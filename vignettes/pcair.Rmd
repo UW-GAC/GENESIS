@@ -1,0 +1,179 @@
+---
+title: "Principal Components Analysis in Related Samples (PC-AiR) using the GENESIS Package"
+author: "Matthew P. Conomos"
+date: "`r Sys.Date()`"
+output: 
+    rmarkdown::html_vignette:
+        toc: true
+        #number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Principal Components Analysis in Related Samples (PC-AiR) using the GENESIS Package}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
+---
+
+## Overview 
+
+Principal Components Analysis (PCA) is commonly applied to genome-wide SNP genotype data from samples in genetic studies for population structure (i.e. ancestry) inference.  PCA takes genotype values at hundreds of thousands of SNPs as input and performs a dimension reduction to principal components (PCs) that best reflect the variability of the data.  Typically the top PCs calculated from the genotype data reflect population structure among the sample individuals.  However, when a sample contains familial relatives, either known or unknown (cryptic), the top PCs obtained from a standard PCA are often confounded by this family structure and reflect clusters of close relatives.
+
+The PC-AiR method is used to perform a PCA for the detection of population structure that is robust to possible familial relatives in the sample.  Unlike a standard PCA, PC-AiR accounts for relatedness (known or cryptic) in the sample and identifies PCs that accurately capture population structure and not family structure.  In order to accomplish this, PC-AiR uses measures of pairwise relatedness (kinship coefficients) and measures of pairwise ancestry divergence to identify an ancestry representative subset of mutually unrelated individuals.  A standard PCA is performed on this "unrelated subset" of individuals, and PC values for the excluded "related subset" of indivdiuals are predicted from genetic similarity.
+
+## Reading in Genotype Data
+
+The functions in the `GENESIS` package read genotype data from a `GenotypeData` class object as created by the `GWASTools` package.  Through the use of `GWASTools`, a `GenotypeData` class object can easily be created from:
+
+* an R matrix of SNP genotype data
+* a GDS file
+* PLINK files
+
+Example R code for creating a `GenotypeData` object is presented below.  Much more detail can be found in the `GWASTools` package reference manual.
+
+### R Matrix
+
+```{r, eval=FALSE}
+geno <- MatrixGenotypeReader(genotype = genotype, snpID = snpID, chromosome = chromosome, 
+                             position = position, scanID = scanID)
+genoData <- GenotypeData(geno)
+```
+* `genotype` is a matrix of genotype values coded as 0 / 1 / 2, where rows index SNPs and columns index samples
+* `snpID` is an integer vector of unique SNP IDs
+* `chromosome` is an integer vector specifying the chromosome of each SNP
+* `position` is an integer vector specifying the position of each SNP
+* `scanID` is a vector of unique individual IDs
+
+### GDS files
+
+```{r, eval=FALSE}
+geno <- GdsGenotypeReader(filename = "genotype.gds")
+genoData <- GenotypeData(geno)
+```
+* `filename` is the file path to the GDS object
+
+### PLINK files
+
+The `SNPRelate` package provides the `snpgdsBED2GDS` function to convert binary PLINK files into a GDS file.
+
+```{r, eval=FALSE}
+snpgdsBED2GDS(bed.fn = "genotype.bed", bim.fn = "genotype.bim", fam.fn = "genotype.fam", 
+              out.gdsfn = "genotype.gds")
+```
+* `bed.fn` is the file path to the PLINK .bed file
+* `bim.fn` is the file path to the PLINK .bim file
+* `fam.fn` is the file path to the PLINK .fam file
+* `out.gdsfn` is the file path for the output GDS file
+
+Once the PLINK files have been converted to a GDS file, then a `GenotypeData` object can be created as described above.
+
+## HapMap Data
+
+To demonstrate a PC-AiR analysis with the `GENESIS` package, we analyze SNP data from the Mexican Americans in Los Angeles, California (MXL) and African American individuals in the southwestern USA (ASW) population samples of HapMap 3.  Mexican Americans and African Americans have a diverse ancestral background, and familial relatives are present in these data, so a PC-AiR analysis is necessary for accurate population structure inference.  Genotype data at a subset of 20K autosomal SNPs for 173 individuals are provided as a GDS file. 
+
+```{r, echo=FALSE, message=FALSE}
+library(GENESIS)
+```
+```{r}
+# read in GDS data
+gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
+HapMap_geno <- GdsGenotypeReader(filename = gdsfile)
+# create a GenotypeData class object
+HapMap_genoData <- GenotypeData(HapMap_geno)
+HapMap_genoData
+```
+
+## Pairwise Measures of Ancestry Divergence
+
+It is possible to identify a subset of mutually unrelated individuals in a sample based solely on pairwise measures of genetic relatedness (i.e. kinship coefficients).  However, in order to obtain accurate population structure inference for the entire sample, it is important that the ancestries of all individuals in the sample are represented by at least one individual in this subset.  In order to identify a mutually unrelated and ancestry representative subset of individuals, PC-AiR also utilizes measures of ancestry divergence.  These measures are calculated using the KING-robust kinship coefficient estimator (Manichaikul et al., 2010), which provides systematically negative estimates for unrelated pairs of individuals with different ancestry.  The number of negative pairwise estimates that an individual has provides information regarding how different that individual's ancestry is from the rest of the sample, which helps to prioritize individuals that should be kept in the ancestry representative subset.
+
+The relevant output from the KING software is two text files with the file extensions .kin0 and .kin.  The `king2mat` function can be used to extract the kinship coefficients (which we use as divergence measures) from this output and create a matrix usable by the `GENESIS` functions.  The `iids` input of the `king2mat` function should be used to ensure that the output matrix orders individuals in the same way as the `GenotypeData` object.
+
+```{r}
+# read individual IDs from GenotypeData object
+iids <- getScanID(HapMap_genoData)
+head(iids)
+# create matrix of KING estimates
+KINGmat <- king2mat(file.kin0 = system.file("extdata", "MXL_ASW.kin0", package="GENESIS"), 
+    				file.kin = system.file("extdata", "MXL_ASW.kin", package="GENESIS"), 
+					iids = iids)
+KINGmat[1:6,1:6]
+```
+
+The column and row names of the matrix are the individual IDs, and each off-diagonal entry is the KING-robust estimate for the specified pair of individuals.
+
+Alternative to running the KING software, the `snpgdsIBDKING` function from the `SNPRelate` package can be used to calculate the KING-robust estimates directly from a GDS file.  The ouput of this function contains a matrix of pairwise estimates, which can be used by the `GENESIS` functions.
+
+## Running PC-AiR
+
+The PC-AiR algorithm requires pairwise measures of both kinship and ancestry divergence in order to partition the sample into an "unrelated subset" and a "related subset."  The kinship coefficient estimates are used to identify relatives, as only one individual from a set of relatives can be included in the "unrelated subset," and the rest must be assigned to the "related subset."  The ancestry divergence measures calculated from KING-robust are used to help select which individual from a set of relatives has the most unique ancestry and should be given priority for inclusion in the "unrelated subset."  
+
+The KING-robust estimates read in above are always used as measures of ancestry divergence for unrelated pairs of individuals, but they can also be used as measures of kinship for relatives (NOTE:  they may be biased measures of kinship for admixed relatives with different ancestry).  The `pcair` function performs the PC-AiR analysis.
+
+```{r}
+# run PC-AiR
+mypcair <- pcair(genoData = HapMap_genoData, kinMat = KINGmat, divMat = KINGmat)
+```
+* `genoData` is a `GenotypeData` class object
+* `kinMat` is a matrix of pairwise kinship coefficient estimates
+* `divMat` is a matrix of pairwise measures of ancestry divergence (KING-robust estimates)
+
+If better estimates of kinship coefficients are available, then the `kinMat` input can be replaced with a similar matrix of these estimates.  The `divMat` input should always remain as the KING-robust estimates.
+
+###  Reference Population Samples
+
+As PCA is an unsupervised method, it is often difficult to identify what population structure each of the top PCs represents.  In order to provide some understanding of the inferred structure, it is sometimes recommended to include reference population samples of known ancestry in the analysis.  If the data set contains such reference population samples, we may want to use only those individuals as the "unrelated subset" for performing the PCA and predict values for all other sample individuals.  This can be accomplished by setting the input `unrel.set` equal to a vector, `IDs`, of the individual IDs for the reference population samples.
+
+```{r, eval=FALSE}
+mypcair <- pcair(genoData = HapMap_genoData, unrel.set = IDs)
+```
+
+If, instead, we want to make sure that these reference population samples are included in the "unrelated subset," but also allow for the PC-AiR algorithm to select additional individuals from the sample to be a part of the "unrelated subset," then this can be accomplished by using the inputs `kinMat`, `divMat`, and `unrel.set` together.
+
+```{r, eval=FALSE}
+mypcair <- pcair(genoData = HapMap_genoData, kinMat = KINGmat, divMat = KINGmat, unrel.set = IDs)
+```
+
+This will force individuals specified with `unrel.set` into the "unrelated subset," move any of their relatives into the "related subset," and then perform the PC-AiR partitioning algorithm on the remaining samples.
+
+###  Partition a Sample without Running PCA
+
+It may be of interest to partition a sample into an ancestry representative "unrelated subset" of individuals and a "related subset" of individuals without performing a PCA.  The `pcairPartition` function, which is called within the `pcair` function, enables the user to do this.
+
+```{r}
+part <- pcairPartition(kinMat = KINGmat, divMat = KINGmat)
+```
+The output contains two vectors that give the individual IDs for the "unrelated subset" and the "related subset." 
+```{r}
+head(part$unrels); head(part$rels)
+```
+
+As with the `pcair` function, the input `unrel.set` can be used to specify certain individuals that must be part of the "unrelated subset."
+
+
+## Output from PC-AiR
+
+An object returned from the `pcair` function has class `pcair`.  A `summary` method for an object of class `pcair` is provided to obtain a quick overview of the results.
+
+```{r}
+summary(mypcair)
+```
+
+The output provides the total sample size along with the number of individuals assigned to the unrelated and related subsets, as well as the threshold values used for determining which pairs of individuals were related or ancestrally divergent.  The eigenvalues for the top PCs are also shown, which can assist in determining the number of PCs that reflect structure.  The minor allele frequency (MAF) filter used for excluding SNPs is also specified, along with the total number of SNPs analyzed after this filtering.  Details describing how to modify the analysis parameters and the available output of the function can be found with the command `help(pcair)`.
+
+### Plotting PC-AiR PCs
+
+The `GENESIS` package also provides a `plot` method for an object of class `pcair` to quickly visualize pairs of PCs.  Each point in one of these PC pairs plots represents a sample individual.  These plots help to visualize population structure in the sample and identify clusters of individuals with similar ancestry.
+
+```{r, fig.show='hold', fig.width=3.4, fig.height=3.4, dev.args=list(pointsize = 10, bg='white')}
+# plot top 2 PCs
+plot(mypcair)
+# plot PCs 3 and 4
+plot(mypcair, vx = 3, vy = 4)
+```
+
+The default is to plot PC values as black dots and blue pluses for individuals in the "unrelated subset" and "related subsets" respectively.  The plotting colors and characters, as well as other standard plotting parameters, can be changed with the standard input to the `plot` function.
+
+## References
+* Conomos M.P., Miller M., & Thornton T. Robust Inference of Population Structure for Ancestry Prediction and Correction of Stratification in the Presence of Relatedness. (Accepted to Genetic Epidemiology).
+
+* Gogarten, S. M., Bhangale, T., Conomos, M. P., Laurie, C. A., McHugh, C. P., Painter, I., ... & Laurie, C. C. (2012). GWASTools: an R/Bioconductor package for quality control and analysis of Genome-Wide Association Studies. Bioinformatics, 28(24), 3329-3331.
+
+* Manichaikul, A., Mychaleckyj, J.C., Rich, S.S., Daly, K., Sale, M., & Chen, W.M. (2010). Robust relationship inference in genome-wide association studies. Bioinformatics, 26(22), 2867-2873.

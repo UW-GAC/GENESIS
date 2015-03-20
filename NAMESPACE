@@ -1,0 +1,8 @@
+export(pcair, 
+       pcairPartition,
+       king2mat)
+import(GWASTools)
+S3method(plot, pcair)
+S3method(summary, pcair)
+S3method(print, pcair)
+S3method(print, summary.pcair)
