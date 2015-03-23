@@ -30,6 +30,8 @@ pcairPartition <- function(kinMat, kin.thresh = 0.025, divMat=NULL, div.thresh =
 		if(!all(IDs == colnames(divMat))){
 			stop("colnames of kinMat and divMat do not match")
 		}
+        # set diagonal to 0
+        diag(divMat) <- 0
 	}
 	
 	# check that unrel.set is included in kinMat

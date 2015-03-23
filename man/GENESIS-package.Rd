@@ -8,9 +8,9 @@
 \tabular{ll}{
 Package: \tab GENESIS\cr
 Type: \tab Package\cr
-Version: \tab 0.99.1\cr
-Date: \tab 2015-01-09\cr
-License: \tab Artistic-2.0\cr
+Version: \tab 0.99.4\cr
+Date: \tab 2015-03-23\cr
+License: \tab GPL-3\cr
 Depends: \tab GWASTools\cr
 Suggests: \tab gdsfmt, SNPRelate, RUnit, BiocGenerics, knitr\cr
 VignetteBuilder: \tab knitr\cr
