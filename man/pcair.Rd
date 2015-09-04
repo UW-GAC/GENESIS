@@ -6,27 +6,27 @@
 \title{PC-AiR: Principal Components Analysis in Related Samples}
 \description{\code{pcair} is used to perform a Principal Components Analysis using genome-wide SNP data for the detection of population structure in a sample.  Unlike a standard PCA, PC-AiR accounts for sample relatedness (known or cryptic) to provide accurate ancestry inference that is not confounded by family structure.}
 \usage{
-pcair(genoData, v = 10, MAF = 0.05, kinMat = NULL, kin.thresh = 0.025, 
-            divMat = NULL, div.thresh = -0.025, unrel.set = NULL, 
+pcair(genoData, v = 20, kinMat = NULL, kin.thresh = 2^(-11/2), 
+            divMat = NULL, div.thresh = 2^(-11/2), unrel.set = NULL, 
             scan.include = NULL, snp.include = NULL, Xchr = FALSE,
-            block.size = 10000, verbose = TRUE)
+            snp.block.size = 10000, MAF = 0.01, verbose = TRUE)
 \method{print}{pcair}(x, ...)
 \method{summary}{pcair}(object, ...)
 \method{print}{summary.pcair}(x, ...)
 }
 \arguments{
   \item{genoData}{An object of class \code{GenotypeData} from the package \code{GWASTools} containing the genotype data for SNPs and samples to be used for the analysis.  This object can easily be created from a matrix of SNP genotype data, PLINK files, or GDS files.}
-  \item{v}{The number of principal components to be returned; the default is 10.  If \code{v = NULL}, then all the principal components are returned.}
-  \item{MAF}{Minor allele frequency filter; any SNPs with MAF less than this value will be excluded from the analysis; the default value is 0.05.}
+  \item{v}{The number of principal components to be returned; the default is 20.  If \code{v = NULL}, then all the principal components are returned.}  
   \item{kinMat}{An optional symmetric matrix of pairwise kinship coefficients for every pair of individuals in the sample (the values on the diagonal do not matter, but the upper and lower triangles must both be filled) used for partitioning the sample into the 'unrelated' and 'related' subsets.  See 'Details' for how this interacts with \code{kin.thresh} and \code{unrel.set}.  IDs for each individual must be set as the row and column names of the matrix.}
-  \item{kin.thresh}{Threshold value on \code{kinMat} used for declaring each pair of individuals as related or unrelated.  The default value is 0.025.  See 'Details' for how this interacts with \code{kinMat}.}
+  \item{kin.thresh}{Threshold value on \code{kinMat} used for declaring each pair of individuals as related or unrelated.  The default value is 2^(-11/2) ~ 0.022.  See 'Details' for how this interacts with \code{kinMat}.}
   \item{divMat}{An optional symmetric matrix of pairwise divergence measures for every pair of individuals in the sample (the values on the diagonal do not matter, but the upper and lower triangles must both be filled) used for partitioning the sample into the 'unrelated' and 'related' subsets.  See 'Details' for how this interacts with \code{div.thresh}.  IDs for each individual must be set as the row and column names of the matrix.}
-  \item{div.thresh}{Threshold value on \code{divMat} used for deciding if each pair of individuals is ancestrally divergent.  The default value is -0.025.  See 'Details' for how this interacts with \code{divMat}.}
+  \item{div.thresh}{Threshold value on \code{divMat} used for deciding if each pair of individuals is ancestrally divergent.  The default value is -2^(-11/2) ~ -0.022.  See 'Details' for how this interacts with \code{divMat}.}
   \item{unrel.set}{An optional vector of IDs for identifying individuals that are forced into the unrelated subset.  See 'Details' for how this interacts with \code{kinMat}.}
   \item{scan.include}{A vector of IDs for samples to include in the analysis.  If NULL, all samples are included.}
   \item{snp.include}{A vector of SNP IDs to include in the analysis.  If NULL, all SNPs are included (see \code{Xchr} for further details).}
   \item{Xchr}{Logical indicator for whether the analysis is of X chromosome SNPs; the default is FALSE.  If \code{snp.include} is NULL: when FALSE only autosomal SNPs are analyzed; when TRUE only X chromosome SNPs are analyzed.}
-  \item{block.size}{The number of SNPs to read-in/analyze at once.  The default value is 10000. }
+  \item{snp.block.size}{The number of SNPs to read-in/analyze at once.  The default value is 10000. }
+  \item{MAF}{Minor allele frequency filter; any SNPs with MAF less than this value will be excluded from the analysis; the default value is 0.01.}
   \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is TRUE.}
   \item{object}{An object of class '\code{pcair}', i.e. output from the \code{pcair} function. }
   \item{x}{An object of class '\code{pcair}', i.e. output from the \code{pcair} function. }

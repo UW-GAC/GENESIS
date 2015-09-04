@@ -1,48 +1,28 @@
-pcair <-
-function(genoData, v = 10, MAF = 0.05, kinMat = NULL, kin.thresh = 0.025, divMat = NULL, div.thresh = -0.025, unrel.set = NULL, scan.include = NULL, snp.include = NULL, Xchr = FALSE, block.size = 10000, verbose = TRUE){
+pcair <- function(	genoData, 
+					v = 20,					 
+					kinMat = NULL, 
+					kin.thresh = 2^(-11/2), 
+					divMat = NULL, 
+					div.thresh = -2^(-11/2), 
+					unrel.set = NULL, 
+					scan.include = NULL, 
+					snp.include = NULL, 
+					Xchr = FALSE,					
+					snp.block.size = 10000, 
+					MAF = 0.01,
+					verbose = TRUE){
 	
-	# checks
-	if(MAF < 0 | MAF > 0.5){
-		stop("MAF must be between 0 and 0.5")
-	}
-	
-	# load snpIDs
-    snpIDs <- getSnpID(genoData)
-	# snps to include
-	if(!is.null(snp.include)){
-		if(!all(snp.include %in% snpIDs)){
-			stop("Not all of the SNP IDs in snp.include are in genoData")
-		}
-    }else{
-        if(!Xchr){
-            # all autosomal SNPs
-            snp.include <- snpIDs[getChromosome(genoData) <= 22]
-        }else{
-            # all X chromosome SNPs
-            snp.include <- snpIDs[getChromosome(genoData) == XchromCode(genoData)]
-        }
-    }
-	# get index of SNP number to include
-	snp.include.idx <- which(snpIDs %in% snp.include); rm(snpIDs)
-    
-    
-	# load scanIDs
-	scanID <- getScanID(genoData)    
-    # samples to include
-    if(!is.null(scan.include)){
-        if(!all(scan.include %in% scanID)){
-            stop("Not all of the scan IDs in scan.include are in genoData")
-        }
-    }else{
-        scan.include <- scanID
-    }
-    # get index of samples numbers to include
-    scan.include.idx <- which(scanID %in% scan.include)
-    
-    
-    # sample size
-    nsamp <- length(scan.include)
-    if(nsamp == 0){  stop("None of the samples in scan.include are in genoData")  }
+	# MAF check
+	if(MAF < 0 | MAF > 0.5){ stop("MAF must be in [0,0.5]") }
+
+	# SNPs to include in analysis
+	snp.include <- getSnpIndex(genoData, snp.include, Xchr)
+	# SNP blocks
+	snp.blocks <- getBlocks(snp.include$n, snp.block.size)
+
+	# Scans to include in analysis
+	scan.include <- getScanIndex(genoData, scan.include)
+	if(scan.include$n == 0){  stop("None of the samples in scan.include are in genoData")  }
       
     # check that scan.include matches kinMat
     if(!is.null(kinMat)){
@@ -50,8 +30,8 @@ function(genoData, v = 10, MAF = 0.05, kinMat = NULL, kin.thresh = 0.025, divMat
             stop("colnames and rownames of kinMat must be individual IDs")
         }
         # subset
-        kinMat <- subset(kinMat, is.element(rownames(kinMat), scan.include), is.element(colnames(kinMat), scan.include))
-        if(!all(scan.include == colnames(kinMat)) | !all(scan.include == rownames(kinMat))){
+        kinMat <- subset(kinMat, rownames(kinMat) %in% scan.include$value, colnames(kinMat) %in% scan.include$value)
+        if(!all(scan.include$value == colnames(kinMat)) | !all(scan.include$value == rownames(kinMat))){
             stop("colnames and rownames of kinMat must match the scanIDs of genoData")
         }
     }
@@ -62,16 +42,16 @@ function(genoData, v = 10, MAF = 0.05, kinMat = NULL, kin.thresh = 0.025, divMat
             stop("colnames and rownames of divMat must be individual IDs")
         }
         # subset
-        divMat <- subset(divMat, is.element(rownames(divMat), scan.include), is.element(colnames(divMat), scan.include))
-        if(!all(scan.include == colnames(divMat)) | !all(scan.include == rownames(divMat))){
+        divMat <- subset(divMat, rownames(divMat) %in% scan.include$value, colnames(divMat) %in% scan.include$value)
+        if(!all(scan.include$value == colnames(divMat)) | !all(scan.include$value == rownames(divMat))){
             stop("colnames and rownames of divMat must match the scanIDs of genoData")
         }
     }
     
     # check that scan.include matches unrel.set
     if(!is.null(unrel.set)){
-        if(!all(unrel.set %in% scan.include)){
-            stop("All of the samples in unrel.set must be in the scanIDs of genoData (and scan.include if specified)")
+        if(!all(unrel.set %in% scan.include$value)){
+            stop("All of the scanIDs in unrel.set must be in the scanIDs of genoData (and scan.include if specified)")
         }
     }
 	
@@ -80,10 +60,10 @@ function(genoData, v = 10, MAF = 0.05, kinMat = NULL, kin.thresh = 0.025, divMat
 		if(is.null(unrel.set)){
             if(verbose){  message("kinMat and unrel.set both unspecified, Running Standard Principal Components Analysis")  }
 			rels <- NULL
-			unrels <- scan.include
+			unrels <- scan.include$value
 		}else{
             if(verbose){  message("kinMat not specified, using unrel.set as the Unrelated Set")  }
-			rels <- scan.include[!(scan.include %in% unrel.set)]
+			rels <- scan.include$value[!(scan.include$value %in% unrel.set)]
 			unrels <- unrel.set
 		}
 	}else{
@@ -102,10 +82,10 @@ function(genoData, v = 10, MAF = 0.05, kinMat = NULL, kin.thresh = 0.025, divMat
 	
 	# create index for related and unrealted sets
     # relative to genoData
-	unrel.idx <- which(scanID %in% unrels)
+	unrel.idx <- which(getScanID(genoData) %in% unrels)
     # relative to scan.include
-    rel.subidx <- which(scan.include %in% rels)
-    unrel.subidx <- which(scan.include %in% unrels)
+    rel.subidx <- which(scan.include$value %in% rels)
+    unrel.subidx <- which(scan.include$value %in% unrels)
     # number of samples in each set
 	nr <- length(rel.subidx)
 	nu <- length(unrel.subidx)
@@ -114,23 +94,10 @@ function(genoData, v = 10, MAF = 0.05, kinMat = NULL, kin.thresh = 0.025, divMat
 	}else{
 		method <- "Standard PCA"
 	}
-    if(verbose){  message(paste("Unrelated Set:",nu,"Samples \nRelated Set:",nr,"Samples"))  }
+    if(verbose){  message(paste("Unrelated Set:",nu,"Samples \nRelated Set:",nr,"Samples"))  }	
 	
-	# determine blocks
-	# number of autosomal snps
-	nloci <- length(snp.include)
-    if(verbose){  message(paste("Running Analysis with",nloci,"SNPs ..."))  }
-	# number of blocks of snps
-	nblocks <- ceiling(nloci/block.size)
-	# start and end positions for SNP blocks
-    if(nblocks == 1){
-        snp.start <- 1
-        snp.end <- nloci
-    }else{
-        snp.start <- (0:(nblocks-1))*block.size+1
-        snp.end <- c( (1:(nblocks-1))*block.size, nloci )
-    }
-	
+
+	if(verbose){ message(paste("Running Analysis with",snp.include$n,"SNPs - in",snp.blocks$n,"Block(s)")) }
 	# if relatives
 	if(nr > 0){
 		# correlation matrix for sPCA
@@ -138,14 +105,18 @@ function(genoData, v = 10, MAF = 0.05, kinMat = NULL, kin.thresh = 0.025, divMat
 		# number of snps used
 		nsnps <- 0
 		
-		for(bn in 1:nblocks){
-            if(verbose){  message(paste("Computing Genetic Correlation Matrix for the Unrelated Set: Block",bn,"of",nblocks,"..."))  }
+		for(bn in 1:snp.blocks$n){
+            if(verbose){  message(paste("Computing Genetic Correlation Matrix for the Unrelated Set: Block",bn,"of",snp.blocks$n,"..."))  }
+
+            # index of SNPs for this block
+            snp.block.idx <- snp.blocks$start[bn]:snp.blocks$end[bn]
+
 			# load genotype data for unrelated set
-            geno <- getGenotypeSelection(genoData, snp = snp.include.idx[snp.start[bn]:snp.end[bn]], scan = unrel.idx, drop = FALSE)
+            geno <- getGenotypeSelection(genoData, snp = snp.include$index[snp.block.idx], scan = unrel.idx, drop = FALSE)
             
 			# allele freq est from unrelated set
 			pA <- 0.5*rowMeans(geno, na.rm = TRUE)
-			# remove monomorphic SNPs
+			# filter SNPs on MAF
 			snp.excl <- which(is.na(pA) | pA <= MAF | pA >= (1-MAF))
 			if(length(snp.excl > 0)){
 				geno <- geno[-snp.excl,]
@@ -158,6 +129,7 @@ function(genoData, v = 10, MAF = 0.05, kinMat = NULL, kin.thresh = 0.025, divMat
 			sigma.hat <- sqrt(2*pA*(1-pA))
 			# z_i = (x_i - 2\hat{p})/sqrt{2*\hat{p}(1-\hat{p})}
 			Zu <- (geno-2*pA)/sigma.hat
+			# impute to mean
 			Zu[which(is.na(Zu))] <- 0
 			
 			# unrelated empirical correlation matrix
@@ -165,14 +137,12 @@ function(genoData, v = 10, MAF = 0.05, kinMat = NULL, kin.thresh = 0.025, divMat
 		}
 		Psiu <- (1/nsnps)*Psiu
 		
-		# sPCA analysis
+		# PCA
         if(verbose){  message("Performing PCA on the Unrelated Set...")  }
 		eigu <- eigen(Psiu, symmetric=TRUE)
 		
 		# subset desired number of eigenvectors
-		if(is.null(v)){
-			v <- nu
-		}
+		if(is.null(v)){ v <- nu	}
 		L <- eigu$values[1:v]
 		V <- eigu$vectors[,1:v]
 		# sum of eigenvalues
@@ -181,15 +151,19 @@ function(genoData, v = 10, MAF = 0.05, kinMat = NULL, kin.thresh = 0.025, divMat
 		# matrix of pseudo-eigenvectors
 		Q <- matrix(0, nrow=nr, ncol=v)
 		
-		# project for related set
-        if(verbose){  message("Predicting PC Values for the Related Set...")  }
-		for(bn in 1:nblocks){
+		# project for related set        
+		for(bn in 1:snp.blocks$n){
+			if(verbose){  message(paste("Predicting PC Values for the Related Set: Block",bn,"of",snp.blocks$n,"..."))  }
+
+			# index of SNPs for this block
+            snp.block.idx <- snp.blocks$start[bn]:snp.blocks$end[bn]
+
 			# load genotype data
-			geno <- getGenotypeSelection(genoData, snp = snp.include.idx[snp.start[bn]:snp.end[bn]], scan = scan.include.idx, drop = FALSE)
+			geno <- getGenotypeSelection(genoData, snp = snp.include$index[snp.block.idx], scan = scan.include$index, drop = FALSE)
             
 			# allele freq est from unrelated set
 			pA <- 0.5*rowMeans(geno[,unrel.subidx], na.rm = TRUE)
-			# remove monomorphic SNPs
+			# filter SNPs on MAF
 			snp.excl <- which(is.na(pA) | pA <= MAF | pA >= (1-MAF))
 			if(length(snp.excl > 0)){
 				geno <- geno[-snp.excl,]
@@ -201,6 +175,7 @@ function(genoData, v = 10, MAF = 0.05, kinMat = NULL, kin.thresh = 0.025, divMat
 			sigma.hat <- sqrt(2*pA*(1-pA))
 			# z_i = (x_i - 2\hat{p})/sqrt{2*\hat{p}(1-\hat{p})}
 			Z <- (geno-2*pA)/sigma.hat
+			# impute to mean
 			Z[which(is.na(Z))] <- 0
 			
 			# subset unrelated and related sets
@@ -218,21 +193,25 @@ function(genoData, v = 10, MAF = 0.05, kinMat = NULL, kin.thresh = 0.025, divMat
 		
 		# concatenate
         if(verbose){  message("Concatenating Results...")  }
-		EIG <- matrix(NA, nrow=nsamp, ncol=v)
+		EIG <- matrix(NA, nrow=scan.include$n, ncol=v)
 		EIG[unrel.subidx,] <- V
 		EIG[rel.subidx,] <- Q
 		
 	# if no relatives
 	}else{
 		# correlation matrix for sPCA
-		Psi <- matrix(0, nrow=nsamp, ncol=nsamp)
+		Psi <- matrix(0, nrow=scan.include$n, ncol=scan.include$n)
 		# number of snps used
 		nsnps <- 0
 		
-		for(bn in 1:nblocks){
-            if(verbose){  message(paste("Computing Genetic Correlation Matrix: Block",bn,"of",nblocks,"..."))  }
+		for(bn in 1:snp.blocks$n){
+            if(verbose){  message(paste("Computing Genetic Correlation Matrix: Block",bn,"of",snp.blocks$n,"..."))  }
+
+            # index of SNPs for this block
+            snp.block.idx <- snp.blocks$start[bn]:snp.blocks$end[bn]
+
 			# load genotype data
-			geno <- getGenotypeSelection(genoData, snp = snp.include.idx[snp.start[bn]:snp.end[bn]], scan = scan.include.idx, drop = FALSE)
+			geno <- getGenotypeSelection(genoData, snp = snp.include$index[snp.block.idx], scan = scan.include$index, drop = FALSE)
 
 			# allele freq est from entire sample
 			pA <- 0.5*rowMeans(geno, na.rm = TRUE)
@@ -261,9 +240,7 @@ function(genoData, v = 10, MAF = 0.05, kinMat = NULL, kin.thresh = 0.025, divMat
 		eig <- eigen(Psi, symmetric=TRUE)
 		
 		# subset desired number of eigenvectors
-		if(is.null(v)){
-			v <- nsamp
-		}
+		if(is.null(v)){	v <- scan.include$n }
 		# output
 		EIG <- eig$vectors[,1:v]
 		L <- eig$values[1:v]
@@ -271,7 +248,7 @@ function(genoData, v = 10, MAF = 0.05, kinMat = NULL, kin.thresh = 0.025, divMat
 	}
     
     # add scanIDs as rownames of EIG
-    rownames(EIG) <- scan.include
+    rownames(EIG) <- scan.include$value
 	
 	# return results
 	out <- list(vectors = EIG, 
@@ -281,7 +258,7 @@ function(genoData, v = 10, MAF = 0.05, kinMat = NULL, kin.thresh = 0.025, divMat
 				unrels = unrels,
 				kin.thresh = kin.thresh,
 				div.thresh = -abs(div.thresh),
-				nsamp = nsamp,
+				nsamp = scan.include$n,
 				nsnps = nsnps,
 				MAF = MAF,
 				call = match.call(),
