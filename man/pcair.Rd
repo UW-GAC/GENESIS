@@ -7,7 +7,7 @@
 \description{\code{pcair} is used to perform a Principal Components Analysis using genome-wide SNP data for the detection of population structure in a sample.  Unlike a standard PCA, PC-AiR accounts for sample relatedness (known or cryptic) to provide accurate ancestry inference that is not confounded by family structure.}
 \usage{
 pcair(genoData, v = 20, kinMat = NULL, kin.thresh = 2^(-11/2), 
-            divMat = NULL, div.thresh = 2^(-11/2), unrel.set = NULL, 
+            divMat = NULL, div.thresh = -2^(-11/2), unrel.set = NULL, 
             scan.include = NULL, snp.include = NULL, Xchr = FALSE,
             snp.block.size = 10000, MAF = 0.01, verbose = TRUE)
 \method{print}{pcair}(x, ...)
