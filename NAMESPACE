@@ -1,7 +1,12 @@
 export(pcair, 
        pcairPartition,
-       king2mat)
+       king2mat,
+       pcrelate,
+       pcrelateReadKinship,
+       pcrelateReadInbreed,
+       pcrelateMakeGRM)
 import(GWASTools)
+import(gdsfmt)
 S3method(plot, pcair)
 S3method(summary, pcair)
 S3method(print, pcair)

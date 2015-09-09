@@ -3,7 +3,7 @@ Type: Package
 Title: GENetic EStimation and Inference in Structured samples
         (GENESIS): Statistical methods for analyzing genetic data from
         samples with population structure and/or relatedness
-Version: 1.1.2
+Version: 1.1.3
 Date: 2015-09-08
 Author: Matthew P. Conomos and Timothy Thornton
 Maintainer: Matthew P. Conomos <mconomos@uw.edu>
@@ -16,7 +16,8 @@ Description: The GENESIS package provides methodology for estimating,
         individuals (known or cryptic).
 License: GPL-3
 Depends: GWASTools
-Suggests: gdsfmt, SNPRelate, RUnit, BiocGenerics, knitr
+Imports: gdsfmt
+Suggests: SNPRelate, RUnit, BiocGenerics, knitr
 VignetteBuilder: knitr
 biocViews: SNP, GeneticVariability, Genetics, StatisticalMethod,
         DimensionReduction, PrincipalComponent, GenomeWideAssociation,

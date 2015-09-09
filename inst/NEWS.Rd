@@ -1,5 +1,12 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 1.1.3}{
+    \itemize{
+        \item Added functions for PC-Relate.  PC-Relate provides model-free estimation of recent genetic relatedness in general samples.  It can be used to estimate kinship coefficients, IBD sharing probabilities, and inbreeding coefficients using genome-wide SNP data.  PC-Relate accounts for population structure (ancestry) among sample individuals through the use of ancestry representative principal components (PCs) to provide accurate relatedness estimates due only to recent family (pedigree) structure.
+        \item NOTE: This is an early release. While the functions have been thoroughly tested, the man pages are still a work in progress, and the vignette has yet to be created.
+        \item GENESIS now imports the package gdsfmt.
+    }
+}
 \section{Version 1.1.1}{
 	\itemize{
 		\item Changed a few default values:  MAF filter from 0.05 to 0.01; kin.thresh from 0.025 to 2^(-11/2) ~ 0.022; div.thresh from -0.025 to -2^(-11/2) ~ -0.022; v (the number of PCs returned) from 10 to 20
