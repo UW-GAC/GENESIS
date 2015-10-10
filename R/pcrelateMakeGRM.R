@@ -1,6 +1,10 @@
 pcrelateMakeGRM <- function(pcrelObj, scan.include = NULL, scaleKin = 2){
     # read in sample.id
-    sample.id <- read.gdsn(index.gdsn(pcrelObj, "sample.id"))
+    if(class(pcrelObj) == "gds.class"){
+        sample.id <- read.gdsn(index.gdsn(pcrelObj, "sample.id"))
+    }else if(class(pcrelObj) == "pcrelate"){
+        sample.id <- pcrelObj$sample.id
+    }
 
     # check that the requested samples are in the output
     if(is.null(scan.include)){
@@ -12,11 +16,16 @@ pcrelateMakeGRM <- function(pcrelObj, scan.include = NULL, scaleKin = 2){
     }
     # index of requested samples
     sample.idx <- sample.id %in% scan.include
-
-    kinMat <- scaleKin*readex.gdsn(index.gdsn(pcrelObj, "kinship"), sel=list(sample.idx, sample.idx))
-    rownames(kinMat) <- scan.include
-    colnames(kinMat) <- scan.include
-
+    
+    # create GRM
+    if(class(pcrelObj) == "gds.class"){
+        kinMat <- scaleKin*readex.gdsn(index.gdsn(pcrelObj, "kinship"), sel=list(sample.idx, sample.idx))
+        rownames(kinMat) <- scan.include
+        colnames(kinMat) <- scan.include
+    }else if(class(pcrelObj) == "pcrelate"){
+        kinMat <- scaleKin*pcrelObj$kinship[sample.idx, sample.idx]
+    }
+    
     return(kinMat)
 }
 

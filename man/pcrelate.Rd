@@ -38,7 +38,7 @@ pcrelate(genoData, pcMat = NULL, ibd.probs = TRUE,
 
 	If \code{write.to.gds = TRUE}, then the output is written to two GDS files rather than returned to the R console. Use of this option requires the \code{\link[gdsfmt:gdsfmt-package]{gdsfmt}} package. The first GDS file, named ``<gds.prefix>_isaf.gds'', contains the individual-specific allele frequency estimates for each individual at each SNP.  The second GDS file, named ``<gds.prefix>_pcrelate.gds'', contains the PC-Relate output as described in Value below.
 }
-\value{A list including:
+\value{An object of class '\code{pcrelate}'. A list including:
 	\item{sample.id}{A vector of IDs for samples included in the analysis.}
 	\item{kinship}{A matrix of estimated pairwise kinship coefficients. The order of samples matches \code{sample.id}.}
 	\item{ibd.probs}{A matrix of estimated pairwise IBD sharing probabilities; the upper triangle gives k0 (the probability of sharing 0 alleles IBD), the lower triangle gives k2 (the probability of sharing 2 alleles IBD), and the diagonal is missing. The order of samples matches \code{sample.id}. This matrix is returned only if \code{ibd.probs = TRUE} in the input.}
@@ -56,7 +56,7 @@ pcrelate(genoData, pcMat = NULL, ibd.probs = TRUE,
 \author{Matthew P. Conomos}
 \note{The \code{GenotypeData} function in the \code{GWASTools} package should be used to create the input \code{genoData}.  Input to the \code{GenotypeData} function can easily be created from an R matrix or GDS file.  PLINK .bed, .bim, and .fam files can easily be converted to a GDS file with the function \code{snpgdsBED2GDS} in the \code{SNPRelate} package.}
 \seealso{
-	\code{\link{pcrelateReadKinship}}, \code{\link{pcrelateReadInbreed}}, and \code{\link{pcrelateMakeGRM}} for functions that can be used to read in the results from a GDS file output by \code{pcrelate}.
+	\code{\link{pcrelateReadKinship}}, \code{\link{pcrelateReadInbreed}}, and \code{\link{pcrelateMakeGRM}} for functions that can be used to read in the results output by \code{pcrelate}.
 	\code{\link[GWASTools:GWASTools-package]{GWASTools}} for a description of the package containing the following functions: \code{\link[GWASTools]{GenotypeData}} for a description of creating a \code{GenotypeData} class object for storing sample and SNP genotype data, \code{\link[GWASTools]{MatrixGenotypeReader}} for a description of reading in genotype data stored as a matrix, and \code{\link[GWASTools]{GdsGenotypeReader}} for a description of reading in genotype data stored as a GDS file.  Also see \code{\link[SNPRelate]{snpgdsBED2GDS}} in the \code{\link[SNPRelate:SNPRelate-package]{SNPRelate}} package for a description of converting binary PLINK files to GDS.
 }
 \examples{

@@ -3,13 +3,13 @@
 \alias{GENESIS}
 \docType{package}
 \title{GENetic EStimation and Inference in Structured samples (GENESIS):  Statistical methods for analyzing genetic data from samples with population structure and/or relatedness}
-\description{The GENESIS package provides methodology for estimating, inferring, and accounting for population and pedigree structure in genetic analyses.  The current implementation performs PC-AiR (Conomos et al., 2015): a Principal Components Analysis on genome-wide SNP data for the detection of population structure in a sample that may contain known or cryptic relatedness.  Unlike standard PCA, PC-AiR accounts for relatedness in the sample to provide accurate ancestry inference that is not confounded by family structure.}
+\description{The GENESIS package provides methodology for estimating, inferring, and accounting for population and pedigree structure in genetic analyses. The current implementation performs PC-AiR (Conomos et al., 2015) and PC-Relate (Conomos et al., In Review). PC-AiR performs a Principal Components Analysis on genome-wide SNP data for the detection of population structure in a sample that may contain known or cryptic relatedness.  Unlike standard PCA, PC-AiR accounts for relatedness in the sample to provide accurate ancestry inference that is not confounded by family structure. PC-Relate uses ancestry representative principal components to adjust for population structure/ancestry and accurately estimate measures of recent genetic relatedness such as kinship coefficients, IBD sharing probabilities, and inbreeding coefficients.}
 \details{
 \tabular{ll}{
 Package: \tab GENESIS\cr
 Type: \tab Package\cr
-Version: \tab 0.99.4\cr
-Date: \tab 2015-03-23\cr
+Version: \tab 1.99.0\cr
+Date: \tab 2015-10-10\cr
 License: \tab GPL-3\cr
 Depends: \tab GWASTools\cr
 Suggests: \tab gdsfmt, SNPRelate, RUnit, BiocGenerics, knitr\cr
@@ -17,10 +17,11 @@ VignetteBuilder: \tab knitr\cr
 biocViews: \tab SNP, GeneticVariability, Genetics, StatisticalMethod, DimensionReduction, PrincipalComponent, GenomeWideAssociation, QualityControl, BiocViews\cr
 
 }
-The main function in this package is \code{\link{pcair}}.  This function takes genotype data and pairwise measures of kinship and ancestry divergence as input and returns PC-AiR PCs as the ouput.
+The PC-AiR analysis is performed using the \code{\link{pcair}} function, which takes genotype data and pairwise measures of kinship and ancestry divergence as input and returns PC-AiR PCs as the ouput.
 The function \code{\link{pcairPartition}} is called within \code{\link{pcair}} and uses the PC-AiR algorithm to partition the sample into an ancestry representative `unrelated subset' and `related subset'.
 The function \code{\link{plot.pcair}} can be used to plot pairs of PCs from a class `\code{pcair}' object returned by the function \code{\link{pcair}}.
 The function \code{\link{king2mat}} can be used to convert output text files from the KING software (Manichaikul et al., 2010) into an R matrix of pairwise kinship coefficient estimates in a format that can be used by the functions \code{\link{pcair}} and \code{\link{pcairPartition}}.
+The PC-Relate analysis is performed using the \code{\link{pcrelate}} function, which takes genotype data and PCs from PC-AiR and returns estimates of kinship coefficients, IBD sharing probabilities, and inbreeding coefficients. The functions \code{\link{pcrelateReadKinship}}, \code{\link{pcrelateReadInbreed}}, and \code{\link{pcrelateMakeGRM}} provide utilities for reading and making tables or matrices of the PC-Relate output.
 }
 \author{
 Matthew P. Conomos and Timothy Thornton

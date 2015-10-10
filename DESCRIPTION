@@ -3,17 +3,23 @@ Type: Package
 Title: GENetic EStimation and Inference in Structured samples
         (GENESIS): Statistical methods for analyzing genetic data from
         samples with population structure and/or relatedness
-Version: 1.1.3
-Date: 2015-09-08
+Version: 1.99.0
+Date: 2015-10-10
 Author: Matthew P. Conomos and Timothy Thornton
 Maintainer: Matthew P. Conomos <mconomos@uw.edu>
 Description: The GENESIS package provides methodology for estimating,
         inferring, and accounting for population and pedigree structure
         in genetic analyses.  The current implementation provides
-        functions to perform PC-AiR (Conomos et al., 2015): a Principal
-        Components Analysis with genome-wide SNP genotype data for
-        robust population structure inference in samples with related
-        individuals (known or cryptic).
+        functions to perform PC-AiR (Conomos et al., 2015) and PC-Relate 
+        (Conomos et al., In Review). PC-AiR performs a Principal Components 
+        Analysis on genome-wide SNP data for the detection of population 
+        structure in a sample that may contain known or cryptic relatedness. 
+        Unlike standard PCA, PC-AiR accounts for relatedness in the sample 
+        to provide accurate ancestry inference that is not confounded by 
+        family structure. PC-Relate uses ancestry representative principal 
+        components to adjust for population structure/ancestry and accurately 
+        estimate measures of recent genetic relatedness such as kinship 
+        coefficients, IBD sharing probabilities, and inbreeding coefficients.
 License: GPL-3
 Depends: GWASTools
 Imports: gdsfmt

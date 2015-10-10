@@ -1,5 +1,5 @@
 ---
-title: "Principal Components Analysis in Related Samples (PC-AiR) using the GENESIS Package"
+title: "Population Structure and Relatedness Inference using the GENESIS Package"
 author: "Matthew P. Conomos"
 date: "`r Sys.Date()`"
 output: 
@@ -7,16 +7,30 @@ output:
         toc: true
         #number_sections: true
 vignette: >
-  %\VignetteIndexEntry{Principal Components Analysis in Related Samples (PC-AiR) using the GENESIS Package}
+  %\VignetteIndexEntry{Population Structure and Relatedness Inference using the GENESIS Package}
   %\VignetteEngine{knitr::rmarkdown}
   \usepackage[utf8]{inputenc}
 ---
 
-## Overview 
+# Overview 
+
+GENESIS provides statistical methodology for analyzing genetic data from samples with population structure and/or familial relatedness. This vignette provides a description of how to use GENESIS for inferring population structure, as well as estimating relatedness measures such as kinship coefficients, identity by descent (IBD) sharing probabilities, and inbreeding coefficients. GENESIS uses PC-AiR for population structure inference that is robust to known or cryptic relatedness, and it uses PC-Relate for accurate relatedness estimation in the presence of population structure, admixutre, and departures from Hardy-Weinberg equilibrium.
+
+## Principal Components Analysis in Related Samples (PC-AiR)
+
 
 Principal Components Analysis (PCA) is commonly applied to genome-wide SNP genotype data from samples in genetic studies for population structure (i.e. ancestry) inference.  PCA takes genotype values at hundreds of thousands of SNPs as input and performs a dimension reduction to principal components (PCs) that best reflect the variability of the data.  Typically the top PCs calculated from the genotype data reflect population structure among the sample individuals.  However, when a sample contains familial relatives, either known or unknown (cryptic), the top PCs obtained from a standard PCA are often confounded by this family structure and reflect clusters of close relatives.
 
 The PC-AiR method is used to perform a PCA for the detection of population structure that is robust to possible familial relatives in the sample.  Unlike a standard PCA, PC-AiR accounts for relatedness (known or cryptic) in the sample and identifies PCs that accurately capture population structure and not family structure.  In order to accomplish this, PC-AiR uses measures of pairwise relatedness (kinship coefficients) and measures of pairwise ancestry divergence to identify an ancestry representative subset of mutually unrelated individuals.  A standard PCA is performed on this "unrelated subset" of individuals, and PC values for the excluded "related subset" of indivdiuals are predicted from genetic similarity.
+
+## Relatedness Estimation Adjusted for Principal Components (PC-Relate)
+
+Many estimators exist that use genome-wide SNP genotype data from samples in genetic studies to estimate measures of recent genetic relatedness such as pairwise kinship coefficients, pairwise IBD sharing probabilities, and individual inbreeding coefficients. However, many of these estimators either make simplifying assumptions that do not hold in the presence of population structure and/or ancestry admixture, or they require reference population panels of known ancestry from pre-specified populations. When assumptions are violated, these estimators can provide highly biased estimates.
+
+The PC-Relate method is used to accurately estimate measures of recent genetic relatedness in samples with unknown or unspecified population structure without requiring reference population panels. PC-Relate uses ancestry representative principal components to account for sample ancestry differences and provide estimates that are robust to population structure, ancestry admixture, and departures from Hardy-Weinberg equilibirum.
+
+
+# Data
 
 ## Reading in Genotype Data
 
@@ -66,7 +80,7 @@ Once the PLINK files have been converted to a GDS file, then a `GenotypeData` ob
 
 ## HapMap Data
 
-To demonstrate a PC-AiR analysis with the `GENESIS` package, we analyze SNP data from the Mexican Americans in Los Angeles, California (MXL) and African American individuals in the southwestern USA (ASW) population samples of HapMap 3.  Mexican Americans and African Americans have a diverse ancestral background, and familial relatives are present in these data, so a PC-AiR analysis is necessary for accurate population structure inference.  Genotype data at a subset of 20K autosomal SNPs for 173 individuals are provided as a GDS file. 
+To demonstrate PC-AiR and PC-Relate analyses with the `GENESIS` package, we analyze SNP data from the Mexican Americans in Los Angeles, California (MXL) and African American individuals in the southwestern USA (ASW) population samples of HapMap 3.  Mexican Americans and African Americans have a diverse ancestral background, and familial relatives are present in these data. Genotype data at a subset of 20K autosomal SNPs for 173 individuals are provided as a GDS file. 
 
 ```{r, echo=FALSE, message=FALSE}
 library(GENESIS)
@@ -79,6 +93,9 @@ HapMap_geno <- GdsGenotypeReader(filename = gdsfile)
 HapMap_genoData <- GenotypeData(HapMap_geno)
 HapMap_genoData
 ```
+
+
+# Principal Components Analysis in Related Samples (PC-AiR)
 
 ## Pairwise Measures of Ancestry Divergence
 
@@ -94,7 +111,7 @@ head(iids)
 KINGmat <- king2mat(file.kin0 = system.file("extdata", "MXL_ASW.kin0", package="GENESIS"), 
     				file.kin = system.file("extdata", "MXL_ASW.kin", package="GENESIS"), 
 					iids = iids)
-KINGmat[1:6,1:6]
+KINGmat[1:5,1:5]
 ```
 
 The column and row names of the matrix are the individual IDs, and each off-diagonal entry is the KING-robust estimate for the specified pair of individuals.
@@ -171,7 +188,49 @@ plot(mypcair, vx = 3, vy = 4)
 
 The default is to plot PC values as black dots and blue pluses for individuals in the "unrelated subset" and "related subsets" respectively.  The plotting colors and characters, as well as other standard plotting parameters, can be changed with the standard input to the `plot` function.
 
-## References
+
+# Relatedness Estimation Adjusted for Principal Components (PC-Relate)
+
+## Running PC-Relate
+
+PC-Relate uses the ancestry representative principal components (PCs) calculated from PC-AiR to adjust for the population structure and ancestry of individuals in the sample and provide accurate estimates of recent genetic relatedness due to family structure. The `pcrelate` function performs the PC-Relate analysis.
+
+The `training.set` input of the `pcrelate` function allows for the specification of which samples are used to estimate the ancestry adjustment at each SNP. The adjustment tends to perform best when close relatives are excluded from `training.set`, so the individuals in the "unrelated subset" from the PC-AiR analysis are typically a good choice. However, when an "unrelated subset" is not available, the adjustment still works well when estimated using all samples (`training.set = NULL`). 
+
+```{r}
+# run PC-Relate
+mypcrelate <- pcrelate(genoData = HapMap_genoData, pcMat = mypcair$vectors[,1:2], 
+                       training.set = mypcair$unrels)
+```
+* `genoData` is a `GenotypeData` class object
+* `pcMat` is a matrix whose columns are the PCs used for the ancestry adjustment
+* `training.set` is a vector of individual IDs specifying which samples are used to esimate the ancestry adjustment at each SNP
+
+If estimates of IBD sharing probabilities are not desired, then setting the input `ibd.probs = FALSE` will speed up the computation.
+
+## Output from PC-Relate
+
+The `pcrelate` function will either return an object of class `pcrelate` (when the input `write.to.gds = FALSE`) or it will save the output to a GDS file (when the input `write.to.gds = TRUE`). Saving the output to a GDS file is useful for large samples, as it allows for efficient storage and access to the estimates (see the package `gdsfmt` for more details). The following command can be used to read in the results from a previous PC-Relate analysis saved to the GDS file "tmp_pcrelate.gds"
+
+```{r, eval=FALSE}
+library(gdsfmt)
+mypcrelate <- openfn.gds("tmp_pcrelate.gds")
+```
+
+Functions are provided for easily reading the output from `pcrelate` (either a class `pcrelate` object or a GDS file) and making a table of pairwise relatedness estimates, a table of individual inbreeding coeficients, and a genetic relationship matrix (GRM).
+
+```{r}
+pcrelateReadKinship(pcrelObj = mypcrelate, scan.include = iids[1:40], kin.thresh = 2^(-9/2))
+pcrelateReadInbreed(pcrelObj = mypcrelate, scan.include = iids[1:40], f.thresh = 2^(-11/2))
+pcrelateMakeGRM(pcrelObj = mypcrelate, scan.include = iids[1:5], scaleKin = 2)
+```
+* `pcrelObj` is the output from `pcrelate`; either a class `pcrelate` object or a GDS file
+* `scan.include` is a vector of individual IDs specifying which individuals to include in the table or matrix
+* `kin.thresh` specifies a minimum kinship coefficient value to include in the table
+* `f.thresh` specifies a minimum inbreeding coefficient value to include in the table
+* `scaleKin` specifies a factor to multiply the kinship coefficients by in the GRM
+
+# References
 * Conomos M.P., Miller M.B., & Thornton T.A. (2015). Robust Inference of Population Structure for Ancestry Prediction and Correction of Stratification in the Presence of Relatedness. Genetic Epidemiology, 39(4), 276-293.
 
 * Gogarten, S.M., Bhangale, T., Conomos, M.P., Laurie, C.A., McHugh, C.P., Painter, I., ... & Laurie, C.C. (2012). GWASTools: an R/Bioconductor package for quality control and analysis of Genome-Wide Association Studies. Bioinformatics, 28(24), 3329-3331.
