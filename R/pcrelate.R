@@ -1,17 +1,17 @@
-pcrelate <- function( genoData,
-						          pcMat = NULL, 
-						          ibd.probs = TRUE,						 
-						          scan.include = NULL, 
-						          training.set = NULL, 
-						          scan.block.size = 5000, 
-						          snp.include = NULL, 
-						          Xchr = FALSE, 
-						          snp.block.size = 10000,
-                      MAF = 0.01, 
-						          write.to.gds = FALSE, 
-						          gds.prefix = NULL,
-                      correct = TRUE,
-						          verbose = TRUE){
+pcrelate <- function(   genoData, 
+                        pcMat = NULL,
+                        ibd.probs = TRUE,
+                        scan.include = NULL,
+                        training.set = NULL,
+                        scan.block.size = 5000,
+                        snp.include = NULL,
+                        Xchr = FALSE,
+                        snp.block.size = 10000,
+                        MAF = 0.01,
+                        write.to.gds = FALSE,
+                        gds.prefix = NULL,
+                        correct = TRUE,
+                        verbose = TRUE){
 
 	# MAF check
 	if(MAF < 0 | MAF > 0.5){ stop("MAF must be in [0,0.5]") }

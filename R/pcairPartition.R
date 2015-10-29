@@ -1,4 +1,4 @@
-pcairPartition <- function(kinMat, kin.thresh = 0.025, divMat=NULL, div.thresh = -0.025, unrel.set=NULL){
+pcairPartition <- function(kinMat, kin.thresh = 2^(-11/2), divMat=NULL, div.thresh = -2^(-11/2), unrel.set=NULL){
 
     # check that kinMat has colummn names
     if(!is.null(kinMat)){
