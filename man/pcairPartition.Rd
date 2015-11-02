@@ -3,8 +3,8 @@
 \title{Partition a sample into an ancestry representative 'unrelated subset' and a 'related subset'}
 \description{\code{pcairPartition} is used to partition a sample from a genetic study into an ancestry representative 'unrelated subset' and a 'related subset'.  The 'unrelated subset' contains individuals who are all mutually unrelated to each other and representative of the ancestries of all individuals in the sample, and the 'related subset' contains individuals who are related to someone in the 'unrealted subset'.}
 \usage{
-pcairPartition(kinMat, kin.thresh = 0.025, divMat = NULL, 
-                    div.thresh = -0.025, unrel.set = NULL)
+pcairPartition(kinMat, kin.thresh = 2^(-11/2), divMat = NULL, 
+                    div.thresh = -2^(-11/2), unrel.set = NULL)
 }
 \arguments{
   \item{kinMat}{A symmetric matrix of pairwise kinship coefficients for every pair of individuals in the sample (the values on the diagonal do not matter, but the upper and lower triangles must both be filled) used for partitioning the sample into the 'unrelated' and 'related' subsets.  See 'Details' for how this interacts with \code{kin.thresh} and \code{unrel.set}.  IDs for each individual must be set as the row and column names of the matrix.}
