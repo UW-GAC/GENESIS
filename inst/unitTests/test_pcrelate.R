@@ -12,5 +12,6 @@ test_pcrelate <- function(){
     mypcs <- pcair(genoData = HapMap_genoData, kinMat = HapMap_ASW_MXL_KINGmat, divMat = HapMap_ASW_MXL_KINGmat)
 
     myrel <- pcrelate(genoData = HapMap_genoData, pcMat = mypcs$vectors[,1:2])
-	
+
+    close(HapMap_genoData)	
 }

@@ -19,5 +19,7 @@ test_pcairPartition <- function(){
 
     obs <- tryCatch( pcairPartition(kinMat = HapMap_ASW_MXL_KINGmat, divMat = HapMap_ASW_MXL_KINGmat, unrel.set = 1:100), error=conditionMessage)
     checkIdentical(obs, "All of the samples in unrel.set must be in kinMat")
+
+    close(HapMap_genoData)
 }
 
