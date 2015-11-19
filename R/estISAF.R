@@ -17,9 +17,9 @@ estISAF <- function(geno, pcMat, pcProd, transpose = FALSE){
 
     # matrix of individual specific allele frequencies
     if(transpose){
-        phat <- 0.5*tcrossprod(pcMat, tcrossprod(geno, pcProd) )
+        muhat <- 0.5*tcrossprod(pcMat, tcrossprod(geno, pcProd) )
     }else{
-        phat <- 0.5*tcrossprod( tcrossprod(geno, pcProd), pcMat)
+        muhat <- 0.5*tcrossprod( tcrossprod(geno, pcProd), pcMat)
     }
-    return(phat)
+    return(muhat)
 }

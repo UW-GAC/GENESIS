@@ -47,27 +47,25 @@ pcairPartition <- function(kinMat, kin.thresh = 2^(-11/2), divMat=NULL, div.thre
 	kinsum <- rowSums(kinMat)
 	# indicator for relatives
 	indKIN <- kinMat != 0
+	rm(kinMat)
 	
 	# number of divergent pairs
 	# zero out divergence measures for relatives
 	divMat[indKIN] <- 0
 	ndiv <- apply(divMat,1,function(x){ sum(x < -abs(div.thresh)) })
+	rm(divMat)
 	
 	
 	ridx <- NULL  # index of samples in related set
 	if(!is.null(unrel.set)){
 		unrel.idx <- which(IDs %in% unrel.set)
-		for(i in 1:length(unrel.idx)){
-			# identify relatives of individual set to the unrelated set
-			rel.idx <- which(indKIN[unrel.idx[i],])
-			# don't count relatives that are also set to the unrelated set
-			rel.idx <- rel.idx[!is.element(rel.idx,unrel.idx)]
-			# add these relatives to the realated set
-			ridx <- append(ridx, rel.idx)
-			indKIN[rel.idx,] <- FALSE; indKIN[,rel.idx] <- FALSE
-		}
 		# ignore relationships between individuals in unrel.set
 		indKIN[unrel.idx,unrel.idx] <- FALSE
+		# identify relatives of individuals set to the unrelated set
+		rel.idx <- which(colSums(indKIN[unrel.idx,]) > 0)
+		# add these relatives to the realated set
+		ridx <- append(ridx, rel.idx)
+		indKIN[rel.idx,] <- FALSE; indKIN[,rel.idx] <- FALSE
 	}
 
     # number of relatives	
