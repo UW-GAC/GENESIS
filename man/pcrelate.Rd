@@ -5,7 +5,7 @@
 \usage{
 pcrelate(genoData, pcMat = NULL, ibd.probs = TRUE, 
 			scan.include = NULL, training.set = NULL, scan.block.size = 5000, 
-			snp.include = NULL, Xchr = FALSE, snp.block.size = 10000, 
+			snp.include = NULL, chromosome = NULL, snp.block.size = 10000, 
 			MAF = 0.01, write.to.gds = FALSE, gds.prefix = NULL, 
 			correct = TRUE, verbose = TRUE)
 }
@@ -49,7 +49,7 @@ pcrelate(genoData, pcMat = NULL, ibd.probs = TRUE,
 	\item{method}{A character string.  Either 'PC-Relate' or 'Unadjusted' identifying which method was used for computing relatedness estimates.  'Unadjusted' is used when \code{pcMat = NULL} and corresponds to an assumption of population homogeneity.}
 }
 \references{
-	Conomos M.P., Reiner, A.P., Weir, B.S., & Thornton T.A. Model-Free Estimation of Recent Genetic Relatedness. (In Review).
+	Conomos M.P., Reiner A.P., Weir B.S., & Thornton T.A. (2016). Model-free Estimation of Recent Genetic Relatedness. American Journal of Human Genetics, 98(1), 127-148.
     
     Gogarten, S.M., Bhangale, T., Conomos, M.P., Laurie, C.A., McHugh, C.P., Painter, I., ... & Laurie, C.C. (2012). GWASTools: an R/Bioconductor package for quality control and analysis of Genome-Wide Association Studies. Bioinformatics, 28(24), 3329-3331.
 }
@@ -76,3 +76,5 @@ mypcrel <- pcrelate(genoData = HapMap_genoData, pcMat = mypcair$vectors[,1],
 				training.set = mypcair$unrels)
 close(HapMap_genoData)
 }
+\keyword{robust}
+\keyword{relatedness}

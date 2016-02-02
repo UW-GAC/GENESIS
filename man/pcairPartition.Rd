@@ -20,7 +20,7 @@ pcairPartition(kinMat, kin.thresh = 2^(-11/2), divMat = NULL,
 	\item{unrels}{A vector of IDs for individuals in the 'unrelated subset'.}
 }
 \references{
-	Conomos M.P., Miller M., & Thornton T. Robust Inference of Population Structure for Ancestry Prediction and Correction of Stratification in the Presence of Relatedness. (Accepted to Genetic Epidemiology).
+	Conomos M.P., Miller M., & Thornton T. (2015). Robust Inference of Population Structure for Ancestry Prediction and Correction of Stratification in the Presence of Relatedness. Genetic Epidemiology, 39(4), 276-293.
     
     Manichaikul, A., Mychaleckyj, J.C., Rich, S.S., Daly, K., Sale, M., & Chen, W.M. (2010). Robust relationship inference in genome-wide association studies. Bioinformatics, 26(22), 2867-2873.
 }

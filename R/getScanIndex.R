@@ -13,7 +13,7 @@ getScanIndex <- function(data, scan.include){
     # samples to include
     if(!is.null(scan.include)){
         if(!all(scan.include %in% scanID)){ 
-            stop("Not alls of the scanID in scan.include are in the provided data") 
+            stop("Not all of the scanID in scan.include are in the provided data") 
         }
     }else{
         scan.include <- scanID

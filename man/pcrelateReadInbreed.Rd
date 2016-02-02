@@ -14,7 +14,7 @@ pcrelateReadInbreed(pcrelObj, scan.include = NULL, f.thresh = NULL)
 	This function provides an easy way to make a table of estimated inbreeding coefficients.
 }
 \references{
-    Conomos M.P., Reiner, A.P., Weir, B.S., & Thornton T.A. Model-Free Estimation of Recent Genetic Relatedness. (In Review).
+    Conomos M.P., Reiner A.P., Weir B.S., & Thornton T.A. (2016). Model-free Estimation of Recent Genetic Relatedness. American Journal of Human Genetics, 98(1), 127-148.
 }
 \author{Matthew P. Conomos}
 \seealso{

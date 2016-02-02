@@ -14,7 +14,7 @@ pcrelateMakeGRM(pcrelObj, scan.include = NULL, scaleKin = 2)
 	This function provides a quick and easy way to construct a genetic relationship matrix (GRM) from the output of \code{pcrelate}.
 }
 \references{
-    Conomos M.P., Reiner, A.P., Weir, B.S., & Thornton T.A. Model-Free Estimation of Recent Genetic Relatedness. (In Review).
+    Conomos M.P., Reiner A.P., Weir B.S., & Thornton T.A. (2016). Model-free Estimation of Recent Genetic Relatedness. American Journal of Human Genetics, 98(1), 127-148.
 }
 \author{Matthew P. Conomos}
 \seealso{

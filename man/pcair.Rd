@@ -57,7 +57,7 @@ pcair(genoData, v = 20, kinMat = NULL, kin.thresh = 2^(-11/2),
 	\item{method}{A character string.  Either "PC-AiR" or "Standard PCA" identifying which method was used for computing principal components.}
 }
 \references{
-	Conomos M.P., Miller M., & Thornton T. Robust Inference of Population Structure for Ancestry Prediction and Correction of Stratification in the Presence of Relatedness. (Accepted to Genetic Epidemiology).
+	Conomos M.P., Miller M., & Thornton T. (2015). Robust Inference of Population Structure for Ancestry Prediction and Correction of Stratification in the Presence of Relatedness. Genetic Epidemiology, 39(4), 276-293.
     
     Gogarten, S.M., Bhangale, T., Conomos, M.P., Laurie, C.A., McHugh, C.P., Painter, I., ... & Laurie, C.C. (2012). GWASTools: an R/Bioconductor package for quality control and analysis of Genome-Wide Association Studies. Bioinformatics, 28(24), 3329-3331.
     
@@ -87,5 +87,5 @@ close(HapMap_genoData)
 }
 \keyword{robust}
 \keyword{multivariate}
-\keyword{cluster}
+\keyword{ancestry}
 

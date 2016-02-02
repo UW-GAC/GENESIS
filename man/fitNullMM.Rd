@@ -1,14 +1,14 @@
 \name{fitNullMM}
 \alias{fitNullMM}
-\title{Fit a Mixed Model Under the Null Hypothesis (i.e. no individual SNP term)}
-\description{\code{fitNullMM} fits a mixed model with random effects specified by their covariance structures; this allows for the inclusion of a polygenic random effect using a kinship matrix or genetic relationship matrix (GRM). The output of \code{fitNullMM} can be used to estimate genetic heritability and can be passed to \code{assocTestMM} for the purpose of genetic association testing.} 
+\title{Fit a Mixed Model Under the Null Hypothesis}
+\description{\code{fitNullMM} fits a mixed model with random effects specified by their covariance structures; this allows for the inclusion of a polygenic random effect using a kinship matrix or genetic relationship matrix (GRM). The output of \code{fitNullMM} can be used to estimate genetic heritability and can be passed to \code{\link{assocTestMM}} for the purpose of genetic association testing.} 
 \usage{
 fitNullMM(scanData, outcome, covars = NULL, covMatList, scan.include = NULL,
             family = gaussian, group.var = NULL, start = NULL, 
             AIREML.tol = 1e-6, maxIter = 100, dropZeros = TRUE, verbose = TRUE)
 }
 \arguments{
-  \item{scanData}{An object of class \code{ScanAnnotationDataFrame} from the package \code{GWASTools} or \code{data.frame} containing the outcome and covariate data for the samples to be used for the analysis. \code{scanData} must have a column \code{scanID} containing unique IDs for all samples.}
+  \item{scanData}{An object of class \code{ScanAnnotationDataFrame} from the package \code{GWASTools} or class \code{data.frame} containing the outcome and covariate data for the samples to be used for the analysis. \code{scanData} must have a column \code{scanID} containing unique IDs for all samples.}
   \item{outcome}{A character string specifying the name of the outcome variable in \code{scanData}.}
   \item{covars}{A vector of character strings specifying the names of the fixed effect covariates in \code{scanData}; an intercept term is automatically included. If NULL (default) the only fixed effect covariate is the intercept term.}
   \item{covMatList}{A list of matrices specifying the covariance structures of the random effects terms. The column and row names of each of these matrices must match the scanIDs from \code{scanData}. If only one random effect is being used, a single matrix (not in a list) can be used. See 'Details' for more information.}
@@ -16,8 +16,8 @@ fitNullMM(scanData, outcome, covars = NULL, covMatList, scan.include = NULL,
   \item{family}{A description of the error distribution to be used in the model. The default "gaussian" fits a linear mixed model; see \code{\link{family}} for further options, and see 'Details' for more information.}
   \item{group.var}{This variable can only be used when \code{family} = gaussian. A character string specifying the name of a categorical variable in \code{scanData} that is used to fit heterogeneous residual error variances. If NULL (default), then a standard LMM with constant residual variance for all samples is fit. See 'Details' for more information.}
   \item{start}{A vector of starting values for the variance component estimation procedure. The function will pick reasonable starting values when left NULL (default). See 'Details' for more information.}
-  \item{AIREML.tol}{The convergence threshold for the Average Information REML (AI-REML) procedure used to estimate the variance components of the random effects. See 'Details' for more information.}
-  \item{maxIter}{The maximum number of iterations allowed in the AI-REML procedure.}
+  \item{AIREML.tol}{The convergence threshold for the Average Information REML (AIREML) procedure used to estimate the variance components of the random effects. See 'Details' for more information.}
+  \item{maxIter}{The maximum number of iterations allowed in the AIREML procedure.}
   \item{dropZeros}{Logical indicator of whether variance component terms that converge to 0 should be removed from the model; the default is TRUE. See 'Details' for more information.}
   \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is TRUE.}
 }
@@ -26,11 +26,11 @@ fitNullMM(scanData, outcome, covars = NULL, covMatList, scan.include = NULL,
     
     When \code{family} is not gaussian, the penalized quasi-likelihood (PQL) approximation to the generlized linear mixed model (GLMM) is fit following the procedure of GMMAT (Chen et al.).
     
-    For some outcomes, there may be evidence that different groups of observations have different residual variances, and the standard LMM assumption of homoscedasticity is violated. When \code{group.var} is specified, then separate (heterogeneous) residual variance components are fit for each unique value of \code{group.var}.
+    For some outcomes, there may be evidence that different groups of observations have different residual variances, and the standard LMM assumption of homoscedasticity is violated. When \code{group.var} is specified, separate (heterogeneous) residual variance components are fit for each unique value of \code{group.var}.
     
     Let m be the number of matrices in \code{covMatList} and let g be the number of categories in the variable specified by \code{group.var}. The length of the \code{start} vector must be (m + 1) when \code{family} is gaussian and \code{group.var} is NULL; (m + g) when \code{family} is gaussian and \code{group.var} is specified; or m when \code{family} is not gaussian.
     
-    A Newton-Raphson iterative procedure with Average Information REML (AI-REML) is used to estimate the variance components of the random effects. When the Euclidean distance between the new and previous variance component estimates is less than \code{AIREML.tol}, the algorithm declares convergence of the estimates. Sometimes a variance component may approach the boundary of the parameter space at 0; step-halving is used to prevent any component from becomming negative. However, when a variance component gets near the 0 boundary, the algorithm can sometimes get "stuck", preventing the other variance components from converging; if \code{dropZeros} is TRUE, then variance components that converge to a value less than \code{AIREML.tol} will be dropped from the model and the estimation procedure will continue with the remaining variance components.
+    A Newton-Raphson iterative procedure with Average Information REML (AIREML) is used to estimate the variance components of the random effects. When the Euclidean distance between the new and previous variance component estimates is less than \code{AIREML.tol}, the algorithm declares convergence of the estimates. Sometimes a variance component may approach the boundary of the parameter space at 0; step-halving is used to prevent any component from becomming negative. However, when a variance component gets near the 0 boundary, the algorithm can sometimes get "stuck", preventing the other variance components from converging; if \code{dropZeros} is TRUE, then variance components that converge to a value less than \code{AIREML.tol} will be dropped from the model and the estimation procedure will continue with the remaining variance components.
 }
 \value{A list including:
     \item{varComp}{The variance component estimates. There is one variance component for each random effect specified in \code{covMatList}. When \code{family} is gaussian, there are additional residual variance components; one residual variance component when \code{group.var} is NULL, and as many residual variance components as there are unique values of \code{group.var} when it is specified.}
@@ -50,7 +50,7 @@ fitNullMM(scanData, outcome, covars = NULL, covMatList, scan.include = NULL,
     \item{cholSigmaInv}{The Cholesky decomposition of the inverse of the estimated outcome covariance structure. This is used by \code{assocTestMM} for genetic association testing.}
     \item{scanID}{A vector of scanIDs for the samples used in the analysis.}
     \item{family}{A character string specifying the family used in the analysis.}
-    \item{converged}{A logical indicator of whether the AI-REML procedure for estimating the random effects variance components converged.}
+    \item{converged}{A logical indicator of whether the AIREML procedure for estimating the random effects variance components converged.}
     \item{zeroFLAG}{A vector of logicals the same length as \code{varComp} specifying whether the corresponding variance component estimate was set to 0 by the function due to convergence to the boundary in the AIREML procedure.}
     \item{hetResid}{A logical indicator of whether heterogeneous residual variance components were used in the model (specified by \code{group.var}).}
 }
@@ -66,7 +66,7 @@ fitNullMM(scanData, outcome, covars = NULL, covMatList, scan.include = NULL,
 \author{Matthew P. Conomos}
 %\note{}
 \seealso{
-    \code{\link{varCompCI}} for estimating confidence intervals on the variance components and the proportion of variability (heritability) they explain, \code{\link{assocTestMM}} for running mixed model genetic association tests using the output from \code{fitNullMM}.
+    \code{\link{varCompCI}} for estimating confidence intervals for the variance components and the proportion of variability (heritability) they explain, \code{\link{assocTestMM}} for running mixed model genetic association tests using the output from \code{fitNullMM}.
     \code{\link[GWASTools:GWASTools-package]{GWASTools}} for a description of the package containing the \code{\link[GWASTools]{ScanAnnotationDataFrame}} class.
 }
 \examples{
@@ -93,7 +93,8 @@ set.seed(4)
 pheno <- 0.2*mypcair$vectors[,1] + rnorm(mypcair$nsamp, mean = 0, sd = 1)
 
 # make ScanAnnotationDataFrame
-scanAnnot <- ScanAnnotationDataFrame(data.frame(scanID = mypcrel$sample.id, pc1 = mypcair$vectors[,1], pheno = pheno))
+scanAnnot <- ScanAnnotationDataFrame(data.frame(scanID = mypcrel$sample.id, 
+              pc1 = mypcair$vectors[,1], pheno = pheno))
 
 # make covMatList
 covMatList <- list("Kin" = pcrelateMakeGRM(mypcrel))

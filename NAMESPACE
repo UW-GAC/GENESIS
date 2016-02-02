@@ -8,6 +8,7 @@ export(assocTestMM,
        pcrelateReadInbreed,
        pcrelateReadKinship,
        varCompCI)
+import(Biobase)
 import(GWASTools)
 import(gdsfmt)
 S3method(plot, pcair)

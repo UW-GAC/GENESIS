@@ -24,7 +24,7 @@ test_pcair <- function(){
     checkIdentical(obs, "MAF must be in [0,0.5]")
 
     obs <- tryCatch( pcair(genoData = HapMap_genoData, kinMat = HapMap_ASW_MXL_KINGmat, divMat = HapMap_ASW_MXL_KINGmat, scan.include=1:100), error=conditionMessage)
-    checkIdentical(obs, "Not all of the ScanID in scan.include are in genoData")
+    checkIdentical(obs, "Not all of the scanID in scan.include are in the provided data")
 
     newMat <- HapMap_ASW_MXL_KINGmat
     colnames(newMat) <- rownames(newMat) <- NULL

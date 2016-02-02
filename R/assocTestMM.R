@@ -103,7 +103,7 @@ assocTestMM <- function(genoData,
       if (b > 1) warning("Sample Set Changed: Re-Calculating Matrices!")
       
       # covariate matrix
-      W <- nullMMobj$model.matrix[keep.geno, , drop=F]
+      W <- nullMMobj$model.matrix[keep.geno, , drop=FALSE]
       k <- ncol(W)
       # outcome
       Y <- nullMMobj$workingY[keep.geno]
@@ -151,12 +151,13 @@ assocTestMM <- function(genoData,
       res[bidx,"SE"] <- sqrt(Vbeta)
       #res[bidx,"RSS"] <- RSS
       res[bidx,"Wald.Stat"] <- Stat
-      res[bidx,"Wald.pval"] <- pchisq(Stat, df=1, lower.tail=FALSE)        
+      res[bidx,"Wald.pval"] <- pchisq(Stat, df=1, lower.tail=FALSE)
       
     }else if(test == "Score"){
       res[bidx,"Score"] <- score
       res[bidx,"Var"] <- XtX
-      f
+      res[bidx,"Score.Stat"] <- Stat
+      res[bidx,"Score.pval"] <- pchisq(Stat, df=1, lower.tail=FALSE)
     }
     
     endTime <- Sys.time()
