@@ -7,7 +7,7 @@ pcair <- function(	genoData,
 					unrel.set = NULL, 
 					scan.include = NULL, 
 					snp.include = NULL, 
-					Xchr = FALSE,					
+					chromosome = NULL,
 					snp.block.size = 10000, 
 					MAF = 0.01,
 					verbose = TRUE){
@@ -16,7 +16,7 @@ pcair <- function(	genoData,
 	if(MAF < 0 | MAF > 0.5){ stop("MAF must be in [0,0.5]") }
 
 	# SNPs to include in analysis
-	snp.include <- getSnpIndex(genoData, snp.include, Xchr)
+	snp.include <- getSnpIndex(genoData, snp.include, chromosome)
 	# SNP blocks
 	snp.blocks <- getBlocks(snp.include$n, snp.block.size)
 

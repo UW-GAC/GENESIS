@@ -1,10 +1,13 @@
-export(pcair, 
-       pcairPartition,
+export(assocTestMM,
+       fitNullMM,
        king2mat,
+       pcair, 
+       pcairPartition,       
        pcrelate,
-       pcrelateReadKinship,
+       pcrelateMakeGRM,
        pcrelateReadInbreed,
-       pcrelateMakeGRM)
+       pcrelateReadKinship,
+       varCompCI)
 import(GWASTools)
 import(gdsfmt)
 S3method(plot, pcair)

@@ -1,27 +1,28 @@
-getSnpIndex <- function(genoData, snp.include, Xchr){
-    # load snpIDs
-    snpIDs <- getSnpID(genoData)
+getSnpIndex <- function(data, snp.include, chromosome){
+    # load snpID
+    snpID <- getSnpID(data)
 
     # snps to include
     if(!is.null(snp.include)){
-        if(!all(snp.include %in% snpIDs)){ stop("Not all of the SnpID in snp.include are in genoData") }
+        # use SNPs specified snp.include
+        if(!all(snp.include %in% snpID)){ stop("Not all of the snpID in snp.include are in the provided data") }
     }else{
-        if(Xchr){
-            # all X chromosome SNPs
-            snp.include <- snpIDs[getChromosome(genoData) == XchromCode(genoData)]
+        if(is.null(chromosome)){
+            # use all SNPs
+            snp.include <- snpID
         }else{
-            # all autosomal SNPs
-            snp.include <- snpIDs[getChromosome(genoData) <= 22]
+            # use SNPs in specified chromosomes
+            snp.include <- snpID[getChromosome(data) %in% chromosome]
         }
     }
 
     # number of SNPs
     n <- length(snp.include)
-    if(n == 0){ stop("None of the SNPs in snp.include are in genoData") }
+    if(n == 0){ stop("None of the SNPs in snp.include are in the provided data") }
 
     # get matching index of SNP number to include
-    snp.include.idx <- match(snp.include, snpIDs)
-    # get the order of SNPs in the genoData
+    snp.include.idx <- match(snp.include, snpID)
+    # get the order of SNPs in the data
     snporder <- order(snp.include.idx)
     # reorder
     snp.include <- snp.include[snporder]

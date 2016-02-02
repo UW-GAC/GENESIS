@@ -16,8 +16,8 @@ pcrelate(genoData, pcMat = NULL, ibd.probs = TRUE,
   \item{scan.include}{A vector of IDs for samples to include in the analysis.  If NULL, all samples in \code{genoData} are included.}
   \item{training.set}{An optional vector of IDs identifying which samples to use for estimation of the ancestry effect when estimating individual-specific allele frequencies.  If NULL, all samples in scan.include are used. See 'Details' for more information.}
   \item{scan.block.size}{The number of individuals to read-in/analyze at once; the default value is 5000. See 'Details' for more information.}
-  \item{snp.include}{A vector of IDs for SNPs to include in the analysis.  If NULL, all SNPs are included (see \code{Xchr} for further details).}
-  \item{Xchr}{Logical indicator for whether the analysis is of X chromosome SNPs; the default is FALSE.  If \code{snp.include} is NULL: when FALSE only autosomal SNPs are analyzed; when TRUE only X chromosome SNPs are analyzed.}
+  \item{snp.include}{A vector of SNP IDs to include in the analysis.  If NULL, see \code{chromosome} for further details.}
+  \item{chromosome}{A vector of integers specifying which chromosomes to analyze.  This parameter is only considred when \code{snp.include} is NULL; if \code{chromosome} is also NULL, then all SNPs are included.}
   \item{snp.block.size}{The number of SNPs to read-in/analyze at once.  The default value is 10000. }
   \item{MAF}{Minor allele frequency filter. If an individual's estimated individual-specific minor allele frequency at a SNP is less than this value, that SNP will be excluded from the analysis for that individual. The default value is 0.01.}
   \item{write.to.gds}{Logical indicator of whether the output should be written to GDS files.  If FALSE (the default), then the output is returned to the R console as expected.  See 'Details' for more information.}

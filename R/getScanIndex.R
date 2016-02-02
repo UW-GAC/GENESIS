@@ -1,20 +1,30 @@
-getScanIndex <- function(genoData, scan.include){
+getScanIndex <- function(data, scan.include){    
     # load Scan IDs
-    scanIDs <- getScanID(genoData)    
+    if(class(data) == "ScanAnnotationDataFrame" | class(data) == "GenotypeData"){
+        scanID <- getScanID(data)
 
+    }else if(class(data) == "data.frame"){
+        if(!("scanID" %in% names(data))){
+            stop("scanID must be in provided data")
+        }
+        scanID <- data[,"scanID"]
+    }
+    
     # samples to include
     if(!is.null(scan.include)){
-        if(!all(scan.include %in% scanIDs)){ stop("Not all of the ScanID in scan.include are in genoData") }
+        if(!all(scan.include %in% scanID)){ 
+            stop("Not alls of the scanID in scan.include are in the provided data") 
+        }
     }else{
-        scan.include <- scanIDs
+        scan.include <- scanID
     }
 
     # sample size
     n <- length(scan.include)
-    if(n == 0){  stop("None of the samples in scan.include are in genoData")  }
+    if(n == 0){  stop("None of the samples in scan.include are in the provided data")  }
 
     # get matching index of sample numbers to include
-    scan.include.idx <- match(scan.include, scanIDs)
+    scan.include.idx <- match(scan.include, scanID)
     # get the order of samples in genoData
     scanorder <- order(scan.include.idx)
     # reorder

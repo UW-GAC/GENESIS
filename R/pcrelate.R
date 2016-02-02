@@ -5,7 +5,7 @@ pcrelate <- function(   genoData,
                         training.set = NULL,
                         scan.block.size = 5000,
                         snp.include = NULL,
-                        Xchr = FALSE,
+                        chromosome = NULL,
                         snp.block.size = 10000,
                         MAF = 0.01,
                         write.to.gds = FALSE,
@@ -17,7 +17,7 @@ pcrelate <- function(   genoData,
 	if(MAF < 0 | MAF > 0.5){ stop("MAF must be in [0,0.5]") }
 
 	# SNPs to include in analysis
-	snp.include <- getSnpIndex(genoData, snp.include, Xchr)
+	snp.include <- getSnpIndex(genoData, snp.include, chromosome)
 	# SNP blocks
 	snp.blocks <- getBlocks(snp.include$n, snp.block.size)
 	if(verbose){ message(paste("Running Analysis with",snp.include$n,"SNPs - in",snp.blocks$n,"Block(s)")) }
@@ -152,7 +152,7 @@ pcrelate <- function(   genoData,
     	isafData <- GenotypeData(GdsGenotypeReader(filename))
     
     	# SNPs to include in the analysis (from isafData)
-    	snp.include.isaf <- getSnpIndex(isafData, snp.include$value, Xchr)
+    	snp.include.isaf <- getSnpIndex(isafData, snp.include$value, chromosome)
     	if(!all.equal(snp.include$value, snp.include.isaf$value)){
     		stop("genoData and isafData are not compatible; perhaps the SNP ordering does not match")
     	}

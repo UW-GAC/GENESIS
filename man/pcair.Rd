@@ -8,7 +8,7 @@
 \usage{
 pcair(genoData, v = 20, kinMat = NULL, kin.thresh = 2^(-11/2), 
             divMat = NULL, div.thresh = -2^(-11/2), unrel.set = NULL, 
-            scan.include = NULL, snp.include = NULL, Xchr = FALSE,
+            scan.include = NULL, snp.include = NULL, chromosome = NULL,
             snp.block.size = 10000, MAF = 0.01, verbose = TRUE)
 \method{print}{pcair}(x, ...)
 \method{summary}{pcair}(object, ...)
@@ -23,8 +23,8 @@ pcair(genoData, v = 20, kinMat = NULL, kin.thresh = 2^(-11/2),
   \item{div.thresh}{Threshold value on \code{divMat} used for deciding if each pair of individuals is ancestrally divergent.  The default value is -2^(-11/2) ~ -0.022.  See 'Details' for how this interacts with \code{divMat}.}
   \item{unrel.set}{An optional vector of IDs for identifying individuals that are forced into the unrelated subset.  See 'Details' for how this interacts with \code{kinMat}.}
   \item{scan.include}{A vector of IDs for samples to include in the analysis.  If NULL, all samples are included.}
-  \item{snp.include}{A vector of SNP IDs to include in the analysis.  If NULL, all SNPs are included (see \code{Xchr} for further details).}
-  \item{Xchr}{Logical indicator for whether the analysis is of X chromosome SNPs; the default is FALSE.  If \code{snp.include} is NULL: when FALSE only autosomal SNPs are analyzed; when TRUE only X chromosome SNPs are analyzed.}
+  \item{snp.include}{A vector of SNP IDs to include in the analysis.  If NULL, see \code{chromosome} for further details.}
+  \item{chromosome}{A vector of integers specifying which chromosomes to analyze.  This parameter is only considred when \code{snp.include} is NULL; if \code{chromosome} is also NULL, then all SNPs are included.}
   \item{snp.block.size}{The number of SNPs to read-in/analyze at once.  The default value is 10000. }
   \item{MAF}{Minor allele frequency filter; any SNPs with MAF less than this value will be excluded from the analysis; the default value is 0.01.}
   \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is TRUE.}
