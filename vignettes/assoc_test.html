@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Matthew P. Conomos" />
+
+<meta name="date" content="2016-02-03" />
+
+<title>Genetic Association Testing using the GENESIS Package</title>
+
+
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
+  margin: 0; padding: 0; vertical-align: baseline; border: none; }
+table.sourceCode { width: 100%; line-height: 100%; }
+td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
+td.sourceCode { padding-left: 5px; }
+code > span.kw { color: #007020; font-weight: bold; }
+code > span.dt { color: #902000; }
+code > span.dv { color: #40a070; }
+code > span.bn { color: #40a070; }
+code > span.fl { color: #40a070; }
+code > span.ch { color: #4070a0; }
+code > span.st { color: #4070a0; }
+code > span.co { color: #60a0b0; font-style: italic; }
+code > span.ot { color: #007020; }
+code > span.al { color: #ff0000; font-weight: bold; }
+code > span.fu { color: #06287e; }
+code > span.er { color: #ff0000; font-weight: bold; }
+</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+
+
+<link href="data:text/css,body%20%7B%0A%20%20background%2Dcolor%3A%20%23fff%3B%0A%20%20margin%3A%201em%20auto%3B%0A%20%20max%2Dwidth%3A%20700px%3B%0A%20%20overflow%3A%20visible%3B%0A%20%20padding%2Dleft%3A%202em%3B%0A%20%20padding%2Dright%3A%202em%3B%0A%20%20font%2Dfamily%3A%20%22Open%20Sans%22%2C%20%22Helvetica%20Neue%22%2C%20Helvetica%2C%20Arial%2C%20sans%2Dserif%3B%0A%20%20font%2Dsize%3A%2014px%3B%0A%20%20line%2Dheight%3A%201%2E35%3B%0A%7D%0A%0A%23header%20%7B%0A%20%20text%2Dalign%3A%20center%3B%0A%7D%0A%0A%23TOC%20%7B%0A%20%20clear%3A%20both%3B%0A%20%20margin%3A%200%200%2010px%2010px%3B%0A%20%20padding%3A%204px%3B%0A%20%20width%3A%20400px%3B%0A%20%20border%3A%201px%20solid%20%23CCCCCC%3B%0A%20%20border%2Dradius%3A%205px%3B%0A%0A%20%20background%2Dcolor%3A%20%23f6f6f6%3B%0A%20%20font%2Dsize%3A%2013px%3B%0A%20%20line%2Dheight%3A%201%2E3%3B%0A%7D%0A%20%20%23TOC%20%2Etoctitle%20%7B%0A%20%20%20%20font%2Dweight%3A%20bold%3B%0A%20%20%20%20font%2Dsize%3A%2015px%3B%0A%20%20%20%20margin%2Dleft%3A%205px%3B%0A%20%20%7D%0A%0A%20%20%23TOC%20ul%20%7B%0A%20%20%20%20padding%2Dleft%3A%2040px%3B%0A%20%20%20%20margin%2Dleft%3A%20%2D1%2E5em%3B%0A%20%20%20%20margin%2Dtop%3A%205px%3B%0A%20%20%20%20margin%2Dbottom%3A%205px%3B%0A%20%20%7D%0A%20%20%23TOC%20ul%20ul%20%7B%0A%20%20%20%20margin%2Dleft%3A%20%2D2em%3B%0A%20%20%7D%0A%20%20%23TOC%20li%20%7B%0A%20%20%20%20line%2Dheight%3A%2016px%3B%0A%20%20%7D%0A%0Atable%20%7B%0A%20%20margin%3A%201em%20auto%3B%0A%20%20border%2Dwidth%3A%201px%3B%0A%20%20border%2Dcolor%3A%20%23DDDDDD%3B%0A%20%20border%2Dstyle%3A%20outset%3B%0A%20%20border%2Dcollapse%3A%20collapse%3B%0A%7D%0Atable%20th%20%7B%0A%20%20border%2Dwidth%3A%202px%3B%0A%20%20padding%3A%205px%3B%0A%20%20border%2Dstyle%3A%20inset%3B%0A%7D%0Atable%20td%20%7B%0A%20%20border%2Dwidth%3A%201px%3B%0A%20%20border%2Dstyle%3A%20inset%3B%0A%20%20line%2Dheight%3A%2018px%3B%0A%20%20padding%3A%205px%205px%3B%0A%7D%0Atable%2C%20table%20th%2C%20table%20td%20%7B%0A%20%20border%2Dleft%2Dstyle%3A%20none%3B%0A%20%20border%2Dright%2Dstyle%3A%20none%3B%0A%7D%0Atable%20thead%2C%20table%20tr%2Eeven%20%7B%0A%20%20background%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0A%0Ap%20%7B%0A%20%20margin%3A%200%2E5em%200%3B%0A%7D%0A%0Ablockquote%20%7B%0A%20%20background%2Dcolor%3A%20%23f6f6f6%3B%0A%20%20padding%3A%200%2E25em%200%2E75em%3B%0A%7D%0A%0Ahr%20%7B%0A%20%20border%2Dstyle%3A%20solid%3B%0A%20%20border%3A%20none%3B%0A%20%20border%2Dtop%3A%201px%20solid%20%23777%3B%0A%20%20margin%3A%2028px%200%3B%0A%7D%0A%0Adl%20%7B%0A%20%20margin%2Dleft%3A%200%3B%0A%7D%0A%20%20dl%20dd%20%7B%0A%20%20%20%20margin%2Dbottom%3A%2013px%3B%0A%20%20%20%20margin%2Dleft%3A%2013px%3B%0A%20%20%7D%0A%20%20dl%20dt%20%7B%0A%20%20%20%20font%2Dweight%3A%20bold%3B%0A%20%20%7D%0A%0Aul%20%7B%0A%20%20margin%2Dtop%3A%200%3B%0A%7D%0A%20%20ul%20li%20%7B%0A%20%20%20%20list%2Dstyle%3A%20circle%20outside%3B%0A%20%20%7D%0A%20%20ul%20ul%20%7B%0A%20%20%20%20margin%2Dbottom%3A%200%3B%0A%20%20%7D%0A%0Apre%2C%20code%20%7B%0A%20%20background%2Dcolor%3A%20%23f7f7f7%3B%0A%20%20border%2Dradius%3A%203px%3B%0A%20%20color%3A%20%23333%3B%0A%7D%0Apre%20%7B%0A%20%20white%2Dspace%3A%20pre%2Dwrap%3B%20%20%20%20%2F%2A%20Wrap%20long%20lines%20%2A%2F%0A%20%20border%2Dradius%3A%203px%3B%0A%20%20margin%3A%205px%200px%2010px%200px%3B%0A%20%20padding%3A%2010px%3B%0A%7D%0Apre%3Anot%28%5Bclass%5D%29%20%7B%0A%20%20background%2Dcolor%3A%20%23f7f7f7%3B%0A%7D%0A%0Acode%20%7B%0A%20%20font%2Dfamily%3A%20Consolas%2C%20Monaco%2C%20%27Courier%20New%27%2C%20monospace%3B%0A%20%20font%2Dsize%3A%2085%25%3B%0A%7D%0Ap%20%3E%20code%2C%20li%20%3E%20code%20%7B%0A%20%20padding%3A%202px%200px%3B%0A%7D%0A%0Adiv%2Efigure%20%7B%0A%20%20text%2Dalign%3A%20center%3B%0A%7D%0Aimg%20%7B%0A%20%20background%2Dcolor%3A%20%23FFFFFF%3B%0A%20%20padding%3A%202px%3B%0A%20%20border%3A%201px%20solid%20%23DDDDDD%3B%0A%20%20border%2Dradius%3A%203px%3B%0A%20%20border%3A%201px%20solid%20%23CCCCCC%3B%0A%20%20margin%3A%200%205px%3B%0A%7D%0A%0Ah1%20%7B%0A%20%20margin%2Dtop%3A%200%3B%0A%20%20font%2Dsize%3A%2035px%3B%0A%20%20line%2Dheight%3A%2040px%3B%0A%7D%0A%0Ah2%20%7B%0A%20%20border%2Dbottom%3A%204px%20solid%20%23f7f7f7%3B%0A%20%20padding%2Dtop%3A%2010px%3B%0A%20%20padding%2Dbottom%3A%202px%3B%0A%20%20font%2Dsize%3A%20145%25%3B%0A%7D%0A%0Ah3%20%7B%0A%20%20border%2Dbottom%3A%202px%20solid%20%23f7f7f7%3B%0A%20%20padding%2Dtop%3A%2010px%3B%0A%20%20font%2Dsize%3A%20120%25%3B%0A%7D%0A%0Ah4%20%7B%0A%20%20border%2Dbottom%3A%201px%20solid%20%23f7f7f7%3B%0A%20%20margin%2Dleft%3A%208px%3B%0A%20%20font%2Dsize%3A%20105%25%3B%0A%7D%0A%0Ah5%2C%20h6%20%7B%0A%20%20border%2Dbottom%3A%201px%20solid%20%23ccc%3B%0A%20%20font%2Dsize%3A%20105%25%3B%0A%7D%0A%0Aa%20%7B%0A%20%20color%3A%20%230033dd%3B%0A%20%20text%2Ddecoration%3A%20none%3B%0A%7D%0A%20%20a%3Ahover%20%7B%0A%20%20%20%20color%3A%20%236666ff%3B%20%7D%0A%20%20a%3Avisited%20%7B%0A%20%20%20%20color%3A%20%23800080%3B%20%7D%0A%20%20a%3Avisited%3Ahover%20%7B%0A%20%20%20%20color%3A%20%23BB00BB%3B%20%7D%0A%20%20a%5Bhref%5E%3D%22http%3A%22%5D%20%7B%0A%20%20%20%20text%2Ddecoration%3A%20underline%3B%20%7D%0A%20%20a%5Bhref%5E%3D%22https%3A%22%5D%20%7B%0A%20%20%20%20text%2Ddecoration%3A%20underline%3B%20%7D%0A%0A%2F%2A%20Class%20described%20in%20https%3A%2F%2Fbenjeffrey%2Ecom%2Fposts%2Fpandoc%2Dsyntax%2Dhighlighting%2Dcss%0A%20%20%20Colours%20from%20https%3A%2F%2Fgist%2Egithub%2Ecom%2Frobsimmons%2F1172277%20%2A%2F%0A%0Acode%20%3E%20span%2Ekw%20%7B%20color%3A%20%23555%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%2F%2A%20Keyword%20%2A%2F%0Acode%20%3E%20span%2Edt%20%7B%20color%3A%20%23902000%3B%20%7D%20%2F%2A%20DataType%20%2A%2F%0Acode%20%3E%20span%2Edv%20%7B%20color%3A%20%2340a070%3B%20%7D%20%2F%2A%20DecVal%20%28decimal%20values%29%20%2A%2F%0Acode%20%3E%20span%2Ebn%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20BaseN%20%2A%2F%0Acode%20%3E%20span%2Efl%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20Float%20%2A%2F%0Acode%20%3E%20span%2Ech%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20Char%20%2A%2F%0Acode%20%3E%20span%2Est%20%7B%20color%3A%20%23d14%3B%20%7D%20%2F%2A%20String%20%2A%2F%0Acode%20%3E%20span%2Eco%20%7B%20color%3A%20%23888888%3B%20font%2Dstyle%3A%20italic%3B%20%7D%20%2F%2A%20Comment%20%2A%2F%0Acode%20%3E%20span%2Eot%20%7B%20color%3A%20%23007020%3B%20%7D%20%2F%2A%20OtherToken%20%2A%2F%0Acode%20%3E%20span%2Eal%20%7B%20color%3A%20%23ff0000%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%2F%2A%20AlertToken%20%2A%2F%0Acode%20%3E%20span%2Efu%20%7B%20color%3A%20%23900%3B%20font%2Dweight%3A%20bold%3B%20%7D%20%2F%2A%20Function%20calls%20%2A%2F%20%0Acode%20%3E%20span%2Eer%20%7B%20color%3A%20%23a61717%3B%20background%2Dcolor%3A%20%23e3d2d2%3B%20%7D%20%2F%2A%20ErrorTok%20%2A%2F%0A%0A" rel="stylesheet" type="text/css" />
+
+</head>
+
+<body>
+
+
+
+<div id="header">
+<h1 class="title">Genetic Association Testing using the GENESIS Package</h1>
+<h4 class="author"><em>Matthew P. Conomos</em></h4>
+<h4 class="date"><em>2016-02-03</em></h4>
+</div>
+
+<div id="TOC">
+<ul>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#data">Data</a><ul>
+<li><a href="#preparing-scan-annotation-data">Preparing Scan Annotation Data</a></li>
+<li><a href="#reading-in-genotype-data">Reading in Genotype Data</a><ul>
+<li><a href="#r-matrix">R Matrix</a></li>
+<li><a href="#gds-files">GDS files</a></li>
+<li><a href="#plink-files">PLINK files</a></li>
+</ul></li>
+<li><a href="#hapmap-data">HapMap Data</a></li>
+<li><a href="#reading-in-the-grm-from-pc-relate">Reading in the GRM from PC-Relate</a></li>
+</ul></li>
+<li><a href="#mixed-model-association-testing">Mixed Model Association Testing</a><ul>
+<li><a href="#fit-the-null-model">Fit the Null Model</a><ul>
+<li><a href="#quantitative-phenotypes">Quantitative Phenotypes</a></li>
+<li><a href="#binary-phentoypes">Binary Phentoypes</a></li>
+</ul></li>
+<li><a href="#run-snp-phenotype-association-tests">Run SNP-Phenotype Association Tests</a></li>
+<li><a href="#output">Output</a><ul>
+<li><a href="#the-null-model">The Null Model</a></li>
+<li><a href="#the-association-tests">The Association Tests</a></li>
+</ul></li>
+</ul></li>
+<li><a href="#heritability-estimation">Heritability Estimation</a></li>
+<li><a href="#references">References</a></li>
+</ul>
+</div>
+
+<div id="overview" class="section level1">
+<h1>Overview</h1>
+<p>This vignette provides a description of how to use the GENESIS package to run genetic association tests. GENESIS uses mixed models for genetic association testing, as PC-AiR PCs can be used as fixed effect covariates to adjust for population stratification, and a kinship matrix (or genetic relationship matrix) estimated from PC-Relate can be used to account for phenotype correlation due to genetic similarity among samples.</p>
+</div>
+<div id="data" class="section level1">
+<h1>Data</h1>
+<div id="preparing-scan-annotation-data" class="section level2">
+<h2>Preparing Scan Annotation Data</h2>
+<p>The <code>fitNullMM</code> function in the <code>GENESIS</code> package reads sample data from either a standard <code>data.frame</code> class object or a <code>ScanAnnotationDataFrame</code> class object as created by the <code>GWASTools</code> package. This object must contain all of the outcome and covariate data for all samples to be included in the mixed model analysis. Additionally, this object must include a variable called “scanID” which contains a unique identifier for each sample in the analysis. While a standard <code>data.frame</code> can be used, we recommend using a <code>ScanAnnotationDataFrame</code> object, as it can be paired with the genotype data (see below) to ensure matching of sample phenotype and genotype data. Through the use of <code>GWASTools</code>, a <code>ScanAnnotationDataFrame</code> class object can easily be created from a <code>data.frame</code> class object. Example R code for creating a <code>ScanAnnotationDataFrame</code> object is presented below. Much more detail can be found in the <code>GWASTools</code> package reference manual.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># mypcair contains PCs from a previous PC-AiR analysis</span>
+<span class="co"># mypcrel contains Kinship Estimates from a previous PC-Relate analysis</span>
+<span class="co"># pheno is a vector of Phenotype values</span>
+
+<span class="co"># make a data.frame</span>
+mydat &lt;-<span class="st"> </span><span class="kw">data.frame</span>(<span class="dt">scanID =</span> mypcrel$sample.id, <span class="dt">pc1 =</span> mypcair$vectors[,<span class="dv">1</span>], 
+                    <span class="dt">pheno =</span> pheno)
+<span class="kw">head</span>(mydat)</code></pre>
+<pre><code>##          scanID         pc1      pheno
+## NA19919 NA19919 -0.12511095  0.1917327
+## NA19916 NA19916 -0.13151757 -0.5687961
+## NA19835 NA19835 -0.08832098  0.8734804
+## NA20282 NA20282 -0.08617659  0.5787453
+## NA19703 NA19703 -0.11969453  1.6116791
+## NA19902 NA19902 -0.11458900  0.6663576</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># make ScanAnnotationDataFrame</span>
+scanAnnot &lt;-<span class="st"> </span><span class="kw">ScanAnnotationDataFrame</span>(mydat)
+scanAnnot</code></pre>
+<pre><code>## An object of class 'ScanAnnotationDataFrame'
+##   scans: NA19919 NA19916 ... NA19764 (173 total)
+##   varLabels: scanID pc1 pheno
+##   varMetadata: labelDescription</code></pre>
+</div>
+<div id="reading-in-genotype-data" class="section level2">
+<h2>Reading in Genotype Data</h2>
+<p>The <code>assocTestMM</code> function in the <code>GENESIS</code> package reads genotype data from a <code>GenotypeData</code> class object as created by the <code>GWASTools</code> package. Through the use of <code>GWASTools</code>, a <code>GenotypeData</code> class object can easily be created from:</p>
+<ul>
+<li>an R matrix of SNP genotype data</li>
+<li>a GDS file</li>
+<li>PLINK files</li>
+</ul>
+<p>Example R code for creating a <code>GenotypeData</code> object is presented below. Much more detail can be found in the <code>GWASTools</code> package reference manual.</p>
+<div id="r-matrix" class="section level3">
+<h3>R Matrix</h3>
+<pre class="sourceCode r"><code class="sourceCode r">geno &lt;-<span class="st"> </span><span class="kw">MatrixGenotypeReader</span>(<span class="dt">genotype =</span> genotype, <span class="dt">snpID =</span> snpID, <span class="dt">chromosome =</span> chromosome, 
+                             <span class="dt">position =</span> position, <span class="dt">scanID =</span> scanID)
+genoData &lt;-<span class="st"> </span><span class="kw">GenotypeData</span>(geno)</code></pre>
+<ul>
+<li><code>genotype</code> is a matrix of genotype values coded as 0 / 1 / 2, where rows index SNPs and columns index samples</li>
+<li><code>snpID</code> is an integer vector of unique SNP IDs</li>
+<li><code>chromosome</code> is an integer vector specifying the chromosome of each SNP</li>
+<li><code>position</code> is an integer vector specifying the position of each SNP</li>
+<li><code>scanID</code> is a vector of unique individual IDs</li>
+</ul>
+</div>
+<div id="gds-files" class="section level3">
+<h3>GDS files</h3>
+<pre class="sourceCode r"><code class="sourceCode r">geno &lt;-<span class="st"> </span><span class="kw">GdsGenotypeReader</span>(<span class="dt">filename =</span> <span class="st">&quot;genotype.gds&quot;</span>)
+genoData &lt;-<span class="st"> </span><span class="kw">GenotypeData</span>(geno)</code></pre>
+<ul>
+<li><code>filename</code> is the file path to the GDS object</li>
+</ul>
+</div>
+<div id="plink-files" class="section level3">
+<h3>PLINK files</h3>
+<p>The <code>SNPRelate</code> package provides the <code>snpgdsBED2GDS</code> function to convert binary PLINK files into a GDS file.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">snpgdsBED2GDS</span>(<span class="dt">bed.fn =</span> <span class="st">&quot;genotype.bed&quot;</span>, <span class="dt">bim.fn =</span> <span class="st">&quot;genotype.bim&quot;</span>, <span class="dt">fam.fn =</span> <span class="st">&quot;genotype.fam&quot;</span>, 
+              <span class="dt">out.gdsfn =</span> <span class="st">&quot;genotype.gds&quot;</span>)</code></pre>
+<ul>
+<li><code>bed.fn</code> is the file path to the PLINK .bed file</li>
+<li><code>bim.fn</code> is the file path to the PLINK .bim file</li>
+<li><code>fam.fn</code> is the file path to the PLINK .fam file</li>
+<li><code>out.gdsfn</code> is the file path for the output GDS file</li>
+</ul>
+<p>Once the PLINK files have been converted to a GDS file, then a <code>GenotypeData</code> object can be created as described above.</p>
+</div>
+</div>
+<div id="hapmap-data" class="section level2">
+<h2>HapMap Data</h2>
+<p>To demonstrate association testing with the <code>GENESIS</code> package, we analyze SNP data from the Mexican Americans in Los Angeles, California (MXL) and African American individuals in the southwestern USA (ASW) population samples of HapMap 3. Mexican Americans and African Americans have a diverse ancestral background, and familial relatives are present in these data. Genotype data at a subset of 20K autosomal SNPs for 173 individuals are provided as a GDS file.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># read in GDS data</span>
+gdsfile &lt;-<span class="st"> </span><span class="kw">system.file</span>(<span class="st">&quot;extdata&quot;</span>, <span class="st">&quot;HapMap_ASW_MXL_geno.gds&quot;</span>, <span class="dt">package=</span><span class="st">&quot;GENESIS&quot;</span>)
+HapMap_geno &lt;-<span class="st"> </span><span class="kw">GdsGenotypeReader</span>(<span class="dt">filename =</span> gdsfile)</code></pre>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># create a GenotypeData class object with paired ScanAnnotationDataFrame</span>
+HapMap_genoData &lt;-<span class="st"> </span><span class="kw">GenotypeData</span>(HapMap_geno, <span class="dt">scanAnnot =</span> scanAnnot)
+HapMap_genoData</code></pre>
+<pre><code>## An object of class GenotypeData 
+##  | data:
+## File: /Users/mconomos/Library/R/3.2/library/GENESIS/extdata/HapMap_ASW_MXL_geno.gds (923.5 KB)
+## +    [  ] *
+## |--+ sample.id   { Int32,factor 173 ZIP(40.90%), 283 bytes } *
+## |--+ snp.id   { Int32 20000 ZIP(34.64%), 27.7 KB }
+## |--+ snp.position   { Int32 20000 ZIP(34.64%), 27.7 KB }
+## |--+ snp.chromosome   { Int32 20000 ZIP(0.13%), 103 bytes }
+## |--+ genotype   { Bit2 20000x173, 865.0 KB } *
+##  | SNP Annotation:
+## NULL
+##  | Scan Annotation:
+## An object of class 'ScanAnnotationDataFrame'
+##   scans: NA19919 NA19916 ... NA19764 (173 total)
+##   varLabels: scanID pc1 pheno
+##   varMetadata: labelDescription</code></pre>
+</div>
+<div id="reading-in-the-grm-from-pc-relate" class="section level2">
+<h2>Reading in the GRM from PC-Relate</h2>
+<p>A mixed model for genetic association testing typically includes a genetic relationship matrix (GRM) to account for genetic similarity among sample individuals. If we are using kinship coefficient estimates from PC-Relate to construct this GRM, then the function <code>pcrelateMakeGRM</code> should be used to provide the matrix in the appropriate format for <code>fitNullMM</code>.</p>
+<pre class="sourceCode r"><code class="sourceCode r">myGRM &lt;-<span class="st"> </span><span class="kw">pcrelateMakeGRM</span>(mypcrel)
+myGRM[<span class="dv">1</span>:<span class="dv">5</span>,<span class="dv">1</span>:<span class="dv">5</span>]</code></pre>
+<pre><code>##              NA19919     NA19916      NA19835      NA20282     NA19703
+## NA19919  0.970561245 0.012362524 -0.030530172  0.009384148 0.032658593
+## NA19916  0.012362524 1.002212592  0.003926782  0.001002341 0.008865596
+## NA19835 -0.030530172 0.003926782  0.977019685 -0.010068629 0.002401790
+## NA20282  0.009384148 0.001002341 -0.010068629  0.990161482 0.016108127
+## NA19703  0.032658593 0.008865596  0.002401790  0.016108127 0.999613046</code></pre>
+<p>Note that both the row and column names of this matrix are the same scanIDs as used in the scan annotation data.</p>
+</div>
+</div>
+<div id="mixed-model-association-testing" class="section level1">
+<h1>Mixed Model Association Testing</h1>
+<p>There are two steps to performing genetic association testing with GENESIS. First, the null model (i.e. the model with no SNP genotype term) is fit using the <code>fitNullMM</code> function. Second, the output of the null model fit is used in conjunction with the genotype data to quickly run SNP-phenotype association tests using the <code>assocTestMM</code> function. There is a computational advantage to splitting these two steps into two function calls; the null model only needs to be fit once, and SNP association tests can be paralelized by chromosome or some other partitioning to speed up analyses (details below).</p>
+<div id="fit-the-null-model" class="section level2">
+<h2>Fit the Null Model</h2>
+<p>The first step for association testing with <code>GENESIS</code> is to fit the mixed model under the null hypothesis that each SNP has no effect. This null model contains all of the covariates, including ancestry representative PCs, as well as any random effects, such as a polygenic effect due to genetic relatedness, but it does not include any SNP genotype terms as fixed effects.</p>
+<p>Using the <code>fitNullMM</code> function, random effects in the null model are specified via their covariance structures. This allows for the inclusion of a polygenic random effect using a kinship matrix or genetic relationship matrix (GRM).</p>
+<div id="quantitative-phenotypes" class="section level3">
+<h3>Quantitative Phenotypes</h3>
+<p>A linear mixed model (LMM) should be fit when analyzing a quantitative phenotype. The example R code below fits a basic null mixed model.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># fit the null mixed model</span>
+nullmod &lt;-<span class="st"> </span><span class="kw">fitNullMM</span>(<span class="dt">scanData =</span> scanAnnot, <span class="dt">outcome =</span> <span class="st">&quot;pheno&quot;</span>, <span class="dt">covars =</span> <span class="st">&quot;pc1&quot;</span>, <span class="dt">covMatList =</span> myGRM, 
+                     <span class="dt">family =</span> gaussian)</code></pre>
+<pre><code>## Reading in Phenotype and Covariate Data...</code></pre>
+<pre><code>## Fitting Model with 173 Samples</code></pre>
+<pre><code>## Computing Variance Component Estimates using AIREML Procedure...</code></pre>
+<pre><code>## Sigma^2_A     Sigma^2_E     logLik     RSS</code></pre>
+<pre><code>## [1]    0.454555    0.454555 -240.580698    1.092263
+## [1]    0.4490879    0.5014759 -240.1379547    1.0337280
+## [1]    0.0428677    0.8073899 -237.5709531    1.0731590
+## [1]    0.09865944    0.80944800 -237.49690339    1.00613113
+## [1]    0.1011882    0.8125438 -237.4968341    1.0000390
+## [1]    0.1009544    0.8128017 -237.4968331    1.0000000
+## [1]    0.1009868    0.8127709 -237.4968330    1.0000000
+## [1]    0.1009824    0.8127751 -237.4968330    1.0000000
+## [1]    0.1009830    0.8127745 -237.4968330    1.0000000</code></pre>
+<ul>
+<li><code>scanData</code> is the class <code>ScanAnnotationDataFrame</code> or <code>data.frame</code> object containing the sample data</li>
+<li><code>outcome</code> specifies the name of the outcome variable in <code>scanData</code></li>
+<li><code>covars</code> specifies the names of the covariates in <code>scanData</code></li>
+<li><code>covMatList</code> specifies the covariance structures for the random effects included in the model</li>
+<li><code>family</code> should be gaussian for a quantitative phenotype, specifying a linear mixed model</li>
+</ul>
+<p>The Average Information REML (AIREML) procedure is used to estimate the variance components of the random effects. When <code>verbose = TRUE</code>, the variance component estimates, the log-likelihood, and the residual sum of squares in each iteration are printed to the R console (shown above). In this example, <code>Sigma^2_A</code> is the variance component for the random effect specified in <code>covMatList</code>, and <code>Sigma^2_E</code> is the residual variance component.</p>
+<div id="multiple-fixed-effect-covariates" class="section level4">
+<h4>Multiple Fixed Effect Covariates</h4>
+<p>The model can be fit with multiple fixed effect covariates by setting <code>covars</code> equal to vector of covariate names. For example, if we wanted to include the variables “pc1”, “pc2”, “sex”, and “age” all as covariates in the model:</p>
+<pre class="sourceCode r"><code class="sourceCode r">nullmod &lt;-<span class="st"> </span><span class="kw">fitNullMM</span>(<span class="dt">scanData =</span> scanAnnot, <span class="dt">outcome =</span> <span class="st">&quot;pheno&quot;</span>, <span class="dt">covars =</span> <span class="kw">c</span>(<span class="st">&quot;pc1&quot;</span>,<span class="st">&quot;pc2&quot;</span>,<span class="st">&quot;sex&quot;</span>,<span class="st">&quot;age&quot;</span>), 
+                     <span class="dt">covMatList =</span> myGRM, <span class="dt">family =</span> gaussian)</code></pre>
+</div>
+<div id="multiple-random-effects" class="section level4">
+<h4>Multiple Random Effects</h4>
+<p>The model also can be fit with multiple random effects. This is done by setting <code>covMatList</code> equal to a list of matrices. For example, if we wanted to include a polygenic random effect with covariance structure given by the matrix “myGRM” and a household random effect with covariance structure specified by the matrix “H”:</p>
+<pre class="sourceCode r"><code class="sourceCode r">nullmod &lt;-<span class="st"> </span><span class="kw">fitNullMM</span>(<span class="dt">scanData =</span> scanAnnot, <span class="dt">outcome =</span> <span class="st">&quot;pheno&quot;</span>, <span class="dt">covars =</span> <span class="st">&quot;pc1&quot;</span>
+                     <span class="dt">covMatList =</span> <span class="kw">list</span>(<span class="st">&quot;GRM&quot;</span> =<span class="st"> </span>myGRM, <span class="st">&quot;House&quot;</span> =<span class="st"> </span>H), <span class="dt">family =</span> gaussian)</code></pre>
+<p>The names of the matrices in <code>covMatList</code> determine the names of the variance component parameters. Therefore, in this example, the output printed to the R console will include <code>Sigma^2_GRM</code> for the random effect specified by “myGRM”, <code>Sigma^2_House</code> for the random effect specified by “H”, and <code>Sigma^2_E</code> for the residual variance component.</p>
+<p>Note: the row and column names of each matrix used to specify the covariance structure of a random effect in the mixed model must be the unique scanIDs for each sample in the analysis.</p>
+</div>
+<div id="heterogeneous-residual-variances" class="section level4">
+<h4>Heterogeneous Residual Variances</h4>
+<p>LMMs are typically fit under an assumption of constant (homogeneous) residual variance for all observations. However, for some outcomes, there may be evidence that different groups of observations have different residual variances, in which case the assumption of homoscedasticity is violated. <code>group.var</code> can be used in order to fit separate (heterogeneous) residual variance components by some grouping variable. For example, if we have a categorical variable “race” in our <code>scanData</code>, then we can estimate a different residual variance component for each unique value of “race” by using the following code:</p>
+<pre class="sourceCode r"><code class="sourceCode r">nullmod &lt;-<span class="st"> </span><span class="kw">fitNullMM</span>(<span class="dt">scanData =</span> scanAnnot, <span class="dt">outcome =</span> <span class="st">&quot;pheno&quot;</span>, <span class="dt">covars =</span> <span class="st">&quot;pc1&quot;</span>, <span class="dt">covMatList =</span> myGRM, 
+                     <span class="dt">family =</span> gaussian, <span class="dt">group.var =</span> <span class="st">&quot;race&quot;</span>)</code></pre>
+<p>In this example, the residual variance component <code>Sigma^2_E</code> is replaced with group specific residual variance components <code>Sigma^2_race1</code>, <code>Sigma^2_race2</code>, …, where “race1”, “race2”, … are the unique values of the “race” variable.</p>
+</div>
+</div>
+<div id="binary-phentoypes" class="section level3">
+<h3>Binary Phentoypes</h3>
+<p>Ideally, a generalized linear mixed model (GLMM) would be fit for a binary phenotype; however, fitting a GLMM is much more computationally demanding than fitting an LMM. To provide a compuationally efficient approach to fitting such a model, <code>fitNullMM</code> uses the penalized quasi-likelihood (PQL) approximation to the GLMM (Breslow and Clayton). The implementation of this procedure in <code>GENESIS</code> is the same as in GMMAT (Chen et al.), and more details can be found in that manuscript. If our outcome variable, “pheno”, were binary, then the same R code could be used to fit the null model, but with <code>family = binomial</code>.</p>
+<pre class="sourceCode r"><code class="sourceCode r">nullmod &lt;-<span class="st"> </span><span class="kw">fitNullMM</span>(<span class="dt">scanData =</span> scanAnnot, <span class="dt">outcome =</span> <span class="st">&quot;pheno&quot;</span>, <span class="dt">covars =</span> <span class="st">&quot;pc1&quot;</span>, <span class="dt">covMatList =</span> myGRM, 
+                     <span class="dt">family =</span> binomial)</code></pre>
+<p>Multiple fixed effect covariates and multiple random effects can be specified for binary phenotypes in the same way as they are for quantitative phenotypes. <code>group.var</code> does not apply here.</p>
+</div>
+</div>
+<div id="run-snp-phenotype-association-tests" class="section level2">
+<h2>Run SNP-Phenotype Association Tests</h2>
+<p>The second step for association testing with <code>GENESIS</code> is to use the fitted null model to test the SNPs in the <code>GenotypeData</code> object for association with the specified outcome variable. This is done with the <code>assocTestMM</code> function. Both (approximate) Wald and score tests are available, but the Wald test can only be performed when <code>family = gaussian</code> in the null model. Otherwise, the use of <code>assocTestMM</code> for running association tests with a quantitative or binary phenotype is identical.</p>
+<p>The example R code below runs the association analyses using the null model we fit using <code>fitNullMM</code> in the previous section.</p>
+<pre class="sourceCode r"><code class="sourceCode r">assoc &lt;-<span class="st"> </span><span class="kw">assocTestMM</span>(<span class="dt">genoData =</span> HapMap_genoData, <span class="dt">nullMMobj =</span> nullmod, <span class="dt">test =</span> <span class="st">&quot;Wald&quot;</span>)</code></pre>
+<pre><code>## Running analysis with 173 Samples and 20000 SNPs</code></pre>
+<pre><code>## Beginning Calculations...</code></pre>
+<pre><code>## Block 1 of 4 Completed - 0.1924 secs</code></pre>
+<pre><code>## Block 2 of 4 Completed - 0.1695 secs</code></pre>
+<pre><code>## Block 3 of 4 Completed - 0.1711 secs</code></pre>
+<pre><code>## Block 4 of 4 Completed - 0.1713 secs</code></pre>
+<ul>
+<li><code>genoData</code> is a <code>GenotypeData</code> class object</li>
+<li><code>nullMMobj</code> is the output from <code>fitNullMM</code></li>
+<li><code>test</code> specifies whether to use a “Wald” or “Score” test</li>
+</ul>
+<p>By default, the function will perform association tests at all SNPs in the <code>genoData</code> object. However, for computational reasons it may be practical to parallelize this step, partitioning SNPs by chromosome or some other pre-selected grouping. If we only want to test a pre-specified set of SNPs, this can be done by passing a vector of snpID values to the <code>snp.include</code> argument.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="co"># mysnps is a vector of snpID values for the SNPs we want to test</span>
+assoc &lt;-<span class="st"> </span><span class="kw">assocTestMM</span>(<span class="dt">genoData =</span> HapMap_genoData, <span class="dt">nullMMobj =</span> nullmod, <span class="dt">test =</span> <span class="st">&quot;Wald&quot;</span>,
+                     <span class="dt">snp.include =</span> mysnps)</code></pre>
+<p>If we only want to test SNPs on chromosome 22, this can be done by specifying the <code>chromosome</code> argument.</p>
+<pre class="sourceCode r"><code class="sourceCode r">assoc &lt;-<span class="st"> </span><span class="kw">assocTestMM</span>(<span class="dt">genoData =</span> HapMap_genoData, <span class="dt">nullMMobj =</span> nullmod, <span class="dt">test =</span> <span class="st">&quot;Wald&quot;</span>,
+                     <span class="dt">chromosome =</span> <span class="dv">22</span>)</code></pre>
+<p>Multiple chromosomes can be specified at once by setting <code>chromosome</code> equal to a vector of integer values.</p>
+<p>Note: if <code>snp.include</code> is specified, then the <code>chromosome</code> argument is ignored.</p>
+</div>
+<div id="output" class="section level2">
+<h2>Output</h2>
+<div id="the-null-model" class="section level3">
+<h3>The Null Model</h3>
+<p>The <code>fitNullMM</code> function will return a list with a large amount of data. Some of the more useful output for the user includes:</p>
+<ul>
+<li><code>varComp</code>: the variance component estimates for the random effects</li>
+<li><code>fixef</code>: a <code>data.frame</code> with point estimates, standard errors, test statistics, and p-values for each of the fixed effect covariates</li>
+<li><code>fitted.values</code>: the fitted values from the model</li>
+<li><code>resid.marginal</code> and <code>resid.conditional</code>: the marginal and conditional residuals from the model</li>
+</ul>
+<p>There are also metrics assessing model fit such as the log-likelihood (<code>logLik</code>), restricted log-likelihood (<code>logLikR</code>), and the Akaike information criterion (<code>AIC</code>). Additionally, there are some objects such as the working outcome vector (<code>workingY</code>) and the Cholesky decomposition of the inverse of the estimated phenotype covariance matrix (<code>cholSigmaInv</code>) that are used by the <code>assocTestMM</code> function for association testing. Further details describing all of the output can be found with the command <code>help(fitNullMM)</code>.</p>
+</div>
+<div id="the-association-tests" class="section level3">
+<h3>The Association Tests</h3>
+<p>The <code>assocTestMM</code> function will return a <code>data.frame</code> with summary information from the association test for each SNP. Each row corresponds to a different SNP.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">head</span>(assoc)</code></pre>
+<pre><code>##   snpID chr   n       MAF minor.allele         Est        SE  Wald.Stat
+## 1     1   1 173 0.3901734            A  0.01597605 0.1156644 0.01907830
+## 2     2   1 173 0.4942197            A -0.08259754 0.1094190 0.56983437
+## 3     3   1 173 0.1011561            A -0.04615330 0.1842738 0.06273047
+## 4     4   1 173 0.4855491            A -0.08009161 0.1061889 0.56887366
+## 5     5   1 173 0.4447674            A  0.09761093 0.1149219 0.72142556
+## 6     6   1 173 0.2093023            A  0.19059553 0.1352177 1.98681779
+##   Wald.pval
+## 1 0.8901423
+## 2 0.4503247
+## 3 0.8022312
+## 4 0.4507068
+## 5 0.3956767
+## 6 0.1586740</code></pre>
+<ul>
+<li><code>snpID</code>: the unique snpID</li>
+<li><code>chr</code>: the chromosome</li>
+<li><code>n</code>: the number of samples analyzed at that SNP</li>
+<li><code>MAF</code>: the estimated minor allele frequency</li>
+<li><code>minor.allele</code>: which allele is the minor allele (either “A” or “B”)</li>
+<li><code>Est</code>: the effect size estimate (beta) for that SNP</li>
+<li><code>SE</code>: the estimated standard error of the effect size estimate</li>
+<li><code>Wald.Stat</code>: the chi-squared Wald test statistic</li>
+<li><code>Wald.pval</code>: the p-value based on the Wald test statistic</li>
+</ul>
+<p>Note: when <code>test = &quot;Score&quot;</code> in <code>assocTestMM</code> (rather than <code>test = &quot;Wald&quot;</code>), then <code>Est</code>, <code>SE</code>, <code>Wald.Stat</code>, and <code>Wald.pval</code> are replaced by:</p>
+<ul>
+<li><code>Score</code>: the value of the score function</li>
+<li><code>Var</code>: the variance of the score</li>
+<li><code>Score.Stat</code>: the chi-squared score test statistic</li>
+<li><code>Score.pval</code>: the p-value based on the score test statistic</li>
+</ul>
+<p>Further details describing all of the output can be found with the command <code>help(assocTestMM)</code>.</p>
+</div>
+</div>
+</div>
+<div id="heritability-estimation" class="section level1">
+<h1>Heritability Estimation</h1>
+<p>It is often of interest to estimate the proportion of the total phenotype variability explained by the entire set of genotyped SNPs avaialable; this provides an estimate of the narrow sense heritability of the trait. One method for estimating heritability is to use the variance component estimates from the null mixed model. <code>GENESIS</code> includes the <code>varCompCI</code> function for computing the proportion of variance explained by each random effect along with 95% confidence intervals.</p>
+<pre class="sourceCode r"><code class="sourceCode r"><span class="kw">varCompCI</span>(<span class="dt">nullMMobj =</span> nullmod, <span class="dt">prop =</span> <span class="ot">TRUE</span>)</code></pre>
+<pre><code>##     Proportion   Lower 95  Upper 95
+## V_A   0.110514 -0.2191182 0.4401461
+## V_E   0.889486  0.5598539 1.2191182</code></pre>
+<ul>
+<li><code>nullMMobj</code> is the output from <code>fitNullMM</code></li>
+<li><code>prop</code> is a logical indicator of whether the point estimates and confidence intervals should be returned as the proportion of total variability explained (TRUE) or on the orginal scale (FALSE)</li>
+</ul>
+<p>When additional random effects are included in the model (e.g. a shared household effect), <code>varCompCI</code> will also return the proportion of variability explained by each of these components.</p>
+<p>Note: <code>varCompCI</code> can not compute proportions of variance explained when heterogeneous residual variances are used in the null model (i.e. <code>group.var</code> is used in <code>fitNullMM</code>). Confidence intervals can still be computed for the variance component estimates on the original scale by setting <code>prop = FALSE</code>.</p>
+<p>Note: variance component estimates are not interpretable for binary phenotypes when fit using the PQL method implemented in <code>fitNullMM</code>; proportions of variance explained should not be calculated for these models.</p>
+</div>
+<div id="references" class="section level1">
+<h1>References</h1>
+<ul>
+<li><p>Breslow NE and Clayton DG. (1993). Approximate Inference in Generalized Linear Mixed Models. Journal of the American Statistical Association 88: 9-25.</p></li>
+<li><p>Chen H, Wang C, Conomos MP, Stilp AM, Li Z, Sofer T, Szpiro AA, Chen W, Brehm JM, Celedon JC, Redline S, Papanicolaou GJ, Thornton TA, Laurie CC, Rice K and Lin X. Control for Population Structure and Relatedness for Binary Traits in Genetic Association Studies Using Logistic Mixed Models. (Submitted).</p></li>
+<li><p>Gogarten, S.M., Bhangale, T., Conomos, M.P., Laurie, C.A., McHugh, C.P., Painter, I., … &amp; Laurie, C.C. (2012). GWASTools: an R/Bioconductor package for quality control and analysis of Genome-Wide Association Studies. Bioinformatics, 28(24), 3329-3331.</p></li>
+</ul>
+</div>
+
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
