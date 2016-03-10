@@ -41,10 +41,10 @@ pcrelateReadKinship <- function(pcrelObj, scan.include = NULL, ibd.probs = TRUE,
         }else if(class(pcrelObj) == "pcrelate"){
             ibd <- pcrelObj$ibd.probs[sample.idx, sample.idx]
         }
-        out$k2 <- ibd[lowerTriMat]
-        k0 <- t(ibd)[lowerTriMat]; rm(ibd)
-        out$k1 <- 1 - out$k2 - k0
-        out$k0 <- k0       
+        out$k0 <- ibd[lowerTriMat]
+        k2 <- t(ibd)[lowerTriMat]; rm(ibd)
+        out$k1 <- 1 - out$k0 - k2
+        out$k2 <- k2
     }
 
 
