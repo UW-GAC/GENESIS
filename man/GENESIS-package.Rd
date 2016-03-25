@@ -8,8 +8,8 @@
 \tabular{ll}{
 Package: \tab GENESIS\cr
 Type: \tab Package\cr
-Version: \tab 2.1.5\cr
-Date: \tab 2016-3-10\cr
+Version: \tab 2.1.6\cr
+Date: \tab 2016-3-24\cr
 License: \tab GPL-3\cr
 Depends: \tab GWASTools\cr
 Suggests: \tab gdsfmt, SNPRelate, RUnit, BiocGenerics, knitr\cr
