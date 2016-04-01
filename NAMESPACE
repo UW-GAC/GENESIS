@@ -11,6 +11,7 @@ export(assocTestMM,
 import(Biobase)
 import(GWASTools)
 import(gdsfmt)
+import(graph)
 S3method(plot, pcair)
 S3method(summary, pcair)
 S3method(print, pcair)

@@ -1,6 +1,10 @@
 getSnpIndex <- function(data, snp.include, chromosome){
     # load snpID
-    snpID <- getSnpID(data)
+    if(class(data) == "GenotypeData"){
+        snpID <- getSnpID(data)
+    }else if(class(data) == "SeqVarData"){
+        snpID <- seqGetData(data, "variant.id")
+    }
 
     # snps to include
     if(!is.null(snp.include)){
@@ -12,7 +16,11 @@ getSnpIndex <- function(data, snp.include, chromosome){
             snp.include <- snpID
         }else{
             # use SNPs in specified chromosomes
-            snp.include <- snpID[getChromosome(data) %in% chromosome]
+            if(class(data) == "GenotypeData"){
+                snp.include <- snpID[getChromosome(data) %in% chromosome]
+            }else if(class(data) == "SeqVarData"){
+                snp.include <- snpID[seqGetData(data, "chromosome") %in% chromosome]
+            }
         }
     }
 
