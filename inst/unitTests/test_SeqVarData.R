@@ -43,12 +43,12 @@ library(SNPRelate)
     kc
 }
 
-.testPCair <- function(genoData, kinship){
-    pcair(genoData=genoData, kinMat=kinship, divMat=kinship, verbose=FALSE)
+.testPCair <- function(genoData, kinship, ...){
+    pcair(genoData, kinMat=kinship, divMat=kinship, verbose=FALSE, ...)
 }
 
-.testPCrelate <- function(genoData, mypcair){
-    mypcrel <- pcrelate(genoData, pcMat=mypcair$vectors[,1:2], training.set=mypcair$unrels, verbose=FALSE)
+.testPCrelate <- function(genoData, mypcair, ...){
+    mypcrel <- pcrelate(genoData, pcMat=mypcair$vectors[,1:2], training.set=mypcair$unrels, verbose=FALSE, ...)
     pcrelateMakeGRM(mypcrel)
 }
 
@@ -61,6 +61,26 @@ library(SNPRelate)
     fitNullMM(scanData, outcome="outcome", covars="sex", covMatList=grm, verbose=FALSE)
 }
 
+test_PCair <- function(){
+    data <- .testObjects()
+    kinship <- .testKing(data$genoData)
+    
+    pca.seq <- .testPCair(data$seqData, kinship)
+    pca.snp <- .testPCair(data$genoData, kinship)
+    checkEquals(pca.seq$values, pca.snp$values)
+    checkEquals(pca.seq$unrels, pca.snp$unrels)
+
+    snpID <- sample(getSnpID(data$genoData), 100)
+    scanID <- sample(getScanID(data$genoData), 50)
+    seqSetFilter(data$seqData, verbose=FALSE)
+    pca.seq <- .testPCair(data$seqData, kinship, scan.include=scanID, snp.include=snpID)
+    pca.snp <- .testPCair(data$genoData, kinship, scan.include=scanID, snp.include=snpID)
+    checkEquals(pca.seq$values, pca.snp$values)
+    checkEquals(pca.seq$unrels, pca.snp$unrels)
+    
+    .testCleanup(data)
+}
+
 test_PCrelate <- function(){
     data <- .testObjects()
     kinship <- .testKing(data$genoData)
@@ -71,6 +91,15 @@ test_PCrelate <- function(){
     names(dimnames(grm.seq)) <- NULL
     checkEquals(grm.seq, grm.snp)
 
+    snpID <- sample(getSnpID(data$genoData), 100)
+    scanID <- sample(getScanID(data$genoData), 50)
+    mypcair <- .testPCair(data$genoData, kinship, scan.include=scanID, snp.include=snpID)
+    seqSetFilter(data$seqData, verbose=FALSE)
+    grm.seq <- .testPCrelate(data$seqData, mypcair, scan.include=scanID, snp.include=snpID)
+    grm.snp <- .testPCrelate(data$genoData, mypcair, scan.include=scanID, snp.include=snpID)
+    names(dimnames(grm.seq)) <- NULL
+    checkEquals(grm.seq, grm.snp)
+    
     .testCleanup(data)
 }
 
@@ -114,8 +143,8 @@ test_getSnpIndex <- function(){
 test_prepareGenotype <- function(){
     data <- .testObjects()
 
-    snp.id <- c(10:20, 30:50)
-    scan.id <- getScanID(data$genoData)[c(20:30, 40:50)]
+    snp.id <- sample(getSnpID(data$genoData), 50)
+    scan.id <- sample(getScanID(data$genoData), 20)
     geno.seq <- GENESIS:::prepareGenotype(data$seqData, snp.id, scan.id, impute.geno=TRUE)
     geno.snp <- GENESIS:::prepareGenotype(data$genoData, snp.id, scan.id, impute.geno=TRUE)
     names(dimnames(geno.seq)) <- NULL

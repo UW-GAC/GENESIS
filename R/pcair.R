@@ -156,7 +156,7 @@ pcair <- function(genoData,
         eigu <- eigen(Psiu, symmetric=TRUE)
         
         # subset desired number of eigenvectors
-        if(is.null(v)){ v <- nu	}
+        if(is.null(v) | v > nu){ v <- nu }
         L <- eigu$values[1:v]
         V <- eigu$vectors[,1:v]
         # sum of eigenvalues
