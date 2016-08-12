@@ -24,7 +24,7 @@ getVariantInclude <- function(data, variant.include, chromosome){
 
     # number of variants
     n <- length(variant.include)
-    if(n == 0){ stop("None of the variants in variant.include are in the provided data") }
+    if(n == 0){ stop("None of the variants in variant.include are polymorphic in the provided data") }
 
     # get matching index of variant id to include
     variant.include.idx <- match(variant.include, variantID)

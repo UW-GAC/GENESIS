@@ -164,14 +164,18 @@ test_burden_firth <- function(){
 
 
 test_monomorphs <- function(){
-    ## check that function works when list of supplied variants includes monomorphs
     seqData <- .testObject()
+    nullmod <- fitNullReg(sampleData(seqData), outcome="outcome")
+    
+    ## check that function works when list of supplied variants includes monomorphs
     af <- seqAlleleFreq(seqData)
     mono <- which(af == 1)
     agg <- list(data.frame(variant.id=(mono[1]-2):(mono[1]+2), allele.index=1))
+    assoc <- assocTestSeq(seqData, nullmod, agg)
 
-    nullmod <- fitNullReg(sampleData(seqData), outcome="outcome")
-
+    ## now check if monomorph is the only variant in a block
+    agg <- list(data.frame(variant.id=1:10, allele.index=1),
+                data.frame(variant.id=mono, allele.index=1))
     assoc <- assocTestSeq(seqData, nullmod, agg)
     
     seqClose(seqData)

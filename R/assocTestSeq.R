@@ -123,15 +123,21 @@ assocTestSeq <- function(	seqData,
 		# number of alleles per variant
 		nAllele <- sapply(alleleIndex, length)
 
-		# matrix to store variant information for this group			
-		variantRes <- matrix(NA, nrow = nrow(aggVarBlock), ncol = length(nvm), dimnames = list(NULL,nvm))		
+		# matrix to store variant information for this group
+		variantRes <- matrix(NA, nrow = nrow(aggVarBlock), ncol = length(nvm), dimnames = list(NULL,nvm))
+                if (nrow(aggVarBlock) == 0) {
+                        resMain[b,"n.site"] <- 0
+			variantInfo[[b]] <- as.data.frame(variantRes)
+			next
+                }
+		
 		variantRes[,"variantID"] <- aggVarBlock$variant.id
 		variantRes[,"allele"] <- aggVarBlock$allele.index
 		# read in chr, pos (repeat the appropriate number of times for each variant)
 		chromChar <- rep(seqGetData(seqData, "chromosome"), nAllele)
 		variantRes[,"chr"] <- as.numeric(chromChar)
 		variantRes[,"pos"] <- rep(seqGetData(seqData, "position"), nAllele)
-
+                
 		# get genotypes for the block; rows are samples, columns are variant-alleles
 		geno <- do.call(cbind, alleleDosage(seqData, n = alleleIndex))
 		
@@ -152,7 +158,7 @@ assocTestSeq <- function(	seqData,
 		resMain[b,"n.site"] <- n.site
 
 		if(n.site == 0){	
-			variantInfo[[b]] <- as.data.frame(variantRes)			
+			variantInfo[[b]] <- as.data.frame(variantRes)
 			next
 
 		}else{
