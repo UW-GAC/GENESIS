@@ -25,7 +25,7 @@ Description: The GENESIS package provides methodology for estimating,
         quantitative and binary phenotypes.
 License: GPL-3
 Depends: 
-Imports: GWASTools, SeqArray, SeqVarTools, Biobase, gdsfmt, graph
+Imports: GWASTools, SeqArray, SeqVarTools, Biobase, gdsfmt, graph, grDevices, graphics, stats, utils
 Suggests: SNPRelate, logistf, survey, CompQuadForm, RUnit, BiocGenerics, knitr
 VignetteBuilder: knitr
 biocViews: SNP, GeneticVariability, Genetics, StatisticalMethod,

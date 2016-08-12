@@ -1,3 +1,8 @@
+import(grDevices)
+import(graphics)
+import(stats)
+import(utils)
+
 import(Biobase)
 import(gdsfmt)
 import(graph)
