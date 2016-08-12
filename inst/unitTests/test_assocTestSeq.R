@@ -2,9 +2,10 @@ library(SeqVarTools)
 library(Biobase)
 library(SNPRelate)
 library(logistf)
+library(gdsfmt)
 
 .testObject <- function(){
-    gdsfmt::showfile.gds(closeall=TRUE, verbose=FALSE)
+    showfile.gds(closeall=TRUE, verbose=FALSE)
     
     gdsfile <- seqExampleFileName("gds")
     gds.seq <- seqOpen(gdsfile)
@@ -179,4 +180,38 @@ test_monomorphs <- function(){
     assoc <- assocTestSeq(seqData, nullmod, agg)
     
     seqClose(seqData)
+}
+
+
+test_sexchrom <- function(){
+    # make a test file with chr="X"
+    gdsfile <- seqExampleFileName("gds")
+    tmpfile <- tempfile()
+    file.copy(gdsfile, tmpfile)
+    gds <- openfn.gds(tmpfile, readonly=FALSE)
+    node <- index.gdsn(gds, "chromosome")
+    compression.gdsn(node, "")
+    chr <- read.gdsn(node)
+    write.gdsn(node, rep("X", length(chr)))
+    closefn.gds(gds)
+    gds.seq <- seqOpen(tmpfile)
+    
+    data(pedigree)
+    pedigree <- pedigree[match(seqGetData(gds.seq, "sample.id"), pedigree$sample.id),]
+    pedigree$outcome <- rnorm(nrow(pedigree))
+    
+    seqData <- SeqVarData(gds.seq, sampleData=AnnotatedDataFrame(pedigree))
+    nullmod <- fitNullReg(sampleData(seqData), outcome="outcome")
+    
+    agg <- list(data.frame(variant.id=1:10, allele.index=1),
+                data.frame(variant.id=11:20, allele.index=1))
+    assoc <- assocTestSeq(seqData, nullmod, agg)
+    checkTrue(all(do.call(rbind, assoc$variantInfo)[,"chr"] == "X"))
+    
+    assoc <- assocTestSeqWindow(seqData, nullmod, variant.include=1:50)
+    checkTrue(all(assoc$results[,"chr"] == "X"))
+    checkTrue(all(assoc$variantInfo[,"chr"] == "X"))
+    
+    seqClose(seqData)
+    unlink(tmpfile)
 }

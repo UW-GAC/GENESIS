@@ -135,7 +135,7 @@ assocTestSeq <- function(	seqData,
 		variantRes[,"allele"] <- aggVarBlock$allele.index
 		# read in chr, pos (repeat the appropriate number of times for each variant)
 		chromChar <- rep(seqGetData(seqData, "chromosome"), nAllele)
-		variantRes[,"chr"] <- as.numeric(chromChar)
+		#variantRes[,"chr"] <- as.numeric(chromChar)
 		variantRes[,"pos"] <- rep(seqGetData(seqData, "position"), nAllele)
                 
 		# get genotypes for the block; rows are samples, columns are variant-alleles
@@ -146,7 +146,8 @@ assocTestSeq <- function(	seqData,
 		variantRes[,"n.obs"] <- nrow(geno) - n.miss
 
 		# calculate allele frequencies
-		freq <- alleleFreq(geno = geno, chromChar = chromChar, sex = NULL, sample.use = AF.sample.use)
+                sex <- sampleData(seqData)$sex
+		freq <- alleleFreq(geno = geno, chromChar = chromChar, sex = sex, sample.use = AF.sample.use)
 		variantRes[,"freq"] <- freq
 
 		# index of those inside the allele freq threshold
@@ -159,6 +160,7 @@ assocTestSeq <- function(	seqData,
 
 		if(n.site == 0){	
 			variantInfo[[b]] <- as.data.frame(variantRes)
+                        variantInfo[[b]][,"chr"] <- chromChar
 			next
 
 		}else{
@@ -180,6 +182,7 @@ assocTestSeq <- function(	seqData,
 			}
 			variantRes[include,"weight"] <- weights
 			variantInfo[[b]] <- as.data.frame(variantRes)
+                        variantInfo[[b]][,"chr"] <- chromChar
 		}
 
 		# mean impute missing genotype values
@@ -370,7 +373,7 @@ assocTestSeqWindow <- function(	seqData,
 
 		# results for this chromosome
 		resChr <- matrix(NA, nrow = nblocks, ncol = length(nv), dimnames = list(NULL,nv))
-		resChr[,"chr"] <- as.numeric(chr)
+		resChr[,"chr"] <- .chrToInt(chr)
 
 		if(verbose) message("Running analysis on Chromosome ", chr, " with ", scan.include$n, " Samples and ", length(variantID), " Variants in ", nblocks, " Sliding Windows of size ", window.size, "kb")
 
@@ -438,7 +441,7 @@ assocTestSeqWindow <- function(	seqData,
 					variantRes[,"variantID"] <- rep(var.id, nAllele)
 					variantRes[,"allele"] <- unlist(alleleIndex)
 					chromChar <- rep(chr, sum(nAllele))
-					variantRes[,"chr"] <- as.numeric(chromChar)
+					variantRes[,"chr"] <- .chrToInt(chromChar)
 					variantRes[,"pos"] <- rep(variantPos[variantID %in% var.add], nAllele)
 
 					# get genotypes; rows are samples, columns are variant-alleles
@@ -449,7 +452,8 @@ assocTestSeqWindow <- function(	seqData,
 					variantRes[,"n.obs"] <- nrow(geno.add) - n.miss
 
 					# calculate allele frequencies
-					freq <- alleleFreq(geno = geno.add, chromChar = chromChar, sex = NULL, sample.use = AF.sample.use)
+                                        sex <- sampleData(seqData)$sex
+					freq <- alleleFreq(geno = geno.add, chromChar = chromChar, sex = sex, sample.use = AF.sample.use)
 					variantRes[,"freq"] <- freq
 
 					# index of those inside the allele freq threshold
@@ -551,8 +555,10 @@ assocTestSeqWindow <- function(	seqData,
 
 	# add results to main output
 	out[["results"]] <- as.data.frame(resMain)
+        out[["results"]][,"chr"] <- .intToChr(out[["results"]][,"chr"])
 	# add variantInfo to main output	
 	out[["variantInfo"]] <- as.data.frame(variantInfo)
+        out[["variantInfo"]][,"chr"] <- .intToChr(out[["variantInfo"]][,"chr"])
 
 	# return to original filter
 	seqSetFilter(seqData, sample.sel = seqFilt.original$sample.sel, variant.sel = seqFilt.original$variant.sel, verbose = FALSE)
@@ -880,3 +886,11 @@ integrateFxn <- function(x, qmin, otherParams, tau, rho){
   return(re)
 }
 
+
+.chrToInt <- function(chr){
+    unname(setNames(1:24, c(1:22, "X", "Y"))[chr])
+}
+
+.intToChr <- function(chr){
+    unname(setNames(c(1:22, "X", "Y"), 1:24)[as.character(chr)])
+}
