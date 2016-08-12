@@ -14,10 +14,8 @@ library(SNPRelate)
     seqGDS2SNP(gds.seq, snpfile, verbose=FALSE)
     
     data(pedigree)
-    gds.seq <- seqOpen(gdsfile)
     pedigree <- pedigree[match(seqGetData(gds.seq, "sample.id"), pedigree$sample.id),]
     pedigree$outcome <- rnorm(nrow(pedigree))
-    seqSetFilter(gds.seq, variant.sel=isSNV(gds.seq), verbose=FALSE)
     seqData <- SeqVarData(gds.seq, sampleData=AnnotatedDataFrame(pedigree))
     
     gds.snp <- GdsGenotypeReader(snpfile)  
