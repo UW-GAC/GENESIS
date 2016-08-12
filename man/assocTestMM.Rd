@@ -8,7 +8,7 @@ assocTestMM(genoData, nullMMobj, test = "Wald", snp.include = NULL,
             ivars = NULL, ivar.return.betaCov = FALSE, verbose = TRUE)
 }
 \arguments{
-    \item{genoData}{An object of class \code{GenotypeData} from the package \code{GWASTools} containing the genotype data for SNPs and samples to be used for the analysis. This object can easily be created from a matrix of SNP genotype data, PLINK files, or GDS files.}
+    \item{genoData}{An object of class \code{GenotypeData} from the package \code{GWASTools} containing the genotype data for SNPs and samples to be used for the analysis. This object can easily be created from a matrix of SNP genotype data, PLINK files, or GDS files.  Alternatively, this could be an object of class \code{SeqVarData} from the package \code{SeqVarTools} containing the genotype data for the sequencing variants and samples to be used for the analysis.}
     \item{nullMMobj}{A null model object returned by \code{fitNullMM}.}
     \item{test}{A character string specifying the type of test to be performed. The possibilities are "Wald" (default) or "Score"; only "Score" can be used when the family of the null model fit with \code{fitNullMM} is not gaussian.}
     \item{snp.include}{A vector of SNP IDs to include in the analysis.  If NULL, see \code{chromosome} for further details.}
@@ -51,10 +51,12 @@ assocTestMM(genoData, nullMMobj, test = "Wald", snp.include = NULL,
     \item{Joint.pval}{The Wald p-value for the joint test of the genotype term and all of the genotype interaction terms; i.e. the test of any genotype effect}
     
     When \code{ivars} is not \code{NULL}, if \code{ivar.return.betaCov} is \code{TRUE}, then the output is a list with two elements.  The first, "results", is the data.frame described above.  The second, "betaCov", is a list with length equal to the number of rows of "results", where each element of the list is the covariance matrix of the effect size estimates (betas) for the genotype and genotype interaction terms.
+
+If \code{genoData} is a \code{SeqVarData} object, the effect size estimate is for each copy of the alternate allele.
 }
 %\references{}
 \author{Matthew P. Conomos}
-\note{The \code{GenotypeData} function in the \code{GWASTools} package should be used to create the input \code{genoData}.  Input to the \code{GenotypeData} function can easily be created from an R matrix or GDS file.  PLINK .bed, .bim, and .fam files can easily be converted to a GDS file with the function \code{snpgdsBED2GDS} in the \code{SNPRelate} package.}
+\note{The \code{GenotypeData} function in the \code{GWASTools} package should be used to create the input \code{genoData}.  Input to the \code{GenotypeData} function can easily be created from an R matrix or GDS file.  PLINK .bed, .bim, and .fam files can easily be converted to a GDS file with the function \code{snpgdsBED2GDS} in the \code{SNPRelate} package.  Alternatively, the \code{SeqVarData} function in the \code{SeqVarTools} package can be used to create the input \code{genodata} when working with sequencing data.}
 \seealso{
      \code{\link{fitNullMM}} for fitting the null mixed model needed as input to \code{assocTestMM}.
      \code{\link[GWASTools]{qqPlot}} for a function to make QQ plots and \code{\link[GWASTools]{manhattanPlot}} for a function to make Manhattan plots of p-values.

@@ -3,6 +3,9 @@ getScanIndex <- function(data, scan.include){
     if(class(data) == "ScanAnnotationDataFrame" | class(data) == "GenotypeData"){
         scanID <- getScanID(data)
 
+    }else if(class(data) == "SeqVarData"){
+        scanID <- seqGetData(data, "sample.id")
+    
     }else if(class(data) == "data.frame"){
         if(!("scanID" %in% names(data))){
             stop("scanID must be in provided data")

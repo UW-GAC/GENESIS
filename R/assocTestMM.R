@@ -9,6 +9,15 @@ assocTestMM <- function(genoData,
                         ivar.return.betaCov = FALSE,
                         verbose = TRUE){
 
+    # save the filter
+    if(class(genoData) == "SeqVarData"){
+        seqFilt.original <- seqGetFilter(genoData)
+        # reset so indexing works
+        ## seqResetFilter(genoData, verbose=FALSE)
+        ## snp.filter <- seqGetData(genoData, "variant.id")[seqFilt.original$variant.sel]
+        ## snp.include <- if(is.null(snp.include)) snp.filter else intersect(snp.include, snp.filter)
+    }
+
     # check that test is valid
     if(!is.element(test,c("Wald","Score"))){
         stop("test must be one of Wald or Score")
@@ -22,22 +31,32 @@ assocTestMM <- function(genoData,
     scan.include <- getScanIndex(data = genoData, nullMMobj$scanID)
 
     # set SNPs to include
-    snp.include <- getSnpIndex(data = genoData, snp.include, chromosome)  
+    snp.include <- getSnpIndex(data = genoData, snp.include, chromosome)
+    
     # get chromosome 
-    chr <- getChromosome(genoData, index=snp.include$index)
+    if(class(genoData) == "GenotypeData"){
+        chr <- getChromosome(genoData, index=snp.include$index)
+    }else if(class(genoData) == "SeqVarData"){
+        chr <- seqGetData(genoData, "chromosome")[snp.include$index]
+    }
   
     # X chromosome check for sex variable
-    if(XchromCode(genoData) %in% chr & !hasSex(genoData)){
+    if(.XchromCode(genoData) %in% chr & !.hasSex(genoData)){
         stop("Sex values for the samples are required to compute MAF for X chromosome SNPs")
     }
   
     # Y chromosome 
-    if(YchromCode(genoData) %in% chr){
+    if(.YchromCode(genoData) %in% chr){
         # check for sex variable
-        if(!hasSex(genoData)){
+        if(!.hasSex(genoData)){
             stop("Sex values for the samples are required for Y chromosome SNPs")
         }
-        if(!all( getSex(genoData, index = scan.include$index) == "M" )){
+        if(class(genoData) == "GenotypeData"){
+            getSex(genoData, index = scan.include$index)
+        }else if(class(genoData) == "SeqVarData"){
+            sex <- sampleData(genoData)$sex[scan.include$index]
+        }
+        if(!all(sex == "M" )){
             stop("Y chromosome SNPs should be analyzed with only males")
         }
     }
@@ -82,9 +101,6 @@ assocTestMM <- function(genoData,
     }
     res <- matrix(NA, nrow=snp.include$n, ncol=length(nv), dimnames=list(NULL, nv))
 
-    # chromosome
-    res[,"chr"] <- chr
-
     # SNP blocks
     snp.blocks <- getBlocks(snp.include$n, snp.block.size)
 
@@ -101,8 +117,8 @@ assocTestMM <- function(genoData,
         # set index for this block of SNPs
         bidx <- snp.blocks$start[b]:snp.blocks$end[b]   
 
-        # prepare the genotype data (read in genotypes; mean impute missing values or exclude samples with complete missingness) 
-        geno <- prepareGenotype(genoData = genoData, snp.read.idx = snp.include$index[bidx], scan.read.idx = scan.include$index, impute.geno = impute.geno)
+        # prepare the genotype data (read in genotypes; mean impute missing values or exclude samples with complete missingness)
+        geno <- prepareGenotype(genoData = genoData, snp.read.id = snp.include$value[bidx], scan.read.id = scan.include$value, impute.geno = impute.geno)
         # rows are samples, columns are SNPs
 
         # samples kept for this block
@@ -112,10 +128,18 @@ assocTestMM <- function(genoData,
         res[bidx, "n"] <- n
 
         # get chromosome for selected SNPs
-        chromChar <- getChromosome(genoData, index = snp.include$index[bidx], char=TRUE)
+        if(class(genoData) == "GenotypeData"){
+            chromChar <- getChromosome(genoData, index = snp.include$index[bidx], char=TRUE)
+        }else if(class(genoData) == "SeqVarData"){
+            chromChar <- seqGetData(genoData, "chromosome")
+        }
         # get sex for selected samples
-        if(hasSex(genoData)){
-            sex <- getSex(genoData, index = getScanID(genoData) %in% rownames(geno))
+        if(.hasSex(genoData)){
+            if(class(genoData) == "GenotypeData"){
+                sex <- getSex(genoData, index = getScanID(genoData) %in% rownames(geno))
+            }else if(class(genoData) == "SeqVarData"){
+                sex <- sampleData(genoData)$sex
+            }
         }else{
             sex <- NULL
         }
@@ -240,9 +264,17 @@ assocTestMM <- function(genoData,
     # add in snpID
     res[,"snpID"] <- snp.include$value
   
+    # chromosome
+    res[,"chr"] <- chr
+
     # convert minor.allele coding back to A/B
-    res[,"minor.allele"][res[,"minor.allele"] == 1] <- "A"
-    res[,"minor.allele"][res[,"minor.allele"] == 0] <- "B"
+    if(class(genoData) == "GenotypeData"){
+        res[,"minor.allele"][res[,"minor.allele"] == 1] <- "A"
+        res[,"minor.allele"][res[,"minor.allele"] == 0] <- "B"
+    }else if(class(genoData) == "SeqVarData"){
+        res[,"minor.allele"][res[,"minor.allele"] == 0] <- "ref"
+        res[,"minor.allele"][res[,"minor.allele"] == 1] <- "alt"
+    }
 
     # if saving covariance matrix of betas
     if(!is.null(ivars) & ivar.return.betaCov){
@@ -250,6 +282,8 @@ assocTestMM <- function(genoData,
         res <- list(results = res, betaCov = res.Vbetas)
     }
   
+    if(class(genoData) == "SeqVarData"){ seqSetFilter(genoData, sample.sel = seqFilt.original$sample.sel, variant.sel = seqFilt.original$variant.sel, verbose = FALSE) }
+
     return(res)
 }
 

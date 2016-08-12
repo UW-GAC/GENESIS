@@ -8,7 +8,7 @@ fitNullMM(scanData, outcome, covars = NULL, covMatList, scan.include = NULL,
             AIREML.tol = 1e-6, maxIter = 100, dropZeros = TRUE, verbose = TRUE)
 }
 \arguments{
-  \item{scanData}{An object of class \code{ScanAnnotationDataFrame} from the package \code{GWASTools} or class \code{data.frame} containing the outcome and covariate data for the samples to be used for the analysis. \code{scanData} must have a column \code{scanID} containing unique IDs for all samples.}
+  \item{scanData}{An object of class \code{ScanAnnotationDataFrame} from the package \code{GWASTools}, \code{AnnotatedDataFrame}, or class \code{data.frame} containing the outcome and covariate data for the samples to be used for the analysis. \code{scanData} must have a column \code{scanID} containing unique IDs for all samples.}
   \item{outcome}{A character string specifying the name of the outcome variable in \code{scanData}.}
   \item{covars}{A vector of character strings specifying the names of the fixed effect covariates in \code{scanData}; an intercept term is automatically included. If NULL (default) the only fixed effect covariate is the intercept term.}
   \item{covMatList}{A list of matrices specifying the covariance structures of the random effects terms. The column and row names of each of these matrices must match the scanIDs from \code{scanData}. If only one random effect is being used, a single matrix (not in a list) can be used. See 'Details' for more information.}
