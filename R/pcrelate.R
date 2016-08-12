@@ -97,8 +97,6 @@ pcrelate <- function(   genoData,
 
     # set up GDS files
     if(write.to.gds){
-        # check that gdsfmt is loaded
-        requireNamespace("gdsfmt")
         # if no gds.prefix specified
         if(is.null(gds.prefix)){ gds.prefix <- "tmp" }
 

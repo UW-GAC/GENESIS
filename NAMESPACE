@@ -18,6 +18,7 @@ importClassesFrom(GWASTools,
                   GenotypeData,
                   ScanAnnotationDataFrame)
 importMethodsFrom(GWASTools,
+                  close,
                   getChromosome,
                   getGenotypeSelection,
                   getPosition,
