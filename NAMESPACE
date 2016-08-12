@@ -1,5 +1,8 @@
 export(assocTestMM,
+       assocTestSeq,
+       assocTestSeqWindow,
        fitNullMM,
+       fitNullReg,
        king2mat,
        pcair, 
        pcairPartition,       
