@@ -14,7 +14,7 @@ fitNullReg <- function(	scanData,
 		names(scanData)[names(scanData) == "sample.id"] <- "scanID"
 	}
 	if(class(scanData) != "data.frame"){
-		stop("scanData should either be a data.frame, and AnnotatedDataFrame, or a ScanAnnotationDataFrame from GWASTools")
+		stop("scanData should either be a data.frame, an AnnotatedDataFrame, or a ScanAnnotationDataFrame from GWASTools")
 	}
 
 	# check family

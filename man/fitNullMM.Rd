@@ -24,7 +24,7 @@ fitNullMM(scanData, outcome, covars = NULL, covMatList, scan.include = NULL,
 \details{
     \code{covMatList} is used to specify the covariance structures of the random effects terms in the model.  For example, to include a polygenic random effect, one matrix in \code{covMatList} could be a kinship matrix or a genetic relationship matrix (GRM).  As another example, to include household membership as a random effect, one matrix in \code{covMatList} should be a 0/1 matrix with a 1 in the [i,j] and [j,i] entries if individuals i and j are in the same household and 0 otherwise; the diagonals of such a matrix should all be 1.
     
-    When \code{family} is not gaussian, the penalized quasi-likelihood (PQL) approximation to the generlized linear mixed model (GLMM) is fit following the procedure of GMMAT (Chen et al.).
+    When \code{family} is not gaussian, the penalized quasi-likelihood (PQL) approximation to the generalized linear mixed model (GLMM) is fit following the procedure of GMMAT (Chen et al.).
     
     For some outcomes, there may be evidence that different groups of observations have different residual variances, and the standard LMM assumption of homoscedasticity is violated. When \code{group.var} is specified, separate (heterogeneous) residual variance components are fit for each unique value of \code{group.var}.
     

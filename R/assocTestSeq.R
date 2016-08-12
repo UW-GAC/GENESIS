@@ -665,7 +665,7 @@ assocTestSeqWindow <- function(	seqData,
 			XtX <- sum(Xtilde^2)
 			XtY <- sum(burden*projObj$resid)
 			beta <- XtY/XtX
-			RSS <- (sum(Y*projObj$resid) - XtY*beta)/(length(projObj$Y) - ncol(projObj$W) - 1)
+			RSS <- (sum(projObj$Y*projObj$resid) - XtY*beta)/(length(projObj$Y) - ncol(projObj$W) - 1)
 			Vbeta <- RSS/XtX
 			stat <- beta^2/Vbeta
 			return(c(burden.skew = burden.skew, Est = beta, SE = sqrt(Vbeta), Wald.stat = stat, Wald.pval = pchisq(stat, df=1, lower.tail=FALSE)))
