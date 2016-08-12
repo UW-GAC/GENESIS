@@ -24,7 +24,8 @@ pcrelateReadKinship <- function(pcrelObj, scan.include = NULL, ibd.probs = TRUE,
 
     # set up a data.frame to store results
     out <- data.frame(ID1 = rep(scan.include[-nsamp], times=((nsamp-1):1)),
-                      ID2 = unlist(lapply(2:nsamp,function(x){ scan.include[x:nsamp] })))
+                      ID2 = unlist(lapply(2:nsamp,function(x){ scan.include[x:nsamp] })),
+                      stringsAsFactors=FALSE)
     
     if(class(pcrelObj) == "gds.class"){
         out$nsnp <- readex.gdsn(index.gdsn(pcrelObj, "nsnp"), sel=list(sample.idx, sample.idx))[lowerTriMat]

@@ -21,11 +21,13 @@ pcrelateReadInbreed <- function(pcrelObj, scan.include = NULL, f.thresh = NULL){
     if(class(pcrelObj) == "gds.class"){
         out <- data.frame(ID = scan.include,
                           nsnp = diag(readex.gdsn(index.gdsn(pcrelObj, "nsnp"), sel = list(sample.idx, sample.idx))),
-                          f = 2*diag(readex.gdsn(index.gdsn(pcrelObj, "kinship"), sel=list(sample.idx, sample.idx)))-1)
+                          f = 2*diag(readex.gdsn(index.gdsn(pcrelObj, "kinship"), sel=list(sample.idx, sample.idx)))-1,
+                          stringsAsFactors=FALSE)
     }else if(class(pcrelObj) == "pcrelate"){
         out <- data.frame(ID = scan.include,
                           nsnp = diag(pcrelObj$nsnp)[sample.idx],
-                          f = 2*diag(pcrelObj$kinship)[sample.idx]-1)
+                          f = 2*diag(pcrelObj$kinship)[sample.idx]-1,
+                          stringsAsFactors=FALSE)
         rownames(out) <- NULL
     }
 
