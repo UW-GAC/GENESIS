@@ -19,7 +19,7 @@ getVariantInclude <- function(data, variant.include, chromosome){
     # set a filter
     seqSetFilter(data, variant.id = variant.include, verbose = FALSE)
     # filter monomorphic SNVs
-    ref.freq <- alleleFrequency(data, n=0)
+    ref.freq <- SeqVarTools::alleleFrequency(data, n=0)
     variant.include <- variant.include[ref.freq != 1]
 
     # number of variants
