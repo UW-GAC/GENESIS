@@ -15,7 +15,7 @@ pcair(genoData, v = 20, kinMat = NULL, kin.thresh = 2^(-11/2),
 \method{print}{summary.pcair}(x, ...)
 }
 \arguments{
-  \item{genoData}{An object of class \code{GenotypeData} from the package \code{GWASTools} containing the genotype data for SNPs and samples to be used for the analysis.  This object can easily be created from a matrix of SNP genotype data, PLINK files, or GDS files.}
+  \item{genoData}{An object of class \code{GenotypeData} from the package \code{GWASTools} containing the genotype data for SNPs and samples to be used for the analysis.  This object can easily be created from a matrix of SNP genotype data, PLINK files, or GDS files.  Alternatively, this could be an object of class \code{SeqVarData} from the package \code{SeqVarTools} containing the genotype data for the sequencing variants and samples to be used for the analysis.}
   \item{v}{The number of principal components to be returned; the default is 20.  If \code{v = NULL}, then all the principal components are returned.}  
   \item{kinMat}{An optional symmetric matrix of pairwise kinship coefficients for every pair of individuals in the sample (the values on the diagonal do not matter, but the upper and lower triangles must both be filled) used for partitioning the sample into the 'unrelated' and 'related' subsets.  See 'Details' for how this interacts with \code{kin.thresh} and \code{unrel.set}.  IDs for each individual must be set as the row and column names of the matrix.}
   \item{kin.thresh}{Threshold value on \code{kinMat} used for declaring each pair of individuals as related or unrelated.  The default value is 2^(-11/2) ~ 0.022.  See 'Details' for how this interacts with \code{kinMat}.}
@@ -64,7 +64,7 @@ pcair(genoData, v = 20, kinMat = NULL, kin.thresh = 2^(-11/2),
     Manichaikul, A., Mychaleckyj, J.C., Rich, S.S., Daly, K., Sale, M., & Chen, W.M. (2010). Robust relationship inference in genome-wide association studies. Bioinformatics, 26(22), 2867-2873.
 }
 \author{Matthew P. Conomos}
-\note{The \code{GenotypeData} function in the \code{GWASTools} package should be used to create the input \code{genoData}.  Input to the \code{GenotypeData} function can easily be created from an R matrix or GDS file.  PLINK .bed, .bim, and .fam files can easily be converted to a GDS file with the function \code{snpgdsBED2GDS} in the \code{SNPRelate} package.}
+\note{The \code{GenotypeData} function in the \code{GWASTools} package should be used to create the input \code{genoData}.  Input to the \code{GenotypeData} function can easily be created from an R matrix or GDS file.  PLINK .bed, .bim, and .fam files can easily be converted to a GDS file with the function \code{snpgdsBED2GDS} in the \code{SNPRelate} package.  Alternatively, the \code{SeqVarData} function in the \code{SeqVarTools} package can be used to create the input \code{genodata} when working with sequencing data.}
 \seealso{
 	\code{\link{pcairPartition}} for a description of the function used by \code{pcair} that can be used to partition the sample into 'unrelated' and 'related' subsets without performing PCA.
 	\code{\link{plot.pcair}} for plotting.
