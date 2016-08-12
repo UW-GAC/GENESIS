@@ -20,8 +20,9 @@ pcrelateMakeGRM <- function(pcrelObj, scan.include = NULL, scaleKin = 2){
     # create GRM
     if(class(pcrelObj) == "gds.class"){
         kinMat <- scaleKin*readex.gdsn(index.gdsn(pcrelObj, "kinship"), sel=list(sample.idx, sample.idx))
-        rownames(kinMat) <- scan.include
-        colnames(kinMat) <- scan.include
+        id <- readex.gdsn(index.gdsn(pcrelObj, "sample.id"), sel=list(sample.idx))
+        rownames(kinMat) <- id
+        colnames(kinMat) <- id
     }else if(class(pcrelObj) == "pcrelate"){
         kinMat <- scaleKin*pcrelObj$kinship[sample.idx, sample.idx]
     }
