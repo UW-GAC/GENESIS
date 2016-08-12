@@ -27,7 +27,6 @@ import(SeqArray)
 importFrom(SeqVarTools, SeqVarData)
 importClassesFrom(SeqVarTools, SeqVarData)
 importMethodsFrom(SeqVarTools,
-                  alleleFrequency,
                   altDosage,
                   alleleDosage,
                   sampleData,
