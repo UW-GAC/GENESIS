@@ -827,7 +827,9 @@ assocTestSeqWindow <- function(	seqData,
 			# find min{(qmin(rho)-rho*chisq_1)/(1-rho)} with integration							
 			otherParams <- c(mu = mua, degf = ldf, varia = sig2a+sig2xi)
 			# integrate
-			re <- integrate(integrateFxn, lower = 0, upper = 40, subdivisions = 2000, qmin = qmin, otherParams = otherParams, tau = tau, rho = rho, abs.tol = 10^-25)
+			re <- tryCatch({
+                            integrate(integrateFxn, lower = 0, upper = 40, subdivisions = 2000, qmin = qmin, otherParams = otherParams, tau = tau, rho = rho, abs.tol = 10^-25)
+                        }, error=function(e) NA)
 			out2["pval_SKATO"] <- 1-re[[1]]
 		}
 		
