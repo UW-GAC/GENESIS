@@ -12,7 +12,7 @@ assocTestSeqWindow(seqData, nullModObj, variant.include = NULL, chromosome = NUL
     \item{seqData}{An object of class \code{SeqVarData} from the package \code{SeqVarTools} containing the sequencing genotype data for variants and samples to be used for the analysis.}
     \item{nullModObj}{A null model object returned by \code{fitNullMM} when using mixed models or \code{fitNullReg} when using linear or logistic regression.}
     \item{variant.include}{A vector of variant.id values indicating which variants to include in the sliding window analysis.  If NULL, see \code{chromosome} for further details.}
-    \item{chromosome}{A vector of integers specifying which chromosomes to analyze.  This parameter is only considred when \code{variant.include} is NULL; if \code{chromosome} is also NULL, then all variants in seqData are included.}
+    \item{chromosome}{A vector specifying which chromosomes to analyze.  This parameter is only considred when \code{variant.include} is NULL; if \code{chromosome} is also NULL, then all variants in seqData are included.}
     \item{window.size}{The size, in kb, of each window to be analyzed. Windows are defined based on physical position.}
     \item{window.shift}{The distance, in kb, that the window is shifted to create each new window.}
     \item{AF.sample}{A vector of sample.id values specifying which samples should be used for allele frequency calculation. When NULL (the default), all samples included in the test are used. Allele frequency calculation will affect variant inclusion based on \code{AF.range} and variant weighting based on \code{weight.beta}.}
@@ -92,6 +92,46 @@ assocTestSeqWindow(seqData, nullModObj, variant.include = NULL, chromosome = NUL
 %\references{}
 \author{Matthew P. Conomos}
 %\note{None now}
-%\examples{
-%}
+\examples{
+library(SeqVarTools)
+library(Biobase)
+
+# open a sequencing GDS file
+gdsfile <- seqExampleFileName("gds")
+gds <- seqOpen(gdsfile)
+
+# simulate some phenotype data
+data(pedigree)
+pedigree <- pedigree[match(seqGetData(gds, "sample.id"), pedigree$sample.id),]
+pedigree$outcome <- rnorm(nrow(pedigree))
+
+# construct a SeqVarData object
+seqData <- SeqVarData(gds, sampleData=AnnotatedDataFrame(pedigree))
+
+# fit the null model
+nullmod <- fitNullReg(sampleData(seqData), outcome="outcome", covars="sex")
+
+# burden test
+assoc <- assocTestSeqWindow(seqData, nullmod, chromosome=22, test="Burden")
+head(assoc$results)
+head(assoc$variantInfo)
+
+# SKAT test
+assoc <- assocTestSeqWindow(seqData, nullmod, chromosome=22, test="SKAT")
+head(assoc$results)
+
+# SKAT-O test
+assoc <- assocTestSeqWindow(seqData, nullmod, chromosome=22, test="SKAT", rho=seq(0, 1, 0.25))
+head(assoc$results)
+
+# user-specified weights
+variant.id <- seqGetData(gds, "variant.id")
+weights <- data.frame(variant.id, weight=runif(length(variant.id)))
+variantData(seqData) <- AnnotatedDataFrame(weights)
+assoc <- assocTestSeqWindow(seqData, nullmod, chromosome=22, test="Burden", weight.user="weight")
+head(assoc$results)
+head(assoc$variantInfo)
+
+seqClose(seqData)
+}
 \keyword{association}
