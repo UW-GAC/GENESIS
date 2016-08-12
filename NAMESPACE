@@ -1,17 +1,6 @@
-export(assocTestMM,
-       assocTestSeq,
-       assocTestSeqWindow,
-       fitNullMM,
-       fitNullReg,
-       king2mat,
-       pcair, 
-       pcairPartition,       
-       pcrelate,
-       pcrelateMakeGRM,
-       pcrelateReadInbreed,
-       pcrelateReadKinship,
-       varCompCI)
 import(Biobase)
+import(gdsfmt)
+import(graph)
 importFrom(GWASTools, GdsGenotypeReader, GenotypeData)
 importClassesFrom(GWASTools,
                   GdsGenotypeReader,
@@ -38,8 +27,21 @@ importMethodsFrom(SeqVarTools,
                   alleleDosage,
                   sampleData,
                   variantData)
-import(gdsfmt)
-import(graph)
+
+export(assocTestMM,
+       assocTestSeq,
+       assocTestSeqWindow,
+       fitNullMM,
+       fitNullReg,
+       king2mat,
+       pcair, 
+       pcairPartition,       
+       pcrelate,
+       pcrelateMakeGRM,
+       pcrelateReadInbreed,
+       pcrelateReadKinship,
+       varCompCI)
+
 S3method(plot, pcair)
 S3method(summary, pcair)
 S3method(print, pcair)
