@@ -1,15 +1,15 @@
-assocTestSeq <- function(	seqData,
-							nullModObj,
-							aggVarList,
-							AF.sample = NULL,
-							AF.range = c(0,1),
-							weight.beta = c(0.5,0.5),
-							weight.user = NULL,
-							test = "Burden",
-							burden.test = "Score",
-							rho = 0,
-							pval.method = "kuonen",
-							verbose = TRUE){
+assocTestSeq <- function(seqData,
+                         nullModObj,
+                         aggVarList,
+                         AF.sample = NULL,
+                         AF.range = c(0,1),
+                         weight.beta = c(0.5,0.5),
+                         weight.user = NULL,
+                         test = "Burden",
+                         burden.test = "Score",
+                         rho = 0,
+                         pval.method = "kuonen",
+                         verbose = TRUE){
 
 	# save the filter
 	seqFilt.original <- seqGetFilter(seqData)
@@ -18,8 +18,8 @@ assocTestSeq <- function(	seqData,
 
 	# check the parameters
 	param <- .paramChecks(seqData = seqData, AF.range = AF.range, weight.beta = weight.beta, weight.user = weight.user, 
-							test = test, burden.test = burden.test, family = nullModObj$family$family, 
-							mixedmodel = nullModObj$family$mixedmodel, rho = rho, pval.method = pval.method)
+                              test = test, burden.test = burden.test, family = nullModObj$family$family, 
+                              mixedmodel = nullModObj$family$mixedmodel, rho = rho, pval.method = pval.method)
 
 	# set up output
 	out <- list()
@@ -48,44 +48,8 @@ assocTestSeq <- function(	seqData,
 
 	# set up main results matrix
 	nv <- c("n.site", "n.sample.alt")
-	if(test == "Burden"){
-		nv <- append(nv, "burden.skew")
-		if(burden.test == "Score"){		
-			nv <- append(nv, c("Score", "Var", "Score.stat", "Score.pval"))
-		}else if(burden.test == "Wald"){
-			nv <- append(nv, c("Est", "SE", "Wald.stat", "Wald.pval"))
-		}else if(burden.test == "Firth"){
-			nv <- append(nv, c("Est", "SE", "Firth.stat", "Firth.pval"))
-		}
-		if(verbose){
-			if(is.null(weight.user)){
-				message("Performing ", burden.test, " Burden Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights from a Beta(", weight.beta[1], ",", weight.beta[2], ") distribution")
-			}else{
-				message("Performing ", burden.test, " Burden Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights specified by ", weight.user, " in the variantData slot of seqData")			
-			}
-		}	
-		
-	}else if(test == "SKAT"){
-		nv <- append(nv, c(paste("Q",rho,sep="_"), paste("pval",rho,sep="_"), paste("err",rho,sep="_")))
-		if(length(rho) == 1){			
-			if(verbose){
-				if(is.null(weight.user)){
-					message("Performing SKAT Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights from a Beta(", weight.beta[1], ",", weight.beta[2], ") distribution and rho = ", rho)
-				}else{
-					message("Performing SKAT Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights specified by ", weight.user, " in the variantData slot of seqData and rho = ", rho)
-				}
-			}
-		}else{
-			nv <- append(nv, c("min.pval", "opt.rho", "pval_SKATO"))
-			if(verbose){
-				if(is.null(weight.user)){
-					message("Performing SKAT-O Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights from a Beta(", weight.beta[1], ",", weight.beta[2], ") distribution and rho = (", paste(rho, collapse=", "), ")")
-				}else{
-					message("Performing SKAT-O Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights specified by ", weight.user, " in the variantData slot of seqData and rho = (", paste(rho, collapse=", "), ")")
-				}
-			}
-		}		
-	}
+        nv <- .outputColumns(nv, AF.range = AF.range, weight.beta = weight.beta, weight.user = weight.user,
+                             test = test, burden.test = burden.test, rho = rho, verbose=verbose)
 
 	# determine the number of variant blocks
 	nblocks <- length(aggVarList)
@@ -235,21 +199,21 @@ assocTestSeq <- function(	seqData,
 
 
 
-assocTestSeqWindow <- function(	seqData,
-								nullModObj,
-								variant.include = NULL,
-								chromosome = NULL,
-								window.size = 50,
-								window.shift = 20,
-								AF.sample = NULL,
-								AF.range = c(0,1),
-								weight.beta = c(0.5, 0.5),
-								weight.user = NULL,
-								test = "Burden",
-								burden.test = "Score",
-								rho = 0,
-								pval.method = "kuonen",
-								verbose = TRUE){
+assocTestSeqWindow <- function(seqData,
+                               nullModObj,
+                               variant.include = NULL,
+                               chromosome = NULL,
+                               window.size = 50,
+                               window.shift = 20,
+                               AF.sample = NULL,
+                               AF.range = c(0,1),
+                               weight.beta = c(0.5, 0.5),
+                               weight.user = NULL,
+                               test = "Burden",
+                               burden.test = "Score",
+                               rho = 0,
+                               pval.method = "kuonen",
+                               verbose = TRUE){
 
 	# save the filter
 	seqFilt.original <- seqGetFilter(seqData)
@@ -258,8 +222,8 @@ assocTestSeqWindow <- function(	seqData,
 
 	# check the parameters
 	param <- .paramChecks(seqData = seqData, AF.range = AF.range, weight.beta = weight.beta, weight.user = weight.user, 
-							test = test, burden.test = burden.test, family = nullModObj$family$family, 
-							mixedmodel = nullModObj$family$mixedmodel, rho = rho, pval.method = pval.method)
+                              test = test, burden.test = burden.test, family = nullModObj$family$family, 
+                              mixedmodel = nullModObj$family$mixedmodel, rho = rho, pval.method = pval.method)
 
 	# set up output
 	out <- list()
@@ -303,44 +267,8 @@ assocTestSeqWindow <- function(	seqData,
 
 	# set up main results matrix
 	nv <- c("chr", "window.start", "window.stop", "n.site", "dup")
-	if(test == "Burden"){
-		nv <- append(nv, "burden.skew")
-		if(burden.test == "Score"){		
-			nv <- append(nv, c("Score", "Var", "Score.stat", "Score.pval"))
-		}else if(burden.test == "Wald"){
-			nv <- append(nv, c("Est", "SE", "Wald.stat", "Wald.pval"))
-		}else if(burden.test == "Firth"){
-			nv <- append(nv, c("Est", "SE", "Firth.stat", "Firth.pval"))
-		}
-		if(verbose){
-			if(is.null(weight.user)){
-				message("Performing ", burden.test, " Burden Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights from a Beta(", weight.beta[1], ",", weight.beta[2], ") distribution")
-			}else{
-				message("Performing ", burden.test, " Burden Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights specified by ", weight.user, " in the variantData slot of seqData")			
-			}
-		}
-
-	}else if(test == "SKAT"){
-		nv <- append(nv, c(paste("Q",rho,sep="_"), paste("pval",rho,sep="_"), paste("err",rho,sep="_")))
-		if(length(rho) == 1){			
-			if(verbose){
-				if(is.null(weight.user)){
-					message("Performing SKAT Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights from a Beta(", weight.beta[1], ",", weight.beta[2], ") distribution and rho = ", rho)
-				}else{
-					message("Performing SKAT Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights specified by ", weight.user, " in the variantData slot of seqData and rho = ", rho)
-				}
-			}
-		}else{
-			nv <- append(nv, c("min.pval", "opt.rho", "pval_SKATO"))
-			if(verbose){
-				if(is.null(weight.user)){
-					message("Performing SKAT-O Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights from a Beta(", weight.beta[1], ",", weight.beta[2], ") distribution and rho = (", paste(rho, collapse=", "), ")")
-				}else{
-					message("Performing SKAT-O Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights specified by ", weight.user, " in the variantData slot of seqData and rho = (", paste(rho, collapse=", "), ")")
-				}
-			} 
-		}
-	}
+        nv <- .outputColumns(nv, AF.range = AF.range, weight.beta = weight.beta, weight.user = weight.user,
+                             test = test, burden.test = burden.test, rho = rho, verbose=verbose)
 	resMain <- matrix(NA, nrow = 0, ncol = length(nv), dimnames = list(NULL,nv))
 
 	# set up results for variants
@@ -490,17 +418,14 @@ assocTestSeqWindow <- function(	seqData,
 						burden <- burden + colSums(t(geno.add)*weights.add)
 						# add genotypes of variants to add
 						geno <- cbind(geno, geno.add)
-						# add weights of variants to add
-						weights <- c(weights, weights.add)
-
 					}else if(test == "SKAT"){
 						# add scores of variants to add
 						U <- c(U, as.vector(crossprod(geno.add, proj$resid)))
 						# add genotypes of variants to add
 						geno <- cbind(geno, crossprod(proj$Mt, geno.add))
-						# add weights of variants to add
-						weights <- c(weights, weights.add)
 					}
+					# add weights of variants to add
+					weights <- c(weights, weights.add)
 
 					testID <- c(testID, variant.include$index[variant.include$value %in% variantRes[include,"variantID"]])
 				}
@@ -626,6 +551,51 @@ assocTestSeqWindow <- function(	seqData,
 	}
 	
 	return(param)	
+}
+
+
+
+.outputColumns <- function(nv, AF.range, weight.beta, weight.user, test, burden.test, rho, verbose){
+	if(test == "Burden"){
+		nv <- append(nv, "burden.skew")
+		if(burden.test == "Score"){		
+			nv <- append(nv, c("Score", "Var", "Score.stat", "Score.pval"))
+		}else if(burden.test == "Wald"){
+			nv <- append(nv, c("Est", "SE", "Wald.stat", "Wald.pval"))
+		}else if(burden.test == "Firth"){
+			nv <- append(nv, c("Est", "SE", "Firth.stat", "Firth.pval"))
+		}
+		if(verbose){
+			if(is.null(weight.user)){
+				message("Performing ", burden.test, " Burden Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights from a Beta(", weight.beta[1], ",", weight.beta[2], ") distribution")
+			}else{
+				message("Performing ", burden.test, " Burden Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights specified by ", weight.user, " in the variantData slot of seqData")			
+			}
+		}	
+		
+	}else if(test == "SKAT"){
+		nv <- append(nv, c(paste("Q",rho,sep="_"), paste("pval",rho,sep="_"), paste("err",rho,sep="_")))
+		if(length(rho) == 1){			
+			if(verbose){
+				if(is.null(weight.user)){
+					message("Performing SKAT Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights from a Beta(", weight.beta[1], ",", weight.beta[2], ") distribution and rho = ", rho)
+				}else{
+					message("Performing SKAT Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights specified by ", weight.user, " in the variantData slot of seqData and rho = ", rho)
+				}
+			}
+		}else{
+			nv <- append(nv, c("min.pval", "opt.rho", "pval_SKATO"))
+			if(verbose){
+				if(is.null(weight.user)){
+					message("Performing SKAT-O Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights from a Beta(", weight.beta[1], ",", weight.beta[2], ") distribution and rho = (", paste(rho, collapse=", "), ")")
+				}else{
+					message("Performing SKAT-O Tests for Variants with AF in [", AF.range[1], ",", AF.range[2], "] using weights specified by ", weight.user, " in the variantData slot of seqData and rho = (", paste(rho, collapse=", "), ")")
+				}
+			}
+		}		
+	}
+
+        return(nv)
 }
 
 
@@ -857,8 +827,8 @@ skatO_qchisqsum <- function(p, lambdas){
     	d <- s1*a^3 - a^2
     	l <- a^2 - 2*d
   	}else{ # s1^2 <= s2
-    	l <- 1/s2 # in liu et al, this is l=1/s1^2; matches kurtosis instead of skewness to improve tail prob estimates
-    }  	
+            l <- 1/s2 # in liu et al, this is l=1/s1^2; matches kurtosis instead of skewness to improve tail prob estimates
+        }  	
   
   	qmin <- qchisq(1-p, df=l)
   	pval <- (qmin - l)/sqrt(2*l) * sqrt(2*sum.lambda.sq) + mu
@@ -870,22 +840,22 @@ skatO_qchisqsum <- function(p, lambdas){
 ## function to integrate; the first term of the optimal integrand
 # it's a non-central sum of weighted chi-squares
 integrateFxn <- function(x, qmin, otherParams, tau, rho){
-  n.r <- length(rho)
-  n.x <- length(x)
-  
-  t1 <- tau %x% t(x)
-  tmp <- (qmin - t1)/(1-rho)
-  minval <- apply(tmp,2,min)
+    n.r <- length(rho)
+    n.x <- length(x)
+    
+    t1 <- tau %x% t(x)
+    tmp <- (qmin - t1)/(1-rho)
+    minval <- apply(tmp,2,min)
 
-  degf <- otherParams["degf"]
-  mu <- otherParams["mu"]
-  varia <- otherParams["varia"]
+    degf <- otherParams["degf"]
+    mu <- otherParams["mu"]
+    varia <- otherParams["varia"]
 
-  temp.q<-(minval - mu)/sqrt(varia)*sqrt(2*degf) + degf
+    temp.q<-(minval - mu)/sqrt(varia)*sqrt(2*degf) + degf
 
-  re<-pchisq(temp.q ,df=degf) * dchisq(x,df=1)
+    re<-pchisq(temp.q ,df=degf) * dchisq(x,df=1)
 
-  return(re)
+    return(re)
 }
 
 
