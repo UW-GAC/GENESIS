@@ -215,3 +215,31 @@ test_sexchrom <- function(){
     seqClose(seqData)
     unlink(tmpfile)
 }
+
+
+test_indexNotValue <- function(){
+    seqData <- .testObject()
+    nullmod <- fitNullReg(sampleData(seqData), outcome="outcome")
+    assoc <- assocTestSeqWindow(seqData, nullmod, window.size=1000, window.shift=500)
+
+    # make new object with different variant.id
+    annot <- sampleData(seqData)
+    seqClose(seqData)
+    gdsfile <- seqExampleFileName("gds")
+    tmpfile <- tempfile()
+    file.copy(gdsfile, tmpfile)
+    gds <- openfn.gds(tmpfile, readonly=FALSE)
+    node <- index.gdsn(gds, "variant.id")
+    compression.gdsn(node, "")
+    var <- read.gdsn(node)
+    write.gdsn(node, var+1000)
+    closefn.gds(gds)
+    gds.seq <- seqOpen(tmpfile)
+    seqData <- SeqVarData(gds.seq, sampleData=annot)
+    assoc2 <- assocTestSeqWindow(seqData, nullmod, window.size=1000, window.shift=500)
+    checkEquals(assoc$results, assoc2$results)
+    checkEquals(assoc$variantInfo[,-1], assoc2$variantInfo[,-1])
+    
+    seqClose(seqData)
+    unlink(tmpfile)
+}

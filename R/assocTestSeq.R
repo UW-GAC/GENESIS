@@ -502,7 +502,7 @@ assocTestSeqWindow <- function(	seqData,
 						weights <- c(weights, weights.add)
 					}
 
-					testID <- c(testID, variantRes[include,"variantID"])
+					testID <- c(testID, variant.include$index[variant.include$value %in% variantRes[include,"variantID"]])
 				}
 
 				# number of variant sites
