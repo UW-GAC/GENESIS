@@ -32,6 +32,8 @@
 	The generic function \code{\link{plot}}.
 }
 \examples{
+library(GWASTools)
+
 # file path to GDS file
 gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
 # read in GDS data

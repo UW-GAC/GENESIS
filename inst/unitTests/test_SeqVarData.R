@@ -1,4 +1,5 @@
 library(SeqVarTools)
+library(GWASTools)
 library(Biobase)
 library(SNPRelate)
 

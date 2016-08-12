@@ -12,7 +12,31 @@ export(assocTestMM,
        pcrelateReadKinship,
        varCompCI)
 import(Biobase)
-import(GWASTools)
+importFrom(GWASTools, GdsGenotypeReader, GenotypeData)
+importClassesFrom(GWASTools,
+                  GdsGenotypeReader,
+                  GenotypeData,
+                  ScanAnnotationDataFrame)
+importMethodsFrom(GWASTools,
+                  getChromosome,
+                  getGenotypeSelection,
+                  getPosition,
+                  getScanID,
+                  getSnpID,
+                  getVariable,
+                  getSex,
+                  hasSex,
+                  XchromCode,
+                  YchromCode)
+import(SeqArray)
+importFrom(SeqVarTools, SeqVarData)
+importClassesFrom(SeqVarTools, SeqVarData)
+importMethodsFrom(SeqVarTools,
+                  alleleFrequency,
+                  altDosage,
+                  alleleDosage,
+                  sampleData,
+                  variantData)
 import(gdsfmt)
 import(graph)
 S3method(plot, pcair)

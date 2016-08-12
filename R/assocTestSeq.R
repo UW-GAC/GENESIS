@@ -679,7 +679,7 @@ assocTestSeqWindow <- function(	seqData,
 		}
 
 	}else if(burden.test == "Firth"){
-		modfit <- logistf(projObj$Y ~ projObj$W + burden - 1)
+		modfit <- logistf::logistf(projObj$Y ~ projObj$W + burden - 1)
 		idx <- which(names(modfit$coef) == "burden")
 		pval <- modfit$prob["burden"]
 		vals <- c(burden.skew, modfit$coef[idx], sqrt(modfit$var[idx,idx]), qchisq(pval, df=1, lower.tail = FALSE), pval)

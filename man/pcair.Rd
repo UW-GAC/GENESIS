@@ -72,6 +72,8 @@ pcair(genoData, v = 20, kinMat = NULL, kin.thresh = 2^(-11/2),
 	\code{\link[GWASTools:GWASTools-package]{GWASTools}} for a description of the package containing the following functions: \code{\link[GWASTools]{GenotypeData}} for a description of creating a \code{GenotypeData} class object for storing sample and SNP genotype data, \code{\link[GWASTools]{MatrixGenotypeReader}} for a description of reading in genotype data stored as a matrix, and \code{\link[GWASTools]{GdsGenotypeReader}} for a description of reading in genotype data stored as a GDS file.  Also see \code{\link[SNPRelate]{snpgdsBED2GDS}} in the \code{\link[SNPRelate:SNPRelate-package]{SNPRelate}} package for a description of converting binary PLINK files to GDS.  The generic functions \code{\link{summary}} and \code{\link{print}}.
 }
 \examples{
+library(GWASTools)
+
 # file path to GDS file
 gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
 # read in GDS data

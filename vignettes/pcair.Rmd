@@ -84,6 +84,7 @@ To demonstrate PC-AiR and PC-Relate analyses with the `GENESIS` package, we anal
 
 ```{r, echo=FALSE, message=FALSE}
 library(GENESIS)
+library(GWASTools)
 ```
 ```{r}
 # read in GDS data

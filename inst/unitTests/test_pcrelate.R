@@ -1,3 +1,5 @@
+library(GWASTools)
+
 test_pcrelate <- function(){
 
 	# file path to GDS file

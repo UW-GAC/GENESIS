@@ -1,3 +1,5 @@
+library(GWASTools)
+
 test_pcair <- function(){
     # file path to GDS file
     gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")

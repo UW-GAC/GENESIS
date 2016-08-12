@@ -24,9 +24,9 @@ Description: The GENESIS package provides methodology for estimating,
         component estimation and mixed model association testing for both 
         quantitative and binary phenotypes.
 License: GPL-3
-Depends: GWASTools
-Imports: Biobase, gdsfmt, graph
-Suggests: SNPRelate, SeqArray, SeqVarTools, logistf, survey, CompQuadForm, RUnit, BiocGenerics, knitr
+Depends: 
+Imports: GWASTools, SeqArray, SeqVarTools, Biobase, gdsfmt, graph
+Suggests: SNPRelate, logistf, survey, CompQuadForm, RUnit, BiocGenerics, knitr
 VignetteBuilder: knitr
 biocViews: SNP, GeneticVariability, Genetics, StatisticalMethod,
         DimensionReduction, PrincipalComponent, GenomeWideAssociation,

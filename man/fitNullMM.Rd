@@ -70,6 +70,8 @@ fitNullMM(scanData, outcome, covars = NULL, covMatList, scan.include = NULL,
     \code{\link[GWASTools:GWASTools-package]{GWASTools}} for a description of the package containing the \code{\link[GWASTools]{ScanAnnotationDataFrame}} class.
 }
 \examples{
+library(GWASTools)
+
 # file path to GDS file
 gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
 # read in GDS data

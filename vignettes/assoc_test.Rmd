@@ -24,6 +24,7 @@ The `fitNullMM` function in the `GENESIS` package reads sample data from either 
 
 ```{r, echo=FALSE, message=FALSE}
 library(GENESIS)
+library(GWASTools)
 # file path to GDS file
 gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
 # read in GDS data

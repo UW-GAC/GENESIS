@@ -18,6 +18,8 @@ varCompCI(nullMMobj, prop = TRUE)
 \author{Matthew P. Conomos}
 \seealso{\code{\link{fitNullMM}} for fitting the mixed model and performing the variance component estimation.}
 \examples{
+library(GWASTools)
+
 # file path to GDS file
 gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
 # read in GDS data
