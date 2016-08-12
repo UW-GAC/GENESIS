@@ -161,3 +161,18 @@ test_burden_firth <- function(){
     
     seqClose(seqData)
 }
+
+
+test_monomorphs <- function(){
+    ## check that function works when list of supplied variants includes monomorphs
+    seqData <- .testObject()
+    af <- seqAlleleFreq(seqData)
+    mono <- which(af == 1)
+    agg <- list(data.frame(variant.id=(mono[1]-2):(mono[1]+2), allele.index=1))
+
+    nullmod <- fitNullReg(sampleData(seqData), outcome="outcome")
+
+    assoc <- assocTestSeq(seqData, nullmod, agg)
+    
+    seqClose(seqData)
+}

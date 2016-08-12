@@ -111,6 +111,9 @@ assocTestSeq <- function(	seqData,
 		# extract variant info for the block
 		aggVarBlock <- aggVarList[[b]]
 
+                # subset aggVarBlock to requested/polymorphic variants
+                aggVarBlock <- aggVarBlock[aggVarBlock$variant.id %in% variant.include$value,]
+                
 		# set a filter for variants in this group
                 variant.index <- variant.include$index[variant.include$value %in% aggVarBlock$variant.id]
 		seqSetFilter(seqData, variant.sel = variant.index, verbose = FALSE)
@@ -284,9 +287,9 @@ assocTestSeqWindow <- function(	seqData,
 	# check Variants and set filter - filters monomorphic reference alleles
 	variant.include <- getVariantInclude(data = seqData, variant.include = variant.include, chromosome = chromosome)
 	# set a filter
-    seqSetFilter(seqData, variant.sel = variant.include$index, verbose = FALSE)
-    # get chromosome
-    variant.chr <- seqGetData(seqData, "chromosome")
+        seqSetFilter(seqData, variant.sel = variant.include$index, verbose = FALSE)
+        # get chromosome
+        variant.chr <- seqGetData(seqData, "chromosome")
 
 
 	# set up main results matrix
