@@ -180,7 +180,7 @@ pcrelate <- function(   genoData,
         # cleanup
         filename <- gds$filename
         closefn.gds(gds)
-        cleanup.gds(filename, verbose=verbose)
+        cleanup.gds(filename, verbose=FALSE)
 
         # read in created GDS
         freqData <- GenotypeData(GdsGenotypeReader(filename))
@@ -603,7 +603,7 @@ pcrelate <- function(   genoData,
     	filename <- gds$filename
     	closefn.gds(gds)
     	close(freqData)
-    	cleanup.gds(filename, verbose=verbose)
+    	cleanup.gds(filename, verbose=FALSE)
 
         out <- paste("Output saved to", filename, sep=" ")
 
