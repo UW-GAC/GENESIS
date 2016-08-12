@@ -146,8 +146,13 @@ test_prepareGenotype <- function(){
 
     snp.id <- sample(getSnpID(data$genoData), 50)
     scan.id <- sample(getScanID(data$genoData), 20)
-    geno.seq <- GENESIS:::prepareGenotype(data$seqData, snp.id, scan.id, impute.geno=TRUE)
-    geno.snp <- GENESIS:::prepareGenotype(data$genoData, snp.id, scan.id, impute.geno=TRUE)
+    seqResetFilter(data$seqData)
+    snp.idx <- which(seqGetData(data$seqData, "variant.id") %in% snp.id)
+    scan.idx <- which(seqGetData(data$seqData, "sample.id") %in% scan.id)
+    geno.seq <- GENESIS:::prepareGenotype(data$seqData, snp.idx, scan.idx, impute.geno=TRUE)
+    snp.idx <- which(getSnpID(data$genoData) %in% snp.id)
+    scan.idx <- which(getScanID(data$genoData) %in% scan.id)
+    geno.snp <- GENESIS:::prepareGenotype(data$genoData, snp.idx, scan.idx, impute.geno=TRUE)
     names(dimnames(geno.seq)) <- NULL
     checkEquals(geno.seq, 2-geno.snp)
 
@@ -174,6 +179,12 @@ test_assocMM <- function(){
     assoc.seq <- assocTestMM(data$seqData, nullMMobj=nullmod, snp.include=snpID, verbose=FALSE)
     assoc.snp <- assocTestMM(data$genoData, nullMMobj=nullmod, snp.include=snpID, verbose=FALSE)
     cols <- !(names(assoc.snp) %in% c("minor.allele", "Est"))
+    checkEquals(assoc.seq[,cols], assoc.snp[,cols])
+    checkEquals(assoc.seq$Est, -assoc.snp$Est)
+
+    # check filter
+    seqSetFilter(data$seqData, variant.id=snpID)
+    assoc.seq <- assocTestMM(data$seqData, nullMMobj=nullmod, verbose=FALSE)
     checkEquals(assoc.seq[,cols], assoc.snp[,cols])
     checkEquals(assoc.seq$Est, -assoc.snp$Est)
 

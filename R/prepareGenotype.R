@@ -1,11 +1,9 @@
-prepareGenotype <- function(genoData, snp.read.id, scan.read.id, impute.geno){
+prepareGenotype <- function(genoData, snp.read.idx, scan.read.idx, impute.geno){
     # get genotypes for the block
     if(class(genoData) == "GenotypeData"){
-        snp.read.idx <- which(getSnpID(genoData) %in% snp.read.id)
-        scan.read.idx <- which(getScanID(genoData) %in% scan.read.id)
         geno <- getGenotypeSelection(genoData, snp = snp.read.idx, scan = scan.read.idx, drop = FALSE, transpose = TRUE)
     }else if(class(genoData) == "SeqVarData"){
-        seqSetFilter(genoData, variant.id = snp.read.id, sample.id = scan.read.id, verbose = FALSE)
+        seqSetFilter(genoData, variant.sel = snp.read.idx, sample.sel = scan.read.idx, verbose = FALSE)
         geno <- altDosage(genoData)
     }
         
@@ -31,14 +29,14 @@ prepareGenotype <- function(genoData, snp.read.id, scan.read.id, impute.geno){
             }
             # calculate allele frequencies
             freq <- alleleFreq(geno = geno, chromChar = chromChar, sex = sex)
-            miss.snp.idx <- ceiling(miss.idx/length(scan.read.id))
+            miss.snp.idx <- ceiling(miss.idx/length(scan.read.idx))
             geno[miss.idx] <- 2*freq[miss.snp.idx]
         }
 
     }else{
         # check that each sample either has no or all missing genotype data 
         check <- rowSums(is.na(geno))
-        if(!all(check %in% c(0, length(snp.read.id)))){
+        if(!all(check %in% c(0, length(snp.read.idx)))){
             stop("genoData has sporadic missingness in block size > 1")
         }
 

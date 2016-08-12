@@ -12,8 +12,16 @@ pcair <- function(genoData,
                   MAF = 0.01,
                   verbose = TRUE){
     
-    # save the filter
-    if(class(genoData) == "SeqVarData"){ seqFilt.original <- seqGetFilter(genoData) }
+    if(class(genoData) == "SeqVarData"){
+        # save the filter
+        seqFilt.original <- seqGetFilter(genoData)
+        # reset so indexing works
+        snp.filter <- seqGetData(genoData, "variant.id")
+        snp.include <- if(is.null(snp.include)) snp.filter else intersect(snp.include, snp.filter)
+        scan.filter <- seqGetData(genoData, "sample.id")
+        scan.include <- if(is.null(scan.include)) scan.filter else intersect(scan.include, scan.filter)
+        seqResetFilter(genoData, verbose=FALSE)
+    }
 
     # MAF check
     if(MAF < 0 | MAF > 0.5){ stop("MAF must be in [0,0.5]") }
@@ -124,7 +132,7 @@ pcair <- function(genoData,
                 geno <- getGenotypeSelection(genoData, snp = snp.include$index[snp.block.idx], scan = unrel.idx, drop = FALSE)
             }else if(class(genoData) == "SeqVarData"){
                 # set a filter to these scans and this variant block
-                seqSetFilter(genoData, variant.id = snp.include$value[snp.block.idx], sample.id = unrels, verbose = FALSE)
+                seqSetFilter(genoData, variant.sel = snp.include$index[snp.block.idx], sample.sel = unrel.idx, verbose = FALSE)
                 geno <- t(altDosage(genoData))
             }                
             
@@ -177,7 +185,7 @@ pcair <- function(genoData,
                 geno <- getGenotypeSelection(genoData, snp = snp.include$index[snp.block.idx], scan = scan.include$index, drop = FALSE)
             }else if(class(genoData) == "SeqVarData"){
                 # set a filter to these scans and this variant block
-                seqSetFilter(genoData, variant.id = snp.include$value[snp.block.idx], sample.id = scan.include$value, verbose = FALSE)
+                seqSetFilter(genoData, variant.sel = snp.include$index[snp.block.idx], sample.sel = scan.include$index, verbose = FALSE)
                 geno <- t(altDosage(genoData))
             }                
             

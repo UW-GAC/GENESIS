@@ -11,7 +11,7 @@ getVariantInclude <- function(data, variant.include, chromosome){
             # use all variants
             variant.include <- variantID
         }else{
-            # use variantss in specified chromosomes
+            # use variants in specified chromosomes
             variant.include <- variantID[seqGetData(data, "chromosome") %in% chromosome]
         }
     }
@@ -24,7 +24,10 @@ getVariantInclude <- function(data, variant.include, chromosome){
 
     # number of variants
     n <- length(variant.include)
-    if(n == 0){ stop("None of the variants in variant.include are in the provided data") }    
+    if(n == 0){ stop("None of the variants in variant.include are in the provided data") }
 
-    return(list(value = variant.include, n = n))
+    # get matching index of variant id to include
+    variant.include.idx <- match(variant.include, variantID)
+
+    return(list(value = variant.include, index = variant.include.idx, n = n))
 }

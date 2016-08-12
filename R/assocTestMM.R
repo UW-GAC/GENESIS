@@ -9,13 +9,13 @@ assocTestMM <- function(genoData,
                         ivar.return.betaCov = FALSE,
                         verbose = TRUE){
 
-    # save the filter
     if(class(genoData) == "SeqVarData"){
+        # save the filter
         seqFilt.original <- seqGetFilter(genoData)
         # reset so indexing works
-        ## seqResetFilter(genoData, verbose=FALSE)
-        ## snp.filter <- seqGetData(genoData, "variant.id")[seqFilt.original$variant.sel]
-        ## snp.include <- if(is.null(snp.include)) snp.filter else intersect(snp.include, snp.filter)
+        snp.filter <- seqGetData(genoData, "variant.id")
+        snp.include <- if(is.null(snp.include)) snp.filter else intersect(snp.include, snp.filter)
+        seqResetFilter(genoData, verbose=FALSE)
     }
 
     # check that test is valid
@@ -118,7 +118,7 @@ assocTestMM <- function(genoData,
         bidx <- snp.blocks$start[b]:snp.blocks$end[b]   
 
         # prepare the genotype data (read in genotypes; mean impute missing values or exclude samples with complete missingness)
-        geno <- prepareGenotype(genoData = genoData, snp.read.id = snp.include$value[bidx], scan.read.id = scan.include$value, impute.geno = impute.geno)
+        geno <- prepareGenotype(genoData = genoData, snp.read.idx = snp.include$index[bidx], scan.read.idx = scan.include$index, impute.geno = impute.geno)
         # rows are samples, columns are SNPs
 
         # samples kept for this block

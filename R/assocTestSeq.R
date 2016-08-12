@@ -13,6 +13,8 @@ assocTestSeq <- function(	seqData,
 
 	# save the filter
 	seqFilt.original <- seqGetFilter(seqData)
+        # reset so indexing works
+        seqResetFilter(seqData, verbose=FALSE)
 
 	# check the parameters
 	param <- .paramChecks(seqData = seqData, AF.range = AF.range, weight.beta = weight.beta, weight.user = weight.user, 
@@ -26,7 +28,7 @@ assocTestSeq <- function(	seqData,
 	# check Scans
 	scan.include <- getScanIndex(data = seqData, scan.include = nullModObj$scanID)	
 	# set up a filter
-	seqSetFilter(seqData, sample.id = scan.include$value, verbose=FALSE)
+	seqSetFilter(seqData, sample.sel = scan.include$index, verbose=FALSE)
 	
 	# logical of samples to use for Allele Frequency calculations
 	if(is.null(AF.sample)){
@@ -39,8 +41,8 @@ assocTestSeq <- function(	seqData,
 	nsample[["AF"]] <- sum(AF.sample.use)
 	out[["nsample"]] <- nsample
 	
-	# check that all variants in aggVarList are in genoData
-	variant.include <- as.vector(unlist(sapply(aggVarList, function(x){ x$variant.id })))
+	# check that all variants in aggVarList are in seqData
+	variant.include <- as.vector(unlist(sapply(aggVarList, function(x){ x$variant.id }), use.names=FALSE))
 	variant.include <- getVariantInclude(data = seqData, variant.include = variant.include, chromosome = NULL)
 	
 
@@ -110,7 +112,8 @@ assocTestSeq <- function(	seqData,
 		aggVarBlock <- aggVarList[[b]]
 
 		# set a filter for variants in this group
-		seqSetFilter(seqData, variant.id = aggVarBlock$variant.id, verbose = FALSE)
+                variant.index <- variant.include$index[variant.include$value %in% aggVarBlock$variant.id]
+		seqSetFilter(seqData, variant.sel = variant.index, verbose = FALSE)
 
 		# get list of allele indices to test for each variant
 		alleleIndex <- do.call(list, by(aggVarBlock, aggVarBlock$variant.id, function(x){ x$allele.index }, simplify = FALSE))
@@ -238,6 +241,8 @@ assocTestSeqWindow <- function(	seqData,
 
 	# save the filter
 	seqFilt.original <- seqGetFilter(seqData)
+        # reset so indexing works
+        seqResetFilter(seqData, verbose=FALSE)
 
 	# check the parameters
 	param <- .paramChecks(seqData = seqData, AF.range = AF.range, weight.beta = weight.beta, weight.user = weight.user, 
@@ -263,7 +268,7 @@ assocTestSeqWindow <- function(	seqData,
 	# check Scans
 	scan.include <- getScanIndex(data = seqData, scan.include = nullModObj$scanID)	
 	# set up a filter
-	seqSetFilter(seqData, sample.id = scan.include$value, verbose=FALSE)	
+	seqSetFilter(seqData, sample.sel = scan.include$index, verbose=FALSE)	
 
 	# logical of samples to use for Allele Frequency calculations
 	if(is.null(AF.sample)){
@@ -279,7 +284,7 @@ assocTestSeqWindow <- function(	seqData,
 	# check Variants and set filter - filters monomorphic reference alleles
 	variant.include <- getVariantInclude(data = seqData, variant.include = variant.include, chromosome = chromosome)
 	# set a filter
-    seqSetFilter(seqData, variant.id = variant.include$value, verbose = FALSE)
+    seqSetFilter(seqData, variant.sel = variant.include$index, verbose = FALSE)
     # get chromosome
     variant.chr <- seqGetData(seqData, "chromosome")
 
@@ -339,10 +344,10 @@ assocTestSeqWindow <- function(	seqData,
 		# keep track of time for rate reporting
 		startTime <- Sys.time()
 
-		# variantID for this chromosome
-		variantID <- variant.include$value[variant.chr == chr]
+		# variant index for this chromosome
+		variantID <- variant.include$index[variant.chr == chr]
 		# set up a filter for the chromosome
-		seqSetFilter(seqData, variant.id = variantID, verbose = FALSE)
+		seqSetFilter(seqData, variant.sel = variantID, verbose = FALSE)
 		# get position
 		variantPos <- seqGetData(seqData, "position")
 
@@ -410,7 +415,7 @@ assocTestSeqWindow <- function(	seqData,
 				var.add <- windowID[!(windowID %in% prevWindowID)]
 				if(length(var.add) > 0){
 					# set a filter for variants to add
-					seqSetFilter(seqData, variant.id = var.add, verbose = FALSE)
+					seqSetFilter(seqData, variant.sel = var.add, verbose = FALSE)
 
 					# number of alleles at each variant
 					nAllele <- seqNumAllele(seqData) - 1
@@ -420,7 +425,8 @@ assocTestSeqWindow <- function(	seqData,
 					# matrix to store variant information					
 					variantRes <- matrix(NA, nrow=sum(nAllele), ncol=length(nvm), dimnames = list(NULL,nvm))
 					# repeat each value the appropriate number of times for each variant
-					variantRes[,"variantID"] <- rep(var.add, nAllele)
+                                        var.id <- variant.include$value[variant.include$index %in% var.add]
+					variantRes[,"variantID"] <- rep(var.id, nAllele)
 					variantRes[,"allele"] <- unlist(alleleIndex)
 					chromChar <- rep(chr, sum(nAllele))
 					variantRes[,"chr"] <- as.numeric(chromChar)
