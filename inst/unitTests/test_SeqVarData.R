@@ -2,21 +2,22 @@ library(SeqVarTools)
 library(GWASTools)
 library(Biobase)
 library(SNPRelate)
+library(gdsfmt)
 
 .testObjects <- function(){
-    gdsfmt::showfile.gds(closeall=TRUE, verbose=FALSE)
+    showfile.gds(closeall=TRUE, verbose=FALSE)
     
     gdsfile <- seqExampleFileName("gds")
     gds.seq <- seqOpen(gdsfile)
     seqSetFilter(gds.seq, variant.sel=isSNV(gds.seq), verbose=FALSE)
     
-    snpfile <- tempfile()
-    seqGDS2SNP(gds.seq, snpfile, verbose=FALSE)
-    
     data(pedigree)
     pedigree <- pedigree[match(seqGetData(gds.seq, "sample.id"), pedigree$sample.id),]
     pedigree$outcome <- rnorm(nrow(pedigree))
     seqData <- SeqVarData(gds.seq, sampleData=AnnotatedDataFrame(pedigree))
+    
+    snpfile <- tempfile()
+    seqGDS2SNP(gds.seq, snpfile, verbose=FALSE)
     
     gds.snp <- GdsGenotypeReader(snpfile)  
     names(pedigree)[names(pedigree) == "sample.id"] <- "scanID"
