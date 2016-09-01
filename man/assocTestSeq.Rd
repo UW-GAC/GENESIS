@@ -82,51 +82,51 @@ assocTestSeq(seqData, nullModObj, aggVarList, AF.sample = NULL,
 %\references{}
 \author{Matthew P. Conomos}
 %\note{None now}
-\examples{
-library(SeqVarTools)
-library(Biobase)
+% \examples{
+% library(SeqVarTools)
+% library(Biobase)
 
-# open a sequencing GDS file
-gdsfile <- seqExampleFileName("gds")
-gds <- seqOpen(gdsfile)
+% # open a sequencing GDS file
+% gdsfile <- seqExampleFileName("gds")
+% gds <- seqOpen(gdsfile)
 
-# simulate some phenotype data
-data(pedigree)
-pedigree <- pedigree[match(seqGetData(gds, "sample.id"), pedigree$sample.id),]
-pedigree$outcome <- rnorm(nrow(pedigree))
+% # simulate some phenotype data
+% data(pedigree)
+% pedigree <- pedigree[match(seqGetData(gds, "sample.id"), pedigree$sample.id),]
+% pedigree$outcome <- rnorm(nrow(pedigree))
 
-# construct a SeqVarData object
-seqData <- SeqVarData(gds, sampleData=AnnotatedDataFrame(pedigree))
+% # construct a SeqVarData object
+% seqData <- SeqVarData(gds, sampleData=AnnotatedDataFrame(pedigree))
 
-# fit the null model
-nullmod <- fitNullReg(sampleData(seqData), outcome="outcome", covars="sex")
+% # fit the null model
+% nullmod <- fitNullReg(sampleData(seqData), outcome="outcome", covars="sex")
 
-# select variant aggregation units (allele.index=1 tests the alternate allele)
-agg <- list(data.frame(variant.id=1:100, allele.index=1),
-            data.frame(variant.id=101:200, allele.index=1),
-            data.frame(variant.id=201:300, allele.index=1))
+% # select variant aggregation units (allele.index=1 tests the alternate allele)
+% agg <- list(data.frame(variant.id=1:100, allele.index=1),
+%             data.frame(variant.id=101:200, allele.index=1),
+%             data.frame(variant.id=201:300, allele.index=1))
 
-# burden test
-assoc <- assocTestSeq(seqData, nullmod, agg, test="Burden")
-assoc$results
-lapply(assoc$variantInfo, head)
+% # burden test
+% assoc <- assocTestSeq(seqData, nullmod, agg, test="Burden")
+% assoc$results
+% lapply(assoc$variantInfo, head)
 
-# SKAT test
-assoc <- assocTestSeq(seqData, nullmod, agg, test="SKAT")
-assoc$results
+% # SKAT test
+% assoc <- assocTestSeq(seqData, nullmod, agg, test="SKAT")
+% assoc$results
 
-# SKAT-O test
-assoc <- assocTestSeq(seqData, nullmod, agg, test="SKAT", rho=seq(0, 1, 0.25))
-assoc$results
+% # SKAT-O test
+% assoc <- assocTestSeq(seqData, nullmod, agg, test="SKAT", rho=seq(0, 1, 0.25))
+% assoc$results
 
-# user-specified weights
-variant.id <- seqGetData(gds, "variant.id")
-weights <- data.frame(variant.id, weight=runif(length(variant.id)))
-variantData(seqData) <- AnnotatedDataFrame(weights)
-assoc <- assocTestSeq(seqData, nullmod, agg, test="Burden", weight.user="weight")
-assoc$results
-lapply(assoc$variantInfo, head)
+% # user-specified weights
+% variant.id <- seqGetData(gds, "variant.id")
+% weights <- data.frame(variant.id, weight=runif(length(variant.id)))
+% variantData(seqData) <- AnnotatedDataFrame(weights)
+% assoc <- assocTestSeq(seqData, nullmod, agg, test="Burden", weight.user="weight")
+% assoc$results
+% lapply(assoc$variantInfo, head)
 
-seqClose(seqData)
-}
+% seqClose(seqData)
+% }
 \keyword{association}
