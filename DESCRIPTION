@@ -6,7 +6,7 @@ Title: GENetic EStimation and Inference in Structured samples
 Version: 2.5.0
 Date: 2016-8-16
 Author: Matthew P. Conomos and Timothy Thornton
-Maintainer: Matthew P. Conomos <mconomos@uw.edu>
+Maintainer: Matthew P. Conomos <mconomos@uw.edu>, Stephanie M. Gogarten <sdmorris@u.washington.edu>
 Description: The GENESIS package provides methodology for estimating,
         inferring, and accounting for population and pedigree structure
         in genetic analyses.  The current implementation provides
