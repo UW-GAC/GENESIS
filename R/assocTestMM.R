@@ -14,7 +14,15 @@ assocTestMM <- function(genoData,
         seqFilt.original <- seqGetFilter(genoData)
         # reset so indexing works
         snp.filter <- seqGetData(genoData, "variant.id")
-        snp.include <- if(is.null(snp.include)) snp.filter else intersect(snp.include, snp.filter)
+        if(is.null(snp.include)) {
+            if(is.null(chromosome)) {
+                snp.include <- snp.filter
+            } else {
+                snp.include <- snp.filter[seqGetData(genoData, "chromosome") %in% chromosome]
+            }
+        } else {
+            snp.include <- intersect(snp.include, snp.filter)
+        }
         seqResetFilter(genoData, verbose=FALSE)
     }
 
