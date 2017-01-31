@@ -16,7 +16,7 @@ fitNullReg(scanData, outcome, covars = NULL, scan.include = NULL,
 }
 %\details{
 %}
-\value{A list including:
+\value{An object of class '\code{GENESIS.nullModel}'. A list including:
     \item{fixef}{A data.frame with effect size estimates (betas), standard errors, chi-squared test statistics, and p-values for each of the fixed effect covariates specified in \code{covars}.}
     \item{betaCov}{The estimated covariance matrix of the effect size estimates (betas) of the fixed effect covariates. This can be used for hypothesis tests regarding the fixed effects.}
     \item{resid.response}{The residuals from the model.}

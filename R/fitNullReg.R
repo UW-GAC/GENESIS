@@ -67,7 +67,7 @@ fitNullReg <- function(	scanData,
 
 	family$mixedmodel <- FALSE
 
-	return(list(fixef = fixef,
+	out <- list(fixef = fixef,
 				betaCov = betaCov,
 				fitted.values = fit0$fitted.values,
 				resid.response = resid,
@@ -78,6 +78,7 @@ fitNullReg <- function(	scanData,
 				aliased = aliased,
 				sigma = sigma,
 				scanID = scan.include$value,
-				family = family))
-
+				family = family)
+        class(out) <- "GENESIS.nullModel"
+        return(out)
 }

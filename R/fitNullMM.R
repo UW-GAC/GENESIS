@@ -247,7 +247,7 @@ fitNullMM <- function(	scanData,
     family$mixedmodel <- TRUE
 
 
-    return(list(varComp = varComp, 
+    out <- list(varComp = varComp, 
     			varCompCov = varCompCov,
     			fixef = fixef,
     			betaCov = betaCov,
@@ -266,8 +266,9 @@ fitNullMM <- function(	scanData,
     			family = family,
     			converged = out$converged, 
     			zeroFLAG = out$zeroFLAG, 
-    			hetResid = (g > 1) ))    
-    
+    			hetResid = (g > 1) )    
+    class(out) <- "GENESIS.nullMixedModel"
+    return(out)
 }
 
 
