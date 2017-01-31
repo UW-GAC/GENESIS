@@ -12,7 +12,7 @@ assocTestMM(genoData, nullMMobj, test = "Wald", snp.include = NULL,
     \item{nullMMobj}{A null model object returned by \code{fitNullMM}.}
     \item{test}{A character string specifying the type of test to be performed. The possibilities are "Wald" (default) or "Score"; only "Score" can be used when the family of the null model fit with \code{fitNullMM} is not gaussian.}
     \item{snp.include}{A vector of SNP IDs to include in the analysis.  If NULL, see \code{chromosome} for further details.}
-    \item{chromosome}{A vector of integers specifying which chromosomes to analyze.  This parameter is only considred when \code{snp.include} is NULL; if \code{chromosome} is also NULL, then all SNPs are included.}
+    \item{chromosome}{A vector of integers specifying which chromosomes to analyze.  This parameter is only considered when \code{snp.include} is NULL; if \code{chromosome} is also NULL, then all SNPs are included.}
     \item{impute.geno}{A logical indicator of whether sporadic missing genotype values should be mean imputed. The default is TRUE. See 'Details' for further information.}
     \item{snp.block.size}{The number of SNPs to read-in/analyze at once.  The default value is 5000. See 'Details' for further information regarding how this parameter works when \code{impute.geno} is FALSE.}
     \item{ivars}{A vector of character strings specifying the names of the variables for which a genotype interaction term should be included. If NULL (default) no genotype interactions are included. See 'Details' for further information.}
