@@ -1,11 +1,13 @@
 import(grDevices)
 import(graphics)
+importFrom(methods, as)
 import(stats)
-import(utils)
+importFrom(utils, read.table)
 
 import(Biobase)
 import(gdsfmt)
 import(graph)
+
 importFrom(GWASTools, GdsGenotypeReader, GenotypeData)
 importClassesFrom(GWASTools,
                   GdsGenotypeReader,
@@ -23,6 +25,7 @@ importMethodsFrom(GWASTools,
                   hasSex,
                   XchromCode,
                   YchromCode)
+
 import(SeqArray)
 importFrom(SeqVarTools, SeqVarData)
 importClassesFrom(SeqVarTools, SeqVarData)
@@ -31,6 +34,11 @@ importMethodsFrom(SeqVarTools,
                   alleleDosage,
                   sampleData,
                   variantData)
+
+importFrom(BiocGenerics, start, end)
+importFrom(GenomicRanges, GRanges)
+importFrom(IRanges, IRanges, findOverlaps)
+importFrom(S4Vectors, queryHits, subjectHits)
 
 export(admixMapMM,
        assocTestMM,

@@ -284,31 +284,31 @@ assocTestSeqWindow <- function(seqData,
 		startTime <- Sys.time()
 
 		# variant index for this chromosome
-		variantID <- variant.include$index[variant.chr == chr]
+		variantIndex <- variant.include$index[variant.chr == chr]
 		# set up a filter for the chromosome
-		seqSetFilter(seqData, variant.sel = variantID, verbose = FALSE)
+		seqSetFilter(seqData, variant.sel = variantIndex, verbose = FALSE)
 		# get position
 		variantPos <- seqGetData(seqData, "position")
 
-		# idenfity windows
-		window.start <- seq(from = (ceiling(variantPos[1]/(window.shift*1000))-1)*window.shift*1000 + 1,
-							to = tail(variantPos,1) - window.size*1000 + window.shift*1000,
-							by = window.shift*1000)
-		window.stop <- window.start + window.size*1000 - 1
-		# determine the number of variant windows
-		nblocks <- length(window.start)
+		# identify windows
+                window.start <- seq(1, max(variantPos), window.shift*1000)
+                windows <- GRanges(seqnames=chr, ranges=IRanges(start=window.start, width=window.size*1000))
+
+                # find variants in each window                
+                variants <- granges(seqData)
+                ol <- findOverlaps(query=variants, subject=windows)
+                unique_windows <- unique(subjectHits(ol))
 
 		# results for this chromosome
-		resChr <- matrix(NA, nrow = nblocks, ncol = length(nv), dimnames = list(NULL,nv))
+                resChr <- matrix(NA, nrow = length(unique_windows), ncol = length(nv), dimnames = list(NULL,nv))
 		resChr[,"chr"] <- .chrToInt(chr)
 
-		if(verbose) message("Running analysis on Chromosome ", chr, " with ", scan.include$n, " Samples and ", length(variantID), " Variants in ", nblocks, " Sliding Windows of size ", window.size, "kb")
+		if(verbose) message("Running analysis on Chromosome ", chr, " with ", scan.include$n, " Samples and ", length(variantIndex), " Variants in ", length(unique_windows), " Sliding Windows of size ", window.size, "kb")
 
 
 		# set some initial parameters
-		count <- 0
-		testID <- NULL
-		prevWindowID <- NULL
+		testIndex <- NULL
+		prevWindowIndex <- NULL
 		geno <- NULL
 		weights <- NULL
 		if(test == "Burden"){
@@ -318,156 +318,148 @@ assocTestSeqWindow <- function(seqData,
 		}
 
 		# slide through the windows
-		for(b in 1:nblocks){
+                for (w in 1:length(unique_windows)){
 			
-			# IDs of variants in the window
-			windowID <- variantID[variantPos >= window.start[b] & variantPos <= window.stop[b]]
-			
-			# check if there are any variants
-			if(length(windowID) > 0){
-				count <- count + 1 
-				resChr[count, "window.start"] <- window.start[b]
-				resChr[count, "window.stop"] <- window.stop[b]
+			# indices of variants in the window
+                        these_hits <- ol[subjectHits(ol) == unique_windows[w]]
+                        windowIndex <- variantIndex[queryHits(these_hits)]
 
-				# check if there are variants to drop
-				var.drop <- !(testID %in% windowID)
-				if(any(var.drop)){
-					# update
-					if(test == "Burden"){
-						# remove burden of variants to drop
-						burden.drop <- colSums(t(geno[,var.drop])*weights[var.drop])
-						burden <- burden - burden.drop
-					}else if(test == "SKAT"){
-						# remove scores of variants to drop
-						U <- U[!var.drop]
-					}
+                        resChr[w, "window.start"] <- BiocGenerics::start(windows[unique_windows[w]])
+                        resChr[w, "window.stop"] <- BiocGenerics::end(windows[unique_windows[w]])
 
-					# remove genotypes of variants to drop
-					geno <- geno[,!var.drop, drop=FALSE]
-					# remove weights of variants to drop
-					weights <- weights[!var.drop]
-					# remove variantIDs of variants to drop
-					testID <- testID[!var.drop]
+			# check if there are variants to drop
+			var.drop <- !(testIndex %in% windowIndex)
+			if(any(var.drop)){
+				# update
+				if(test == "Burden"){
+					# remove burden of variants to drop
+					burden.drop <- colSums(t(geno[,var.drop])*weights[var.drop])
+					burden <- burden - burden.drop
+				}else if(test == "SKAT"){
+					# remove scores of variants to drop
+					U <- U[!var.drop]
 				}
 
-				# check if there are any variants to add
-				var.add <- windowID[!(windowID %in% prevWindowID)]
-				if(length(var.add) > 0){
-					# set a filter for variants to add
-					seqSetFilter(seqData, variant.sel = var.add, verbose = FALSE)
-
-					# number of alleles at each variant
-					nAllele <- seqNumAllele(seqData) - 1
-					# get list of allele indices to test for each variant
-					alleleIndex <- list(); for(i in 1:length(nAllele)){ alleleIndex[[i]] <- 1:nAllele[i] }
-
-					# matrix to store variant information					
-					variantRes <- matrix(NA, nrow=sum(nAllele), ncol=length(nvm), dimnames = list(NULL,nvm))
-					# repeat each value the appropriate number of times for each variant
-                                        var.id <- variant.include$value[variant.include$index %in% var.add]
-					variantRes[,"variantID"] <- rep(var.id, nAllele)
-					variantRes[,"allele"] <- unlist(alleleIndex)
-					chromChar <- rep(chr, sum(nAllele))
-					variantRes[,"chr"] <- .chrToInt(chromChar)
-					variantRes[,"pos"] <- rep(variantPos[variantID %in% var.add], nAllele)
-
-					# get genotypes; rows are samples, columns are variant-alleles
-					geno.add <- do.call(cbind, alleleDosage(seqData, n = alleleIndex))
-
-					# calculate number of missing/observed values by variant-allele
-					n.miss <- colSums(is.na(geno.add))
-					variantRes[,"n.obs"] <- nrow(geno.add) - n.miss
-
-					# calculate allele frequencies
-                                        sex <- sampleData(seqData)$sex
-					freq <- alleleFreq(geno = geno.add, chromChar = chromChar, sex = sex, sample.use = AF.sample.use)
-					variantRes[,"freq"] <- freq
-
-					# index of those inside the allele freq threshold
-					include <- (freq !=0 & freq !=1 & freq >= AF.range[1] & freq <= AF.range[2])
-					variantRes[!include,"weight"] <- 0
-
-					# subset
-					geno.add <- geno.add[,include, drop=FALSE]
-					freq <- freq[include]
-
-					# variant weights
-					if(is.null(weight.user)){
-						# Beta weights
-                                                weights.add <- .weightFromFreq(freq, weight.beta)
-					}else{
-						# user supplied weights - read in from variantData, repeat to match nAllele, subset to those included
-						weights.add <- rep(pData(variantData(seqData))[,weight.user], nAllele)[include]
-					}
-					variantRes[include,"weight"] <- weights.add
-
-					# mean impute missing genotype values
-					if(sum(n.miss) > 0){
-						miss.idx <- which(is.na(geno.add))
-						miss.snp.idx <- ceiling(miss.idx/nrow(geno.add))
-						geno.add[miss.idx] <- 2*freq[miss.snp.idx]
-					}
-
-					# update 
-					variantInfo <- rbind(variantInfo, variantRes)
-
-					if(test == "Burden"){
-						# add burden of variants to add
-						burden <- burden + colSums(t(geno.add)*weights.add)
-						# add genotypes of variants to add
-						geno <- cbind(geno, geno.add)
-					}else if(test == "SKAT"){
-						# add scores of variants to add
-						U <- c(U, as.vector(crossprod(geno.add, proj$resid)))
-						# add genotypes of variants to add
-						geno <- cbind(geno, crossprod(proj$Mt, geno.add))
-					}
-					# add weights of variants to add
-					weights <- c(weights, weights.add)
-
-					testID <- c(testID, variant.include$index[variant.include$value %in% variantRes[include,"variantID"]])
-				}
-
-				# number of variant sites
-				n.site <- length(unique(testID))
-				resChr[count,"n.site"] <- n.site
-
-				if(n.site > 0){
-					if(any(var.drop) | length(var.add) > 0){
-						resChr[count,"dup"] <- 0
-						# perform test
-						if(test == "Burden"){
-							testout <- .runBurdenTest(burden = burden, projObj = proj, burden.test = burden.test)
-
-						}else if(test == "SKAT"){
-							if(length(rho) == 1){
-								testout <- .runSKATTest(scores = U, geno.adj = geno, weights = weights, rho = rho, pval.method = pval.method, optimal = FALSE)
-							}else{
-								testout <- .runSKATTest(scores = U, geno.adj = geno, weights = weights, rho = rho, pval.method = pval.method, optimal = TRUE)
-							}
-						}
-
-					}else{
-						resChr[count,"dup"] <- 1
-					}
-					# update main results
-					for(val in names(testout)){ resChr[count,val] <- testout[val] }
-				}
-
-			# no variants in the window
-			}else{ 
-				# drop a line from the results
-				resChr <- resChr[-(count+1),]
+				# remove genotypes of variants to drop
+				geno <- geno[,!var.drop, drop=FALSE]
+				# remove weights of variants to drop
+				weights <- weights[!var.drop]
+				# remove variantIndex of variants to drop
+				testIndex <- testIndex[!var.drop]
 			}
 
-			# record this window's variantIDs
-			prevWindowID <- windowID
+			# check if there are any variants to add
+			var.add <- windowIndex[!(windowIndex %in% prevWindowIndex)]
+			if(length(var.add) > 0){
+				# set a filter for variants to add
+				seqSetFilter(seqData, variant.sel = var.add, verbose = FALSE)
+
+				# number of alleles at each variant
+				nAllele <- seqNumAllele(seqData) - 1
+				# get list of allele indices to test for each variant
+				alleleIndex <- list(); for(i in 1:length(nAllele)){ alleleIndex[[i]] <- 1:nAllele[i] }
+
+				# matrix to store variant information					
+				variantRes <- matrix(NA, nrow=sum(nAllele), ncol=length(nvm), dimnames = list(NULL,nvm))
+				# repeat each value the appropriate number of times for each variant
+                                var.id <- variant.include$value[variant.include$index %in% var.add]
+				variantRes[,"variantID"] <- rep(var.id, nAllele)
+				variantRes[,"allele"] <- unlist(alleleIndex)
+				chromChar <- rep(chr, sum(nAllele))
+				variantRes[,"chr"] <- .chrToInt(chromChar)
+				variantRes[,"pos"] <- rep(variantPos[variantIndex %in% var.add], nAllele)
+
+				# get genotypes; rows are samples, columns are variant-alleles
+				geno.add <- do.call(cbind, alleleDosage(seqData, n = alleleIndex))
+
+				# calculate number of missing/observed values by variant-allele
+				n.miss <- colSums(is.na(geno.add))
+				variantRes[,"n.obs"] <- nrow(geno.add) - n.miss
+
+				# calculate allele frequencies
+                                sex <- sampleData(seqData)$sex
+				freq <- alleleFreq(geno = geno.add, chromChar = chromChar, sex = sex, sample.use = AF.sample.use)
+				variantRes[,"freq"] <- freq
+
+				# index of those inside the allele freq threshold
+				include <- (freq !=0 & freq !=1 & freq >= AF.range[1] & freq <= AF.range[2])
+				variantRes[!include,"weight"] <- 0
+
+				# subset
+				geno.add <- geno.add[,include, drop=FALSE]
+				freq <- freq[include]
+
+				# variant weights
+				if(is.null(weight.user)){
+					# Beta weights
+                                        weights.add <- .weightFromFreq(freq, weight.beta)
+				}else{
+					# user supplied weights - read in from variantData, repeat to match nAllele, subset to those included
+					weights.add <- rep(pData(variantData(seqData))[,weight.user], nAllele)[include]
+				}
+				variantRes[include,"weight"] <- weights.add
+
+				# mean impute missing genotype values
+				if(sum(n.miss) > 0){
+					miss.idx <- which(is.na(geno.add))
+					miss.snp.idx <- ceiling(miss.idx/nrow(geno.add))
+					geno.add[miss.idx] <- 2*freq[miss.snp.idx]
+				}
+
+				# update 
+				variantInfo <- rbind(variantInfo, variantRes)
+
+				if(test == "Burden"){
+					# add burden of variants to add
+					burden <- burden + colSums(t(geno.add)*weights.add)
+					# add genotypes of variants to add
+					geno <- cbind(geno, geno.add)
+				}else if(test == "SKAT"){
+					# add scores of variants to add
+					U <- c(U, as.vector(crossprod(geno.add, proj$resid)))
+					# add genotypes of variants to add
+					geno <- cbind(geno, crossprod(proj$Mt, geno.add))
+				}
+				# add weights of variants to add
+				weights <- c(weights, weights.add)
+
+				testIndex <- c(testIndex, variant.include$index[variant.include$value %in% variantRes[include,"variantID"]])
+			}
+
+			# number of variant sites
+			n.site <- length(unique(testIndex))
+			resChr[w,"n.site"] <- n.site
+
+			if(n.site > 0){
+				if(any(var.drop) | length(var.add) > 0){
+					resChr[w,"dup"] <- 0
+					# perform test
+					if(test == "Burden"){
+						testout <- .runBurdenTest(burden = burden, projObj = proj, burden.test = burden.test)
+
+					}else if(test == "SKAT"){
+						if(length(rho) == 1){
+							testout <- .runSKATTest(scores = U, geno.adj = geno, weights = weights, rho = rho, pval.method = pval.method, optimal = FALSE)
+						}else{
+							testout <- .runSKATTest(scores = U, geno.adj = geno, weights = weights, rho = rho, pval.method = pval.method, optimal = TRUE)
+						}
+					}
+
+				}else{
+					resChr[w,"dup"] <- 1
+				}
+				# update main results
+				for(val in names(testout)){ resChr[w,val] <- testout[val] }
+			}
+
+			# record this window's variantIndex
+			prevWindowIndex <- windowIndex
 
 			# report time				
-			if(verbose & b %% 100 == 0){
+			if(verbose & w %% 100 == 0){
 				endTime <- Sys.time()
 				rate <- format(endTime - startTime, digits=4)
-				message(paste("...Window", b, "of", nblocks, "Completed -", rate, "Elapsed"))
+				message(paste("...Window", w, "of", length(unique_windows), "Completed -", rate, "Elapsed"))
 			}
 
 		} # for windows
