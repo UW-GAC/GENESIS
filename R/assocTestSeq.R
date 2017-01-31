@@ -137,9 +137,8 @@ assocTestSeq <- function(seqData,
 
 			# variant weights
 			if(is.null(weight.user)){
-				#freq <- ifelse(freq < 0.5, freq, 1-freq) - should MAF be used even if alternate allele is not minor?
 				# Beta weights
-				weights <- dbeta(freq, weight.beta[1], weight.beta[2])
+                                weights <- .weightFromFreq(freq, weight.beta)
 			}else{
 				# user supplied weights - read in from variantData, repeat to match nAllele, subset to those included
 				weights <- rep(pData(variantData(seqData))[,weight.user], nAllele)[include]
@@ -394,9 +393,8 @@ assocTestSeqWindow <- function(seqData,
 
 					# variant weights
 					if(is.null(weight.user)){
-						#freq <- ifelse(freq < 0.5, freq, 1-freq) - should MAF be used even if alternate allele is not minor?
 						# Beta weights
-						weights.add <- dbeta(freq, weight.beta[1], weight.beta[2])
+                                                weights.add <- .weightFromFreq(freq, weight.beta)
 					}else{
 						# user supplied weights - read in from variantData, repeat to match nAllele, subset to those included
 						weights.add <- rep(pData(variantData(seqData))[,weight.user], nAllele)[include]
@@ -865,4 +863,10 @@ integrateFxn <- function(x, qmin, otherParams, tau, rho){
 
 .intToChr <- function(chr){
     unname(setNames(c(1:22, "X", "Y"), 1:24)[as.character(chr)])
+}
+
+
+.weightFromFreq <- function(freq, weight.beta) {
+    freq <- pmin(freq, 1-freq)
+    dbeta(freq, weight.beta[1], weight.beta[2])
 }
