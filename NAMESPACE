@@ -32,7 +32,8 @@ importMethodsFrom(SeqVarTools,
                   sampleData,
                   variantData)
 
-export(assocTestMM,
+export(admixMapMM,
+       assocTestMM,
        assocTestSeq,
        assocTestSeqWindow,
        fitNullMM,

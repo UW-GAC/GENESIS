@@ -127,6 +127,8 @@ admixMapMM <- function(admixDataList,
       local[,,i] <- tmplocal; rm(tmplocal)
     }
 
+    keep.geno <- scan.include$value %in% keep.scanID
+    
     # ancestral frequency
     freq <- 0.5*colMeans(local, dims=1, na.rm=T) # matrix:  rows are SNPs, columns are ancestries
     # for X chr
@@ -134,8 +136,8 @@ admixMapMM <- function(admixDataList,
       # which are on X chr
       Xidx <- chr[bidx] == XchromCode(admixDataList[[1]])
       # males
-      m <- (getSex(admixDataList[[1]]) == "M")[scan.include$index]
-      f <- (getSex(admixDataList[[1]]) == "F")[scan.include$index]
+      m <- (getSex(admixDataList[[1]]) == "M")[keep.geno]
+      f <- (getSex(admixDataList[[1]]) == "F")[keep.geno]
       # calculate allele freq for X
       freq[Xidx,] <- (0.5*colSums(local[m,Xidx,], dims=1, na.rm=T) + colSums(local[f,Xidx,], dims=1, na.rm=T)) / (colSums(!is.na(local[m,Xidx,]), dims=1) + 2*colSums(!is.na(local[f,Xidx,]), dims=1) )
     }
@@ -160,8 +162,6 @@ admixMapMM <- function(admixDataList,
     #}
     # this is imputing as population average.  would it be better to impute to individual's global ancestry?
     ### no missing data currently - worry about this later ###
-    
-    keep.geno <- scan.include$value %in% keep.scanID
     
     # sample size
     n <- sum(keep.geno)
