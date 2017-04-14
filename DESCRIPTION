@@ -3,8 +3,8 @@ Type: Package
 Title: GENetic EStimation and Inference in Structured samples
         (GENESIS): Statistical methods for analyzing genetic data from
         samples with population structure and/or relatedness
-Version: 2.5.2
-Date: 2016-11-17
+Version: 2.5.3
+Date: 2017-04-14
 Author: Matthew P. Conomos, Timothy Thornton, Stephanie M. Gogarten
 Maintainer: Matthew P. Conomos <mconomos@uw.edu>, Stephanie M. Gogarten <sdmorris@u.washington.edu>
 Description: The GENESIS package provides methodology for estimating,

@@ -6,6 +6,8 @@ getVariantInclude <- function(data, variant.include, chromosome){
     if(!is.null(variant.include)){
         # use variants specified variant.include
         if(!all(variant.include %in% variantID)){ stop("Not all of the variant.id in variant.include are in the provided data") }
+        # make sure variant.include is unique and in same order as variantID
+        variant.include <- variantID[variantID %in% variant.include]
     }else{
         if(is.null(chromosome)){
             # use all variants

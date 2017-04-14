@@ -243,3 +243,31 @@ test_indexNotValue <- function(){
     seqClose(seqData)
     unlink(tmpfile)
 }
+
+
+test_variantInclude <- function() {
+    seqData <- .testObject()
+    var.id <- seqGetData(seqData, "variant.id")
+    var.incl <- sample(var.id, 1000, replace=TRUE)
+    res <- GENESIS:::getVariantInclude(seqData, var.incl, chromosome=NULL)
+    freq <- SeqVarTools::alleleFrequency(seqData, use.names=TRUE)
+    mono <- as.integer(names(freq[freq == 1]))
+    checkEquals(res$value, sort(setdiff(var.incl, mono)))
+    seqClose(seqData)
+}
+
+
+test_aggVarList <- function(){
+    seqData <- .testObject()
+    nullmod <- fitNullReg(sampleData(seqData), outcome="outcome")
+    
+    agg <- list(data.frame(variant.id=11:25, allele.index=1),
+                data.frame(variant.id=1:15, allele.index=1))
+    assoc <- assocTestSeq(seqData, nullmod, agg)
+    assoc1 <- assocTestSeq(seqData, nullmod, agg[1])
+    assoc2 <- assocTestSeq(seqData, nullmod, agg[2])
+    checkEquals(assoc$results[1,], assoc1$results)
+    checkEquals(unlist(assoc$results[2,]), unlist(assoc2$results)) # avoid comparing row names
+    
+    seqClose(seqData)
+}
