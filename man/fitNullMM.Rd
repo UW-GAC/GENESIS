@@ -46,6 +46,7 @@ fitNullMM(scanData, outcome, covars = NULL, covMatList, scan.include = NULL,
     \item{AIC}{The Akaike Information Criterion value.}
     \item{RSS}{The residual sum of squares from the model fit. When \code{family} is gaussian, this will typically be 1 since the residual variance component is estimated separately.}
     \item{workingY}{The "working" outcome vector. When \code{family} is gaussian, this is just the original outcome vector. When \code{family} is not gaussian, this is the PQL linearization of the outcome vector. This is used by \code{assocTestMM} for genetic association testing. See 'Details' for more information.}
+    \item{outcome}{The original outcome vector. When \code{family} is gaussian, this is equal to \code{workingY}.}
     \item{model.matrix}{The design matrix for the fixed effect covariates used in the model.}
     \item{cholSigmaInv}{The Cholesky decomposition of the inverse of the estimated outcome covariance structure. This is used by \code{assocTestMM} for genetic association testing.}
     \item{scanID}{A vector of scanIDs for the samples used in the analysis.}
@@ -53,6 +54,7 @@ fitNullMM(scanData, outcome, covars = NULL, covMatList, scan.include = NULL,
     \item{converged}{A logical indicator of whether the AIREML procedure for estimating the random effects variance components converged.}
     \item{zeroFLAG}{A vector of logicals the same length as \code{varComp} specifying whether the corresponding variance component estimate was set to 0 by the function due to convergence to the boundary in the AIREML procedure.}
     \item{hetResid}{A logical indicator of whether heterogeneous residual variance components were used in the model (specified by \code{group.var}).}
+    \item{call}{The call to \code{fitNullMM}.}
 }
 \references{
     Chen H, Wang C, Conomos MP, Stilp AM, Li Z, Sofer T, Szpiro AA, Chen W, Brehm JM, Celedon JC, Redline S, Papanicolaou GJ, Thornton TA, Laurie CC, Rice K and Lin X. Control for Population Structure and Relatedness for Binary Traits in Genetic Association Studies Using Logistic Mixed Models. (Submitted).

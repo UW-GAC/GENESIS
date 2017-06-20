@@ -246,27 +246,31 @@ fitNullMM <- function(	scanData,
 
     family$mixedmodel <- TRUE
 
+    #call <- list(outcome=outcome, covars=covars)
+
 
     out <- list(varComp = varComp, 
-    			varCompCov = varCompCov,
-    			fixef = fixef,
-    			betaCov = betaCov,
-    			fitted.values = as.vector(out$fits),
-    			resid.marginal = out$residM,
-    			eta = as.vector(out$eta),
-    			resid.conditional = residC,
-    			logLikR = out$logLikR,
-    			logLik = out$logLik,
-    			AIC = AIC,    			
-    			RSS = out$RSS,
-    			workingY = as.vector(workingY),
-    			model.matrix = dat$W,
-    			cholSigmaInv = cholSigmaInv,
-    			scanID = scan.include$value,
-    			family = family,
-    			converged = out$converged, 
-    			zeroFLAG = out$zeroFLAG, 
-    			hetResid = (g > 1) )    
+                varCompCov = varCompCov,
+                fixef = fixef,
+                betaCov = betaCov,
+                fitted.values = as.vector(out$fits),
+                resid.marginal = out$residM,
+                eta = as.vector(out$eta),
+                resid.conditional = residC,
+                logLikR = out$logLikR,
+                logLik = out$logLik,
+                AIC = AIC,
+                RSS = out$RSS,
+                workingY = as.vector(workingY),
+                outcome = dat$Y,
+                model.matrix = dat$W,
+                cholSigmaInv = cholSigmaInv,
+                scanID = scan.include$value,
+                family = family,
+                converged = out$converged,
+                zeroFLAG = out$zeroFLAG,
+                hetResid = (g > 1),
+                call = match.call())
     class(out) <- "GENESIS.nullMixedModel"
     return(out)
 }
