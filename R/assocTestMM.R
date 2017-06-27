@@ -60,7 +60,7 @@ assocTestMM <- function(genoData,
             stop("Sex values for the samples are required for Y chromosome SNPs")
         }
         if(class(genoData) == "GenotypeData"){
-            getSex(genoData, index = scan.include$index)
+            sex <- getSex(genoData, index = scan.include$index)
         }else if(class(genoData) == "SeqVarData"){
             sex <- sampleData(genoData)$sex[scan.include$index]
         }
