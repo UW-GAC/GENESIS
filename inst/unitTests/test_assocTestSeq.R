@@ -172,12 +172,12 @@ test_monomorphs <- function(){
     af <- seqAlleleFreq(seqData)
     mono <- which(af == 1)
     agg <- list(data.frame(variant.id=(mono[1]-2):(mono[1]+2), allele.index=1))
-    assoc <- assocTestSeq(seqData, nullmod, agg)
+    assoc <- assocTestSeq(seqData, nullmod, agg, verbose=FALSE)
 
     ## now check if monomorph is the only variant in a block
     agg <- list(data.frame(variant.id=1:10, allele.index=1),
                 data.frame(variant.id=mono, allele.index=1))
-    assoc <- assocTestSeq(seqData, nullmod, agg)
+    assoc <- assocTestSeq(seqData, nullmod, agg, verbose=FALSE)
     
     seqClose(seqData)
 }
@@ -201,14 +201,14 @@ test_sexchrom <- function(){
     pedigree$outcome <- rnorm(nrow(pedigree))
     
     seqData <- SeqVarData(gds.seq, sampleData=AnnotatedDataFrame(pedigree))
-    nullmod <- fitNullReg(sampleData(seqData), outcome="outcome")
+    nullmod <- fitNullReg(sampleData(seqData), outcome="outcome", verbose=FALSE)
     
     agg <- list(data.frame(variant.id=1:10, allele.index=1),
                 data.frame(variant.id=11:20, allele.index=1))
-    assoc <- assocTestSeq(seqData, nullmod, agg)
+    assoc <- assocTestSeq(seqData, nullmod, agg, verbose=FALSE)
     checkTrue(all(do.call(rbind, assoc$variantInfo)[,"chr"] == "X"))
     
-    assoc <- assocTestSeqWindow(seqData, nullmod, variant.include=1:50)
+    assoc <- assocTestSeqWindow(seqData, nullmod, variant.include=1:50, verbose=FALSE)
     checkTrue(all(assoc$results[,"chr"] == "X"))
     checkTrue(all(assoc$variantInfo[,"chr"] == "X"))
     
@@ -219,8 +219,8 @@ test_sexchrom <- function(){
 
 test_indexNotValue <- function(){
     seqData <- .testObject()
-    nullmod <- fitNullReg(sampleData(seqData), outcome="outcome")
-    assoc <- assocTestSeqWindow(seqData, nullmod, window.size=1000, window.shift=500)
+    nullmod <- .testNullModel(seqData, type="reg")
+    assoc <- assocTestSeqWindow(seqData, nullmod, window.size=1000, window.shift=500, verbose=FALSE)
 
     # make new object with different variant.id
     annot <- sampleData(seqData)
@@ -236,7 +236,7 @@ test_indexNotValue <- function(){
     closefn.gds(gds)
     gds.seq <- seqOpen(tmpfile)
     seqData <- SeqVarData(gds.seq, sampleData=annot)
-    assoc2 <- assocTestSeqWindow(seqData, nullmod, window.size=1000, window.shift=500)
+    assoc2 <- assocTestSeqWindow(seqData, nullmod, window.size=1000, window.shift=500, verbose=FALSE)
     checkEquals(assoc$results, assoc2$results)
     checkEquals(assoc$variantInfo[,-1], assoc2$variantInfo[,-1])
     
@@ -259,15 +259,23 @@ test_variantInclude <- function() {
 
 test_aggVarList <- function(){
     seqData <- .testObject()
-    nullmod <- fitNullReg(sampleData(seqData), outcome="outcome")
+    nullmod <- .testNullModel(seqData, type="reg")
     
     agg <- list(data.frame(variant.id=11:25, allele.index=1),
                 data.frame(variant.id=1:15, allele.index=1))
-    assoc <- assocTestSeq(seqData, nullmod, agg)
-    assoc1 <- assocTestSeq(seqData, nullmod, agg[1])
-    assoc2 <- assocTestSeq(seqData, nullmod, agg[2])
+    assoc <- assocTestSeq(seqData, nullmod, agg, verbose=FALSE)
+    assoc1 <- assocTestSeq(seqData, nullmod, agg[1], verbose=FALSE)
+    assoc2 <- assocTestSeq(seqData, nullmod, agg[2], verbose=FALSE)
     checkEquals(assoc$results[1,], assoc1$results)
     checkEquals(unlist(assoc$results[2,]), unlist(assoc2$results)) # avoid comparing row names
     
+    seqClose(seqData)
+}
+
+
+test_skat <- function(){
+    seqData <- .testObject()
+    nullmod <- .testNullModel(seqData, type="reg")
+    assoc <- assocTestSeqWindow(seqData, nullmod, window.size=1000, window.shift=500, chromosome=1, test="SKAT", rho=c(0,0.5,1), verbose=FALSE)
     seqClose(seqData)
 }
