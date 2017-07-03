@@ -4,7 +4,7 @@
 \description{\code{assocTestSeq} performs aggregate association tests with sequencing data using the null model fit with \code{\link{fitNullMM}} or \code{\link{fitNullReg}}.}
 \usage{
 assocTestSeq(seqData, nullModObj, aggVarList, AF.sample = NULL,
-            AF.range = c(0,1), weight.beta = c(0.5, 0.5), weight.user = NULL,
+            AF.range = c(0,1), weight.beta = c(1, 1), weight.user = NULL,
             test = "Burden", burden.test = "Score", rho = 0, 
             pval.method = "davies", verbose = TRUE)
 }

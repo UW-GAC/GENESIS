@@ -5,7 +5,7 @@
 \usage{
 assocTestSeqWindow(seqData, nullModObj, variant.include = NULL, chromosome = NULL,
                     window.size = 50, window.shift = 20, AF.sample = NULL, AF.range = c(0,1), 
-                    weight.beta = c(0.5, 0.5), weight.user = NULL, test = "Burden", 
+                    weight.beta = c(1, 1), weight.user = NULL, test = "Burden", 
                     burden.test = "Score", rho = 0, pval.method = "davies", verbose = TRUE)
 }
 \arguments{

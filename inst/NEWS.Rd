@@ -1,5 +1,10 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.7.3}{
+    \itemize{
+	\item Change defaults in assocTestSeq*: Davies method for SKAT p-values, flat weights.
+    }
+}
 \section{Version 2.6.0}{
     \itemize{
 	\item Major bug fix: assocTestSeq no longer drops some variants from aggregate tests in the case where the same variants are included in more than one aggregate unit.
