@@ -6,7 +6,7 @@
 assocTestSeq(seqData, nullModObj, aggVarList, AF.sample = NULL,
             AF.range = c(0,1), weight.beta = c(0.5, 0.5), weight.user = NULL,
             test = "Burden", burden.test = "Score", rho = 0, 
-            pval.method = "kuonen", verbose = TRUE)
+            pval.method = "davies", verbose = TRUE)
 }
 \arguments{
     \item{seqData}{An object of class \code{SeqVarData} from the package \code{SeqVarTools} containing the sequencing genotype data for variants and samples to be used for the analysis.}
@@ -19,7 +19,7 @@ assocTestSeq(seqData, nullModObj, aggVarList, AF.sample = NULL,
     \item{test}{A character string specifying the type of test to be performed. The possibilities are "Burden" (default) or "SKAT".  When this is set to "SKAT" and the parameter \code{rho} has multiple values, a SKAT-O test is performed.}
     \item{burden.test}{A character string specifying the type of Burden test to perform when \code{test} = "Burden".  The possibilities are "Score", "Wald", and "Firth". "Score" can be used for any \code{nullModObj}. "Wald" can not be used when the \code{nullModObj} is from a mixed model with a binary outcome variable. "Firth" can only be used when the \code{nullModObj} is from a logistic regression with a binary outcome variable.}
     \item{rho}{A numeric value (or vector of numeric values) in [0,1] specifying the rho parameter for SKAT. When rho = 0, a standard SKAT test is performed. When rho = 1, a score burden test is performed. When rho is a vector of values, SKAT-O is performed using each of those values as the search space for the optimal rho.}
-    \item{pval.method}{A character string specifying which method to use to calculate SKAT p-values. "kuonen" (the default) uses a saddlepoint method; "davies" uses numerical integration; and "liu" uses a moment matching approximation.}
+    \item{pval.method}{A character string specifying which method to use to calculate SKAT p-values. "davies" (the default) uses numerical integration; "kuonen" uses a saddlepoint method; and "liu" uses a moment matching approximation. If the davies method generates an error, kuonen is tried, and then liu as a last resort.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is TRUE.}
 }
 %\details{
@@ -64,7 +64,7 @@ assocTestSeq(seqData, nullModObj, aggVarList, AF.sample = NULL,
     If \code{test} is "SKAT":
     \item{Q_rho}{The SKAT test statistic for the value of rho specified. There will be as many of these variables as there are rho values chosen.}
     \item{pval_rho}{The SKAT p-value for the value of rho specified.  There will be as many of these variables as there are rho values chosen.}
-    \item{err_rho}{Takes value 1 if there was an error in calculating the p-value for the value of rho specified when using the "kunonen" or "davies" methods; 0 otherwise. When there is an error, the p-value returned is from the "liu" method. There will be as many of these variables as there are rho values chosen.}
+    \item{err_rho}{Takes value 1 if there was an error in calculating the p-value for the value of rho specified when using the "kuonen" or "davies" methods; 0 otherwise. When there is an error, the p-value returned is from the "liu" method. There will be as many of these variables as there are rho values chosen.}
     When \code{length(rho) > 1} and SKAT-O is performed:
     \item{min.pval}{The minimum p-value among the p-values calculated for each choice of rho.}
     \item{opt.rho}{The optimal rho value; i.e. the rho value that gave the minimum p-value.}

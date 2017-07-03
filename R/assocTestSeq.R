@@ -8,7 +8,7 @@ assocTestSeq <- function(seqData,
                          test = "Burden",
                          burden.test = "Score",
                          rho = 0,
-                         pval.method = "kuonen",
+                         pval.method = "davies",
                          verbose = TRUE){
 
 	# save the filter
@@ -211,7 +211,7 @@ assocTestSeqWindow <- function(seqData,
                                test = "Burden",
                                burden.test = "Score",
                                rho = 0,
-                               pval.method = "kuonen",
+                               pval.method = "davies",
                                verbose = TRUE){
 
 	# save the filter
@@ -534,8 +534,8 @@ assocTestSeqWindow <- function(seqData,
 		if(length(rho) > 1){ param[["test"]] <- "SKAT-O" }
 		# check pval.method
 		if(!(pval.method %in% c("kuonen","davies","liu"))){ stop("pval.method must be one of 'kuonen', 'davies', or 'liu'")}
-		if(pval.method == "kuonen") requireNamespace("survey")
-		if(pval.method == "davies" | pval.method == "liu") requireNamespace("CompQuadForm")
+		if(!requireNamespace("survey")) stop("package 'survey' must be installed to calculate p-values for SKAT")
+		if(!requireNamespace("CompQuadForm")) stop("package 'CompQuadForm' must be installed to calculate p-values for SKAT")
 		param[["rho"]] <- rho
 		param[["pval.method"]] <- pval.method
 	}
@@ -722,15 +722,18 @@ assocTestSeqWindow <- function(seqData,
 				err <- ifelse(is.na(pval), 1, 0)
 
 			}else if(pval.method == "davies"){
-				tmp <- CompQuadForm::davies(q = Q, lambda = lambda, acc = 1e-06)
+				tmp <- suppressWarnings(CompQuadForm::davies(q = Q, lambda = lambda, acc = 1e-06))
 				pval <- tmp$Qq
-				err <- tmp$ifault
+                                if((tmp$ifault > 0) | (pval <= 0) | (pval >= 1)) {
+                                        pval <- survey:::saddle(x = Q, lambda = lambda)
+                                }
+				err <- ifelse(is.na(pval), 1, 0)
 
 			}else if(pval.method == "liu"){
 				pval <- CompQuadForm::liu(q = Q, lambda = lambda)
 				err <- 0
 			}
-
+                    
 			if(err > 0){
 				pval <- CompQuadForm::liu(q = Q, lambda = lambda)
 			}
