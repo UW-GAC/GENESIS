@@ -231,9 +231,12 @@ fitNullMM <- function(	scanData,
     cholSigmaInv <- t(chol(out$Sigma.inv))
     colnames(cholSigmaInv) <- colnames(covMatList[[1]])
     rownames(cholSigmaInv) <- rownames(covMatList[[1]])  
-
-    # Variance Covariance of betas RSS*(Wt %*% Sigma^{-1} %*% W)^{-1}
-    betaCov <- out$RSS*chol2inv(chol(crossprod(crossprod(cholSigmaInv, dat$W))))
+	
+	if (is.element(family$family, c("binomial", "poisson"))){ # Variance Covariance of betas (Wt %*% Sigma^{-1} %*% W)^{-1} 
+		betaCov <- chol2inv(chol(crossprod(crossprod(cholSigmaInv, dat$W))))	
+	} else {  # multiply by RSS (dispersion parameter) 
+		betaCov <- out$RSS*chol2inv(chol(crossprod(crossprod(cholSigmaInv, dat$W))))
+	}
     dimnames(betaCov) <- list(colnames(dat$W), colnames(dat$W))
 
     # test statistics and p-values
