@@ -1,5 +1,10 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.7.4}{
+    \itemize{
+	\item In fitNullMM, for Binomial and Poisson GLM families, the variance of the fixed effects will not be multiplied by the dispersion parameter RSS.
+    }
+}
 \section{Version 2.7.3}{
     \itemize{
 	\item Change defaults in assocTestSeq*: Davies method for SKAT p-values, flat weights.
