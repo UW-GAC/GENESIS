@@ -26,7 +26,7 @@ admixMapMM(admixDataList, nullMMobj, snp.include = NULL,
 
 \value{data frame with admixture mapping results}
 
-\author{Matt Conomos}
+\author{Matthew P. Conomos, Lisa Brown}
 
 \seealso{\code{\link{GenotypeData}}, \code{\link{fitNullMM}}, \code{\link{assocTestMM}}}
 
@@ -80,6 +80,10 @@ myassoc <- admixMapMM(genoDataList, nullMMobj = nullmod)
 
 close(genoDataList[[1]])
 unlink(tmpfile)
+}
+
+\references{
+Brown, L.A. et al. (2017). Admixture Mapping Identifies an Amerindian Ancestry Locus Associated with Albuminuria in Hispanics in the United States. J Am Soc Nephrol. 28(7):2211-2220.
 }
 
 \keyword{mixed model}
