@@ -108,22 +108,24 @@ pcrelate <- function(   genoData,
         # if no gds.prefix specified
         if(is.null(gds.prefix)){ gds.prefix <- "tmp" }
 
+        compress <- "LZMA_RA"
+
         if(verbose){ message("Creating GDS file for Allele Frequency Estimates:")}
         # create an empty GDS file
         gds <- createfn.gds(paste0(gds.prefix,"_freq.gds"))
         # add sample.id (closed)
-        add.gdsn(gds, "sample.id", scan.include$value, compress="ZIP.max", closezip=TRUE)
+        add.gdsn(gds, "sample.id", scan.include$value, compress=compress, closezip=TRUE)
         # add SNP info (open to append data)
-        add.gdsn(gds, "snp.id", storage=class(snp.include$value), valdim=0, compress="ZIP.max")
-        add.gdsn(gds, "snp.position", storage="integer", valdim=0, compress="ZIP.max")
-        add.gdsn(gds, "snp.chromosome", storage="uint8", valdim=0, compress="ZIP.max")
+        add.gdsn(gds, "snp.id", storage=class(snp.include$value), valdim=0, compress=compress)
+        add.gdsn(gds, "snp.position", storage="integer", valdim=0, compress=compress)
+        add.gdsn(gds, "snp.chromosome", storage="uint8", valdim=0, compress=compress)
 
         if(freq.type == "population"){
-            add.gdsn(gds, "pop.freq", storage="float32", valdim=0, compress="ZIP.max")
+            add.gdsn(gds, "pop.freq", storage="float32", valdim=0, compress=compress)
         }
         if(freq.type == "individual"){
             # create node for individual-specific allele frequency data
-            isaf.node <- add.gdsn(gds, "genotype", storage="float32", valdim=c(scan.include$n, 0), compress="ZIP.max")
+            isaf.node <- add.gdsn(gds, "genotype", storage="float32", valdim=c(scan.include$n, 0), compress=compress)
             put.attr.gdsn(isaf.node, "sample.order")
         }
         sync.gds(gds)
@@ -195,7 +197,7 @@ pcrelate <- function(   genoData,
     	# create an empty GDS file for results
     	gds <- createfn.gds(paste0(gds.prefix,"_pcrelate.gds"))
     	# add sample.id (closed)
-    	add.gdsn(gds, "sample.id", scan.include$value, compress="ZIP.max", closezip=TRUE)
+    	add.gdsn(gds, "sample.id", scan.include$value, compress=compress, closezip=TRUE)
     	# create node for kinship values
     	kinship.node <- add.gdsn(gds, "kinship", storage="float32", valdim=c(scan.include$n, scan.include$n))
     	if(ibd.probs){
@@ -591,12 +593,12 @@ pcrelate <- function(   genoData,
         add.gdsn(gds, "freq.type", freq.type, storage="character", closezip=TRUE)
         add.gdsn(gds, "scale", scale, storage="character", closezip=TRUE)        
     	# compress nodes and put in readmode
-    	compression.gdsn(kinship.node, compress="ZIP.max")    	
-    	compression.gdsn(nsnp.node, compress="ZIP.max")
+    	compression.gdsn(kinship.node, compress=compress)    	
+    	compression.gdsn(nsnp.node, compress=compress)
     	readmode.gdsn(kinship.node)    	
     	readmode.gdsn(nsnp.node)
     	if(ibd.probs){
-    		compression.gdsn(ibd.node, compress="ZIP.max")
+    		compression.gdsn(ibd.node, compress=compress)
     		readmode.gdsn(ibd.node)
     	}
     	# cleanup
