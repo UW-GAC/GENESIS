@@ -69,7 +69,7 @@ fitNullMM(scanData, outcome, covars = NULL, covMatList, scan.include = NULL,
 %\note{}
 \seealso{
     \code{\link{varCompCI}} for estimating confidence intervals for the variance components and the proportion of variability (heritability) they explain, \code{\link{assocTestMM}} for running mixed model genetic association tests using the output from \code{fitNullMM}.
-    \code{\link[GWASTools:GWASTools-package]{GWASTools}} for a description of the package containing the \code{\link[GWASTools]{ScanAnnotationDataFrame}} class.
+    \code{\link[GWASTools:GWASTools-package]{GWASTools}} for a description of the package containing the \code{\link{ScanAnnotationDataFrame}} class.
 }
 \examples{
 library(GWASTools)
