@@ -1,3 +1,4 @@
+context("SeqVarData tests")
 library(SeqVarTools)
 library(GWASTools)
 library(Biobase)
@@ -61,27 +62,27 @@ library(gdsfmt)
     fitNullMM(scanData, outcome="outcome", covars="sex", covMatList=grm, verbose=FALSE)
 }
 
-test_PCair <- function(){
+test_that("PCair", {
     data <- .testObjects()
     kinship <- .testKing(data$genoData)
     
     pca.seq <- .testPCair(data$seqData, kinship)
     pca.snp <- .testPCair(data$genoData, kinship)
-    checkEquals(pca.seq$values, pca.snp$values)
-    checkEquals(pca.seq$unrels, pca.snp$unrels)
+    expect_equal(pca.seq$values, pca.snp$values)
+    expect_equal(pca.seq$unrels, pca.snp$unrels)
 
     snpID <- sample(getSnpID(data$genoData), 100)
     scanID <- sample(getScanID(data$genoData), 50)
     seqSetFilter(data$seqData, verbose=FALSE)
     pca.seq <- .testPCair(data$seqData, kinship, scan.include=scanID, snp.include=snpID)
     pca.snp <- .testPCair(data$genoData, kinship, scan.include=scanID, snp.include=snpID)
-    checkEquals(pca.seq$values, pca.snp$values)
-    checkEquals(pca.seq$unrels, pca.snp$unrels)
+    expect_equal(pca.seq$values, pca.snp$values)
+    expect_equal(pca.seq$unrels, pca.snp$unrels)
     
     .testCleanup(data)
-}
+})
 
-test_PCrelate <- function(){
+test_that("PCrelate", {
     data <- .testObjects()
     kinship <- .testKing(data$genoData)
     mypcair <- .testPCair(data$genoData, kinship)
@@ -89,7 +90,7 @@ test_PCrelate <- function(){
     grm.seq <- .testPCrelate(data$seqData, mypcair)
     grm.snp <- .testPCrelate(data$genoData, mypcair)
     names(dimnames(grm.seq)) <- NULL
-    checkEquals(grm.seq, grm.snp)
+    expect_equal(grm.seq, grm.snp)
 
     snpID <- sample(getSnpID(data$genoData), 100)
     scanID <- sample(getScanID(data$genoData), 50)
@@ -98,12 +99,12 @@ test_PCrelate <- function(){
     grm.seq <- .testPCrelate(data$seqData, mypcair, scan.include=scanID, snp.include=snpID)
     grm.snp <- .testPCrelate(data$genoData, mypcair, scan.include=scanID, snp.include=snpID)
     names(dimnames(grm.seq)) <- NULL
-    checkEquals(grm.seq, grm.snp)
+    expect_equal(grm.seq, grm.snp)
     
     .testCleanup(data)
-}
+})
 
-test_nullModel <- function(){
+test_that("nullModel", {
     data <- .testObjects()
     kinship <- .testKing(data$genoData)
     mypcair <- .testPCair(data$genoData, kinship)
@@ -111,36 +112,36 @@ test_nullModel <- function(){
 
     null.seq <- .testNullModel(data$seqData, grm)
     null.snp <- .testNullModel(data$genoData, grm)
-    checkEquals(null.seq$varComp, null.snp$varComp)
+    expect_equal(null.seq$varComp, null.snp$varComp)
     
     .testCleanup(data)
-}
+})
 
-test_getSnpIndex <- function(){
+test_that("getSnpIndex", {
     data <- .testObjects()
 
     snp.seq <- GENESIS:::getSnpIndex(data$seqData, snp.include=1:10, chromosome=NULL)
-    checkEquals(1:10, snp.seq$index)
+    expect_equal(1:10, snp.seq$index)
 
     seqSetFilter(data$seqData, variant.id=1:10, verbose=FALSE)
     snp.seq <- GENESIS:::getSnpIndex(data$seqData, snp.include=NULL, chromosome=NULL)
-    checkEquals(1:10, snp.seq$value)
-    checkEquals(1:10, snp.seq$index)
+    expect_equal(1:10, snp.seq$value)
+    expect_equal(1:10, snp.seq$index)
     
     seqSetFilter(data$seqData, variant.id=11:20, verbose=FALSE)
     snp.seq <- GENESIS:::getSnpIndex(data$seqData, snp.include=NULL, chromosome=NULL)
-    checkEquals(11:20, snp.seq$value)
-    checkEquals(1:10, snp.seq$index)
+    expect_equal(11:20, snp.seq$value)
+    expect_equal(1:10, snp.seq$index)
     
     seqSetFilter(data$seqData, verbose=FALSE)
     snp.seq <- GENESIS:::getSnpIndex(data$seqData, snp.include=NULL, chromosome=22)
     chr22 <- which(seqGetData(data$seqData, "chromosome") == 22)
-    checkEquals(chr22, snp.seq$index)    
+    expect_equal(chr22, snp.seq$index)    
     
     .testCleanup(data)
-}
+})
 
-test_prepareGenotype <- function(){
+test_that("prepareGenotype", {
     data <- .testObjects()
 
     snp.id <- sample(getSnpID(data$genoData), 50)
@@ -153,12 +154,12 @@ test_prepareGenotype <- function(){
     scan.idx <- which(getScanID(data$genoData) %in% scan.id)
     geno.snp <- GENESIS:::prepareGenotype(data$genoData, snp.idx, scan.idx, impute.geno=TRUE)
     names(dimnames(geno.seq)) <- NULL
-    checkEquals(geno.seq, 2-geno.snp)
+    expect_equal(geno.seq, 2-geno.snp)
 
     .testCleanup(data)
-}
+})
 
-test_assocMM <- function(){
+test_that("assocMM", {
     data <- .testObjects()
 
     kinship <- .testKing(data$genoData)
@@ -169,23 +170,23 @@ test_assocMM <- function(){
     assoc.seq <- assocTestMM(data$seqData, nullMMobj=nullmod, verbose=FALSE)
     assoc.snp <- assocTestMM(data$genoData, nullMMobj=nullmod, verbose=FALSE)
     cols <- !(names(assoc.snp) %in% c("minor.allele", "Est"))
-    checkEquals(assoc.seq[,cols], assoc.snp[,cols])
-    checkEquals(assoc.seq$Est, -assoc.snp$Est)
+    expect_equal(assoc.seq[,cols], assoc.snp[,cols])
+    expect_equal(assoc.seq$Est, -assoc.snp$Est)
     ind <- assoc.seq$MAF < 0.5
-    checkEquals(assoc.seq$minor.allele[ind] == "ref", assoc.snp$minor.allele[ind] == "A")
+    expect_equal(assoc.seq$minor.allele[ind] == "ref", assoc.snp$minor.allele[ind] == "A")
 
     snpID <- sample(getSnpID(data$genoData), 100)
     assoc.seq <- assocTestMM(data$seqData, nullMMobj=nullmod, snp.include=snpID, verbose=FALSE)
     assoc.snp <- assocTestMM(data$genoData, nullMMobj=nullmod, snp.include=snpID, verbose=FALSE)
     cols <- !(names(assoc.snp) %in% c("minor.allele", "Est"))
-    checkEquals(assoc.seq[,cols], assoc.snp[,cols])
-    checkEquals(assoc.seq$Est, -assoc.snp$Est)
+    expect_equal(assoc.seq[,cols], assoc.snp[,cols])
+    expect_equal(assoc.seq$Est, -assoc.snp$Est)
 
     # check filter
     seqSetFilter(data$seqData, variant.id=snpID)
     assoc.seq <- assocTestMM(data$seqData, nullMMobj=nullmod, verbose=FALSE)
-    checkEquals(assoc.seq[,cols], assoc.snp[,cols])
-    checkEquals(assoc.seq$Est, -assoc.snp$Est)
+    expect_equal(assoc.seq[,cols], assoc.snp[,cols])
+    expect_equal(assoc.seq$Est, -assoc.snp$Est)
 
     .testCleanup(data)
-}
+})

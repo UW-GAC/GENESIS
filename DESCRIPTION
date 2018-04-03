@@ -28,7 +28,7 @@ License: GPL-3
 Depends: 
 Imports: Biobase, BiocGenerics, GWASTools, gdsfmt, GenomicRanges, graph, IRanges, S4Vectors, SeqArray, SeqVarTools, 
 	 dplyr, graphics, grDevices, Matrix, methods, stats, utils, genesis2tests
-Suggests: CompQuadForm, logistf, survey, SNPRelate, GWASdata, RUnit, knitr
+Suggests: CompQuadForm, logistf, survey, SNPRelate, GWASdata, testthat, knitr
 VignetteBuilder: knitr
 biocViews: SNP, GeneticVariability, Genetics, StatisticalMethod,
         DimensionReduction, PrincipalComponent, GenomeWideAssociation,

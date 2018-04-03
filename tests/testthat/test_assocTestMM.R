@@ -1,7 +1,8 @@
+context("assocTestMM")
 library(GWASdata)
 library(SNPRelate)
 
-test_assocTestMM <- function() {
+test_that("assocTestMM", {
     # use GWASdata objects because they have the Y chromosome)
     data(illuminaScanADF)
     scanAnnot <- illuminaScanADF
@@ -25,4 +26,5 @@ test_assocTestMM <- function() {
     assoc <- assocTestMM(genoData, nullmod, test="Score", chromosome=25, verbose=FALSE)
     
     close(genoData)
-}
+})
+
