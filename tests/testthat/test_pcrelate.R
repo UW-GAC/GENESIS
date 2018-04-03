@@ -17,7 +17,7 @@ test_that("pcrelate", {
     myrel <- pcrelate(genoData = HapMap_genoData, pcMat = mypcs$vectors[,1:2])
 
     close(HapMap_genoData)	
-}
+})
 
 test_that("pcrelate_writegds", {
 
@@ -40,7 +40,7 @@ test_that("pcrelate_writegds", {
     
     close(HapMap_genoData)
     
-}
+})
 
 test_that("pcrelate_makegrm", {
     requireNamespace("gdsfmt")
@@ -81,4 +81,4 @@ test_that("pcrelate_makegrm", {
     
     close(HapMap_genoData)
     
-}
+})
