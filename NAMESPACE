@@ -8,7 +8,6 @@ import(Biobase)
 import(gdsfmt)
 import(graph)
 import(Matrix)
-import(genesis2tests)
 
 importFrom(GWASTools, GdsGenotypeReader, GenotypeData)
 importClassesFrom(GWASTools,
@@ -30,13 +29,6 @@ importMethodsFrom(GWASTools,
 
 import(SeqArray)
 import(SeqVarTools)
-## importFrom(SeqVarTools, SeqVarData)
-## importClassesFrom(SeqVarTools, SeqVarData)
-## importMethodsFrom(SeqVarTools,
-##                   altDosage,
-##                   alleleDosage,
-##                   sampleData,
-##                   variantData)
 
 importFrom(BiocGenerics, start, end)
 importFrom(GenomicRanges, GRanges)
@@ -45,19 +37,20 @@ importFrom(S4Vectors, mcols, queryHits, subjectHits)
 
 importFrom(dplyr, bind_rows, inner_join)
 
+export(king2mat,
+       pcair,
+       pcairPartition,
+       pcrelate,
+       pcrelateMakeGRM,
+       pcrelateReadInbreed,
+       pcrelateReadKinship)
+
 export(admixMapMM,
        assocTestMM,
        assocTestSeq,
        assocTestSeqWindow,
        fitNullMM,
        fitNullReg,
-       king2mat,
-       pcair, 
-       pcairPartition,       
-       pcrelate,
-       pcrelateMakeGRM,
-       pcrelateReadInbreed,
-       pcrelateReadKinship,
        varCompCI)
 
 exportMethods(assocTestSingle,
