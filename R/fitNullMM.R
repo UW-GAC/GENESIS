@@ -124,7 +124,7 @@ fitNullMM <- function(	scanData,
         workingY <- dat$Y
         
         # estimate variance components
-        out <- .runAIREMLgaussian(	Y = workingY,
+        out <- .runAIREMLgaussian1(	Y = workingY,
         							W = dat$W,
         							n = scan.include$n,
         							k = dat$k,
@@ -156,7 +156,7 @@ fitNullMM <- function(	scanData,
             if(verbose) message(paste(paste("Sigma^2_",c(names(covMatList)),sep="", collapse="     "), "log-lik", "RSS", sep="     "))
             
             # estimate variance components
-            out <- .runAIREMLother( Y = workingY, 
+            out <- .runAIREMLother1( Y = workingY, 
             						W = dat$W,
             						n = scan.include$n,
             						k = dat$k,
@@ -280,7 +280,7 @@ fitNullMM <- function(	scanData,
 
 
 
-.runAIREMLgaussian <- function(Y, W, n, k, covMatList, m, group.idx, g, start, AIREML.tol, maxIter, dropZeros, verbose){
+.runAIREMLgaussian1 <- function(Y, W, n, k, covMatList, m, group.idx, g, start, AIREML.tol, maxIter, dropZeros, verbose){
     
     # trait variance
     sigma2.p <- var(Y)
@@ -479,7 +479,7 @@ fitNullMM <- function(	scanData,
 
 
 
-.runAIREMLother <- function(Y, W, n, k, covMatList, m, vmu, gmuinv, start, AIREML.tol, maxIter, dropZeros, verbose){
+.runAIREMLother1 <- function(Y, W, n, k, covMatList, m, vmu, gmuinv, start, AIREML.tol, maxIter, dropZeros, verbose){
     
     val <- 2*AIREML.tol
 

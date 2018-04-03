@@ -165,9 +165,9 @@ assocTestSeq <- function(seqData,
 			U <- as.vector(crossprod(geno, proj$resid))
 			geno <- crossprod(proj$Mt, geno)
 			if(length(rho) == 1){
-				testout <- .runSKATTest(scores = U, geno.adj = geno, weights = weights, rho = rho, pval.method = pval.method, optimal = FALSE)
+				testout <- .runSKATTest1(scores = U, geno.adj = geno, weights = weights, rho = rho, pval.method = pval.method, optimal = FALSE)
 			}else{
-				testout <- .runSKATTest(scores = U, geno.adj = geno, weights = weights, rho = rho, pval.method = pval.method, optimal = TRUE)
+				testout <- .runSKATTest1(scores = U, geno.adj = geno, weights = weights, rho = rho, pval.method = pval.method, optimal = TRUE)
 			}
 		}
 
@@ -439,9 +439,9 @@ assocTestSeqWindow <- function(seqData,
 
 					}else if(test == "SKAT"){
 						if(length(rho) == 1){
-							testout <- .runSKATTest(scores = U, geno.adj = geno, weights = weights, rho = rho, pval.method = pval.method, optimal = FALSE)
+							testout <- .runSKATTest1(scores = U, geno.adj = geno, weights = weights, rho = rho, pval.method = pval.method, optimal = FALSE)
 						}else{
-							testout <- .runSKATTest(scores = U, geno.adj = geno, weights = weights, rho = rho, pval.method = pval.method, optimal = TRUE)
+							testout <- .runSKATTest1(scores = U, geno.adj = geno, weights = weights, rho = rho, pval.method = pval.method, optimal = TRUE)
 						}
 					}
 
@@ -677,7 +677,7 @@ assocTestSeqWindow <- function(seqData,
 
 
 
-.runSKATTest <- function(scores, geno.adj, weights, rho, pval.method, optimal){
+.runSKATTest1 <- function(scores, geno.adj, weights, rho, pval.method, optimal){
 	# covariance of scores
 	V <- crossprod(geno.adj)
 	
@@ -805,52 +805,6 @@ assocTestSeqWindow <- function(seqData,
 }
 
 
-# function to calculate q_min value
-# basically a qchisqsum() function that takes the quantile/percentile and the lambda values
-# matches the first 2 moments and the kurtosis
-# based upon liu et al (2009) paper
-skatO_qchisqsum <- function(p, lambdas){
-	mu <- sum(lambdas)
-	sum.lambda.sq <- sum(lambdas^2)
-
-  	s1 <- sum(lambdas^3)/(sum.lambda.sq^(3/2))
-  	s2 <- sum(lambdas^4)/(sum.lambda.sq^2)
-  	if(s1^2 > s2){
-    	a <- 1/(s1-sqrt(s1^2-s2))
-    	d <- s1*a^3 - a^2
-    	l <- a^2 - 2*d
-  	}else{ # s1^2 <= s2
-            l <- 1/s2 # in liu et al, this is l=1/s1^2; matches kurtosis instead of skewness to improve tail prob estimates
-        }  	
-  
-  	qmin <- qchisq(1-p, df=l)
-  	pval <- (qmin - l)/sqrt(2*l) * sqrt(2*sum.lambda.sq) + mu
-  
-  	return(pval)
-}
-
-
-## function to integrate; the first term of the optimal integrand
-# it's a non-central sum of weighted chi-squares
-integrateFxn <- function(x, qmin, otherParams, tau, rho){
-    n.r <- length(rho)
-    n.x <- length(x)
-    
-    t1 <- tau %x% t(x)
-    tmp <- (qmin - t1)/(1-rho)
-    minval <- apply(tmp,2,min)
-
-    degf <- otherParams["degf"]
-    mu <- otherParams["mu"]
-    varia <- otherParams["varia"]
-
-    temp.q<-(minval - mu)/sqrt(varia)*sqrt(2*degf) + degf
-
-    re<-pchisq(temp.q ,df=degf) * dchisq(x,df=1)
-
-    return(re)
-}
-
 
 .chrToInt <- function(chr){
     unname(setNames(1:24, c(1:22, "X", "Y"))[chr])
@@ -858,10 +812,4 @@ integrateFxn <- function(x, qmin, otherParams, tau, rho){
 
 .intToChr <- function(chr){
     unname(setNames(c(1:22, "X", "Y"), 1:24)[as.character(chr)])
-}
-
-
-.weightFromFreq <- function(freq, weight.beta) {
-    freq <- pmin(freq, 1-freq)
-    dbeta(freq, weight.beta[1], weight.beta[2])
 }

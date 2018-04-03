@@ -2,7 +2,6 @@ context("SeqVarData tests")
 library(SeqVarTools)
 library(GWASTools)
 library(Biobase)
-library(SNPRelate)
 library(gdsfmt)
 
 .testObjects <- function(){
@@ -31,17 +30,6 @@ library(gdsfmt)
     seqClose(data$seqData)
     close(data$genoData)
     unlink(data$genoData@data@filename)
-}
-
-.testKing <- function(gds){
-    if (is(gds, "GenotypeData")) {
-        gds <- gds@data@handler
-    }
-    suppressMessages(ibd <- snpgdsIBDKING(gds, verbose=FALSE))
-    kc <- ibd$kinship
-    rownames(kc) <- ibd$sample.id
-    colnames(kc) <- ibd$sample.id
-    kc
 }
 
 .testPCair <- function(genoData, kinship, ...){
@@ -120,21 +108,21 @@ test_that("nullModel", {
 test_that("getSnpIndex", {
     data <- .testObjects()
 
-    snp.seq <- GENESIS:::getSnpIndex(data$seqData, snp.include=1:10, chromosome=NULL)
+    snp.seq <- getSnpIndex(data$seqData, snp.include=1:10, chromosome=NULL)
     expect_equal(1:10, snp.seq$index)
 
     seqSetFilter(data$seqData, variant.id=1:10, verbose=FALSE)
-    snp.seq <- GENESIS:::getSnpIndex(data$seqData, snp.include=NULL, chromosome=NULL)
+    snp.seq <- getSnpIndex(data$seqData, snp.include=NULL, chromosome=NULL)
     expect_equal(1:10, snp.seq$value)
     expect_equal(1:10, snp.seq$index)
     
     seqSetFilter(data$seqData, variant.id=11:20, verbose=FALSE)
-    snp.seq <- GENESIS:::getSnpIndex(data$seqData, snp.include=NULL, chromosome=NULL)
+    snp.seq <- getSnpIndex(data$seqData, snp.include=NULL, chromosome=NULL)
     expect_equal(11:20, snp.seq$value)
     expect_equal(1:10, snp.seq$index)
     
     seqSetFilter(data$seqData, verbose=FALSE)
-    snp.seq <- GENESIS:::getSnpIndex(data$seqData, snp.include=NULL, chromosome=22)
+    snp.seq <- getSnpIndex(data$seqData, snp.include=NULL, chromosome=22)
     chr22 <- which(seqGetData(data$seqData, "chromosome") == 22)
     expect_equal(chr22, snp.seq$index)    
     
@@ -146,13 +134,13 @@ test_that("prepareGenotype", {
 
     snp.id <- sample(getSnpID(data$genoData), 50)
     scan.id <- sample(getScanID(data$genoData), 20)
-    seqResetFilter(data$seqData)
+    seqResetFilter(data$seqData, verbose=FALSE)
     snp.idx <- which(seqGetData(data$seqData, "variant.id") %in% snp.id)
     scan.idx <- which(seqGetData(data$seqData, "sample.id") %in% scan.id)
-    geno.seq <- GENESIS:::prepareGenotype(data$seqData, snp.idx, scan.idx, impute.geno=TRUE)
+    geno.seq <- prepareGenotype(data$seqData, snp.idx, scan.idx, impute.geno=TRUE)
     snp.idx <- which(getSnpID(data$genoData) %in% snp.id)
     scan.idx <- which(getScanID(data$genoData) %in% scan.id)
-    geno.snp <- GENESIS:::prepareGenotype(data$genoData, snp.idx, scan.idx, impute.geno=TRUE)
+    geno.snp <- prepareGenotype(data$genoData, snp.idx, scan.idx, impute.geno=TRUE)
     names(dimnames(geno.seq)) <- NULL
     expect_equal(geno.seq, 2-geno.snp)
 
@@ -183,7 +171,7 @@ test_that("assocMM", {
     expect_equal(assoc.seq$Est, -assoc.snp$Est)
 
     # check filter
-    seqSetFilter(data$seqData, variant.id=snpID)
+    seqSetFilter(data$seqData, variant.id=snpID, verbose=FALSE)
     assoc.seq <- assocTestMM(data$seqData, nullMMobj=nullmod, verbose=FALSE)
     expect_equal(assoc.seq[,cols], assoc.snp[,cols])
     expect_equal(assoc.seq$Est, -assoc.snp$Est)

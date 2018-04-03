@@ -13,7 +13,10 @@
 }
 
 .testKing <- function(gds){
-    ibd <- SNPRelate::snpgdsIBDKING(gds, verbose=FALSE)
+    if (is(gds, "GenotypeData")) {
+        gds <- gds@data@handler
+    }
+    suppressMessages(ibd <- SNPRelate::snpgdsIBDKING(gds, verbose=FALSE))
     kc <- ibd$kinship
     rownames(kc) <- ibd$sample.id
     colnames(kc) <- ibd$sample.id
@@ -22,7 +25,7 @@
 
 .testGRM <- function(seqData, ...){
     kinship <- .testKing(seqData)
-    mypcair <- GENESIS::pcair(seqData, kinMat=kinship, divMat=kinship, verbose=FALSE, ...)
-    mypcrel <- GENESIS::pcrelate(seqData, pcMat=mypcair$vectors[,1:2], training.set=mypcair$unrels, verbose=FALSE, ...)
-    GENESIS::pcrelateMakeGRM(mypcrel)
+    mypcair <- pcair(seqData, kinMat=kinship, divMat=kinship, verbose=FALSE, ...)
+    mypcrel <- pcrelate(seqData, pcMat=mypcair$vectors[,1:2], training.set=mypcair$unrels, verbose=FALSE, ...)
+    pcrelateMakeGRM(mypcrel)
 }
