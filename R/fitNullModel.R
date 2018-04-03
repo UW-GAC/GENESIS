@@ -13,7 +13,7 @@ setMethod("fitNullModel",
                    max.iter = 100,
                    drop.zeros = TRUE,
                    verbose = TRUE) {
-              desmat <- createDesignMatrix2(x, outcome, covars, group.var)
+              desmat <- createDesignMatrix(x, outcome, covars, group.var)
               fitNullMod(y=desmat$y, X=desmat$X, covMatList=cov.mat,
                          group.idx=desmat$group.idx, family=family,
                          start=start, AIREML.tol=AIREML.tol,
@@ -29,7 +29,7 @@ setMethod("fitNullModel",
                    group.var = NULL,
                    sample.id = NULL,
                    ...) {
-              desmat <- createDesignMatrix2(x, outcome, covars, group.var, sample.id)
+              desmat <- createDesignMatrix(x, outcome, covars, group.var, sample.id)
 
               # subset or re-order cov.mat if necessary
               if (!is.null(cov.mat)) {

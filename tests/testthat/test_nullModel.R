@@ -6,15 +6,15 @@ test_that("design matrix from data.frame", {
                       b=c(rep("a",5), rep("b", 5)),
                       c=sample(1:10, 10, replace=TRUE),
                       d=rep(1, 10))
-    dm <- createDesignMatrix2(dat, outcome="a")
+    dm <- createDesignMatrix(dat, outcome="a")
     expect_equivalent(dm$y, dat$a)
     expect_equal(ncol(dm$X), 1)
     expect_true(all(dm$X[,1] == 1))
-    dm <- createDesignMatrix2(dat, outcome="a", covars="b")
+    dm <- createDesignMatrix(dat, outcome="a", covars="b")
     expect_equal(colnames(dm$X)[-1], "bb")
-    dm <- createDesignMatrix2(dat, outcome="a", covars=c("b", "c", "b:c"))
+    dm <- createDesignMatrix(dat, outcome="a", covars=c("b", "c", "b:c"))
     expect_equal(colnames(dm$X)[-1], c("bb", "c", "bb:c"))
-    expect_message(createDesignMatrix2(dat, outcome="a", covars="d"), "removed from the model")
+    expect_message(createDesignMatrix(dat, outcome="a", covars="d"), "removed from the model")
 })
 
 test_that("design matrix from AnnotatedDataFrame", {
@@ -23,11 +23,11 @@ test_that("design matrix from AnnotatedDataFrame", {
                       b=c(rep("a",5), rep("b", 5)),
                       stringsAsFactors=FALSE)
     dat <- AnnotatedDataFrame(dat)
-    dm <- createDesignMatrix2(dat, outcome="a", covars="b")
+    dm <- createDesignMatrix(dat, outcome="a", covars="b")
     expect_equivalent(dm$y, dat$a)
     expect_equal(rownames(dm$X), dat$sample.id)
     keep <- dat$sample.id[c(TRUE,FALSE)]
-    dm <- createDesignMatrix2(dat, outcome="a", covars="b", sample.id=keep)
+    dm <- createDesignMatrix(dat, outcome="a", covars="b", sample.id=keep)
     expect_equivalent(dm$y, dat$a[c(TRUE,FALSE)])
     expect_equal(rownames(dm$X), keep)
 })
@@ -94,7 +94,7 @@ test_that("change sample order", {
     covMat <- crossprod(matrix(rnorm(100,sd=0.05),10,10))
     
     keep <- rev(dat$sample.id[c(TRUE,FALSE)])
-    dm <- createDesignMatrix2(dat, outcome="a", covars="b", sample.id=keep)
+    dm <- createDesignMatrix(dat, outcome="a", covars="b", sample.id=keep)
     expect_equivalent(dm$y, rev(dat$a[c(TRUE,FALSE)]))
     expect_equal(rownames(dm$X), keep)
 
