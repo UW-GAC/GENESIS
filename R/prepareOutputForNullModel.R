@@ -17,7 +17,7 @@
     fixef <- as.data.frame(summary(mod)$coef)
     varNames <- colnames(X) 
     rownames(fixef) <- varNames
-    betaCov <- vcov(mod)
+    betaCov <- vcov(mod, complete=FALSE)
     dimnames(betaCov) <- list(varNames, varNames)
     fitted.values <- mod$fitted.values
     resid.marginal <-  residuals(mod, type = "response")
