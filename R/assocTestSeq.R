@@ -11,6 +11,8 @@ assocTestSeq <- function(seqData,
                          pval.method = "davies",
                          verbose = TRUE){
 
+    .Deprecated("assocTestAggregate")
+
 	# save the filter
 	seqFilt.original <- seqGetFilter(seqData)
         # reset so indexing works
@@ -213,6 +215,8 @@ assocTestSeqWindow <- function(seqData,
                                rho = 0,
                                pval.method = "davies",
                                verbose = TRUE){
+
+    .Deprecated("assocTestAggregate")
 
 	# save the filter
 	seqFilt.original <- seqGetFilter(seqData)

@@ -1,7 +1,8 @@
 \name{assocTestSeq}
 \alias{assocTestSeq}
 \title{Aggregate Association Testing with Sequencing Data}
-\description{\code{assocTestSeq} performs aggregate association tests with sequencing data using the null model fit with \code{\link{fitNullMM}} or \code{\link{fitNullReg}}.}
+\description{\code{assocTestSeq} performs aggregate association tests with sequencing data using the null model fit with \code{\link{fitNullMM}} or \code{\link{fitNullReg}}.
+This function is deprecated; use \code{\link{assocTestAggregate}} instead.}
 \usage{
 assocTestSeq(seqData, nullModObj, aggVarList, AF.sample = NULL,
             AF.range = c(0,1), weight.beta = c(1, 1), weight.user = NULL,
@@ -83,6 +84,7 @@ assocTestSeq(seqData, nullModObj, aggVarList, AF.sample = NULL,
 \author{Matthew P. Conomos}
 %\note{None now}
 \examples{
+\dontrun{
 library(SeqVarTools)
 library(Biobase)
 
@@ -128,5 +130,6 @@ assoc$results
 lapply(assoc$variantInfo, head)
 
 seqClose(seqData)
+}
 }
 \keyword{association}
