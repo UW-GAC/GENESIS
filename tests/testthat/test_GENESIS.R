@@ -3,7 +3,9 @@ library(SeqVarTools)
 library(GenomicRanges)
 library(Biobase)
 
-## flag for binary tests
+## flags for running various tests
+test_any <- FALSE
+
 ## these have unpredictable errors depending on the random covariance matrix
 ## mostly of the form "a is 0-dimensional"
 test_binary <- FALSE
@@ -11,7 +13,11 @@ test_binary <- FALSE
 ## unpredictable failures - check this
 test_GxE <- FALSE
 
+## tests involving deprecated functions (assocTestSeq*)
+test_deprecated <- FALSE
 
+if (test_any) {
+    
 test_that("fitNullMod matches fitNullReg - linear", {
     dat <- .testNullInputs()
     nullmod <- fitNullMod(dat$y, dat$X, verbose=FALSE)
@@ -487,6 +493,7 @@ test_that("assocTestSingle matches assocTestMM - GxE", {
 }
 
 
+if (test_deprecated) {
 test_that("assocTestAggregate matches assocTestSeqWindow - Burden, Wald", {
     svd <- .testData()
     nullmod <- fitNullReg(sampleData(svd), outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
@@ -745,3 +752,5 @@ test_that("assocTestAggregate matches assocTestSeqWindow - SKAT-O, LMM", {
     
     seqClose(svd)
 })
+}
+}
