@@ -30,7 +30,7 @@ fitNullReg <- function(	scanData,
 
     # create design matrices and outcome vector
     if(verbose) message("Reading in Phenotype and Covariate Data...")
-    dat <- createDesignMatrix(scanData = scanData, outcome = outcome, covars = covars, scan.include = scan.include)
+    dat <- createDesignMatrix1(scanData = scanData, outcome = outcome, covars = covars, scan.include = scan.include)
 
     # update scan.include
     scan.include <- getScanIndex(data = scanData, scan.include = rownames(dat$W))    

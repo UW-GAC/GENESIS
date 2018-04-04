@@ -1,55 +1,55 @@
-createDesignMatrix <- function(scanData, outcome, covars, scan.include){
-    # check for variable names in scanData
-    if(!("scanID" %in% names(scanData))){
-        stop("scanID must be in scanData")
-    }
-    if(!(outcome %in% names(scanData))){
-        stop("outcome must be in scanData")
-    }
 
-    # set which samples to keep
-    scanID <- scanData[,"scanID"]
-    # samples to include for the analysis
-    if(!is.null(scan.include)){
-        if(!all(scan.include %in% scanID)){
-            stop("Not all of the scanID in scan.include are in scanData")
-        }
-        keep <- scanID %in% scan.include
-    }else{
-        keep <- rep(TRUE, length(scanID))
-    }
+setGeneric("createDesignMatrix", function(x, ...) standardGeneric("createDesignMatrix"))
 
-    # set up model and read in data
-    if(!is.null(covars)){
-        cvnames <- unique(unlist(strsplit(covars,"[*:]")))
-        if(!(all(cvnames %in% names(scanData)))){
-            stop("All of the variables in covars must be in scanData")
-        }
-        dat <- scanData[,c(outcome, cvnames)]
-        model.formula <- as.formula(paste(paste(outcome,"~"), paste(covars,collapse="+")))
-    }else{
-        dat <- scanData[,outcome, drop=FALSE]
-        model.formula <- as.formula(paste(paste(outcome,"~"), 1))
-    }    
-        
-    # identify samples with any missing data
-    keep <- keep & apply(dat,1,function(x){ all(!is.na(x)) })
-    # remove samples with any missing data
-    dat <- dat[keep,,drop=FALSE]
+setMethod("createDesignMatrix",
+          "data.frame",
+          function(x, outcome, covars=NULL, group.var=NULL) {
 
-    # outcome vector
-    Y <- dat[,outcome]
-    # create design matrix    
-    W <- model.matrix(model.formula, data=dat)
-    rownames(W) <- scanID[keep]
-    # check for columns of all the same value (except the intercept)
-    dropcol <- append(FALSE, apply(W[,-1,drop=FALSE], 2, var) == 0)
-    if(sum(dropcol) > 0){
-        message("Covariates ",paste(colnames(W)[dropcol], collapse = ", "), " have only 1 value: they have been removed from the model")
-        W <- W[,!dropcol,drop=FALSE]
-    }
-    k <- ncol(W)
+              # group index
+              if (!is.null(group.var)) {
+                  group.idx <- .indexList(x[[group.var]])
+              } else {
+                  group.idx <- NULL
+              }
+              
+              if (!is.null(covars)) {
+                  model.formula <- as.formula(paste(outcome, "~", paste(covars, collapse="+")))
+                  # allow interactions
+                  covars <- unique(unlist(strsplit(covars,"[*:]")))
+              } else {
+                  model.formula <- as.formula(paste(outcome, "~", 1))
+              }
+              x <- x[, c(outcome, covars), drop=FALSE]
+              x <- x[complete.cases(x),,drop=FALSE]
+              
+              # outcome vector - preserve column name
+              #y <- x[[outcome]]
+              y <- as.matrix(x[,outcome,drop=FALSE])
+              # create design matrix    
+              X <- model.matrix(model.formula, data=x)
+              # check for columns of all the same value (except the intercept)
+              dropcol <- append(FALSE, apply(X[,-1,drop=FALSE], 2, var) == 0)
+              if (sum(dropcol) > 0) {
+                  message("Covariates ",paste(colnames(X)[dropcol], collapse = ", "), " have only 1 value: they have been removed from the model")
+                  X <- X[,!dropcol,drop=FALSE]
+              }
 
-    # return output
-    return(list(Y = Y, W = W, k = k))
+              list(y=y, X=X, group.idx=group.idx)
+          })
+
+setMethod("createDesignMatrix",
+          "AnnotatedDataFrame",
+          function(x, outcome, covars=NULL, group.var=NULL, sample.id=NULL) {
+              x <- pData(x)
+              rownames(x) <- x$sample.id
+              if (!is.null(sample.id)) {
+                  stopifnot(all(sample.id %in% x$sample.id))
+                  x <- x[as.character(sample.id),]
+              }
+              createDesignMatrix(x, outcome, covars, group.var)
+          })
+
+.indexList <- function(x) {
+    groups <- unique(x)
+    lapply(setNames(groups, groups), function(g) which(x == g))
 }

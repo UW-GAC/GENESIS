@@ -1,12 +1,13 @@
 import(grDevices)
 import(graphics)
-importFrom(methods, as)
+import(methods)
 import(stats)
 importFrom(utils, read.table)
 
 import(Biobase)
 import(gdsfmt)
 import(graph)
+import(Matrix)
 
 importFrom(GWASTools, GdsGenotypeReader, GenotypeData)
 importClassesFrom(GWASTools,
@@ -27,18 +28,22 @@ importMethodsFrom(GWASTools,
                   YchromCode)
 
 import(SeqArray)
-importFrom(SeqVarTools, SeqVarData)
-importClassesFrom(SeqVarTools, SeqVarData)
-importMethodsFrom(SeqVarTools,
-                  altDosage,
-                  alleleDosage,
-                  sampleData,
-                  variantData)
+import(SeqVarTools)
 
 importFrom(BiocGenerics, start, end)
 importFrom(GenomicRanges, GRanges)
 importFrom(IRanges, IRanges, findOverlaps)
-importFrom(S4Vectors, queryHits, subjectHits)
+importFrom(S4Vectors, mcols, queryHits, subjectHits)
+
+importFrom(dplyr, bind_rows, inner_join)
+
+export(king2mat,
+       pcair,
+       pcairPartition,
+       pcrelate,
+       pcrelateMakeGRM,
+       pcrelateReadInbreed,
+       pcrelateReadKinship)
 
 export(admixMapMM,
        assocTestMM,
@@ -46,14 +51,12 @@ export(admixMapMM,
        assocTestSeqWindow,
        fitNullMM,
        fitNullReg,
-       king2mat,
-       pcair, 
-       pcairPartition,       
-       pcrelate,
-       pcrelateMakeGRM,
-       pcrelateReadInbreed,
-       pcrelateReadKinship,
        varCompCI)
+
+exportMethods(assocTestSingle,
+              assocTestAggregate,
+              fitNullModel)
+export(nullModelInvNorm)
 
 S3method(plot, pcair)
 S3method(summary, pcair)

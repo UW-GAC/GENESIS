@@ -1,8 +1,9 @@
+context("pcrelate tests")
 library(GWASTools)
 
-test_pcrelate <- function(){
+test_that("pcrelate", {
 
-	# file path to GDS file
+    # file path to GDS file
     gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
     # read in GDS data
     HapMap_geno <- GdsGenotypeReader(filename = gdsfile)
@@ -16,11 +17,11 @@ test_pcrelate <- function(){
     myrel <- pcrelate(genoData = HapMap_genoData, pcMat = mypcs$vectors[,1:2])
 
     close(HapMap_genoData)	
-}
+})
 
-test_pcrelate_writegds <- function(){
+test_that("pcrelate_writegds", {
 
-	# file path to GDS file
+    # file path to GDS file
     gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
     # read in GDS data
     HapMap_geno <- GdsGenotypeReader(filename = gdsfile)
@@ -39,12 +40,12 @@ test_pcrelate_writegds <- function(){
     
     close(HapMap_genoData)
     
-}
+})
 
-test_pcrelate_makegrm <- function(){
+test_that("pcrelate_makegrm", {
     requireNamespace("gdsfmt")
 
-	# file path to GDS file
+    # file path to GDS file
     gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
     # read in GDS data
     HapMap_geno <- GdsGenotypeReader(filename = gdsfile)
@@ -62,7 +63,7 @@ test_pcrelate_makegrm <- function(){
     scan.include <- sample(colnames(grm), floor(ncol(grm)/2))
     grm.sub <- pcrelateMakeGRM(myrel, scan.include=scan.include)
     ind <- colnames(grm) %in% scan.include
-    checkEquals(grm[ind,ind], grm.sub)
+    expect_equal(grm[ind,ind], grm.sub)
 
     # check with gds
     gds.prefix <- tempfile()
@@ -73,11 +74,11 @@ test_pcrelate_makegrm <- function(){
     scan.include <- sample(colnames(grm), floor(ncol(grm)/2))
     grm.sub <- pcrelateMakeGRM(gds, scan.include=scan.include)
     ind <- colnames(grm) %in% scan.include
-    checkEquals(grm[ind,ind], grm.sub)
+    expect_equal(grm[ind,ind], grm.sub)
     
     closefn.gds(gds)
     unlink(paste0(gds.prefix, "_pcrelate.gds"))
     
     close(HapMap_genoData)
     
-}
+})

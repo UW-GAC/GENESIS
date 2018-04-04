@@ -1,7 +1,8 @@
 \name{assocTestSeqWindow}
 \alias{assocTestSeqWindow}
 \title{Aggregate Association Testing with Sequencing Data in Sliding Windows}
-\description{\code{assocTestSeqWindow} performs aggregate association tests with sequencing data in sliding windows using the null model fit with \code{\link{fitNullMM}} or \code{\link{fitNullReg}}.}
+\description{\code{assocTestSeqWindow} performs aggregate association tests with sequencing data in sliding windows using the null model fit with \code{\link{fitNullMM}} or \code{\link{fitNullReg}}.
+This function is deprecated; use \code{\link{assocTestAggregate}} instead.}
 \usage{
 assocTestSeqWindow(seqData, nullModObj, variant.include = NULL, chromosome = NULL,
                     window.size = 50, window.shift = 20, AF.sample = NULL, AF.range = c(0,1), 
@@ -93,6 +94,7 @@ assocTestSeqWindow(seqData, nullModObj, variant.include = NULL, chromosome = NUL
 \author{Matthew P. Conomos}
 %\note{None now}
 \examples{
+\dontrun{
 library(SeqVarTools)
 library(Biobase)
 
@@ -133,5 +135,6 @@ head(assoc$results)
 head(assoc$variantInfo)
 
 seqClose(seqData)
+}
 }
 \keyword{association}
