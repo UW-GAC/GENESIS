@@ -35,7 +35,7 @@
     The effect size estimate is for each copy of the alternate allele.
     For multiallelic variants, each alternate allele is tested separately.
 
-    The SMMAT test is a hybrid of SKAT and the burdren test.
+    The SMMAT test is a hybrid of SKAT and the burden test.
 }
 
 \value{A list with the following items:
@@ -91,7 +91,7 @@
     \item{weight}{The weight assigned to the variant in the analysis.}
 }
 
-\author{Matthew P. Conomos, Stephanie M. Gogarten, Tamar Sofer, Ken Rice, Chaoyu Yu}
+\author{Matthew P. Conomos, Stephanie M. Gogarten, Tamar Sofer, Ken Rice, Chaoyu Yu, Han Chen}
 
 \examples{
 library(SeqVarTools)
