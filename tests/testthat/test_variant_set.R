@@ -57,7 +57,7 @@ test_that("SKAT with rho=1 matches burden", {
 })
 
 
-test_that("hybrid test matches burden and skat", {
+test_that("SMMAT matches burden and skat", {
 	n <- 100
 
 	### create a matrix of genetic variants to test.

@@ -80,7 +80,7 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "SMMA
     V.rowSums <- rowSums(V)
     U <- U - V.rowSums * burden.scores / burden.distMat
     V <- V - tcrossprod(V.rowSums) / burden.distMat
-    if(mean(abs(V)) < sqrt(.Machine$double.eps)) return(list(pval_burden=burden.pval, pval_hybrid=burden.pval, err=0))
+    if(mean(abs(V)) < sqrt(.Machine$double.eps)) return(list(pval_burden=burden.pval, pval_SMMAT=burden.pval, err=0))
     Q <- sum(U^2)
     # lambda for p value calculation
     lambda <- eigen(V, only.values = TRUE, symmetric=TRUE)$values
@@ -93,7 +93,7 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "SMMA
         err <- 1
         out.pval <- burden.pval
     }
-    out <- list(pval_burden=burden.pval, pval_hybrid=out.pval, err=err)
+    out <- list(pval_burden=burden.pval, pval_SMMAT=out.pval, err=err)
     return(out)
 }
 

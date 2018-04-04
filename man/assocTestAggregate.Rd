@@ -35,7 +35,7 @@
     The effect size estimate is for each copy of the alternate allele.
     For multiallelic variants, each alternate allele is tested separately.
 
-    The SMMAT test is a hybrid of SKAT and the burden test.
+    Somewhat similarly to SKAT-O, the variant Set Mixed Model Association Test (SMMAT, Chen et al., manuscript in preparation) combines the burden test p-value with an adjusted SKAT (which is asymptotically independent of the burden test) p-value using a chi-square distribution with 4df from Fisher's method.
 }
 
 \value{A list with the following items:
@@ -78,8 +78,8 @@
 
     If \code{test} is \code{"SMMAT"}:
     \item{pval_burden}{The burden test p-value}
-    \item{pval_hybrid}{The SMMAT p-value}
-    \item{err}{Takes value 1 if there was an error calculating the hybrid p-value; 0 otherwise. If \code{err=1}, \code{pval_hybrid} is set to \code{pval_burden}.}
+    \item{pval_SMMAT}{The SMMAT p-value}
+    \item{err}{Takes value 1 if there was an error calculating the SMMAT p-value; 0 otherwise. If \code{err=1}, \code{pval_SMMAT} is set to \code{pval_burden}.}
     
 
     \item{variantInfo}{A list with as many elements as aggregate tests performed. Each element of the list is a data.frame providing information on the variants used in the aggregate test with results presented in the corresponding row of \code{results}. Each of these data.frames has the following information:}
