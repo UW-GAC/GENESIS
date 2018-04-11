@@ -61,20 +61,17 @@ calcXtilde <- function(nullmod, G){
     }
     
     if (!nullmod$family$mixedmodel & (nullmod$family$family != "gaussian")){
-        ## above we use cholSigmaInv, here we use Sigma, but the math is the same.
-        ## why is this case different from the gaussian case below?
         C <- Diagonal(x=sqrt(nullmod$varComp))
         M1 <- crossprod(C,G)
     }
 
-    if (!nullmod$family$mixedmodel & (nullmod$family$family == "gaussian")){  ## a diagonal or scalar cholSigmaInv
-        if (length(nullmod$cholSigmaInv) > 1) { ## cholSigmaInv is diagonal
-            C <- diag(nullmod$cholSigmaInv)
-        } else { ## family is "gaussian", cholSigmaInv is a scalar.
-            C <- nullmod$cholSigmaInv
+    if (!nullmod$family$mixedmodel & (nullmod$family$family == "gaussian")){
+        if (length(nullmod$cholSigmaInv) == 1) { # cholSigmaInv is a scalar
+            M1 <- G*nullmod$cholSigmaInv
+        } else {
+            M1 <- crossprod(nullmod$cholSigmaInv,G) # cholSigmaInv is a diagonal matrix
         }
-        M1 <- G*C
-    }	
+    }
     
     rm(G)
     Xtilde <- M1 - tcrossprod(nullmod$CXCXI, crossprod(M1, nullmod$CX))
