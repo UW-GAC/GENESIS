@@ -10,6 +10,8 @@
 testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), GxE.return.cov = FALSE){
     test <- match.arg(test)
     
+    if (is.matrix(G)) G <- Matrix(G)
+
     if (test == "Wald" & nullmod$family$family != "gaussian"){
     	test <- "Score"
     	message("Cannot use Wald test for non-guassian families, using the score test instead.")

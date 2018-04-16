@@ -14,6 +14,8 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "SMMA
     burden.test <- match.arg(burden.test)
     pval.method <- match.arg(pval.method)
 
+    if (is.matrix(G)) G <- Matrix(G)
+
     if (test == "SKAT") {
         out <- .testVariantSetSKAT(nullmod, G, weights, rho, pval.method, 
                                    return.scores, return.scores.cov)
@@ -33,7 +35,7 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "SMMA
 ## can easily implement GxE interaction with the burden score... later!
 .testVariantSetBurden <- function(nullmod, G, weights, burden.test){
     
-    burden <- matrix(colSums(t(G) * weights))
+    burden <- Matrix(colSums(t(G) * weights))
     
     Xtilde <- calcXtilde(nullmod, burden)
     

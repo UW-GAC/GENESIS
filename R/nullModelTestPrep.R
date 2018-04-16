@@ -3,7 +3,7 @@
 nullModelTestPrep <- function(nullmod){
     
     Y <- nullmod$workingY
-    X <- Matrix(nullmod$model.matrix)
+    X <- nullmod$model.matrix
     
     if (nullmod$family$mixedmodel | (nullmod$family$family == "gaussian")){
         C <- nullmod$cholSigmaInv
