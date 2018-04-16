@@ -3,7 +3,7 @@
 nullModelTestPrep <- function(nullmod){
     
     Y <- nullmod$workingY
-    X <- nullmod$model.matrix
+    X <- Matrix(nullmod$model.matrix)
     
     if (nullmod$family$mixedmodel){  ## n by n cholSigmaInv
         C <- nullmod$cholSigmaInv
