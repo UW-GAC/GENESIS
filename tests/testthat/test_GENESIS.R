@@ -8,13 +8,13 @@ test_any <- FALSE
 
 ## these have unpredictable errors depending on the random covariance matrix
 ## mostly of the form "a is 0-dimensional"
-test_binary <- FALSE
+test_binary <- TRUE
 
 ## unpredictable failures - check this
-test_GxE <- FALSE
+test_GxE <- TRUE
 
 ## tests involving deprecated functions (assocTestSeq*)
-test_deprecated <- FALSE
+test_deprecated <- TRUE
 
 if (test_any) {
     
@@ -78,7 +78,7 @@ test_that("fitNullMod matches fitNullMM - linear, no group", {
     expect_equivalent(nullmod$varCompCov, lmm.genesis$varCompCov)
     expect_equivalent(nullmod$family$family, lmm.genesis$family$family)
     expect_equivalent(nullmod$zeroFLAG, lmm.genesis$zeroFLAG)
-    expect_true(all(abs(nullmod$cholSigmaInv - lmm.genesis$cholSigmaInv) < 1e-9))
+    expect_true(all(abs(nullmod$cholSigmaInv - lmm.genesis$cholSigmaInv) < 1e-7))
     expect_equivalent(nullmod$RSS, lmm.genesis$RSS)
 })
 
@@ -103,7 +103,7 @@ test_that("fitNullMod matches fitNullMM - linear, with group", {
     expect_equivalent(nullmod$varCompCov, lmm.genesis$varCompCov)
     expect_equivalent(nullmod$family$family, lmm.genesis$family$family)
     expect_equivalent(nullmod$zeroFLAG, lmm.genesis$zeroFLAG)
-    expect_true(all(abs(nullmod$cholSigmaInv - lmm.genesis$cholSigmaInv) < 1e-9))
+    expect_true(all(abs(nullmod$cholSigmaInv - lmm.genesis$cholSigmaInv) < 1e-7))
     expect_equivalent(nullmod$RSS, lmm.genesis$RSS)
 })
 
@@ -194,8 +194,8 @@ test_that("nullModelTestPrep matches calculateProjection", {
     nullmod.orig <- fitNullReg(df, outcome="y", covars=c("X1", "X2", "X3"), verbose=FALSE)
     proj <- .calculateProjection(nullmod.orig, test="", burden.test="")
 
-    expect_true(all(abs(nullmod$Xtilde - crossprod(proj$Mt, geno)) < 1e-9))
-    expect_true(all(abs(nullmod$resid - proj$resid) < 1e-9))
+    expect_true(all(abs(nullmod$Xtilde - crossprod(proj$Mt, geno)) < 1e-7))
+    expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
     
     # with covMatList
     nullmod <- fitNullMod(dat$y, dat$X, dat$cor.mat, verbose=FALSE)
@@ -204,8 +204,8 @@ test_that("nullModelTestPrep matches calculateProjection", {
     nullmod.orig <- fitNullMM(df, outcome="y", covars=c("X1", "X2", "X3"), covMatList=dat$cor.mat, verbose=FALSE)
     proj <- .calculateProjection(nullmod.orig, test="", burden.test="")
 
-    expect_true(all(abs(Xtilde - crossprod(proj$Mt, geno)) < 1e-9))
-    expect_true(all(abs(nullmod$resid - proj$resid) < 1e-9))
+    expect_true(all(abs(Xtilde - crossprod(proj$Mt, geno)) < 1e-7))
+    expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
     
     # with group
     nullmod <- fitNullMod(dat$y, dat$X, dat$cor.mat, group.idx=dat$group.idx, verbose=FALSE)
@@ -214,8 +214,8 @@ test_that("nullModelTestPrep matches calculateProjection", {
     nullmod.orig <- fitNullMM(df, outcome="y", covars=c("X1", "X2", "X3"), covMatList=dat$cor.mat, group.var="group", verbose=FALSE)
     proj <- .calculateProjection(nullmod.orig, test="", burden.test="")
 
-    expect_true(all(abs(Xtilde - crossprod(proj$Mt, geno)) < 1e-9))
-    expect_true(all(abs(nullmod$resid - proj$resid) < 1e-9))
+    expect_true(all(abs(Xtilde - crossprod(proj$Mt, geno)) < 1e-7))
+    expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
 })
 
 
@@ -250,8 +250,8 @@ test_that("nullModelTestPrep vs calculateProjection - binary", {
     nullmod.orig <- fitNullReg(df, outcome="y", covars=c("X1", "X2", "X3"), family="binomial", verbose=FALSE)
     proj <- .calculateProjection(nullmod.orig, test="", burden.test="")
 
-    expect_true(all(abs(Xtilde - crossprod(proj$Mt, geno)) < 1e-9))
-    expect_true(all(abs(nullmod$resid - proj$resid) < 1e-9))
+    expect_true(all(abs(Xtilde - crossprod(proj$Mt, geno)) < 1e-7))
+    expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
     
     # with covMatList
     nullmod <- fitNullMod(dat$y, dat$X, dat$cor.mat, family="binomial", verbose=FALSE)
@@ -260,7 +260,7 @@ test_that("nullModelTestPrep vs calculateProjection - binary", {
     nullmod.orig <- fitNullMM(df, outcome="y", covars=c("X1", "X2", "X3"), covMatList=dat$cor.mat, family="binomial", verbose=FALSE)
     proj <- .calculateProjection(nullmod.orig, test="", burden.test="")
 
-    expect_true(all(abs(Xtilde - crossprod(proj$Mt, geno)) < 1e-9))
+    expect_true(all(abs(Xtilde - crossprod(proj$Mt, geno)) < 1e-7))
     expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
 })
 }
@@ -284,7 +284,7 @@ test_that("fitNullModel matches fitNulMM", {
     expect_equivalent(gen2$varCompCov, gen1$varCompCov)
     expect_equivalent(gen2$family$family, gen1$family$family)
     expect_equivalent(gen2$zeroFLAG, gen1$zeroFLAG)
-    expect_true(all(abs(gen2$cholSigmaInv - gen1$cholSigmaInv) < 1e-9))
+    expect_true(all(abs(gen2$cholSigmaInv - gen1$cholSigmaInv) < 1e-7))
     expect_equivalent(gen2$RSS, gen1$RSS)
 
     seqClose(svd)
@@ -308,7 +308,7 @@ test_that("fitNullModel matches fitNulMM - group", {
     expect_equivalent(gen2$varCompCov, gen1$varCompCov)
     expect_equivalent(gen2$family$family, gen1$family$family)
     expect_equivalent(gen2$zeroFLAG, gen1$zeroFLAG)
-    expect_true(all(abs(gen2$cholSigmaInv - gen1$cholSigmaInv) < 1e-9))
+    expect_true(all(abs(gen2$cholSigmaInv - gen1$cholSigmaInv) < 1e-7))
     expect_equivalent(gen2$RSS, gen1$RSS)
 
     seqClose(svd)
