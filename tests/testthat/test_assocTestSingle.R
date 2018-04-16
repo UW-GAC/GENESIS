@@ -39,7 +39,7 @@ test_that("assocTestSingle - reorder samples", {
     seqResetFilter(svd, verbose=FALSE)
     iterator <- SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
     assoc2 <- assocTestSingle(iterator, nullmod, verbose=FALSE)
-    expect_equal(assoc, assoc2, tolerance=1e-4)
+    expect_equal(assoc, assoc2, tolerance=1e-3)
     
     seqClose(svd)
 })
