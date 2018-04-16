@@ -116,7 +116,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), G
         res.Vbetas <- vector(mode = "list", length = p)
     }
     
-    intE <- cbind(1, E) # add intercept the "Environmental" variable E.
+    intE <- Matrix(cbind(1, E)) # add intercept the "Environmental" variable E.
     
     var.names <- c("G", paste("G", colnames(E), sep = ":"))
     
