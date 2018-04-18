@@ -137,3 +137,29 @@ test_that("select alleles with mismatch", {
     expect_equal(nrow(assoc$variantInfo[[1]]), 9)
     seqClose(svd)
 })
+
+test_that("matchAlleles handles duplicate variants", {
+    svd <- .testData()
+    gr <- granges(svd)
+    vi <- variantInfo(svd, alleles=TRUE)
+    mcols(gr) <- vi[,c("ref", "alt")]
+    grl <- GRangesList(gr[c(1,1,2)])
+    iterator <- SeqVarListIterator(svd, variantRanges=grl, verbose=FALSE)
+    var.info <- variantInfo(iterator)
+    ind <- .matchAlleles(iterator, var.info)
+    expect_equal(ind, 1:2)
+    seqClose(svd)
+})
+
+test_that("select alleles with duplicate variants", {
+    svd <- .testData()
+    gr <- granges(svd)
+    vi <- variantInfo(svd, alleles=TRUE)
+    mcols(gr) <- vi[,c("ref", "alt")]
+    grl <- GRangesList(gr[c(1,1,2)])
+    iterator <- SeqVarListIterator(svd, variantRanges=grl, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+    assoc <- assocTestAggregate(iterator, nullmod, verbose=FALSE)
+    expect_equal(nrow(assoc$variantInfo[[1]]), 2)
+    seqClose(svd)
+})

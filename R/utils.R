@@ -75,7 +75,7 @@
     if ("ref" %in% names(var.sel)) match.cols <- c(match.cols, "ref"="ref")
     if ("alt" %in% names(var.sel)) match.cols <- c(match.cols, "alt"="alt")
     var.match <- inner_join(var.info, var.sel, by=match.cols)
-    var.match$n
+    unique(var.match$n)
 }
 
 
