@@ -1,0 +1,262 @@
+---
+title: "Analyzing Sequence Data using the GENESIS Package"
+author: "Stephanie M. Gogarten"
+date: "`r Sys.Date()`"
+output: 
+    rmarkdown::html_vignette:
+        toc: true
+        #number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Analyzing Sequence Data using the GENESIS Package}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, fig.height = 6, fig.width = 6)
+```
+
+# Overview
+
+This vignette provides a description of how to use the GENESIS package to analyze sequence data. We demonstrate the use of mixed models for genetic association testing, as PC-AiR PCs can be used as fixed effect covariates to adjust for population stratification, and a kinship matrix (or genetic relationship matrix) estimated from PC-Relate can be used to account for phenotype correlation due to genetic similarity among samples. To illustrate the methods, we use a small subset of data from 1000 Genomes Phase 3.
+
+# Convert VCF to GDS
+
+The first step is to convert a VCF file into the GDS file format used by GENESIS. We use the SeqArray package, which defines the extended GDS format used to capture all data in a VCF file. If the VCF files are split by chromosome, they can be combined into a single GDS file.
+
+```{r vcf2gds}
+library(SeqArray)
+vcffile <- system.file("extdata", "1KG", paste0("1KG_phase3_subset_chr", 1:22, ".vcf.gz"), package="GENESIS")
+gdsfile <- tempfile()
+seqVCF2GDS(vcffile, gdsfile, verbose=FALSE)
+gds <- seqOpen(gdsfile)
+gds
+```
+
+## Create a SeqVarData object
+
+Next, we combine the GDS file with information about the samples, which we store in an `AnnotatedDataFrame` (defined in the Biobase package). An `AnnotatedDataFrame` combines a `data.frame` with metadata describing each column. A `SeqVarData` object (defined in the SeqVarTools package), contains both an open GDS file and an `AnnotatedDataFrame` describing the samples. The `sample.id` column in the `AnnotatedDataFrame` must match the `sample.id` node in the GDS file.
+
+```{r seqvardata}
+library(GENESIS)
+library(Biobase)
+library(SeqVarTools)
+
+data(sample_annotation_1KG)
+annot <- sample_annotation_1KG
+
+# simulate some phenotype data
+annot$outcome <- rnorm(nrow(annot))
+metadata <- data.frame(labelDescription=c("sample id", "1000 genomes population", 
+                                          "sex", "simulated phenotype"),
+                       row.names=names(annot))
+annot <- AnnotatedDataFrame(annot, metadata)
+
+all.equal(annot$sample.id, seqGetData(gds, "sample.id"))
+seqData <- SeqVarData(gds, sampleData=annot)
+```
+
+# Population structure and relatedness
+
+PC-AiR and PC-Relate are described in detail in a separate vignette. Here, we demonstrate their use to provide adjustment for population structure and relatedness in a mixed model.
+
+## KING
+
+Step 1 is to get initial estimates of kinship using KING, which is robust to population structure but not admixture. The KING algorithm is available in SNPRelate. We select a subset of variants for this calculation with LD pruning.
+
+```{r seed, include=FALSE}
+# set seed for LD pruning
+set.seed(100)
+```
+
+```{r king}
+library(SNPRelate)
+
+# LD pruning to get variant set
+snpset <- snpgdsLDpruning(gds, method="corr", slide.max.bp=10e6, 
+                          ld.threshold=sqrt(0.1), verbose=FALSE)
+pruned <- unlist(snpset, use.names=FALSE)
+
+king <- snpgdsIBDKING(gds, snp.id=pruned, verbose=FALSE)
+kingMat <- king$kinship
+colnames(kingMat) <- rownames(kingMat) <- king$sample.id
+```
+
+## PC-AiR
+
+The next step is PC-AiR, in which we select a set of unrelated samples that is maximally informative about all ancestries in the sample, use this unrelated set for Principal Component Analysis (PCA), then project the relatives onto the PCs.  We use a kinship threshold of degree 3 (unrelated is less than first cousins). In this example, we use the KING estimates for both kinship (`kinMat`) and ancestry divergence (`divMat`). KING kinship estimates are negative for samples with different ancestry.
+
+```{r pcair}
+pcs <- pcair(seqData, kinMat=kingMat, kin.thresh=2^(-9/2),
+                      divMat=kingMat, div.thresh=-2^(-9/2),
+             snp.include=pruned, snp.block.size=22000)
+```
+
+We need to determine which PCs are ancestry informative. To do this we need population information for the 1000 Genomes samples. We make a parallel coordinates plot, color-coding by 1000 Genomes population.
+
+```{r pcair_plot, fig.width=7, out.width="100%"}
+library(dplyr)
+library(RColorBrewer)
+library(ggplot2)
+library(GGally)
+
+pc.df <- as.data.frame(pcs$vectors)
+names(pc.df) <- paste0("PC", 1:ncol(pcs$vectors))
+pc.df$sample.id <- row.names(pcs$vectors)
+pc.df <- left_join(pc.df, pData(annot), by="sample.id")
+
+pop.cols <- setNames(brewer.pal(12, "Paired"),
+                 c("ACB", "ASW", "CEU", "GBR", "CHB", "JPT", "CLM", "MXL", "LWK", "YRI", "GIH", "PUR"))
+
+ggplot(pc.df, aes(PC1, PC2, color=Population)) + geom_point() +
+    scale_color_manual(values=pop.cols)
+```
+
+```{r parcoord, fig.height=4, fig.width=10, out.width="100%"}
+ggparcoord(pc.df, columns=1:10, groupColumn="Population", scale="uniminmax") +
+    scale_color_manual(values=pop.cols) +
+    xlab("PC") + ylab("")
+```
+
+## PC-Relate
+
+The first 2 PCs separate populations, so we use them to compute kinship estimates adjusting for ancestry.
+
+```{r pcrelate}
+pcrel <- pcrelate(seqData, pcMat=pcs$vectors[,1:2], training.set=pcs$unrels,
+                  snp.include=pruned, snp.block.size=22000)
+```
+
+```{r pcrelate_plot}
+kinship <- pcrelateReadKinship(pcrel)
+
+ggplot(kinship, aes(k0, kin)) +
+    geom_hline(yintercept=2^(-seq(3,9,2)/2), linetype="dashed", color="grey") +
+    geom_point(alpha=0.5) +
+    ylab("kinship estimate") +
+    theme_bw()
+```
+
+To improve our estimates for PCs and kinship, we could run another iteration of PC-AiR and PC-Relate, this time using the PC-Relate kinship estimates as the `kinMat` argument to `pcair`.  The KING matrix is still used for ancestry divergence. We could then use those new PCs to calculate revised kinship estimates.
+
+
+# Association tests
+
+## Null model
+
+The first step for association testing is to fit the model under the null hypothesis that each SNP has no effect. This null model contains all of the covariates, including ancestry representative PCs, as well as any random effects, such as a polygenic effect due to genetic relatedness, but it does not include any SNP genotype terms as fixed effects.
+
+The type of model fit depends on the arguments to `fitNullModel`. Including a `cov.mat` argument will result in a mixed model, while omitting this argument will run a standard linear model. A logistic model is specified with `family="binomial"`. In the case of a logistic model and a covariance matrix, `fitNullModel` will use the GMMAT algorithm. Including a `group.var` argument will allow heteroscedastic variance (for linear models or linear mixed models only).
+
+```{r null_model}
+# add PCs to sample annotation in SeqVarData object
+annot <- AnnotatedDataFrame(pc.df)
+sampleData(seqData) <- annot
+
+# covariance matrix from pcrelate output
+grm <- pcrelateMakeGRM(pcrel, scaleKin=2)
+
+# fit the null model
+nullmod <- fitNullModel(seqData, outcome="outcome", 
+                        covars=c("sex", "Population", paste0("PC", 1:2)),
+                        cov.mat=grm, verbose=FALSE)
+```
+
+
+## Single variant tests
+
+To run a test using the null model, we first create an iterator object specifying how we want variants to be selected. (See the documentation for the `SeqVarIterator` class in SeqVarTools for more details.) For single-variant tests (GWAS), it is common to use a block iterator that reads variants in blocks (default is 10,000 variants per block).
+
+For example purposes, we restrict our analysis to chromosome 1. The `seqSetFilter` function can be used to restrict the set of variants tested in other ways (e.g., variants that pass a quality filter).
+
+```{r assoc_single}
+# select chromosome 1
+seqSetFilterChrom(seqData, include=1)
+
+iterator <- SeqVarBlockIterator(seqData, verbose=FALSE)
+assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+head(assoc)
+```
+
+The default test is a Score test, but the Wald test is also available for continuous outcomes.
+
+If there are multiallelic variants, each alternate allele is tested separately. The `allele.index` column in the output differentiates between different alternate alleles for the same variant.
+
+We make a QQ plot to examine the results.
+
+```{r assoc_single_qq}
+qqPlot <- function(pval) {
+    pval <- pval[!is.na(pval)]
+    n <- length(pval)
+    x <- 1:n
+    dat <- data.frame(obs=sort(pval),
+                      exp=x/n,
+                      upper=qbeta(0.025, x, rev(x)),
+                      lower=qbeta(0.975, x, rev(x)))
+    
+    ggplot(dat, aes(-log10(exp), -log10(obs))) +
+        geom_line(aes(-log10(exp), -log10(upper)), color="gray") +
+        geom_line(aes(-log10(exp), -log10(lower)), color="gray") +
+        geom_point() +
+        geom_abline(intercept=0, slope=1, color="red") +
+        xlab(expression(paste(-log[10], "(expected P)"))) +
+        ylab(expression(paste(-log[10], "(observed P)"))) +
+        theme_bw()
+}    
+
+qqPlot(assoc$Score.pval)
+```
+
+
+## Aggregate tests
+
+We can aggregate rare variants for association testing to decrease multiple testing burden and increase statistical power. We can create functionally agnostic units using a `SeqVarWindowIterator`. This iterator type generates a sliding window over the genome, with user-specified width and step size. We can also create units with specific start and end points or containing specific variants, using a `SeqVarRangeIterator` or a `SeqVarListIterator`.
+
+In this example, we illustrate defining ranges based on known genes. We run a burden test, setting a maximum alternate allele frequency to exclude common variants.
+
+```{r}
+library(GenomicRanges)
+library(TxDb.Hsapiens.UCSC.hg19.knownGene)
+
+# return the variants on chromosome 1 as a GRanges object
+seqSetFilterChrom(seqData, include=1)
+gr <- granges(gds)
+
+# find variants that overlap with each transcript
+txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+gr <- renameSeqlevels(gr, paste0("chr", seqlevels(gr)))
+ts <- transcriptsByOverlaps(txdb, gr, columns="GENEID")
+ts <- reduce(ts)
+ts <- renameSeqlevels(ts, sub("chr", "", seqlevels(ts)))
+
+# create an iterator where each successive unit is a different transcript
+iterator <- SeqVarRangeIterator(seqData, variantRanges=ts, verbose=FALSE)
+
+# do a burden test on the rare variants in each transcript
+assoc <- assocTestAggregate(iterator, nullmod, AF.max=0.05, test="Burden", verbose=FALSE)
+```
+
+The output of an aggregate test is a list with two elements: 1) a data.frame with the test results for each aggregate unit, and 2) a list of data.frames containing the variants in each aggregate unit.
+
+```{r}
+head(assoc$results)
+head(assoc$variantInfo)
+```
+
+```{r close}
+seqClose(gds)
+unlink(gdsfile)
+```
+
+
+# References
+* Conomos M.P., Reiner A.P., Weir B.S., & Thornton T.A. (2016). Model-free Estimation of Recent Genetic Relatedness. American Journal of Human Genetics, 98(1), 127-148.
+
+* Conomos M.P., Miller M.B., & Thornton T.A. (2015). Robust Inference of Population Structure for Ancestry Prediction and Correction of Stratification in the Presence of Relatedness. Genetic Epidemiology, 39(4), 276-293.
+
+* Manichaikul, A., Mychaleckyj, J.C., Rich, S.S., Daly, K., Sale, M., & Chen, W.M. (2010). Robust relationship inference in genome-wide association studies. Bioinformatics, 26(22), 2867-2873.
+
+* Breslow NE and Clayton DG. (1993). Approximate Inference in Generalized Linear Mixed Models. Journal of the American Statistical Association 88: 9-25.
+
+* Chen H, Wang C, Conomos MP, Stilp AM, Li Z, Sofer T, Szpiro AA, Chen W, Brehm JM, Celedon JC, Redline S, Papanicolaou GJ, Thornton TA, Laurie CC, Rice K and Lin X. Control for Population Structure and Relatedness for Binary Traits in Genetic Association Studies Using Logistic Mixed Models. American Journal of Human Genetics, 98(4): 653-66.
+
+* Leal, S.M. & Li, B. (2008). Methods for Detecting Associations with Rare Variants for Common Diseases: Application to Analysis of Sequence Data. American Journal of Human Genetics, 83(3), 311-321.

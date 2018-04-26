@@ -28,7 +28,8 @@ License: GPL-3
 Depends: 
 Imports: Biobase, BiocGenerics, GWASTools, gdsfmt, GenomicRanges, graph, IRanges, S4Vectors, SeqArray, SeqVarTools, 
 	 dplyr, graphics, grDevices, Matrix, methods, stats, utils
-Suggests: CompQuadForm, logistf, poibin, survey, SNPRelate, GWASdata, testthat, knitr
+Suggests: CompQuadForm, logistf, poibin, survey, testthat, knitr, rmarkdown,
+    SNPRelate, GWASdata, ggplot2, GGally, RColorBrewer, TxDb.Hsapiens.UCSC.hg19.knownGene
 VignetteBuilder: knitr
 biocViews: SNP, GeneticVariability, Genetics, StatisticalMethod,
         DimensionReduction, PrincipalComponent, GenomeWideAssociation,
