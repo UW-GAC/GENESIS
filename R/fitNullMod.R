@@ -88,11 +88,13 @@ fitNullMod <- function(y, X, covMatList = NULL, group.idx = NULL, family = "gaus
             out <- .nullModOutReg(y, X, mod, family)
         }
     }
-    
+
+    out.class <- class(out)
     out$model.matrix <- Matrix(out$model.matrix)
     nullprep <- nullModelTestPrep(out)
     out <- c(out, nullprep)
     out$model.matrix <- X.mm # preserve original model.matrix object in output
+    class(out) <- out.class
     
     return(out)
     

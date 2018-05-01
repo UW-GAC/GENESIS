@@ -27,5 +27,6 @@ test_that("linear regression", {
     expect_true(nullmod$converged)
     expect_null(nullmod$zeroFLAG)
     expect_equal(nullmod$RSS, sum(lm.mod$resid^2)/(summary(lm.mod)$sigma^2*(n - ncol(dat$X))))
+    expect_true(is(nullmod, "GENESIS.nullModel"))
 })
 
