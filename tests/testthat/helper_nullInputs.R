@@ -29,3 +29,21 @@
 .testGenoMatrix <- function(n=100) {
     matrix(rbinom(200*n, size = 2, prob = 0.2), nrow = n, ncol = 200)
 }
+
+.testNullmod <- function(n=100, MM=FALSE, binary=FALSE) {
+    dat <- .testNullInputs(n=n, binary=binary)
+    
+    if (!binary) {
+        family <- "gaussian"
+    }  else {
+        family <- "binomial"
+    }
+    
+    if (MM) {
+        covMatList <- dat$cor.mat
+    } else {
+        covMatList <- NULL
+    }
+    
+    fitNullMod(dat$y, dat$X, covMatList = covMatList, group.idx = dat$group.idx, family=family, verbose=FALSE)
+}
