@@ -4,10 +4,10 @@ setMethod("assocTestAggregate",
           "SeqVarIterator",
           function(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
-                   test=c("Burden", "SKAT", "SMMAT"),
+                   test=c("Burden", "SKAT", "SMMAT", "fastSKAT"),
                    burden.test=c("Score", "Wald"), rho=0,
                    pval.method=c("davies", "kuonen", "liu"),
-                   verbose=TRUE) {
+                   verbose=TRUE, ...) {
 
               # check argument values
               test <- match.arg(test)
@@ -85,7 +85,7 @@ setMethod("assocTestAggregate",
                       # do the test
                       assoc <- testVariantSet(null.model, G=geno, weights=weight, test=test, 
                                               burden.test=burden.test, rho=rho,
-                                              pval.method=pval.method)
+                                              pval.method=pval.method, ...)
                       res[[i]] <- cbind(res[[i]], assoc)
                   }
 

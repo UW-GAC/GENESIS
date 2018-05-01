@@ -5,10 +5,11 @@
 ## Variant set: SKAT, burden, SKAT-O. Multiple types of p-values. Default: Davies with Kuonen if does not converge. 
 
 
-testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "SMMAT"), 
+testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "SMMAT", "fastSKAT"), 
                            burden.test = c("Score", "Wald"),  rho = 0,
                            pval.method = c("davies", "kuonen", "liu"), 
-                           return.scores = FALSE, return.scores.cov = FALSE){
+                           return.scores = FALSE, return.scores.cov = FALSE,
+                           ...){
 
     test <- match.arg(test)
     burden.test <- match.arg(burden.test)
@@ -25,6 +26,9 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "SMMA
     }
     if (test == "SMMAT") {
         out <- .testVariantSetSMMAT(nullmod, G, weights, pval.method)
+    }
+    if (test == "fastSKAT") {
+        out <- .testVariantSetFastSKAT(nullmod, G, weights, rho, ...)
     }
     return(out)
 }

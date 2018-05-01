@@ -9,10 +9,10 @@
 \usage{
 \S4method{assocTestAggregate}{SeqVarIterator}(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
-                   test=c("Burden", "SKAT", "SMMAT"),
+                   test=c("Burden", "SKAT", "SMMAT", "fastSKAT"),
                    burden.test=c("Score", "Wald"), rho=0,
                    pval.method=c("davies", "kuonen", "liu"),
-                   verbose=TRUE)
+                   verbose=TRUE, ...)
 }
 
 \arguments{
@@ -21,12 +21,13 @@
     \item{AF.max}{A numeric value specifying the upper bound on the alternate allele frequency for variants to be included in the analysis.}
     \item{weight.beta}{A numeric vector of length two specifying the two parameters of the Beta distribution used to determine variant weights; weights are given by \code{dbeta(MAF, a, b)}, where MAF is the minor allele frequency, and a and b are the two parameters specified here. \code{weight.beta = c(1,25)} gives the Wu weights; \code{weight.beta = c(0.5, 0.5)} is proportional to the Madsen-Browning weights; and \code{weight.beta = c(1,1)} gives a weight of 1 to all variants. This input is ignored when \code{weight.user} is not \code{NULL}.}
     \item{weight.user}{A character string specifying the name of a variable in the variantData slot of \code{gdsobj} to be used as variant weights.  When left \code{NULL} (the default), the weights specified by \code{weight.beta} will be used.}
-    \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Burden"} (default), \code{"SKAT"}, or \code{"SMMAT"}.  When this is set to "SKAT" and the parameter \code{rho} has multiple values, a SKAT-O test is performed.}
+    \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Burden"} (default), \code{"SKAT"}, \code{"SMMAT"}, or \code{"fastSKAT"}.  When this is set to "SKAT" and the parameter \code{rho} has multiple values, a SKAT-O test is performed.}
     \item{burden.test}{A character string specifying the type of Burden test to perform when \code{test = "Burden"}.  The possibilities are \code{"Score"} and \code{"Wald"}. \code{"Score"} can be used for any \code{null.model}. \code{"Wald"} can not be used when the \code{null.model} is from a mixed model with a binary outcome variable.}
     %\item{burden.test}{A character string specifying the type of Burden test to perform when \code{test} = "Burden".  The possibilities are "Score", "Wald", and "Firth". "Score" can be used for any \code{null.model}. "Wald" can not be used when the \code{null.model} is from a mixed model with a binary outcome variable. "Firth" can only be used when the \code{null.model} is from a logistic regression with a binary outcome variable.}
     \item{rho}{A numeric value (or vector of numeric values) in \code{[0,1]} specifying the rho parameter for SKAT. When \code{rho = 0}, a standard SKAT test is performed. When \code{rho = 1}, a score burden test is performed. When \code{rho} is a vector of values, SKAT-O is performed using each of those values as the search space for the optimal \code{rho}.}
     \item{pval.method}{A character string specifying which method to use to calculate SKAT p-values. \code{"davies"} (the default) uses numerical integration; \code{"kuonen"} uses a saddlepoint method; and \code{"liu"} uses a moment matching approximation. If the davies method generates an error, kuonen is tried, and then liu as a last resort.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is \code{TRUE}.}
+    \item{...}{Additional arguments to pass to other methods (\code{\link[bigQF]{pQF}}).}
 }
 
 \details{
@@ -36,6 +37,8 @@
     For multiallelic variants, each alternate allele is tested separately.
 
     Somewhat similarly to SKAT-O, the variant Set Mixed Model Association Test (SMMAT, Chen et al., manuscript in preparation) combines the burden test p-value with an adjusted SKAT (which is asymptotically independent of the burden test) p-value using a chi-square distribution with 4df from Fisher's method.
+
+    fastSKAT uses the bigQF package.
 }
 
 \value{A list with the following items:
