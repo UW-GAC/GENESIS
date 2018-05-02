@@ -7,6 +7,7 @@ test_that("prep null model - no covar.matrix", {
     out <- nullModelFastSKAT(nullmod)
     expect_true(Matrix::isDiagonal(out$cholSigma))
     expect_true(is(out, "GENESIS.nullModelFastSKAT"))
+    expect_true(is(out, "GENESIS.nullModel"))
     expect_equal(nullmod$model.matrix, out$model.matrix)
     expect_equal(diag(as.matrix(nullmod$cholSigmaInv)),
                  1/diag(as.matrix(out$cholSigma)))
@@ -17,6 +18,7 @@ test_that("prep null model - with covar.matrix", {
     nullmod <- .testNullmod(n, MM=TRUE)
     out <- nullModelFastSKAT(nullmod)
     expect_true(is(out, "GENESIS.nullModelFastSKAT"))
+    expect_true(is(out, "GENESIS.nullMixedModel"))
     expect_equal(nullmod$model.matrix, out$model.matrix)
     expect_equal(diag(as.matrix(nullmod$cholSigmaInv)),
                  1/diag(as.matrix(out$cholSigma)))

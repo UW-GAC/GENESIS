@@ -29,10 +29,11 @@ nullModelFastSKATTestPrep <- function(nullmod, threshold = 1e-10){
 
 
 nullModelFastSKAT <- function(null.model, threshold = 1e-10){
+    nm.class <- class(null.model)
     out <- nullModelFastSKATTestPrep(null.model, threshold=threshold)
     null.model[c("cholSigmaInv", "Ytilde", "resid", "CX", "CXCXI")] <- NULL
     null.model <- c(null.model, out)
-    class(null.model) <- c(class(null.model), "GENESIS.nullModelFastSKAT")
+    class(null.model) <- c(nm.class, "GENESIS.nullModelFastSKAT")
     return(null.model)
 }
 
