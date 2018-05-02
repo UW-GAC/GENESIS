@@ -12,6 +12,7 @@ test_that("lmm - with group", {
     expect_equivalent(nullmod$workingY, dat$y)
     expect_equivalent(nullmod$outcome, dat$y)
     expect_equivalent(nullmod$model.matrix, dat$X)
+    expect_true(is(nullmod, "GENESIS.nullMixedModel"))
 })
 
 
@@ -24,6 +25,7 @@ test_that("lmm - without group", {
     expect_equivalent(nullmod$workingY, dat$y)
     expect_equivalent(nullmod$outcome, dat$y)
     expect_equivalent(nullmod$model.matrix, dat$X)
+    expect_true(is(nullmod, "GENESIS.nullMixedModel"))
 
 })
 

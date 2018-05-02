@@ -26,4 +26,5 @@ test_that("logistic", {
     expect_equal(nullmod$converged, glm.mod$converged)
     expect_null(nullmod$zeroFLAG)
     expect_equal(nullmod$RSS, 1)
+    expect_true(is(nullmod, "GENESIS.nullModel"))
 })

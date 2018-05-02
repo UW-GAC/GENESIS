@@ -13,4 +13,5 @@ test_that("WLS", {
     expect_equivalent(nullmod$workingY, dat$y)
     expect_equivalent(nullmod$outcome, dat$y)
     expect_equivalent(nullmod$model.matrix, dat$X)
+    expect_true(is(nullmod, "GENESIS.nullModel"))
 })

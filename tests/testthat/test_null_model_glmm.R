@@ -6,8 +6,13 @@ test_that("glmm", {
     nullmod <- fitNullMod(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial", verbose=FALSE)
 
     expect_equal(nullmod$family$family, "binomial")
-    if (!nullmod$zeroFLAG) expect_true(nullmod$family$mixedmodel)
-    if (nullmod$zeroFLAG) expect_false(nullmod$family$mixedmodel)
+    if (!nullmod$zeroFLAG) {
+        expect_true(nullmod$family$mixedmodel)
+        expect_true(is(nullmod, "GENESIS.nullMixedModel"))
+    } else {
+        expect_false(nullmod$family$mixedmodel)
+        expect_true(is(nullmod, "GENESIS.nullModel"))
+    }
     expect_false(nullmod$hetResid)
     expect_true(nullmod$converged)
     expect_equivalent(nullmod$outcome, dat$y)
