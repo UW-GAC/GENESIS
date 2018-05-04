@@ -13,6 +13,8 @@ importFrom(GWASTools, GdsGenotypeReader, GenotypeData)
 importClassesFrom(GWASTools,
                   GdsGenotypeReader,
                   GenotypeData,
+                  GenotypeIterator,
+                  GenotypeBlockIterator,
                   ScanAnnotationDataFrame)
 importMethodsFrom(GWASTools,
                   close,
@@ -24,6 +26,7 @@ importMethodsFrom(GWASTools,
                   getVariable,
                   getSex,
                   hasSex,
+                  snpFilter,
                   XchromCode,
                   YchromCode)
 
