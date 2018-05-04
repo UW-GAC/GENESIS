@@ -21,7 +21,7 @@ setMethod("assocTestSingle",
                   geno <- expandedAltDosage(gdsobj, use.names=FALSE, sparse=TRUE)[sample.index,,drop=FALSE]
                   
                   # allele frequency
-                  freq <- .alleleFreq(gdsobj, geno)
+                  freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index)
 
                   # take note of number of non-missing samples
                   n.obs <- colSums(!is.na(geno))

@@ -22,17 +22,18 @@ setMethod("validateSex",
 
 # index is in case we had to subset geno so it no longer matches the variant filter
 # (in the case of allele matching)
-.alleleFreq <- function(gdsobj, geno, index=NULL, sample.index=NULL) {
+.alleleFreq <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL) {
 
     # check sex
-    sex <- validateSex(gdsobj)[sample.index]
+    sex <- validateSex(gdsobj)
+    if (!is.null(sample.index)) sex <- sex[sample.index]
     if (is.null(sex)) {
         return(0.5*colMeans(geno, na.rm=TRUE))
     }
 
     # check chromosome
     chr <- chromWithPAR(gdsobj)
-    if (!is.null(index)) chr <- chr[index]
+    if (!is.null(variant.index)) chr <- chr[variant.index]
     X <- chr %in% "X"
     Y <- chr %in% "Y"
     auto <- !X & !Y
