@@ -1,4 +1,5 @@
 context("single variant tests on GenotypeIterator objects")
+library(GWASTools)
 
 test_that("assocTestSingle", {
     genoData <- .testGenoData()
@@ -26,6 +27,20 @@ test_that("assocTestSingle - sample selection", {
     close(genoData)
 })
 
+
+test_that("code to reorder samples works as expected", {
+    genoData <- .testGenoData()
+    sample.id <- getScanID(genoData)
+    samp.reorder <- sample(sample.id)[1:10]
+    sample.index <- match(samp.reorder, sample.id)
+
+    geno1 <- GWASTools::getGenotype(genoData, use.names=TRUE)
+    geno2 <- GWASTools::getGenotypeSelection(genoData, scanID=samp.reorder, order="selection",
+                                             use.names=TRUE)
+    expect_equal(geno1[,sample.index], geno2)
+    
+    close(genoData)
+})
 
 test_that("assocTestSingle - reorder samples", {
     genoData <- .testGenoData()

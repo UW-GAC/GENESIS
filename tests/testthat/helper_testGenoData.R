@@ -7,8 +7,8 @@
     scanAnnot$outcome <- rnorm(nrow(scanAnnot))
 
     gdsfile <- system.file("extdata", "illumina_geno.gds", package="GWASdata")
-    gds <- GdsGenotypeReader(gdsfile)
-    GenotypeData(gds, scanAnnot=scanAnnot)
+    gds <- GWASTools::GdsGenotypeReader(gdsfile)
+    GWASTools::GenotypeData(gds, scanAnnot=scanAnnot)
 }
 
 
