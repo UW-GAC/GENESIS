@@ -58,6 +58,19 @@ test_that("null model - cov.mat", {
     expect_equivalent(nm$workingY, dat$a)
 })
 
+test_that("null model - with group", {
+    dat <- data.frame(sample.id=sample(letters, 10),
+                      a=rnorm(10),
+                      b=c(rep("a",5), rep("b", 5)),
+                      stringsAsFactors=FALSE)
+    dat <- AnnotatedDataFrame(dat)
+    covMat <- crossprod(matrix(rnorm(100,sd=0.05),10,10))
+    dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
+    nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, group="b", verbose=FALSE)
+    expect_equal(nm$sample.id, dat$sample.id)
+    expect_equivalent(nm$workingY, dat$a)
+})
+
 test_that("null model from data.frame", {
     dat <- data.frame(a=rnorm(10),
                       b=c(rep("a",5), rep("b", 5)),
