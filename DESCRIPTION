@@ -25,6 +25,7 @@ Description: The GENESIS package provides methodology for estimating,
         component estimation and mixed model association testing for both 
         quantitative and binary phenotypes.
 License: GPL-3
+URL: https://github.com/smgogarten/GENESIS
 Depends: 
 Imports: Biobase, BiocGenerics, GWASTools, gdsfmt, GenomicRanges, graph, IRanges, S4Vectors, SeqArray, SeqVarTools, 
 	 dplyr, graphics, grDevices, Matrix, methods, stats, utils
