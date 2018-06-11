@@ -5,13 +5,6 @@ setMethod("createDesignMatrix",
           "data.frame",
           function(x, outcome, covars=NULL, group.var=NULL) {
 
-              # group index
-              if (!is.null(group.var)) {
-                  group.idx <- .indexList(x[[group.var]])
-              } else {
-                  group.idx <- NULL
-              }
-              
               if (!is.null(covars)) {
                   model.formula <- as.formula(paste(outcome, "~", paste(covars, collapse="+")))
                   # allow interactions
@@ -19,8 +12,15 @@ setMethod("createDesignMatrix",
               } else {
                   model.formula <- as.formula(paste(outcome, "~", 1))
               }
-              x <- x[, c(outcome, covars), drop=FALSE]
+              x <- x[, unique(c(outcome, covars, group.var)), drop=FALSE]
               x <- x[complete.cases(x),,drop=FALSE]
+              
+              # group index
+              if (!is.null(group.var)) {
+                  group.idx <- .indexList(x[[group.var]])
+              } else {
+                  group.idx <- NULL
+              }
               
               # outcome vector - preserve column name
               #y <- x[[outcome]]

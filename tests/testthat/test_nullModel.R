@@ -149,3 +149,26 @@ test_that("outcome has colnames", {
     
     seqClose(svd)
 })
+
+test_that("missing data - data.frame", {
+    dat <- data.frame(a=c(rep(NA, 5), rnorm(10)),
+                      b=c(rep(NA, 5), rep("a",5), rep("b", 5)),
+                      stringsAsFactors=FALSE)
+    covMat <- crossprod(matrix(rnorm(15*2,sd=0.05),15,15))
+    nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, group="b", verbose=FALSE)
+    expect_equivalent(rownames(nm$model.matrix), as.character(6:15))
+    expect_equivalent(nm$workingY, dat$a[6:15])
+})
+
+test_that("missing data - AnnotatedDataFrame", {
+    dat <- data.frame(sample.id=sample(letters, 15),
+                      a=c(rep(NA, 5), rnorm(10)),
+                      b=c(rep(NA, 5), rep("a",5), rep("b", 5)),
+                      stringsAsFactors=FALSE)
+    dat <- AnnotatedDataFrame(dat)
+    covMat <- crossprod(matrix(rnorm(15*2,sd=0.05),15,15))
+    dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
+    nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, group="b", verbose=FALSE)
+    expect_equal(nm$sample.id, dat$sample.id[6:15])
+    expect_equivalent(nm$workingY, dat$a[6:15])
+})

@@ -14,6 +14,16 @@ setMethod("fitNullModel",
                    drop.zeros = TRUE,
                    verbose = TRUE) {
               desmat <- createDesignMatrix(x, outcome, covars, group.var)
+
+              # if there was missing data, need to subset cov.mat
+              if (!is.null(cov.mat) & nrow(desmat$X) < nrow(x)) {
+                  if (!is.list(cov.mat)) {
+                      cov.mat <- list(A=cov.mat)
+                  }
+                  ind <- match(rownames(desmat$X), rownames(x))
+                  cov.mat <- lapply(cov.mat, function(m) m[ind,ind])
+              }
+              
               fitNullMod(y=desmat$y, X=desmat$X, covMatList=cov.mat,
                          group.idx=desmat$group.idx, family=family,
                          start=start, AIREML.tol=AIREML.tol,
@@ -30,6 +40,11 @@ setMethod("fitNullModel",
                    sample.id = NULL,
                    ...) {
               desmat <- createDesignMatrix(x, outcome, covars, group.var, sample.id)
+
+              # have we removed any samples due to missingness?
+              if (nrow(desmat$X) < nrow(x)) {
+                  sample.id <- rownames(desmat$X)
+              }
 
               # subset or re-order cov.mat if necessary
               if (!is.null(cov.mat)) {
