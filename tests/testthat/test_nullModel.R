@@ -149,3 +149,21 @@ test_that("outcome has colnames", {
     
     seqClose(svd)
 })
+
+
+test_that("ScanAnnotationDataFrame", {
+    dat <- data.frame(sample.id=sample(letters, 10),
+                      a=rnorm(10),
+                      b=c(rep("a",5), rep("b", 5)),
+                      stringsAsFactors=FALSE)
+    dat <- AnnotatedDataFrame(dat)
+    covMat <- crossprod(matrix(rnorm(100,sd=0.05),10,10))
+    dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
+    nm1 <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, verbose=FALSE)
+
+    dat <- pData(dat)
+    names(dat)[1] <- "scanID"
+    dat <- GWASTools::ScanAnnotationDataFrame(dat)
+    nm2 <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, verbose=FALSE)
+    expect_equal(nm1, nm2)
+})
