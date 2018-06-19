@@ -69,6 +69,20 @@ setMethod("fitNullModel",
               fitNullModel(sampleData(x), ...)
           })
 
+setMethod("fitNullModel",
+          "ScanAnnotationDataFrame",
+          function(x, ...) {
+              class(x) <- "AnnotatedDataFrame"
+              varLabels(x)[varLabels(x) == "scanID"] <- "sample.id"
+              fitNullModel(x, ...)
+          })
+
+setMethod("fitNullModel",
+          "GenotypeData",
+          function(x, ...) {
+              fitNullModel(getScanAnnotation(x), ...)
+          })
+
 
 nullModelInvNorm <- function(null.model, cov.mat = NULL,
                              norm.option = c("by.group", "all"),

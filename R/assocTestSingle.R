@@ -21,7 +21,7 @@ setMethod("assocTestSingle",
                   geno <- expandedAltDosage(gdsobj, use.names=FALSE, sparse=TRUE)[sample.index,,drop=FALSE]
                   
                   # allele frequency
-                  freq <- .alleleFreq(gdsobj, geno)
+                  freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index)
 
                   # take note of number of non-missing samples
                   n.obs <- colSums(!is.na(geno))
@@ -44,6 +44,60 @@ setMethod("assocTestSingle",
                   }
                   i <- i + 1
                   iterate <- iterateFilter(gdsobj, verbose=FALSE)
+              }
+
+              do.call(rbind, res)
+          })
+
+
+
+setMethod("assocTestSingle",
+          "GenotypeIterator",
+          function(gdsobj, null.model, test=c("Score", "Wald"), GxE=NULL, verbose=TRUE) {
+              test <- match.arg(test)
+
+              # filter samples to match null model
+              sample.id <- null.model$sample.id
+              sample.index <- match(sample.id, getScanID(gdsobj))
+              
+              # results
+              res <- list()
+              n.iter <- length(snpFilter(gdsobj))
+              i <- 1
+              iterate <- TRUE
+              while (iterate) {
+                  var.info <- data.frame(variant.id=getSnpID(gdsobj),
+                                         chr=getChromosome(gdsobj, char=TRUE),
+                                         pos=getPosition(gdsobj),
+                                         stringsAsFactors=FALSE)
+                  
+                  geno <- getGenotypeSelection(gdsobj, scanID=sample.id, order="selection",
+                                               transpose=TRUE)
+                  
+                  # allele frequency
+                  freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index)
+
+                  # take note of number of non-missing samples
+                  n.obs <- colSums(!is.na(geno))
+                  
+                  # mean impute missing values
+                  if (any(n.obs < nrow(geno))) {
+                      geno <- .meanImpute(geno, freq)
+                  }
+
+                  # do the test
+                  if (!is.null(GxE)) GxE <- .modelMatrixColumns(null.model, GxE)
+                  assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test)
+                  # set monomorphs to NA - do we want to skip testing these to save time?
+                  assoc[freq %in% c(0,1),] <- NA
+
+                  res[[i]] <- cbind(var.info, n.obs, freq, assoc)
+                  
+                  if (verbose & i %% 100 == 0) {
+                      message(paste("Iteration", i , "of", n.iter, "completed"))
+                  }
+                  i <- i + 1
+                  iterate <- GWASTools::iterateFilter(gdsobj)
               }
 
               do.call(rbind, res)
