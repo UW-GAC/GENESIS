@@ -8,7 +8,7 @@ setMethod("chromWithPAR",
 setMethod("validateSex",
           "GenotypeData",
           function(x) {
-              sex <- getSex(x)
+              sex <- suppressWarnings(getSex(x))
               if (!is.null(sex)) {
                   if (all(sex %in% c(1,2,NA))) {
                       sex <- c("M", "F")[sex]
