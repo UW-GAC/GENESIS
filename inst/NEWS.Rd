@@ -1,5 +1,10 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.11.4}{
+    \itemize{
+        \item Added assocTestSingle and fitNullModel methods for GenotypeData objects.
+    }
+}
 \section{Version 2.9.3}{
     \itemize{
 	\item New methods assocTestSingle and assocTestAggregate are refactors of assocTestMM and assocTestSeq/assocTestSeqWindow, respectively. assocTestSeq and assocTestSeqWindow are deprecated. assocTestMM is still used for GenotypeData objects, but will be deprecated in a future release. fitNullModel is a refactor of fitNullMM/fitNullReg and should be used with the new association test methods.
