@@ -47,14 +47,14 @@ test_that("assocTestSingle - reorder samples", {
     samp <- as.character(sample(getScanID(genoData), 50))
     iterator <- GenotypeBlockIterator(genoData, snpBlock=1000)
 
-    nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", sample.id=samp, verbose=FALSE)
+    nullmod <- fitNullModel(genoData, outcome="outcome", sample.id=samp, verbose=FALSE)
     assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
     expect_equal(nrow(nullmod$model.matrix), 50)
     expect_equal(nullmod$sample.id, samp)
 
     # check that we get same assoc results with samples in different order
     samp.sort <- sort(samp)
-    nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", sample.id=samp.sort, verbose=FALSE)
+    nullmod <- fitNullModel(genoData, outcome="outcome", sample.id=samp.sort, verbose=FALSE)
     expect_equal(nullmod$sample.id, samp.sort)
     iterator <- GenotypeBlockIterator(genoData, snpBlock=1000)
     assoc2 <- assocTestSingle(iterator, nullmod, verbose=FALSE)
