@@ -4,6 +4,8 @@
 \alias{fitNullModel,AnnotatedDataFrame-method}
 \alias{fitNullModel,data.frame-method}
 \alias{fitNullModel,SeqVarData-method}
+\alias{fitNullModel,ScanAnnotationDataFrame-method}
+\alias{fitNullModel,GenotypeData-method}
 \alias{nullModelInvNorm}
 
 \title{Fit a Model Under the Null Hypothesis}
@@ -28,6 +30,8 @@
 \S4method{fitNullModel}{AnnotatedDataFrame}(x, outcome, covars = NULL, cov.mat = NULL,
             group.var = NULL, sample.id = NULL, ...)
 \S4method{fitNullModel}{SeqVarData}(x, ...)
+\S4method{fitNullModel}{ScanAnnotationDataFrame}(x, ...)
+\S4method{fitNullModel}{GenotypeData}(x, ...)
 
 nullModelInvNorm(null.model, cov.mat = NULL, norm.option = c("by.group", "all"),
                  rescale = c("none", "model", "residSD"),

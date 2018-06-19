@@ -2,6 +2,7 @@
 \alias{assocTestSingle}
 \alias{assocTestSingle-methods}
 \alias{assocTestSingle,SeqVarIterator-method}
+\alias{assocTestSingle,GenotypeIterator-method}
 
 \title{Genotype Association Testing with Mixed Models}
 
@@ -11,10 +12,12 @@
 \usage{
 \S4method{assocTestSingle}{SeqVarIterator}(gdsobj, null.model, test=c("Score", "Wald"),
                 GxE=NULL, verbose=TRUE)
+\S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model, test=c("Score", "Wald"),
+                GxE=NULL, verbose=TRUE)
 }
 
 \arguments{
-    \item{gdsobj}{An object of class \code{\link{SeqVarIterator}} from the package \pkg{\link{SeqVarTools}} containing the genotype data for the variants and samples to be used for the analysis.}
+    \item{gdsobj}{An object of class \code{\link{SeqVarIterator}} from the package \pkg{\link{SeqVarTools}}, or an object of class \code{\link{GenotypeIterator}} from the package \pkg{\link{GWASTools}}, containing the genotype data for the variants and samples to be used for the analysis.}
     \item{null.model}{A null model object returned by \code{\link{fitNullModel}}.}
     \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Score"} (default) or \code{"Wald"}; only \code{"Score"} can be used when the family of the null model fit with \code{\link{fitNullModel}} is not gaussian.}
     %\item{impute.geno}{A logical indicator of whether sporadic missing genotype values should be mean imputed. The default is TRUE. See 'Details' for further information.}
@@ -97,6 +100,29 @@ nullmod <- fitNullModel(iterator, outcome="outcome", covars="sex")
 assoc <- assocTestSingle(iterator, nullmod)
 
 seqClose(iterator)
+
+
+library(GWASTools)
+
+# open a SNP-based GDS file
+gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
+gds <- GdsGenotypeReader(filename = gdsfile)
+
+# simulate some phenotype data
+pheno <- data.frame(scanID=getScanID(gds),
+                    outcome=rnorm(nscan(gds)))
+
+# construct a GenotypeIterator object
+genoData <- GenotypeData(gds, scanAnnot=ScanAnnotationDataFrame(pheno))
+iterator <- GenotypeBlockIterator(genoData)
+
+# fit the null model
+nullmod <- fitNullModel(iterator, outcome="outcome")
+
+# run the association test
+assoc <- assocTestSingle(iterator, nullmod)
+
+close(iterator)
 }
 \keyword{mixed model}
 \keyword{association}
