@@ -69,7 +69,7 @@ setMethod("assocTestAggregate",
                       weight <- .weightFromFreq(freq, weight.beta)
                   } else {
                       # user supplied weights
-                      weight <- variantData(gdsobj)[[weight.user]][expandedVariantIndex(gdsobj)]
+                      weight <- currentVariants(gdsobj)[[weight.user]][expandedVariantIndex(gdsobj)]
                       weight <- weight[!excl]
                   }
                   

@@ -1,6 +1,7 @@
 context("rare variant tests")
 library(SeqVarTools)
 library(GenomicRanges)
+library(Biobase)
 
 test_that("window", {
     svd <- .testData()
@@ -161,5 +162,19 @@ test_that("select alleles with duplicate variants", {
     nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
     assoc <- assocTestAggregate(iterator, nullmod, verbose=FALSE)
     expect_equal(nrow(assoc$variantInfo[[1]]), 2)
+    seqClose(svd)
+})
+
+
+test_that("user weights in GRanges", {
+    svd <- .testData()
+    gr <- GRangesList(
+        GRanges(seqnames=rep(1,2), ranges=IRanges(start=c(1e6, 3e6), width=1e6), weight=1:2),
+        GRanges(seqnames=rep(1,2), ranges=IRanges(start=c(3e6, 34e6), width=1e6), weight=3:4))
+    iterator <- SeqVarListIterator(svd, variantRanges=gr, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+    assoc <- assocTestAggregate(iterator, nullmod, weight.user="weight", verbose=FALSE)
+    expect_equal(assoc$variantInfo[[1]]$weight, c(rep(1,3),rep(2,4)))
+    expect_equal(assoc$variantInfo[[2]]$weight, c(rep(3,4),rep(4,4)))
     seqClose(svd)
 })
