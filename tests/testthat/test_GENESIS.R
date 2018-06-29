@@ -4,7 +4,7 @@ library(GenomicRanges)
 library(Biobase)
 
 ## flags for running various tests
-test_any <- TRUE
+test_any <- FALSE
 
 ## these have unpredictable errors depending on the random covariance matrix
 ## mostly of the form "a is 0-dimensional"
