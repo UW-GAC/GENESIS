@@ -221,17 +221,18 @@ library(TxDb.Hsapiens.UCSC.hg19.knownGene)
 seqSetFilterChrom(seqData, include=1)
 gr <- granges(gds)
 
-# find variants that overlap with each transcript
+# find variants that overlap with each gene
 txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
 gr <- renameSeqlevels(gr, paste0("chr", seqlevels(gr)))
 ts <- transcriptsByOverlaps(txdb, gr, columns="GENEID")
-ts <- reduce(ts)
-ts <- renameSeqlevels(ts, sub("chr", "", seqlevels(ts)))
+# simplistic example - define genes as overlapping transcripts
+genes <- reduce(ts)
+genes <- renameSeqlevels(genes, sub("chr", "", seqlevels(genes)))
 
-# create an iterator where each successive unit is a different transcript
-iterator <- SeqVarRangeIterator(seqData, variantRanges=ts, verbose=FALSE)
+# create an iterator where each successive unit is a different gene
+iterator <- SeqVarRangeIterator(seqData, variantRanges=genes, verbose=FALSE)
 
-# do a burden test on the rare variants in each transcript
+# do a burden test on the rare variants in each gene
 assoc <- assocTestAggregate(iterator, nullmod, AF.max=0.05, test="Burden", verbose=FALSE)
 ```
 

@@ -3,8 +3,8 @@ Type: Package
 Title: GENetic EStimation and Inference in Structured samples
         (GENESIS): Statistical methods for analyzing genetic data from
         samples with population structure and/or relatedness
-Version: 2.11.1-0
-Date: 2018-05-01
+Version: 2.11.5-0
+Date: 2018-06-20
 Author: Matthew P. Conomos, Stephanie M. Gogarten,
 	Lisa Brown, Han Chen, Thomas Lumley, Ken Rice, Tamar Sofer, Timothy Thornton, Chaoyu Yu
 Maintainer: Stephanie M. Gogarten <sdmorris@uw.edu>
@@ -25,6 +25,7 @@ Description: The GENESIS package provides methodology for estimating,
         component estimation and mixed model association testing for both 
         quantitative and binary phenotypes.
 License: GPL-3
+URL: https://github.com/smgogarten/GENESIS
 Depends: 
 Imports: Biobase, BiocGenerics, GWASTools, gdsfmt, GenomicRanges, graph, IRanges, S4Vectors, SeqArray, SeqVarTools, 
 	 dplyr, graphics, grDevices, Matrix, methods, stats, utils

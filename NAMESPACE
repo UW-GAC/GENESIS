@@ -9,21 +9,28 @@ import(gdsfmt)
 import(graph)
 import(Matrix)
 
-importFrom(GWASTools, GdsGenotypeReader, GenotypeData)
+importFrom(GWASTools,
+           GdsGenotypeReader,
+           GenotypeData,
+           GenotypeBlockIterator)
 importClassesFrom(GWASTools,
                   GdsGenotypeReader,
                   GenotypeData,
+                  GenotypeIterator,
+                  GenotypeBlockIterator,
                   ScanAnnotationDataFrame)
 importMethodsFrom(GWASTools,
                   close,
                   getChromosome,
                   getGenotypeSelection,
                   getPosition,
+                  getScanAnnotation,
                   getScanID,
                   getSnpID,
                   getVariable,
                   getSex,
                   hasSex,
+                  snpFilter,
                   XchromCode,
                   YchromCode)
 

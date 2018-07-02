@@ -40,7 +40,7 @@ setMethod("assocTestAggregate",
                   }
 
                   # allele frequency
-                  freq <- .alleleFreq(gdsobj, geno, index)
+                  freq <- .alleleFreq(gdsobj, geno, variant.index=index, sample.index=sample.index)
                   # exclude monomorphic variants
                   mono <- freq %in% c(0,1)
                   # exclude variants with freq > max
@@ -69,7 +69,7 @@ setMethod("assocTestAggregate",
                       weight <- .weightFromFreq(freq, weight.beta)
                   } else {
                       # user supplied weights
-                      weight <- variantData(gdsobj)[[weight.user]][expandedVariantIndex(gdsobj)]
+                      weight <- currentVariants(gdsobj)[[weight.user]][expandedVariantIndex(gdsobj)]
                       weight <- weight[!excl]
                   }
                   

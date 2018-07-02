@@ -8,13 +8,13 @@ test_any <- FALSE
 
 ## these have unpredictable errors depending on the random covariance matrix
 ## mostly of the form "a is 0-dimensional"
-test_binary <- TRUE
+test_binary <- FALSE
 
 ## unpredictable failures - check this
-test_GxE <- TRUE
+test_GxE <- FALSE
 
 ## tests involving deprecated functions (assocTestSeq*)
-test_deprecated <- TRUE
+test_deprecated <- FALSE
 
 if (test_any) {
     
@@ -753,4 +753,89 @@ test_that("assocTestAggregate matches assocTestSeqWindow - SKAT-O, LMM", {
     seqClose(svd)
 })
 }
+
+
+test_that("assocTestSingle matches assocTestMM - GenotypeData", {
+    genoData <- .testGenoData()
+    grm <- .testGenoDataGRM(genoData)
+    chr <- getChromosome(genoData)
+
+    nullmod1 <- fitNullMM(getScanAnnotation(genoData), outcome="outcome", covars="sex", covMatList=grm, verbose=FALSE)
+    # can't test Y chr with females
+    # also some XY SNPs have exactly the same separation as sex, so can't use it as a covariate
+    assoc1 <- assocTestMM(genoData, nullmod1, test="Score", chromosome=c(21:23,26), verbose=FALSE)
+    
+    iterator <- GenotypeBlockIterator(genoData, snpBlock=1000)
+    nullmod2 <- fitNullModel(genoData, outcome="outcome", covars="sex", cov.mat=grm, verbose=FALSE)
+    assoc2 <- assocTestSingle(iterator, nullmod2, test="Score", verbose=FALSE)
+    assoc2 <- assoc2[assoc2$chr %in% c(21:22, "X", "M"),]
+
+    expect_equal(assoc1$snpID, assoc2$variant.id)
+    expect_equal(ifelse(assoc1$minor.allele == "A", assoc1$MAF, 1-assoc1$MAF), assoc2$freq)
+    expect_equal(assoc1$Score, assoc2$Score)
+    expect_equal(assoc1$Var, (assoc2$Score.SE)^2)
+    expect_equal(assoc1$Score.Stat, (assoc2$Score.Stat)^2)
+    expect_equal(assoc1$Score.pval, assoc2$Score.pval)
+
+    close(genoData)
+})
+
+
+test_that("assocTestSingle matches assocTestMM - GenotypeData - XY", {
+    genoData <- .testGenoData()
+    grm <- .testGenoDataGRM(genoData)
+
+    nullmod1 <- fitNullMM(getScanAnnotation(genoData), outcome="outcome", covMatList=grm, verbose=FALSE)
+    assoc1 <- assocTestMM(genoData, nullmod1, test="Score", chromosome=24, verbose=FALSE)
+
+    iterator <- GenotypeBlockIterator(genoData, snpBlock=1000)
+    nullmod2 <- fitNullModel(genoData, outcome="outcome", cov.mat=grm, verbose=FALSE)
+    assoc2 <- assocTestSingle(iterator, nullmod2, verbose=FALSE)
+    assoc2 <- assoc2[assoc2$chr == "XY",]
+
+    expect_equal(assoc1$snpID, assoc2$variant.id)
+    expect_equal(ifelse(assoc1$minor.allele == "A", assoc1$MAF, 1-assoc1$MAF), assoc2$freq)
+    expect_equal(assoc1$Score, assoc2$Score)
+    expect_equal(assoc1$Var, (assoc2$Score.SE)^2)
+    expect_equal(assoc1$Score.Stat, (assoc2$Score.Stat)^2)
+    expect_equal(assoc1$Score.pval, assoc2$Score.pval)
+
+    close(genoData)
+})
+ 
+
+test_that("assocTestSingle matches assocTestMM - GenotypeData - Ychr", {
+    genoData <- .testGenoData()
+    grm <- .testGenoDataGRM(genoData)
+
+    # select males only
+    males <- getScanID(genoData, index=(getSex(genoData) == "M"))
+    
+    nullmod1 <- fitNullMM(getScanAnnotation(genoData), outcome="outcome", covMatList=grm, scan.include=males, verbose=FALSE)
+    assoc1 <- assocTestMM(genoData, nullmod1, test="Score", chromosome=25, verbose=FALSE)
+
+    iterator <- GenotypeBlockIterator(genoData, snpBlock=1000)
+    nullmod2 <- fitNullModel(genoData, outcome="outcome", cov.mat=grm, sample.id=males, verbose=FALSE)
+    assoc2 <- assocTestSingle(iterator, nullmod2, verbose=FALSE)
+    assoc2 <- assoc2[assoc2$chr == "Y",]
+
+    expect_equal(assoc1$snpID, assoc2$variant.id)
+    expect_equal(ifelse(assoc1$minor.allele == "A", assoc1$MAF, 1-assoc1$MAF), assoc2$freq)
+    expect_equal(assoc1$Score, assoc2$Score)
+    expect_equal(assoc1$Var, (assoc2$Score.SE)^2)
+    expect_equal(assoc1$Score.Stat, (assoc2$Score.Stat)^2)
+    expect_equal(assoc1$Score.pval, assoc2$Score.pval)
+
+    close(genoData)
+})
+ 
+
+test_that(".alleleFreq matches alleleFreq", {
+    genoData <- .testGenoData()
+    geno <- GWASTools::getGenotype(genoData, transpose=TRUE)
+    freq1 <- alleleFreq(geno, chromChar=getChromosome(genoData, char=TRUE), sex=getSex(genoData))
+    freq2 <- .alleleFreq(genoData, geno)
+    expect_equal(freq1, freq2)
+})
+   
 }

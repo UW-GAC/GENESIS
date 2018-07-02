@@ -20,8 +20,8 @@
     \item{null.model}{A null model object returned by \code{fitNullModel}.}
     \item{AF.max}{A numeric value specifying the upper bound on the alternate allele frequency for variants to be included in the analysis.}
     \item{weight.beta}{A numeric vector of length two specifying the two parameters of the Beta distribution used to determine variant weights; weights are given by \code{dbeta(MAF, a, b)}, where MAF is the minor allele frequency, and a and b are the two parameters specified here. \code{weight.beta = c(1,25)} gives the Wu weights; \code{weight.beta = c(0.5, 0.5)} is proportional to the Madsen-Browning weights; and \code{weight.beta = c(1,1)} gives a weight of 1 to all variants. This input is ignored when \code{weight.user} is not \code{NULL}.}
-    \item{weight.user}{A character string specifying the name of a variable in the variantData slot of \code{gdsobj} to be used as variant weights.  When left \code{NULL} (the default), the weights specified by \code{weight.beta} will be used.}
-    \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Burden"} (default), \code{"SKAT"}, \code{"SMMAT"}, or \code{"fastSKAT"}.  When this is set to "SKAT" and the parameter \code{rho} has multiple values, a SKAT-O test is performed.}
+    \item{weight.user}{A character string specifying the name of a variable to be used as variant weights. This variable can be in either 1) the variantData slot of \code{gdsobj} or 2) the \code{\link{mcols}} of the \code{\link{GRanges}} or \code{\link{GRangesList}} object used to create \code{gdsobj} (when \code{gdsobj} is a \code{link{SeqVarRangeIterator}} or \code{link{SeqVarListIterator}}).  When left \code{NULL} (the default), the weights specified by \code{weight.beta} will be used.}
+    \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Burden"} (default), \code{"SKAT"}, or \code{"SMMAT"}, or \code{"fastSKAT"}.  When this is set to "SKAT" and the parameter \code{rho} has multiple values, a SKAT-O test is performed.}
     \item{burden.test}{A character string specifying the type of Burden test to perform when \code{test = "Burden"}.  The possibilities are \code{"Score"} and \code{"Wald"}. \code{"Score"} can be used for any \code{null.model}. \code{"Wald"} can not be used when the \code{null.model} is from a mixed model with a binary outcome variable.}
     %\item{burden.test}{A character string specifying the type of Burden test to perform when \code{test} = "Burden".  The possibilities are "Score", "Wald", and "Firth". "Score" can be used for any \code{null.model}. "Wald" can not be used when the \code{null.model} is from a mixed model with a binary outcome variable. "Firth" can only be used when the \code{null.model} is from a logistic regression with a binary outcome variable.}
     \item{rho}{A numeric value (or vector of numeric values) in \code{[0,1]} specifying the rho parameter for SKAT. When \code{rho = 0}, a standard SKAT test is performed. When \code{rho = 1}, a score burden test is performed. When \code{rho} is a vector of values, SKAT-O is performed using each of those values as the search space for the optimal \code{rho}.}
@@ -150,11 +150,22 @@ assoc <- assocTestAggregate(iterator, nullmod, test="SKAT", rho=seq(0, 1, 0.25))
 assoc$results
 assoc$variantInfo
 
-# user-specified weights
+# user-specified weights - option 1
 seqResetFilter(iterator)
 variant.id <- seqGetData(gds, "variant.id")
 weights <- data.frame(variant.id, weight=runif(length(variant.id)))
 variantData(seqData) <- AnnotatedDataFrame(weights)
+iterator <- SeqVarListIterator(seqData, variantRanges=gr)
+assoc <- assocTestAggregate(iterator, nullmod, test="Burden", weight.user="weight")
+assoc$results
+assoc$variantInfo
+
+# user-specified weights - option 2
+seqResetFilter(iterator)
+variantData(seqData)$weight <- NULL
+gr <- GRangesList(
+  GRanges(seqnames=rep(22,2), ranges=IRanges(start=c(16e6, 17e6), width=1e6), weight=runif(2)),
+  GRanges(seqnames=rep(22,2), ranges=IRanges(start=c(18e6, 20e6), width=1e6), weight=runif(2)))
 iterator <- SeqVarListIterator(seqData, variantRanges=gr)
 assoc <- assocTestAggregate(iterator, nullmod, test="Burden", weight.user="weight")
 assoc$results
