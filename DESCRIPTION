@@ -7,7 +7,8 @@ Version: 2.11.5
 Date: 2018-06-20
 Author: Matthew P. Conomos, Stephanie M. Gogarten,
 	Lisa Brown, Han Chen, Ken Rice, Tamar Sofer, Timothy Thornton, Chaoyu Yu
-Maintainer: Stephanie M. Gogarten <sdmorris@uw.edu>
+Maintainer: Stephanie M. Gogarten <sdmorris@uw.edu>,
+	    Matthew P. Conomos <mconomos@uw.edu>
 Description: The GENESIS package provides methodology for estimating,
         inferring, and accounting for population and pedigree structure
         in genetic analyses.  The current implementation provides
