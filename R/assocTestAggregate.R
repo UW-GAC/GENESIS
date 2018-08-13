@@ -70,6 +70,7 @@ setMethod("assocTestAggregate",
                   } else {
                       # user supplied weights
                       weight <- currentVariants(gdsobj)[[weight.user]][expandedVariantIndex(gdsobj)]
+                      if (!is.null(index)) weight <- weight[index]
                       weight <- weight[!excl]
                   }
                   
