@@ -58,7 +58,13 @@ setMethod("assocTestSingle",
 
               # filter samples to match null model
               sample.id <- null.model$sample.id
-              sample.index <- match(sample.id, getScanID(gdsobj))
+              if (!is.null(sample.id)) {
+                  sample.index <- match(sample.id, getScanID(gdsobj))
+              } else {
+                  sample.index <- match(rownames(null.model$model.matrix),
+                                        sampleNames(getScanAnnotation(gdsobj)))
+                  sample.id <- getScanID(gdsobj)[sample.index]
+              }
               
               # results
               res <- list()

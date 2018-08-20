@@ -81,8 +81,12 @@ setMethod("validateSex",
 # set a sample filter, and return the index to put filtered samples
 # in the same order as the null model
 .setFilterNullModel <- function(gdsobj, null.model, verbose=TRUE) {
-    seqSetFilter(gdsobj, sample.id=null.model$sample.id, verbose=verbose)
-    match(null.model$sample.id, seqGetData(gdsobj, "sample.id"))
+    if (!is.null(null.model$sample.id)) {
+        seqSetFilter(gdsobj, sample.id=null.model$sample.id, verbose=verbose)
+        match(null.model$sample.id, seqGetData(gdsobj, "sample.id"))
+    } else {
+        seq_along(seqGetData(gdsobj, "sample.id"))
+    }
 }
 
 .modelMatrixColumns <- function(null.model, col.name) {

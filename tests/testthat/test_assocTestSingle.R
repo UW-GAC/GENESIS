@@ -94,3 +94,17 @@ test_that("assocTestSingle - GxE", {
     expect_true(all(c("Est.G:envb", "SE.G:envb", "GxE.Stat") %in% names(assoc)))
     seqClose(svd)
 })
+
+test_that("missing sample.id in null model", {
+    svd <- .testData()
+    seqSetFilterChrom(svd, include=1, verbose=FALSE)
+    n <- 10
+    seqSetFilter(svd, sample.sel=1:n)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    nullmod <- fitNullModel(pData(sampleData(svd)), outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+    expect_false("sample.id" %in% names(nullmod))
+    expect_equal(length(nullmod$outcome), n)
+    assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+    expect_equal(max(assoc$n.obs), n)
+    seqClose(svd)
+})
