@@ -1,5 +1,10 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.11.8}{
+    \itemize{
+        \item Added admixMap function to replace admixMapMM.
+    }
+}
 \section{Version 2.11.4}{
     \itemize{
         \item Added assocTestSingle and fitNullModel methods for GenotypeData objects.

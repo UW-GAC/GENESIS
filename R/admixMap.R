@@ -158,36 +158,14 @@ admixMap <- function(admixDataList,
     n <- length(sample.id)
     res[, "n"] <- n
     
-    if (b == 1){
-      # calculate matrices
-      
-      # covariate matrix
-      W.block <- null.model$model.matrix
-      k <- ncol(W.block)
-      # outcome
-      Y.block <- null.model$workingY
-      
-      # here we have to subset the matrix, not the inverse
-      # this is a fancy way of getting the inverse of the subset without having to get the original matrix
-      #chol.idx <- which(!(colnames(null.model$cholSigmaInv) %in% sample.id))
-      #C.block <- subsetCholSigmaInv(null.model$cholSigmaInv, chol.idx)
-      
-      C.block <- null.model$cholSigmaInv
-      
-      # W: covariate matrix
-      # C: cholesky decomposition of sigma inverse
-      # sigma inverse: inverse phenotype covariance matrix
-      CW <- crossprod(C.block, W.block)
-      Mt <- C.block - tcrossprod(tcrossprod(C.block,tcrossprod(chol2inv(chol(crossprod(CW))),CW)),CW) # this is a matrix used to adjust phenotype and local ancestry for fixed effect covariates AND "decorrelating" the phenotype and genotype -- ie adjusting out covariance structure given by sigma matrix.
-      Ytilde <- crossprod(Mt,Y.block) # so ytilde is the phenotype adjusted for the covariates/correlation structure
-      sY2 <- sum(Ytilde^2)
-    }
-    
+    k <- ncol(null.model$model.matrix)
+    Ytilde <- null.model$Ytilde
+    sY2 <- sum(Ytilde^2)
         
     # perform regressions
     if(v == 1){
-      local <- local[,,1]
-      Xtilde <- crossprod(Mt,local) # adjust local for correlation structure and fixed effects
+      local <- Matrix(local[,,1])
+      Xtilde <- calcXtilde(null.model, local)
       XtX <- colSums(Xtilde^2) # vector of X^T SigmaInv X (for each SNP)
       # filter monomorphic SNPs
       XtX[which(freq == 0 || freq == 1)] <- NA
@@ -213,7 +191,9 @@ admixMap <- function(admixDataList,
         }
         # filter monomorphic or missing SNPs
         if(any(freq[g,]==1) || sum(freq[g,]==0)){ next }
-        Xtilde <- crossprod(Mt,local[,g,])
+        Xtilde <- calcXtilde(null.model, Matrix(local[,g,]))
+        Ytilde <- null.model$Ytilde
+        sY2 <- sum(Ytilde^2)
         XtX <- crossprod(Xtilde)
         XtXinv <- tryCatch( chol2inv(chol(XtX)), error=function(e){TRUE})
         # check that the error function above hasn't been called (which returns TRUE instead of the inverse matrix)

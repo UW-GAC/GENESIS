@@ -63,7 +63,8 @@ export(admixMapMM,
 exportMethods(assocTestSingle,
               assocTestAggregate,
               fitNullModel)
-export(nullModelInvNorm)
+export(admixMap,
+       nullModelInvNorm)
 
 S3method(plot, pcair)
 S3method(summary, pcair)

@@ -2,6 +2,7 @@ context("Compare with old functions")
 library(SeqVarTools)
 library(GenomicRanges)
 library(Biobase)
+library(gdsfmt)
 
 ## flags for running various tests
 test_any <- FALSE
@@ -838,4 +839,78 @@ test_that(".alleleFreq matches alleleFreq", {
     expect_equal(freq1, freq2)
 })
    
+
+test_that("admixMap matches admixMapMM", {
+
+# create file with multiple ancestries
+gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
+tmpfile <- tempfile()
+file.copy(gdsfile, tmpfile)
+gds <- openfn.gds(tmpfile, readonly=FALSE)
+nsnp <- objdesp.gdsn(index.gdsn(gds, "snp.id"))$dim
+nsamp <- objdesp.gdsn(index.gdsn(gds, "sample.id"))$dim
+dosage_eur <- sample(0:2, nsnp*nsamp, replace=TRUE)
+dosage_afr <- ifelse(dosage_eur == 2, 0, sample(0:1, nsnp*nsamp, replace=TRUE))
+dosage_amer <- 2 - dosage_eur - dosage_afr
+add.gdsn(gds, "dosage_eur", matrix(dosage_eur, nrow=nsamp, ncol=nsnp))
+add.gdsn(gds, "dosage_afr", matrix(dosage_afr, nrow=nsamp, ncol=nsnp))
+add.gdsn(gds, "dosage_amer", matrix(dosage_amer, nrow=nsamp, ncol=nsnp))
+closefn.gds(gds)
+        
+# read GRM
+pcrfile <- system.file("extdata", "HapMap_ASW_MXL_pcrelate.gds", package="GENESIS")
+pcr <- openfn.gds(pcrfile)
+mypcrel <- pcrelateMakeGRM(pcr)
+closefn.gds(pcr)
+
+# generate a phenotype
+set.seed(4)
+pheno <- rnorm(nsamp, mean = 0, sd = 1)
+covar <- sample(0:1, nsamp, replace=TRUE)
+
+# make ScanAnnotationDataFrame
+scanAnnot <- GWASTools::ScanAnnotationDataFrame(data.frame(scanID = rownames(mypcrel), 
+              covar, pheno, stringsAsFactors=FALSE))
+
+# read in GDS data
+gds <- openfn.gds(tmpfile)
+genoDataList <- list()
+for (anc in c("eur", "afr", "amer")){
+  gdsr <- GWASTools::GdsGenotypeReader(gds, genotypeVar=paste0("dosage_", anc))
+  genoDataList[[anc]] <- GWASTools::GenotypeData(gdsr, scanAnnot=scanAnnot)
+}
+     
+# fit the null mixed model
+nullmod <- fitNullMM(scanData = scanAnnot, outcome = "pheno", covars = "covar", covMatList = mypcrel, verbose=FALSE)
+
+# run the association test
+a1 <- admixMapMM(genoDataList, nullMMobj = nullmod, verbose=FALSE)
+
+
+# new method
+nullmod2 <- fitNullModel(scanAnnot, outcome = "pheno", covars = "covar", cov.mat = mypcrel, verbose=FALSE)
+
+# iterators
+genoIterators <- lapply(genoDataList, GWASTools::GenotypeBlockIterator)
+a2 <- admixMap(genoIterators, nullmod2)
+
+for (v in c("snpID", "chr", "n", "eur.freq", "afr.freq", "amer.freq")) {
+    expect_equal(a1[[v]], a2[[v]])
+}
+
+## # instability with new null model - same as GxE
+## # this worked before we switched to using new calcXtilde and Matrix objects
+## nm.tmp <- nullmod
+## nm.tmp$sample.id <- nm.tmp$scanID
+## lapply(genoIterators, GWASTools::resetIterator)
+## a3 <- admixMap(genoIterators, nm.tmp)
+
+## for (v in names(a3)) {
+##     expect_equal(a1[[v]], a3[[v]])
+## }
+
+GWASTools::close(genoDataList[[1]])
+unlink(tmpfile)
+})
+
 }
