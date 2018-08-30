@@ -1,22 +1,22 @@
 \name{varCompCI}
 \alias{varCompCI}
 \title{Variance Component Confidence Intervals}
-\description{\code{varCompCI} provides confidence intervals for the variance component estimates found using \code{\link{fitNullMM}}. The confidence intervals can be found on either the original scale or for the proportion of total variability explained.}
+\description{\code{varCompCI} provides confidence intervals for the variance component estimates found using \code{\link{fitNullModel}}. The confidence intervals can be found on either the original scale or for the proportion of total variability explained.}
 \usage{
 varCompCI(nullMMobj, prop = TRUE)
 }
 \arguments{
-  \item{nullMMobj}{A null model object returned by \code{\link{fitNullMM}}.}
+  \item{nullMMobj}{A null model object returned by \code{\link{fitNullModel}}.}
   \item{prop}{A logical indicator of whether the point estimates and confidence intervals should be returned as the proportion of total variability explained (TRUE) or on the orginal scale (FALSE).}
 }
 \details{
-    \code{varCompCI} takes the object returned by \code{\link{fitNullMM}} as its input and returns point estimates and confidence intervals for each of the random effects variance component estimates. If a kinship matrix or genetic relationship matrix (GRM) was included as a random effect in the model fit using \code{\link{fitNullMM}}, then this function can be used to provide a heritability estimate when \code{prop} is TRUE.
+    \code{varCompCI} takes the object returned by \code{\link{fitNullModel}} as its input and returns point estimates and confidence intervals for each of the random effects variance component estimates. If a kinship matrix or genetic relationship matrix (GRM) was included as a random effect in the model fit using \code{\link{fitNullModel}}, then this function can be used to provide a heritability estimate when \code{prop} is TRUE.
 }
 \value{\code{varCompCI} prints a table of point estimates and 95\% confidence interval limits for each estimated variance component.}
 %\references{
 %}
 \author{Matthew P. Conomos}
-\seealso{\code{\link{fitNullMM}} for fitting the mixed model and performing the variance component estimation.}
+\seealso{\code{\link{fitNullModel}} for fitting the mixed model and performing the variance component estimation.}
 \examples{
 library(GWASTools)
 
@@ -50,7 +50,7 @@ scanAnnot <- ScanAnnotationDataFrame(data.frame(scanID = mypcrel$sample.id,
 covMatList <- list("Kin" = pcrelateMakeGRM(mypcrel))
 
 # fit the null mixed model
-nullmod <- fitNullMM(scanData = scanAnnot, outcome = "pheno", covars = "pc1", covMatList = covMatList)
+nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1", cov.mat = covMatList)
 
 # find the variance component CIs
 varCompCI(nullmod, prop = TRUE)

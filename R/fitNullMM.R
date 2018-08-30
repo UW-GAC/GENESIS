@@ -10,6 +10,7 @@ fitNullMM <- function(	scanData,
 						maxIter = 100,
 						dropZeros = TRUE,
 						verbose = TRUE){
+    .Deprecated("fitNullModel")
 
 	# make sure scanData is a data.frame
 	if(class(scanData) == "ScanAnnotationDataFrame"){

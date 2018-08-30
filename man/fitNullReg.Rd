@@ -1,7 +1,8 @@
 \name{fitNullReg}
 \alias{fitNullReg}
 \title{Fit a Regression Model Under the Null Hypothesis}
-\description{\code{fitNullReg} fits a regression model. The output of \code{fitNullReg} can be passed to \code{\link{assocTestSeq}} or \code{\link{assocTestSeqWindow}} for the purpose of genetic association testing.} 
+\description{\code{fitNullReg} fits a regression model. The output of \code{fitNullReg} can be passed to \code{\link{assocTestSeq}} or \code{\link{assocTestSeqWindow}} for the purpose of genetic association testing.
+This function is deprecated; use \code{\link{fitNullModel}} instead.} 
 \usage{
 fitNullReg(scanData, outcome, covars = NULL, scan.include = NULL,
             family = gaussian, verbose = TRUE)

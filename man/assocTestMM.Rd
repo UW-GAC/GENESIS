@@ -1,7 +1,8 @@
 \name{assocTestMM}
 \alias{assocTestMM}
 \title{SNP Genotype Association Testing with Mixed Models}
-\description{\code{assocTestMM} performs SNP genotype association tests using the null model fit with \code{\link{fitNullMM}}.}
+\description{\code{assocTestMM} performs SNP genotype association tests using the null model fit with \code{\link{fitNullMM}}.
+This function is deprecated; use \code{\link{assocTestSingle}} instead.}
 \usage{
 assocTestMM(genoData, nullMMobj, test = "Wald", snp.include = NULL,
             chromosome = NULL, impute.geno = TRUE, snp.block.size = 5000,
@@ -63,6 +64,7 @@ If \code{genoData} is a \code{SeqVarData} object, the effect size estimate is fo
      \code{\link[GWASTools:GWASTools-package]{GWASTools}} for a description of the package containing the following functions: \code{\link{GenotypeData}} for a description of creating a \code{GenotypeData} class object for storing sample and SNP genotype data, \code{\link{MatrixGenotypeReader}} for a description of reading in genotype data stored as a matrix, and \code{\link{GdsGenotypeReader}} for a description of reading in genotype data stored as a GDS file.  Also see \code{\link[SNPRelate]{snpgdsBED2GDS}} in the \code{\link[SNPRelate:SNPRelate-package]{SNPRelate}} package for a description of converting binary PLINK files to GDS.
 }
 \examples{
+\dontrun{
 library(GWASTools)
 
 # file path to GDS file
@@ -102,6 +104,7 @@ close(HapMap_genoData)
 
 # make a QQ plot
 qqPlot(myassoc$Wald.pval)
+}
 }
 \keyword{mixed model}
 \keyword{association}

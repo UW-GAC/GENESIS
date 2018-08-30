@@ -3,7 +3,8 @@
 
 \title{admixMapMM}
 \description{
-Run admixture analyses
+Run admixture analyses.
+This function is deprecated; use \code{\link{admixMap}} instead.
 }
 \usage{
 admixMapMM(admixDataList, nullMMobj, snp.include = NULL,
@@ -31,6 +32,7 @@ admixMapMM(admixDataList, nullMMobj, snp.include = NULL,
 \seealso{\code{\link{GenotypeData}}, \code{\link{fitNullMM}}, \code{\link{assocTestMM}}}
 
 \examples{
+\dontrun{
 library(GWASTools)
 library(gdsfmt)
 
@@ -80,6 +82,7 @@ myassoc <- admixMapMM(genoDataList, nullMMobj = nullmod)
 
 close(genoDataList[[1]])
 unlink(tmpfile)
+}
 }
 
 \references{

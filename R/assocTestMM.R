@@ -9,8 +9,9 @@ assocTestMM <- function(genoData,
                         ivar.return.betaCov = FALSE,
                         verbose = TRUE){
 
+    .Deprecated("assocTestSingle")
+    
     if(class(genoData) == "SeqVarData"){
-        message("Consider using assocTestSingle instead.")
         # save the filter
         seqFilt.original <- seqGetFilter(genoData)
         # reset so indexing works

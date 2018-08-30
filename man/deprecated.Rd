@@ -13,8 +13,10 @@
   the replacement indicated below:
   \itemize{
 
-    \item{assocTestSeq: \code{\link{assocTestAggregate}}}
-    \item{assocTestSeqWindow: \code{\link{assocTestAggregate}}}
+    \item{admixMapMM: \code{\link{admixMap}}}
+    \item{assocTestMM: \code{\link{assocTestSingle}}}
+    \item{fitNullMM: \code{\link{fitNullModel}}}
+    \item{fitNullReg: \code{\link{fitNullModel}}}
 
   }
 }

@@ -4,7 +4,8 @@ fitNullReg <- function(	scanData,
 						scan.include = NULL,
 						family = gaussian,
 						verbose = TRUE){
-
+    .Deprecated("fitNullModel")
+    
 	# make sure scanData is a data.frame
 	if(class(scanData) == "ScanAnnotationDataFrame"){
 		scanData <- pData(scanData)

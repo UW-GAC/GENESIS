@@ -6,6 +6,8 @@ admixMapMM <- function(admixDataList,
                                snp.block.size = 5000,
                                verbose = TRUE){
 
+    .Deprecated("admixMap")
+    
   # if admixDataList is GenotypeData (one file), convert to a list
   if(class(admixDataList) == "GenotypeData"){
     admixDataList <- list(admixDataList)

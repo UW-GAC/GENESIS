@@ -1,7 +1,8 @@
 \name{fitNullMM}
 \alias{fitNullMM}
 \title{Fit a Mixed Model Under the Null Hypothesis}
-\description{\code{fitNullMM} fits a mixed model with random effects specified by their covariance structures; this allows for the inclusion of a polygenic random effect using a kinship matrix or genetic relationship matrix (GRM). The output of \code{fitNullMM} can be used to estimate genetic heritability and can be passed to \code{\link{assocTestMM}} for the purpose of genetic association testing.} 
+\description{\code{fitNullMM} fits a mixed model with random effects specified by their covariance structures; this allows for the inclusion of a polygenic random effect using a kinship matrix or genetic relationship matrix (GRM). The output of \code{fitNullMM} can be used to estimate genetic heritability and can be passed to \code{\link{assocTestMM}} for the purpose of genetic association testing.
+This function is deprecated; use \code{\link{fitNullModel}} instead.} 
 \usage{
 fitNullMM(scanData, outcome, covars = NULL, covMatList, scan.include = NULL,
             family = gaussian, group.var = NULL, start = NULL, 
@@ -70,6 +71,7 @@ fitNullMM(scanData, outcome, covars = NULL, covMatList, scan.include = NULL,
     \code{\link[GWASTools:GWASTools-package]{GWASTools}} for a description of the package containing the \code{\link{ScanAnnotationDataFrame}} class.
 }
 \examples{
+\dontrun{
 library(GWASTools)
 
 # file path to GDS file
@@ -103,6 +105,7 @@ covMatList <- list("Kin" = pcrelateMakeGRM(mypcrel))
 
 # fit the null mixed model
 nullmod <- fitNullMM(scanData = scanAnnot, outcome = "pheno", covars = "pc1", covMatList = covMatList)
+}
 }
 \keyword{mixed model}
 \keyword{association}
