@@ -1,7 +1,8 @@
 pcairPartition2_gds <- function(kinobj, divobj,
 							kin.thresh = 2^(-11/2),
 							div.thresh = -2^(-11/2),
-							unrel.set = NULL){
+							unrel.set = NULL,
+							sample.include = NULL){
 
 	# sample.id from kinship matrix
 	kin.id.all <- read.gdsn(index.gdsn(kinobj, 'sample.id'))
@@ -15,6 +16,36 @@ pcairPartition2_gds <- function(kinobj, divobj,
 		warning('kinobj and divobj contain non-matching samples; only partitioning those present in both objects')
 	}
 
+	# filter to samples in sample.include
+	if(!is.null(sample.include)){
+		if(!all(sample.include %in% kin.id.all) | !all(sample.include %in% div.id.all)){
+			warning('some samples in sample.include are not in kinobj or divobj; they will not be included')
+		}
+
+		# subset the read indicators to samples in sample.include
+		kin.read <- kin.read & (kin.id.all %in% sample.include)
+		div.read <- div.read & (div.id.all %in% sample.include)
+	}
+
+	# checks on unrel.set
+	if(!is.null(unrel.set)){
+		if(!all(unrel.set %in% kin.id.all) | !all(unrel.set %in% div.id.all)){
+			warning('some samples in unrel.set are not in kinobj or divobj; they will not be included')
+			# subset unrel.set to only those in kinobj and divobj
+			unrel.set <- unrel.set[(unrel.set %in% kin.id.all) & (unrel.set %in% div.id.all)]
+		}
+
+		# if using sample.include, only keep unrel.set in sample.include
+		if(!is.null(sample.include)){
+			unrel.set <- unrel.set[unrel.set %in% sample.include]
+		}
+
+		# if no samples left in unrel.set; don't use it downstream
+		if(length(unrel.set) == 0){
+			unrel.set <- NULL
+		}
+	}
+	
 
 	message('Identifying relatives for each sample using kinship threshold ', kin.thresh)
 	# create a vector of ids for samples to be read
@@ -182,6 +213,36 @@ pcairPartition2_matrix <- function(kinobj, divobj,
 	div.read <- div.id.all %in% kin.id.all
 	if(!(all(kin.read) & all(div.read))){
 		warning('kinobj and divobj contain non-matching samples; only partitioning those present in both objects')
+	}
+
+	# filter to samples in sample.include
+	if(!is.null(sample.include)){
+		if(!all(sample.include %in% kin.id.all) | !all(sample.include %in% div.id.all)){
+			warning('some samples in sample.include are not in kinobj or divobj; they will not be included')
+		}
+
+		# subset the read indicators to samples in sample.include
+		kin.read <- kin.read & (kin.id.all %in% sample.include)
+		div.read <- div.read & (div.id.all %in% sample.include)
+	}
+
+	# checks on unrel.set
+	if(!is.null(unrel.set)){
+		if(!all(unrel.set %in% kin.id.all) | !all(unrel.set %in% div.id.all)){
+			warning('some samples in unrel.set are not in kinobj or divobj; they will not be included')
+			# subset unrel.set to only those in kinobj and divobj
+			unrel.set <- unrel.set[(unrel.set %in% kin.id.all) & (unrel.set %in% div.id.all)]
+		}
+
+		# if using sample.include, only keep unrel.set in sample.include
+		if(!is.null(sample.include)){
+			unrel.set <- unrel.set[unrel.set %in% sample.include]
+		}
+
+		# if no samples left in unrel.set; don't use it downstream
+		if(length(unrel.set) == 0){
+			unrel.set <- NULL
+		}
 	}
 
 
