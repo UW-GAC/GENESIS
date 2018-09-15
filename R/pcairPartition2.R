@@ -85,12 +85,13 @@ pcairPartition2_gds <- function(kinobj, divobj,
 	# logical indicator of which samples in divobj need divergence measures
 	div.read.col <- div.id.all %in% kin.id
 	# vector of ids we are reading
-	div.id <- div.id.all[div.read.col]
+	div.id <- div.id.all[div.read]
+	div.id.col <- div.id.all[div.read.col]
 	# create list of divergent pairs for each sample
 	divlist <- apply.gdsn(	node = index.gdsn(divobj, 'kinship'), margin = 2, 
 							FUN = function(x){ div.id[x < div.thresh] }, 
 							selection = list(div.read, div.read.col))
-	names(divlist) <- div.id
+	names(divlist) <- div.id.col
 
 	# create a vector matching ids of rellist and divlist
 	idx <- match(names(divlist), names(rellist))
@@ -104,7 +105,7 @@ pcairPartition2_gds <- function(kinobj, divobj,
 	ndiv <- sapply(divlist, length)
 
 	# clean up
-	rm(divlist); rm(div.id.all); rm(div.read); rm(div.read.col); rm(div.id)
+	rm(divlist); rm(div.id.all); rm(div.read); rm(div.read.col); rm(div.id); rm(div.id.col)
 
 
 	# empty vector to store related set
@@ -282,11 +283,13 @@ pcairPartition2_matrix <- function(kinobj, divobj,
 	# logical indicator of which samples in divobj need divergence measures
 	div.read.col <- div.id.all %in% kin.id
 	# vector of ids we are reading
-	div.id <- div.id.all[div.read.col]
+	div.id <- div.id.all[div.read]
+	div.id.col <- div.id.all[div.read.col]
 	# create list of divergent pairs for each sample
-	divlist <- apply(	divobj[div.read, div.read.col], MARGIN = 2,
-						FUN = function(x){ div.id[x < div.thresh] })
-	names(divlist) <- div.id
+	divlist <- apply.gdsn(	node = index.gdsn(divobj, 'kinship'), margin = 2, 
+							FUN = function(x){ div.id[x < div.thresh] }, 
+							selection = list(div.read, div.read.col))
+	names(divlist) <- div.id.col
 
 	# create a vector matching ids of rellist and divlist
 	idx <- match(names(divlist), names(rellist))
@@ -300,7 +303,7 @@ pcairPartition2_matrix <- function(kinobj, divobj,
 	ndiv <- sapply(divlist, length)
 
 	# clean up
-	rm(divlist); rm(div.id.all); rm(div.read); rm(div.read.col); rm(div.id)
+	rm(divlist); rm(div.id.all); rm(div.read); rm(div.read.col); rm(div.id); rm(div.id.col)
 
 
 	# empty vector to store related set
