@@ -290,9 +290,8 @@ pcairPartition2_matrix <- function(kinobj, divobj,
 	div.id <- div.id.all[div.read]
 	div.id.col <- div.id.all[div.read.col]
 	# create list of divergent pairs for each sample
-	divlist <- apply.gdsn(	node = index.gdsn(divobj, 'kinship'), margin = 2, 
-							FUN = function(x){ div.id[x < div.thresh] }, 
-							selection = list(div.read, div.read.col))
+	divlist <- apply(divobj[div.read, div.read.col]	MARGIN = 2, 
+							FUN = function(x){ div.id[x < div.thresh] })
 	names(divlist) <- div.id.col
 
 	# create a vector matching ids of rellist and divlist
