@@ -1,9 +1,5 @@
 
-setGeneric("createDesignMatrix", function(x, ...) standardGeneric("createDesignMatrix"))
-
-setMethod("createDesignMatrix",
-          "data.frame",
-          function(x, outcome, covars=NULL, group.var=NULL) {
+createDesignMatrix <- function(x, outcome, covars=NULL, group.var=NULL) {
 
               if (!is.null(covars)) {
                   model.formula <- as.formula(paste(outcome, "~", paste(covars, collapse="+")))
@@ -35,19 +31,7 @@ setMethod("createDesignMatrix",
               }
 
               list(y=y, X=X, group.idx=group.idx)
-          })
-
-setMethod("createDesignMatrix",
-          "AnnotatedDataFrame",
-          function(x, outcome, covars=NULL, group.var=NULL, sample.id=NULL) {
-              x <- pData(x)
-              rownames(x) <- x$sample.id
-              if (!is.null(sample.id)) {
-                  stopifnot(all(sample.id %in% x$sample.id))
-                  x <- x[as.character(sample.id),]
-              }
-              createDesignMatrix(x, outcome, covars, group.var)
-          })
+}
 
 .indexList <- function(x) {
     groups <- unique(x)

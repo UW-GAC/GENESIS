@@ -13,9 +13,10 @@ test_that("assocTestSingle", {
 
 test_that("assocTestSingle - sample selection", {
     svd <- .testData()
+    grm <- .testGRM(svd)
     samp <- sampleData(svd)$sample.id[sample(1:nrow(sampleData(svd)), 50)]
     iterator <- SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
-    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), sample.id=samp, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), cov.mat=grm, sample.id=samp, verbose=FALSE)
     expect_equal(nrow(nullmod$model.matrix), 50)
     assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
     expect_equal(max(assoc$n.obs), 50)
@@ -25,8 +26,9 @@ test_that("assocTestSingle - sample selection", {
 test_that("assocTestSingle - reorder samples", {
     svd <- .testData()
     samp <- sample(sampleData(svd)$sample.id, 50)
+    grm <- .testGRM(svd)
     iterator <- SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
-    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), sample.id=samp, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), cov.mat=grm[samp,samp], verbose=FALSE)
     expect_equal(nrow(nullmod$model.matrix), 50)
     expect_equal(nullmod$sample.id, samp)
     assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
@@ -34,11 +36,10 @@ test_that("assocTestSingle - reorder samples", {
 
     # check that we get same assoc results with samples in different order
     samp.sort <- sort(samp)
-    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), sample.id=samp.sort, verbose=FALSE)
-    expect_equal(nullmod$sample.id, samp.sort)
-    seqResetFilter(svd, verbose=FALSE)
-    iterator <- SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
-    assoc2 <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+    nullmod2 <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), cov.mat=grm[samp.sort,samp.sort], verbose=FALSE)
+    expect_equal(nullmod2$sample.id, samp.sort)
+    resetIterator(iterator, verbose=FALSE)
+    assoc2 <- assocTestSingle(iterator, nullmod2, verbose=FALSE)
     expect_equal(assoc, assoc2, tolerance=1e-3)
     
     seqClose(svd)
@@ -48,8 +49,9 @@ test_that("assocTestSingle - reorder samples", {
 ## test the lines of code that reorder the genotypes
 test_that("reorder genotypes", {
     svd <- .testData()
+    grm <- .testGRM(svd)
     samp <- sample(sampleData(svd)$sample.id, 50)
-    nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), sample.id=samp, verbose=FALSE)
+    nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=grm[samp,samp], verbose=FALSE)
     sample.index <- .setFilterNullModel(svd, nullmod, verbose=FALSE)
     geno <- expandedAltDosage(svd, use.names=TRUE, sparse=TRUE)[sample.index,,drop=FALSE]
     expect_equal(rownames(geno), samp)

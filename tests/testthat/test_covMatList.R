@@ -38,3 +38,26 @@ test_that("sparse matrix", {
     nullmod2 <- fitNullMod(dat$y, dat$X, dat$cor.mat, verbose=FALSE)
     expect_equal(nullmod, nullmod2)
 })
+
+test_that("error on mismatched names", {
+    s <- letters[1:10]
+    mat1 <- matrix(1, nrow=10, ncol=10, dimnames=list(s,s))
+    mat2 <- matrix(1, nrow=10, ncol=10, dimnames=list(rev(s), rev(s)))
+    materr <- matrix(1, nrow=10, ncol=10, dimnames=list(s,rev(s)))
+    expect_error(.covMatNames(materr))
+    expect_error(.covMatNames(list(mat1, mat2)))
+})
+
+test_that("rownames only", {
+    s <- letters[1:10]
+    mat <- matrix(1, nrow=10, ncol=10, dimnames=list(s,NULL))
+    expect_equal(s, .covMatNames(mat))
+    expect_equal(s, .covMatNames(list(mat, mat)))
+})
+
+test_that("colnames only", {
+    s <- letters[1:10]
+    mat <- matrix(1, nrow=10, ncol=10, dimnames=list(NULL,s))
+    expect_equal(s, .covMatNames(mat))
+    expect_equal(s, .covMatNames(list(mat, mat)))
+})

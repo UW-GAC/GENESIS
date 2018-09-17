@@ -13,15 +13,16 @@ setMethod("fitNullModel",
                    max.iter = 100,
                    drop.zeros = TRUE,
                    verbose = TRUE) {
+              
               desmat <- createDesignMatrix(x, outcome, covars, group.var)
 
               # if there was missing data, need to subset cov.mat
-              if (!is.null(cov.mat) & nrow(desmat$X) < nrow(x)) {
-                  if (!is.list(cov.mat)) {
-                      cov.mat <- list(A=cov.mat)
+              if (!is.null(cov.mat)) {
+                  .checkRownames(cov.mat, x)
+                  if (nrow(desmat$X) < nrow(x)) {
+                      ind <- which(rownames(x) %in% rownames(desmat$X))
+                      cov.mat <- .covMatSubset(cov.mat, ind)
                   }
-                  ind <- match(rownames(desmat$X), rownames(x))
-                  cov.mat <- lapply(cov.mat, function(m) m[ind,ind])
               }
               
               fitNullMod(y=desmat$y, X=desmat$X, covMatList=cov.mat,
@@ -39,26 +40,32 @@ setMethod("fitNullModel",
                    group.var = NULL,
                    sample.id = NULL,
                    ...) {
-              desmat <- createDesignMatrix(x, outcome, covars, group.var, sample.id)
+              
+              x <- pData(x)
+              rownames(x) <- x$sample.id
 
-              # have we removed any samples due to missingness?
-              if (nrow(desmat$X) < nrow(x)) {
-                  sample.id <- rownames(desmat$X)
-              }
-
-              # subset or re-order cov.mat if necessary
               if (!is.null(cov.mat)) {
-                  if (!is.list(cov.mat)) {
-                      cov.mat <- list(A=cov.mat)
-                  }
-                  if (!is.null(sample.id)) {
-                      cov.mat <- lapply(cov.mat, .orderSamples,
-                                           orig.ids=x$sample.id, new.ids=sample.id)
-                  }
+                  .checkSampleId(cov.mat, x)
               }
               
-              nm <- fitNullMod(y=desmat$y, X=desmat$X, covMatList=cov.mat,
-                               group.idx=desmat$group.idx, ...)
+              ## subset data.frame and cov.mat for selected samples
+              if (!is.null(sample.id)) {
+                  stopifnot(all(sample.id %in% x$sample.id))
+                  ind <- x$sample.id %in% sample.id
+                  x <- x[ind,]
+                  if (!is.null(cov.mat)) {
+                      ind <- which(.covMatNames(cov.mat) %in% sample.id)
+                      cov.mat <- .covMatSubset(cov.mat, ind)
+                  }
+              }
+
+              ## reorder data.frame to match cov.mat
+              if (!is.null(cov.mat)) {
+                  ind <- match(.covMatNames(cov.mat), rownames(x))
+                  x <- x[ind,]
+              }
+              
+              nm <- fitNullModel(x, outcome, covars, cov.mat, group.var, ...)
               nm$sample.id <- rownames(nm$model.matrix)
               nm
           })
@@ -89,43 +96,72 @@ nullModelInvNorm <- function(null.model, cov.mat = NULL,
                              rescale = c("none", "model", "residSD"),
                              AIREML.tol = 1e-6, max.iter = 100, verbose = TRUE) {
 
-    # subset or re-order cov.mat if necessary
-    if (!is.null(cov.mat)) {
-        if (!is.list(cov.mat)) {
-            cov.mat <- list(A=cov.mat)
-        }
-        if (!is.null(null.model$sample.id)) {
-            cov.mat <- lapply(cov.mat, function(x) {
-                .orderSamples(x, orig.ids=rownames(x), new.ids=null.model$sample.id)
-            })
-        }
-    }
-
     updateNullModOutcome(null.model, covMatList=cov.mat, rankNorm.option=norm.option,
                          rescale=rescale, AIREML.tol=AIREML.tol, max.iter=max.iter,
                          verbose=verbose)
 }
 
 
-.orderSamples <- function(cov.mat, orig.ids, new.ids) {
-    if (!is.null(rownames(cov.mat)) & !is.null(colnames(cov.mat))) {
-        stopifnot(identical(rownames(cov.mat), colnames(cov.mat)))
-        stopifnot(all(new.ids %in% rownames(cov.mat)))
-    } else if (!is.null(rownames(cov.mat))) {
-        stopifnot(all(new.ids %in% rownames(cov.mat)))
-        colnames(cov.mat) <- rownames(cov.mat)
-    } else if (!is.null(colnames(cov.mat))) {
-        stopifnot(all(new.ids %in% colnames(cov.mat)))
-        rownames(cov.mat) <- colnames(cov.mat)
-    } else {
-        warning("no dimnames given for cov.mat; assuming order of samples matches data frame")
-        dimnames(cov.mat) <- list(orig.ids, orig.ids)
+
+## function to get sample.ids from cov.mat rownames and/or column names
+## error if they don't match
+.covMatNames <- function(cov.mat) {
+    if (is.list(cov.mat) & length(cov.mat) == 1) {
+        cov.mat <- cov.mat[[1]]
     }
-    orig.ids <- as.character(orig.ids)
-    new.ids <- as.character(new.ids)
-    if (identical(rownames(cov.mat), new.ids)) {
-        return(cov.mat)
+    if (!is.list(cov.mat)) {
+        names <- dimnames(cov.mat)
+        if (!is.null(names[[1]]) & !is.null(names[[2]]) & any(names[[1]] != names[[2]])) {
+            stop("dimnames of cov.mat should be identical")
+        }
+        if (!is.null(names[[1]])) {
+            return(names[[1]])
+        } else {
+            return(names[[2]])
+        }
     } else {
-        return(cov.mat[new.ids, new.ids])
+        rows <- lapply(cov.mat, rownames)
+        cols <- lapply(cov.mat, colnames)
+        if (!do.call(identical, rows)) stop("dimnames of cov.mat should be identical")
+        if (!do.call(identical, cols)) stop("dimnames of cov.mat should be identical")
+        if (!is.null(rows[[1]])) {
+            return(rows[[1]])
+        } else {
+            return(cols[[1]])
+        }
+    }
+}
+
+
+## need to subset cov.mat in case of missing data
+## don't re-order in case we have a block diagonal matrix
+.covMatSubset <- function(cov.mat, index) {
+    if (identical(index, 1:nrow(cov.mat))) {
+        return(cov.mat)
+    }
+    if (!is.list(cov.mat)) {
+        return(cov.mat[index,index])
+    } else {
+        cov.mat <- return(lapply(cov.mat, function(m) m[index,index]))
+    }
+}
+
+
+## match rownames between cov.mat and data frame
+.checkRownames <- function(cov.mat, x) {
+    nms <- .covMatNames(cov.mat)
+    if (!is.null(nms) & !all(nms == rownames(x))) {
+        stop("dimnames of cov.mat must match rownames of x")
+    }
+}
+
+
+## match sample.id between cov.mat and data frame
+.checkSampleId <- function(cov.mat, x) {
+    nms <- .covMatNames(cov.mat)
+    if (is.null(nms)) {
+        stop("provide sample.id in rownames and/or colnames of cov.mat")
+    } else if (!all(nms %in% x$sample.id)) {
+        stop("all sample names in dimnames of cov.mat must be present in x$sample.id")
     }
 }
