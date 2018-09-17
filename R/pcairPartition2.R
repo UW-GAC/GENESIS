@@ -25,6 +25,8 @@ pcairPartition2_gds <- function(kinobj, divobj,
 		# subset the read indicators to samples in sample.include
 		kin.read <- kin.read & (kin.id.all %in% sample.include)
 		div.read <- div.read & (div.id.all %in% sample.include)
+
+		message('Working with ', sum(kin.read), 'samples')
 	}
 
 	# checks on unrel.set
@@ -225,6 +227,8 @@ pcairPartition2_matrix <- function(kinobj, divobj,
 		# subset the read indicators to samples in sample.include
 		kin.read <- kin.read & (kin.id.all %in% sample.include)
 		div.read <- div.read & (div.id.all %in% sample.include)
+
+		message('Working with ', sum(kin.read), 'samples')
 	}
 
 	# checks on unrel.set
