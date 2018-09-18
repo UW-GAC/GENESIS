@@ -37,6 +37,11 @@ importMethodsFrom(GWASTools,
 import(SeqArray)
 import(SeqVarTools)
 
+importFrom(SNPRelate,
+           snpgdsPCA,
+           snpgdsPCASNPLoading,
+           snpgdsPCASampLoading)
+
 importFrom(BiocGenerics, start, end)
 importFrom(GenomicRanges, GRanges)
 importFrom(IRanges, IRanges, findOverlaps)
