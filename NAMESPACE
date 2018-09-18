@@ -45,6 +45,8 @@ importFrom(S4Vectors, mcols, queryHits, subjectHits)
 importFrom(dplyr, bind_rows, inner_join)
 
 export(king2mat,
+       kin2gds,
+       mat2gds,
        pcair,
        pcairPartition,
        pcrelate,
