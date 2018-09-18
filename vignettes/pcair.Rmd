@@ -156,7 +156,7 @@ This will force individuals specified with `unrel.set` into the "unrelated subse
 It may be of interest to partition a sample into an ancestry representative "unrelated subset" of individuals and a "related subset" of individuals without performing a PCA.  The `pcairPartition` function, which is called within the `pcair` function, enables the user to do this.
 
 ```{r}
-part <- pcairPartition(kinMat = KINGmat, divMat = KINGmat)
+part <- pcairPartition(kinobj = KINGmat, divobj = KINGmat)
 ```
 The output contains two vectors that give the individual IDs for the "unrelated subset" and the "related subset." 
 ```{r}

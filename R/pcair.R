@@ -83,7 +83,7 @@ pcair <- function(genoData,
         }else{
             if(verbose){  message("Partitioning Samples into Related and Unrelated Sets, unrel.set forced into the Unrelated Set")  }
         }
-        part <- pcairPartition(kinMat = kinMat, kin.thresh = kin.thresh, divMat = divMat, div.thresh = div.thresh, unrel.set = unrel.set)
+        part <- pcairPartition(kinobj = kinMat, kin.thresh = kin.thresh, divobj = divMat, div.thresh = div.thresh, unrel.set = unrel.set)
         rels <- part$rels
         unrels <- part$unrels
         if(is.null(rels)){
