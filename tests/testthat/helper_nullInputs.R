@@ -45,5 +45,5 @@
         covMatList <- NULL
     }
     
-    fitNullMod(dat$y, dat$X, covMatList = covMatList, group.idx = dat$group.idx, family=family, verbose=FALSE)
+    .fitNullModel(dat$y, dat$X, covMatList = covMatList, group.idx = dat$group.idx, family=family, verbose=FALSE)
 }

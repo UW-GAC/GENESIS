@@ -58,10 +58,10 @@ updateNullModOutcome <- function(nullmod, covMatList = NULL, rankNorm.option = c
     
     ### now re-fit the null model:
     
-    new.nullmod <- fitNullMod(y = resid, X = nullmod$model.matrix, covMatList = covMatList,
-                              group.idx = group.idx, family = "gaussian", start = nullmod$varComp, 
-                              AIREML.tol = AIREML.tol, max.iter = max.iter, drop.zeros = TRUE, 
-                              verbose = verbose)
+    new.nullmod <- .fitNullModel(y = resid, X = nullmod$model.matrix, covMatList = covMatList,
+                                 group.idx = group.idx, family = "gaussian", start = nullmod$varComp, 
+                                 AIREML.tol = AIREML.tol, max.iter = max.iter, drop.zeros = TRUE, 
+                                 verbose = verbose)
 
     ## add any extra slots
     extra <- setdiff(names(nullmod), names(new.nullmod))

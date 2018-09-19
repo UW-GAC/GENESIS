@@ -4,7 +4,7 @@ test_that("linear regression", {
     n <- 100
     dat <- .testNullInputs(n)
 
-    nullmod <- fitNullMod(dat$y, dat$X, verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, verbose=FALSE)
 
     lm.mod <- lm(dat$y ~ -1 + dat$X)
 

@@ -3,7 +3,7 @@ context("check null model logistic regression")
 test_that("logistic", {
     dat <- .testNullInputs(binary=TRUE)
     
-    nullmod <- fitNullMod(dat$y, dat$X, family="binomial", verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
 
     glm.mod <- glm(dat$y ~ -1 + dat$X, family = "binomial")
 

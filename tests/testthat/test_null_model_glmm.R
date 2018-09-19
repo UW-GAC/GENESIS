@@ -3,7 +3,7 @@ context("check null model glmm")
 test_that("glmm", {
     dat <- .testNullInputs(binary=TRUE)
     
-    nullmod <- fitNullMod(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial", verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial", verbose=FALSE)
 
     expect_equal(nullmod$family$family, "binomial")
     if (!nullmod$zeroFLAG) {

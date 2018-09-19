@@ -3,7 +3,7 @@ context("check null model WLS regression")
 test_that("WLS", {
     dat <- .testNullInputs()
 
-    nullmod <- fitNullMod(dat$y, dat$X, group.idx=dat$group.idx, verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, group.idx=dat$group.idx, verbose=FALSE)
 
     expect_equal(nullmod$family$family, "gaussian")
     expect_false(nullmod$family$mixedmodel)

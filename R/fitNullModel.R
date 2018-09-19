@@ -25,11 +25,11 @@ setMethod("fitNullModel",
                   }
               }
               
-              fitNullMod(y=desmat$y, X=desmat$X, covMatList=cov.mat,
-                         group.idx=desmat$group.idx, family=family,
-                         start=start, AIREML.tol=AIREML.tol,
-                         max.iter=max.iter, drop.zeros=drop.zeros,
-                         verbose=verbose)
+              .fitNullModel(y=desmat$y, X=desmat$X, covMatList=cov.mat,
+                            group.idx=desmat$group.idx, family=family,
+                            start=start, AIREML.tol=AIREML.tol,
+                            max.iter=max.iter, drop.zeros=drop.zeros,
+                            verbose=verbose)
           })
 
 setMethod("fitNullModel",

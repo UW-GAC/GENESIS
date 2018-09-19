@@ -6,8 +6,8 @@
 
 ## y - outcome vector
 ## X - data.frame or model.matrix
-fitNullMod <- function(y, X, covMatList = NULL, group.idx = NULL, family = "gaussian", start = NULL,
-                       AIREML.tol = 1e-6, max.iter = 100, drop.zeros = TRUE, verbose = TRUE){
+.fitNullModel <- function(y, X, covMatList = NULL, group.idx = NULL, family = "gaussian", start = NULL,
+                          AIREML.tol = 1e-6, max.iter = 100, drop.zeros = TRUE, verbose = TRUE){
     
     if(!is.null(covMatList)){
         if (!is.list(covMatList)){

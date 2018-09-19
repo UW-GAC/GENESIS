@@ -21,7 +21,7 @@ if (test_any) {
     
 test_that("fitNullMod matches fitNullReg - linear", {
     dat <- .testNullInputs()
-    nullmod <- fitNullMod(dat$y, dat$X, verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, verbose=FALSE)
 
     df <- .asDataFrame(dat)
     lm.genesis <- fitNullReg(df, outcome="y", covars=c("X1", "X2", "X3"), verbose=FALSE)
@@ -41,7 +41,7 @@ test_that("fitNullMod matches fitNullReg - linear", {
 if (test_binary) {
 test_that("fitNullMod matches fitNullReg - binary", {
     dat <- .testNullInputs(binary=TRUE)
-    nullmod <- fitNullMod(dat$y, dat$X, family="binomial", verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
 
     df <- .asDataFrame(dat)
     glm.genesis <- fitNullReg(df, outcome="y", covars=c("X1", "X2", "X3"), family="binomial", verbose=FALSE)
@@ -61,7 +61,7 @@ test_that("fitNullMod matches fitNullReg - binary", {
 
 test_that("fitNullMod matches fitNullMM - linear, no group", {
     dat <- .testNullInputs()
-    nullmod <- fitNullMod(dat$y, dat$X, dat$cor.mat, verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose=FALSE)
 
     df <- .asDataFrame(dat)
     lmm.genesis <- fitNullMM(df, outcome="y", covars=c("X1", "X2", "X3"), covMatList=dat$cor.mat, verbose=FALSE)
@@ -86,7 +86,7 @@ test_that("fitNullMod matches fitNullMM - linear, no group", {
 
 test_that("fitNullMod matches fitNullMM - linear, with group", {
     dat <- .testNullInputs()
-    nullmod <- fitNullMod(dat$y, dat$X, dat$cor.mat, group.idx=dat$group.idx, verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, group.idx=dat$group.idx, verbose=FALSE)
 
     df <- .asDataFrame(dat)
     lmm.genesis <- fitNullMM(df, outcome="y", covars=c("X1", "X2", "X3"), covMatList=dat$cor.mat, group.var="group", verbose=FALSE)
@@ -126,7 +126,7 @@ test_that("fitNullMod matches fitNullMM - binary", {
         if (glmm.genesis$varComp[1] != 0 ) varCompZero <- FALSE
     }
 
-    nullmod <- fitNullMod(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial", verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial", verbose=FALSE)
     
     expect_equivalent(nullmod$fixef, glmm.genesis$fixef, tolerance=1e-6)
     expect_equivalent(nullmod$betaCov, glmm.genesis$betaCov, tolerance=1e-6)
@@ -160,7 +160,7 @@ test_that("fitNullMod matches fitNullMM - no variance components", {
 	if (lmm.genesis$varComp[1] == 0 ) varCompJunk <- FALSE
     }
 
-    nullmod <- fitNullMod(dat$y, dat$X, group.idx=dat$group.idx, verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, group.idx=dat$group.idx, verbose=FALSE)
 
     expect_equivalent(nullmod$fixef, lmm.genesis$fixef, tolerance=1e-6)
     expect_equivalent(nullmod$betaCov, lmm.genesis$betaCov, tolerance=1e-6)
@@ -189,7 +189,7 @@ test_that("nullModelTestPrep matches calculateProjection", {
     df <- .asDataFrame(dat)
     
     # basic
-    nullmod <- fitNullMod(dat$y, dat$X, verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, verbose=FALSE)
     Xtilde <- calcXtilde(nullmod, geno)
     
     nullmod.orig <- fitNullReg(df, outcome="y", covars=c("X1", "X2", "X3"), verbose=FALSE)
@@ -199,7 +199,7 @@ test_that("nullModelTestPrep matches calculateProjection", {
     expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
     
     # with covMatList
-    nullmod <- fitNullMod(dat$y, dat$X, dat$cor.mat, verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose=FALSE)
     Xtilde <- calcXtilde(nullmod, geno)
 
     nullmod.orig <- fitNullMM(df, outcome="y", covars=c("X1", "X2", "X3"), covMatList=dat$cor.mat, verbose=FALSE)
@@ -209,7 +209,7 @@ test_that("nullModelTestPrep matches calculateProjection", {
     expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
     
     # with group
-    nullmod <- fitNullMod(dat$y, dat$X, dat$cor.mat, group.idx=dat$group.idx, verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, group.idx=dat$group.idx, verbose=FALSE)
     Xtilde <- calcXtilde(nullmod, geno)
 
     nullmod.orig <- fitNullMM(df, outcome="y", covars=c("X1", "X2", "X3"), covMatList=dat$cor.mat, group.var="group", verbose=FALSE)
@@ -245,7 +245,7 @@ test_that("nullModelTestPrep vs calculateProjection - binary", {
     ## if (varCompZero) stop("could not generate nonzero varComp")
 
     # basic
-    nullmod <- fitNullMod(dat$y, dat$X, family="binomial", verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
     Xtilde <- calcXtilde(nullmod, geno)
     
     nullmod.orig <- fitNullReg(df, outcome="y", covars=c("X1", "X2", "X3"), family="binomial", verbose=FALSE)
@@ -255,7 +255,7 @@ test_that("nullModelTestPrep vs calculateProjection - binary", {
     expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
     
     # with covMatList
-    nullmod <- fitNullMod(dat$y, dat$X, dat$cor.mat, family="binomial", verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, family="binomial", verbose=FALSE)
     Xtilde <- calcXtilde(nullmod, geno)
 
     nullmod.orig <- fitNullMM(df, outcome="y", covars=c("X1", "X2", "X3"), covMatList=dat$cor.mat, family="binomial", verbose=FALSE)

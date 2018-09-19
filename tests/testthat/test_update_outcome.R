@@ -6,7 +6,7 @@ test_that("updateOutcome", {
     cor.mat <- dat$cor.mat
     covMatList <- list(A = cor.mat)
 
-    nullmod <- fitNullMod(dat$y, dat$X, group.idx = group.idx, covMatList, verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, group.idx = group.idx, covMatList, verbose=FALSE)
 
     group.ind <- 1
     expect_equal(.averageGroupVar(nullmod$varComp, covMatList = covMatList, group.idx = group.idx[group.ind]),
