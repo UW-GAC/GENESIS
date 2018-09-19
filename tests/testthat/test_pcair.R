@@ -1,15 +1,9 @@
 context("pcair tests")
-#library(GWASTools)
 
-test_that("pcair", {
-    # file path to GDS file
+test_that("gds.class", {
+    showfile.gds(closeall=TRUE)
     gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
-    gds <- SNPRelate::snpgdsOpen(gdsfile)
-    # read in GDS data
-    #HapMap_geno <- GdsGenotypeReader(filename = gdsfile)
-    # create a GenotypeData class object
-    #HapMap_genoData <- GenotypeData(HapMap_geno)
-    # load saved matrix of KING-robust estimates
+    gds <- openfn.gds(gdsfile)
     data("HapMap_ASW_MXL_KINGmat")
 
     mypcs <- pcair(gds, kinobj=HapMap_ASW_MXL_KINGmat, divobj=HapMap_ASW_MXL_KINGmat, eigen.cnt=20, verbose=FALSE)
@@ -23,6 +17,41 @@ test_that("pcair", {
     expect_equal(mypcs$nsamp, 173)
 
     closefn.gds(gds)
-    #close(HapMap_genoData)
 })
 
+
+test_that("SNPGDSFileClass", {
+    showfile.gds(closeall=TRUE)
+    gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
+    gds <- SNPRelate::snpgdsOpen(gdsfile)
+    data("HapMap_ASW_MXL_KINGmat")
+    mypcs <- pcair(gds, kinobj=HapMap_ASW_MXL_KINGmat, divobj=HapMap_ASW_MXL_KINGmat, verbose=FALSE)
+    expect_equal(dim(mypcs$vectors), c(173,32))
+    closefn.gds(gds)
+})
+
+
+test_that("GenotypeData", {
+    showfile.gds(closeall=TRUE)
+    gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
+    HapMap_geno <- GWASTools::GdsGenotypeReader(gdsfile)
+    data("HapMap_ASW_MXL_KINGmat")
+    mypcs <- pcair(HapMap_geno, kinobj=HapMap_ASW_MXL_KINGmat, divobj=HapMap_ASW_MXL_KINGmat, verbose=FALSE)
+    expect_equal(dim(mypcs$vectors), c(173,32))
+    
+    HapMap_genoData <- GWASTools::GenotypeData(HapMap_geno)
+    mypcs <- pcair(HapMap_genoData, kinobj=HapMap_ASW_MXL_KINGmat, divobj=HapMap_ASW_MXL_KINGmat, verbose=FALSE)
+    expect_equal(dim(mypcs$vectors), c(173,32))
+    
+    GWASTools::close(HapMap_genoData)
+})
+
+
+test_that("SeqVarData", {
+    gds <- .testData()
+    kin <- .testKing(gds)
+    # weird NAs here, but we are just testing that the classes work
+    mypcs <- suppressWarnings(pcair(gds, kinobj=kin, divobj=kin, verbose=FALSE))
+    expect_equal(mypcs$nsamp, 90)
+    seqClose(gds)
+})

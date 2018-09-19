@@ -127,26 +127,26 @@ The KING-robust estimates read in above are always used as measures of ancestry 
 
 ```{r}
 # run PC-AiR
-mypcair <- pcair(genoData = HapMap_genoData, kinMat = KINGmat, divMat = KINGmat)
+mypcair <- pcair(HapMap_genoData, kinobj = KINGmat, divobj = KINGmat)
 ```
 * `genoData` is a `GenotypeData` class object
-* `kinMat` is a matrix of pairwise kinship coefficient estimates
-* `divMat` is a matrix of pairwise measures of ancestry divergence (KING-robust estimates)
+* `kinobj` is a matrix of pairwise kinship coefficient estimates
+* `divobj` is a matrix of pairwise measures of ancestry divergence (KING-robust estimates)
 
-If better estimates of kinship coefficients are available, then the `kinMat` input can be replaced with a similar matrix of these estimates.  The `divMat` input should always remain as the KING-robust estimates.
+If better estimates of kinship coefficients are available, then the `kinobj` input can be replaced with a similar matrix of these estimates.  The `divobj` input should always remain as the KING-robust estimates.
 
 ###  Reference Population Samples
 
 As PCA is an unsupervised method, it is often difficult to identify what population structure each of the top PCs represents.  In order to provide some understanding of the inferred structure, it is sometimes recommended to include reference population samples of known ancestry in the analysis.  If the data set contains such reference population samples, we may want to use only those individuals as the "unrelated subset" for performing the PCA and predict values for all other sample individuals.  This can be accomplished by setting the input `unrel.set` equal to a vector, `IDs`, of the individual IDs for the reference population samples.
 
 ```{r, eval=FALSE}
-mypcair <- pcair(genoData = HapMap_genoData, unrel.set = IDs)
+mypcair <- pcair(HapMap_genoData, unrel.set = IDs)
 ```
 
-If, instead, we want to make sure that these reference population samples are included in the "unrelated subset," but also allow for the PC-AiR algorithm to select additional individuals from the sample to be a part of the "unrelated subset," then this can be accomplished by using the inputs `kinMat`, `divMat`, and `unrel.set` together.
+If, instead, we want to make sure that these reference population samples are included in the "unrelated subset," but also allow for the PC-AiR algorithm to select additional individuals from the sample to be a part of the "unrelated subset," then this can be accomplished by using the inputs `kinobj`, `divobj`, and `unrel.set` together.
 
 ```{r, eval=FALSE}
-mypcair <- pcair(genoData = HapMap_genoData, kinMat = KINGmat, divMat = KINGmat, unrel.set = IDs)
+mypcair <- pcair(HapMap_genoData, kinobj = KINGmat, divobj = KINGmat, unrel.set = IDs)
 ```
 
 This will force individuals specified with `unrel.set` into the "unrelated subset," move any of their relatives into the "related subset," and then perform the PC-AiR partitioning algorithm on the remaining samples.
@@ -200,7 +200,7 @@ The `training.set` input of the `pcrelate` function allows for the specification
 
 ```{r}
 # run PC-Relate
-mypcrelate <- pcrelate(genoData = HapMap_genoData, pcMat = mypcair$vectors[,1:2], 
+mypcrelate <- pcrelate(HapMap_genoData, pcMat = mypcair$vectors[,1:2], 
                        training.set = mypcair$unrels)
 ```
 * `genoData` is a `GenotypeData` class object

@@ -1,4 +1,64 @@
-pcair <- function(gdsobj,
+setGeneric("pcair", function(gdsobj, ...) standardGeneric("pcair"))
+
+setOldClass("gds.class")
+setMethod("pcair",
+          "gds.class",
+          function(gdsobj, 
+                   kinobj,
+                   divobj,
+                   kin.thresh = 2^(-11/2),
+                   div.thresh = -2^(-11/2),
+                   unrel.set = NULL,
+                   sample.include = NULL,
+                   snp.include = NULL,
+                   num.thread = 1L,
+                   verbose = TRUE,
+                   ...) {
+              .pcair(gdsobj = gdsobj, 
+                     kinobj = kinobj,
+                     divobj = divobj,
+                     kin.thresh = kin.thresh,
+                     div.thresh = div.thresh,
+                     unrel.set = unrel.set,
+                     sample.include = sample.include,
+                     snp.include = snp.include,
+                     num.thread = num.thread,
+                     verbose = verbose,
+                     ...)
+          })
+
+setOldClass("SNPGDSFileClass")
+setMethod("pcair",
+          "SNPGDSFileClass",
+          function(gdsobj, ...) {
+              .pcair(gdsobj, ...)
+          })
+
+setMethod("pcair",
+          "GdsGenotypeReader",
+          function(gdsobj, ...) {
+              pcair(gdsobj@handler, ...)
+          })
+
+setMethod("pcair",
+          "GenotypeData",
+          function(gdsobj, ...) {
+              pcair(gdsobj@data, ...)
+          })
+
+setMethod("pcair",
+          "SeqVarGDSClass",
+          function(gdsobj, ...) {
+              filt <- seqGetFilter(gdsobj)
+              out <- .pcair(gdsobj, ...)
+              seqSetFilter(gdsobj,
+                           sample.sel=filt$sample.sel,
+                           variant.sel=filt$variant.sel,
+                           verbose=FALSE)
+              out
+          })
+
+.pcair <- function(gdsobj,
                    kinobj,
                    divobj,
                    kin.thresh = 2^(-11/2),
@@ -21,17 +81,24 @@ pcair <- function(gdsobj,
     }
 
     if(verbose){  message("Performing PCA on the Unrelated Set...")  }
-    pca.unrel <- snpgdsPCA(gdsobj, sample.id = part$unrels, snp.id = snp.include,
-                           num.thread = num.thread, verbose = verbose, ...)
+    ## suppressMessages gets rid of the hint to use snpgdsOpen
+    pca.unrel <- suppressMessages(
+        snpgdsPCA(gdsobj, sample.id = part$unrels, snp.id = snp.include,
+                  num.thread = num.thread, verbose = verbose, ...)
+    )
 
     if(length(part$rels > 0)){
         method <- "PC-AiR"
         if(verbose){  message("Predicting PC Values for the Related Set...") }
-        snp.load <- snpgdsPCASNPLoading(pca.unrel, gdsobj = gdsobj,
-                                        num.thread = num.thread, verbose = verbose)
-        samp.load <- snpgdsPCASampLoading(snp.load, gdsobj = gdsobj,
-                                          sample.id = part$rels,
-                                          num.thread = num.thread, verbose = verbose)
+        snp.load <- suppressMessages(
+            snpgdsPCASNPLoading(pca.unrel, gdsobj = gdsobj,
+                                num.thread = num.thread, verbose = verbose)
+        )
+        samp.load <- suppressMessages(
+            snpgdsPCASampLoading(snp.load, gdsobj = gdsobj,
+                                 sample.id = part$rels,
+                                 num.thread = num.thread, verbose = verbose)
+        )
 
         # combine unrelated and related PCs and order as in GDS file
         eigenvect <- rbind(pca.unrel$eigenvect, samp.load$eigenvect)

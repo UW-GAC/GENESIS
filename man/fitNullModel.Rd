@@ -116,7 +116,6 @@ nullModelInvNorm(null.model, cov.mat = NULL, norm.option = c("by.group", "all"),
   
 \examples{
 library(GWASTools)
-library(GENESIS)
 
 # file path to GDS file
 gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
@@ -128,11 +127,11 @@ HapMap_genoData <- GenotypeData(HapMap_geno)
 data("HapMap_ASW_MXL_KINGmat")
 
 # run PC-AiR
-mypcair <- pcair(genoData = HapMap_genoData, kinMat = HapMap_ASW_MXL_KINGmat, 
-                divMat = HapMap_ASW_MXL_KINGmat)
-                
+mypcair <- pcair(HapMap_genoData, kinobj = HapMap_ASW_MXL_KINGmat, 
+                divobj = HapMap_ASW_MXL_KINGmat)
+
 # run PC-Relate
-mypcrel <- pcrelate(genoData = HapMap_genoData, pcMat = mypcair$vectors[,1],
+mypcrel <- pcrelate(HapMap_genoData, pcMat = mypcair$vectors[,1],
     			training.set = mypcair$unrels)
 close(HapMap_genoData)
 
