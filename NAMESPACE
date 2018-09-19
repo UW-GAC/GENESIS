@@ -52,7 +52,6 @@ importFrom(dplyr, bind_rows, inner_join)
 export(king2mat,
        kin2gds,
        mat2gds,
-       pcair,
        pcairPartition,
        pcrelate,
        pcrelateMakeGRM,
@@ -69,7 +68,8 @@ export(admixMapMM,
 
 exportMethods(assocTestSingle,
               assocTestAggregate,
-              fitNullModel)
+              fitNullModel,
+              pcair)
 export(admixMap,
        nullModelInvNorm)
 
