@@ -47,6 +47,7 @@
 	\item{unrels}{A vector of IDs for individuals in the 'unrelated subset'.}
 	\item{kin.thresh}{The threshold value used for declaring each pair of individuals as related or unrelated.}
 	\item{div.thresh}{The threshold value used for determining if each pair of individuals is ancestrally divergent.}
+	\item{sample.id}{A vector of IDs for the samples used in the analysis.}
 	\item{nsamp}{The total number of samples in the analysis.}
 	\item{nsnps}{The total number of SNPs used in the analysis.}
 	\item{varprop}{The variance proportion for each principal component.}
