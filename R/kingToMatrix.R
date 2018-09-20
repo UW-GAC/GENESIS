@@ -19,11 +19,11 @@ kingToMatrix <- function(file.king, sample.include = NULL, thresh = NULL, verbos
     # subset to needed columns
     if('PropIBD' %in% colnames(king)){
         if(verbose) message('Inferred to be KING --ibdseg output')
-        king <- king[,.(ID1, ID2, PropIBD)]
-        king <- king[, Kinship := 0.5*PropIBD][, PropIBD := NULL]
+        king <- king[, list(`ID1`, `ID2`, `PropIBD`)]
+        king <- king[, `Kinship` := 0.5*`PropIBD`][, `PropIBD` := NULL]
     }else if('Kinship' %in% colnames(king)){
         if(verbose) message('Inferred to be KING --robust output')
-        king <- king[,.(ID1, ID2, Kinship)]
+        king <- king[, list(`ID1`, `ID2`, `Kinship`)]
     }else{
         stop('All files in file.king must contain a column called `PropIBD` (KING --ibdseg output) or `Kinship` (KING --robust output)')
     }
@@ -37,7 +37,7 @@ kingToMatrix <- function(file.king, sample.include = NULL, thresh = NULL, verbos
     if(!is.null(sample.include)){
         # subset king data to samples in sample.include
         if(verbose) message('Using ', length(sample.include), ' samples in sample.include')
-        king <- king[ID1 %in% sample.include & ID2 %in% sample.include]
+        king <- king[`ID1` %in% sample.include & `ID2` %in% sample.include]
     }else{
         # get list of all samples in the file
         sample.include <- sort(unique(c(king$ID1, king$ID2)))
@@ -49,7 +49,7 @@ kingToMatrix <- function(file.king, sample.include = NULL, thresh = NULL, verbos
     if(is.null(thresh)){
         g <- igraph::graph_from_data_frame(king)
     }else{
-        g <- igraph::graph_from_data_frame(king[Kinship > thresh])
+        g <- igraph::graph_from_data_frame(king[`Kinship` > thresh])
     }
     # extract cluster membership
     clu <- igraph::components(g)
@@ -74,12 +74,12 @@ kingToMatrix <- function(file.king, sample.include = NULL, thresh = NULL, verbos
             allpairs <- as.data.table(expand.grid(ID2 = ids, ID1 = ids))
 
             # merge
-            sub <- king[ID1 %in% ids & ID2 %in% ids][allpairs, on = c('ID1', 'ID2')]
+            sub <- king[`ID1` %in% ids & `ID2` %in% ids][allpairs, on = c('ID1', 'ID2')]
             # set pairs not included in KING data to 0
-            sub[is.na(Kinship), Kinship := 0]
+            sub[is.na(`Kinship`), `Kinship` := 0]
 
             # cast to a matrix
-            submat <- reshape2::acast(data = sub, formula = ID1 ~ ID2, value.var = 'Kinship')
+            submat <- reshape2::acast(data = sub, formula = as.formula('ID1 ~ ID2'), value.var = 'Kinship')
             # put the values on both sides of the diagonal
             submat <- submat + t(submat)
             # set the diagonal to 0.5
