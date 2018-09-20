@@ -7,7 +7,7 @@
 
 
 # E an environmental variable for optional GxE interaction analysis. 
-testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), GxE.return.cov = FALSE){
+testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "SAIGE"), GxE.return.cov = FALSE){
     test <- match.arg(test)
     
     if (is.matrix(G)) G <- Matrix(G)
@@ -35,6 +35,15 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), G
     if (test == "Score"){
         Xtilde <- calcXtilde(nullmod, G)
         res <- .testGenoSingleVarScore(Xtilde, G, nullmod$resid)
+    }
+    
+    if (test == "SAIGE"){
+        Xtilde <- calcXtilde(nullmod, G)
+        res <- .testGenoSingleVarScore(Xtilde, G, nullmod$resid)
+        saip <- SAIGE_Pvalue(nullmod,res,G)$PVAL.saige
+        SAIGE_P <- res$Score.pval
+        SAIGE_P[!is.na(saip)] <- saip[!is.na(saip)]
+        res$SAIGE.pval <- SAIGE_P
     }
     
     if (test == "BinomiRare"){

@@ -120,3 +120,14 @@ test_that("GxE", {
     expect_message(test.gxe <- testGenoSingleVar(nullmod, G = geno, E = dat$X[,3,drop=FALSE], test = "Score"))
 })
 }
+
+
+test_that("singleVarTest - SAIGE", {
+    n <- 100
+    dat <- .testNullInputs(n, binary=TRUE)
+    geno <- .testGenoMatrix(n)
+    
+    nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
+    test.score <- testGenoSingleVar(nullmod, G = geno, test = "SAIGE")
+    expect_true(max(test.score$Score.pval - test.score$SAIGE.pval) < 0.01)
+})

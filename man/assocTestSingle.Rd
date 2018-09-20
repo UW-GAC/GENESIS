@@ -10,16 +10,16 @@
   using the null model fit with \code{\link{fitNullModel}}.}
 
 \usage{
-\S4method{assocTestSingle}{SeqVarIterator}(gdsobj, null.model, test=c("Score", "Wald"),
+\S4method{assocTestSingle}{SeqVarIterator}(gdsobj, null.model, test=c("Score", "Wald", "SAIGE"),
                 GxE=NULL, verbose=TRUE)
-\S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model, test=c("Score", "Wald"),
+\S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model, test=c("Score", "Wald", "SAIGE"),
                 GxE=NULL, verbose=TRUE)
 }
 
 \arguments{
     \item{gdsobj}{An object of class \code{\link{SeqVarIterator}} from the package \pkg{\link{SeqVarTools}}, or an object of class \code{\link{GenotypeIterator}} from the package \pkg{\link{GWASTools}}, containing the genotype data for the variants and samples to be used for the analysis.}
     \item{null.model}{A null model object returned by \code{\link{fitNullModel}}.}
-    \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Score"} (default) or \code{"Wald"}; only \code{"Score"} can be used when the family of the null model fit with \code{\link{fitNullModel}} is not gaussian.}
+    \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Score"} (default), \code{"Wald"}, \code{"SAIGE"}; only \code{"Score"} or \code{"SAIGE"} can be used when the family of the null model fit with \code{\link{fitNullModel}} is not gaussian.}
     %\item{impute.geno}{A logical indicator of whether sporadic missing genotype values should be mean imputed. The default is TRUE. See 'Details' for further information.}
     \item{GxE}{A vector of character strings specifying the names of the variables for which a genotype interaction term should be included. If \code{NULL} (default) no genotype interactions are included. See 'Details' for further information.}
     %\item{ivar.return.betaCov}{Logical indicator of whether the estimated covariance matrix of the effect size estimates (betas) for the genotype and genotype interaction terms should be returned; the default is FALSE.}
@@ -67,7 +67,7 @@
     For multiallelic variants, each alternate allele is tested separately.
 }
 
-\author{Matthew P. Conomos, Stephanie M. Gogarten, Tamar Sofer, Ken Rice, Chaoyu Yu}
+\author{Matthew P. Conomos, Stephanie M. Gogarten, Tamar Sofer, Ken Rice, Chaoyu Yu, Wei Zhou}
 
 \seealso{
      \code{\link{fitNullModel}} for fitting the null mixed model needed as input to \code{assocTestSingle}.
