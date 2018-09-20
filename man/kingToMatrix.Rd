@@ -27,7 +27,12 @@ kingToMatrix(file.king, sample.include = NULL, thresh = NULL, verbose = TRUE)
 	\code{\link{pcair}} and \code{\link{pcairPartition}} for functions that use the output matrix.
 }
 \examples{
+# KING --robust
 file.king <- c(system.file("extdata", "MXL_ASW.kin0", package="GENESIS"), system.file("extdata", "MXL_ASW.kin", package="GENESIS"))
+KINGmat <- kingToMatrix(file.king = file.king)
+
+# KING --ibdseg
+file.king <- system.file("extdata", "HapMap.seg", package="GENESIS")
 KINGmat <- kingToMatrix(file.king = file.king)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the

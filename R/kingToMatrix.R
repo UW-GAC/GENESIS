@@ -1,5 +1,10 @@
 kingToMatrix <- function(file.king, sample.include = NULL, thresh = NULL, verbose = TRUE){
+    if(!requireNamespace("igraph")) stop("package 'igraph' must be installed to use this function")
+    if(!requireNamespace("reshape2")) stop("package 'reshape2' must be installed to use this function")
+
+    # keep R CMD check from warning about undefined global variables
     ID1 <- ID2 <- PropIBD <- Kinship <- NULL
+    `.` <- function(...) NULL
     
     # read in the king results and subset columns
     if(verbose) message('Reading in KING output...')

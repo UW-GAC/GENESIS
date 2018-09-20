@@ -8,6 +8,7 @@ import(Biobase)
 import(gdsfmt)
 import(graph)
 import(Matrix)
+import(data.table)
 
 importFrom(GWASTools,
            GdsGenotypeReader,
@@ -49,7 +50,8 @@ importFrom(S4Vectors, mcols, queryHits, subjectHits)
 
 importFrom(dplyr, bind_rows, inner_join)
 
-export(king2mat,
+export(kingToMatrix,
+       king2mat,
        kin2gds,
        mat2gds,
        pcairPartition,
