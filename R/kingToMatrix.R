@@ -20,7 +20,7 @@ kingToMatrix <- function(file.king, sample.include = NULL, thresh = NULL, verbos
     if('PropIBD' %in% colnames(king)){
         if(verbose) message('Inferred to be KING --ibdseg output')
         king <- king[, list(`ID1`, `ID2`, `PropIBD`)]
-        king <- king[, `Kinship` := 0.5*`PropIBD`][, `PropIBD` := NULL]
+        king <- king[, `:=`(`Kinship` = 0.5*`PropIBD`)][, `:=`(`PropIBD` = NULL)]
     }else if('Kinship' %in% colnames(king)){
         if(verbose) message('Inferred to be KING --robust output')
         king <- king[, list(`ID1`, `ID2`, `Kinship`)]
@@ -76,7 +76,7 @@ kingToMatrix <- function(file.king, sample.include = NULL, thresh = NULL, verbos
             # merge
             sub <- king[`ID1` %in% ids & `ID2` %in% ids][allpairs, on = c('ID1', 'ID2')]
             # set pairs not included in KING data to 0
-            sub[is.na(`Kinship`), `Kinship` := 0]
+            sub[is.na(`Kinship`), `:=`(`Kinship` = 0)]
 
             # cast to a matrix
             submat <- reshape2::acast(data = sub, formula = as.formula('ID1 ~ ID2'), value.var = 'Kinship')
