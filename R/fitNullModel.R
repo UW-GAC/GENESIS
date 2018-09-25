@@ -136,13 +136,17 @@ nullModelInvNorm <- function(null.model, cov.mat = NULL,
 ## need to subset cov.mat in case of missing data
 ## don't re-order in case we have a block diagonal matrix
 .covMatSubset <- function(cov.mat, index) {
-    if (identical(index, 1:nrow(cov.mat))) {
-        return(cov.mat)
+    .subset <- function(x, index) {
+        if (identical(index, 1:nrow(x))) {
+            return(x)
+        } else {
+            return(x[index,index])
+        }
     }
     if (!is.list(cov.mat)) {
-        return(cov.mat[index,index])
+        .subset(cov.mat, index)
     } else {
-        cov.mat <- return(lapply(cov.mat, function(m) m[index,index]))
+        cov.mat <- return(lapply(cov.mat, .subset, index))
     }
 }
 
