@@ -15,7 +15,7 @@
         }
         # coerce to Matrix objects. should get "dspMatrix" (packed symmetric matrix)
         covMatList <- lapply(covMatList, function(x) {
-            x <- Matrix(x)
+            if (!is(x, "Matrix")) x <- Matrix(x)
             if (is(x, "symmetricMatrix") & !is(x, "sparseMatrix")) x <- pack(x)
             return(x)
         })
