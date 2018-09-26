@@ -6,7 +6,6 @@ importFrom(utils, read.table)
 
 import(Biobase)
 import(gdsfmt)
-import(graph)
 import(Matrix)
 import(data.table)
 
