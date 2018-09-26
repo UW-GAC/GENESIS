@@ -1,149 +1,230 @@
-pcairPartition <- function(kinMat, kin.thresh = 2^(-11/2), divMat=NULL, div.thresh = -2^(-11/2), unrel.set=NULL){	
+pcairPartition <- function(kinobj, divobj,
+                           kin.thresh = 2^(-11/2),
+                           div.thresh = -2^(-11/2),
+                           unrel.set = NULL,
+                           sample.include = NULL,
+                           verbose = TRUE){
 
-    # check that kinMat has colummn names
-    if(is.null(colnames(kinMat))){
-    	stop("colnames and rownames of kinMat must be individual IDs")
+    # sample.id from kinship matrix
+    kin.id.all <- .readSampleId(kinobj)
+    # sample.id from divergence matrix
+    div.id.all <- .readSampleId(divobj)
+
+    # check for ids provided
+    if(is.null(kin.id.all) | is.null(div.id.all)) {
+        stop('colnames must be provided for kinobj and divobj')
     }
-	# create vector of IDs
-	IDs <- colnames(kinMat)
-	
-	# check that row and column names match
-	if(!all(IDs == rownames(kinMat))){
-		stop("colnames and rownames of kinMat do not match")
-	}
 
-	# set diagonal to 0
-	diag(kinMat) <- 0
+    # logical indicators of which samples are in both sets
+    kin.read <- kin.id.all %in% div.id.all
+    div.read <- div.id.all %in% kin.id.all
+    if(!(all(kin.read) & all(div.read))){
+        warning('kinobj and divobj contain non-matching samples; only partitioning those present in both objects')
+    }
 
-	# check that unrel.set is included in kinMat
-	if(!is.null(unrel.set)){
-		if(!all(unrel.set %in% IDs)){
-			stop("All of the samples in unrel.set must be in kinMat")
-		}
-	}
-	
-	# if divMat unspecified
-	if(is.null(divMat)){
-		message("divMat not specified; using kinMat for kinship and divergence measures...")
-		divMat <- kinMat
-	# if divMat specified
-	}else{
-		# check that colnames and rownames match kinMat
-		if(!all(colnames(divMat) == rownames(divMat))){
-			stop("colnames and rownames of divMat do not match")
-		}
-		if(!all(IDs == colnames(divMat))){
-			stop("colnames of kinMat and divMat do not match")
-		}
-	}
+    # filter to samples in sample.include
+    if(!is.null(sample.include)){
+        if(!all(sample.include %in% kin.id.all) | !all(sample.include %in% div.id.all)){
+            warning('some samples in sample.include are not in kinobj or divobj; they will not be included')
+        }
 
+        # subset the read indicators to samples in sample.include
+        kin.read <- kin.read & (kin.id.all %in% sample.include)
+        div.read <- div.read & (div.id.all %in% sample.include)
 
-	# indicator for divergent pairs
-	indDIV <- (divMat < -abs(div.thresh)) & (kinMat < kin.thresh)
-	rm(divMat)
-	# number of divergent pairs
-	ndiv <- colSums(indDIV)
-	rm(indDIV)
+        if(verbose) message('Working with ', sum(kin.read), 'samples')
+    }
 
-	# "total kinship" values
-	kinMat[kinMat < kin.thresh] <- 0
-	kinsum <- colSums(kinMat)
-	# indicator for relatives
-	indKIN <- kinMat != 0
-	rm(kinMat)
-	
-	
-	ridx <- NULL  # index of samples in related set
-	uidx <- NULL  # index of samples in unrelated set
-	if(!is.null(unrel.set)){
-		# index of user specified unrelated set
-		unrel.idx <- which(IDs %in% unrel.set)
-		# index of relatives of the unrelated set
-		rel.idx <- as.vector(which(colSums(indKIN[unrel.idx,]) > 0))
-		# remove individuals in unrel.idx from rel.idx
-		rel.idx <- rel.idx[!(rel.idx %in% unrel.idx)]
+    # checks on unrel.set
+    if(!is.null(unrel.set)){
+        if(!all(unrel.set %in% kin.id.all) | !all(unrel.set %in% div.id.all)){
+            warning('some samples in unrel.set are not in kinobj or divobj; they will not be included')
+            # subset unrel.set to only those in kinobj and divobj
+            unrel.set <- unrel.set[(unrel.set %in% kin.id.all) & (unrel.set %in% div.id.all)]
+        }
 
-		# append
-		ridx <- append(ridx, rel.idx)
-		uidx <- append(uidx, unrel.idx)
-		# subset indKIN
-		indKIN <- indKIN[-c(rel.idx, unrel.idx),-c(rel.idx, unrel.idx)]
+        # if using sample.include, only keep unrel.set in sample.include
+        if(!is.null(sample.include)){
+            unrel.set <- unrel.set[unrel.set %in% sample.include]
+        }
 
-		rm(unrel.idx); rm(rel.idx)
-	}
+        # if no samples left in unrel.set; don't use it downstream
+        if(length(unrel.set) == 0){
+            unrel.set <- NULL
+        }
+    }
+    
 
-    # number of relatives	
-	numrel <- colSums(indKIN)
+    if(verbose) message('Identifying relatives for each sample using kinship threshold ', kin.thresh)
+    # create a vector of ids for samples to be read
+    kin.id <- kin.id.all[kin.read]
+    # create list of relatives for each sample
+    rellist <- .apply(kinobj, MARGIN = 2, 
+                      FUN = function(x){ kin.id[x > kin.thresh] },
+                      selection = list(kin.read, kin.read))
+    names(rellist) <- kin.id
+    # remove self from rellist
+    for(i in 1:length(rellist)){
+        rellist[[i]] <- rellist[[i]][rellist[[i]] != names(rellist)[i]]
+    }
 
-	# identify individuals with no relatives
-	unrel.idx <- which(IDs %in% colnames(indKIN)[which(numrel == 0)])	
-	uidx <- append(uidx, unrel.idx)
-	
-	# subset indKIN to individuals with relatives
-	keep.idx <- which(numrel > 0)
-	indKIN <- indKIN[keep.idx, keep.idx]
-
-	# find connected components
-	grph <- as(indKIN, "graphNEL")
-	conn <- connComp(grph)
-
-	# IDs of individuals left in indKIN
-	subIDs <- colnames(indKIN)
-	
-
-	# loop through components
-	for(i in 1:length(conn)){		
-
-		# indices for IDs
-		ID.idx <- which(IDs %in% conn[[i]])
-		subID.idx <- which(subIDs %in% conn[[i]])
-
-		# subset indKIN
-		indKINsub <- indKIN[subID.idx, subID.idx]
-		
-		# number of relatives
-		numrel <- colSums(indKINsub)
-		rel.idx <- NULL
-
-		# partition the component		
-		while(max(numrel) > 0){
-			idx <- which(numrel == max(numrel))
-			if(length(idx) > 1){
-				ndiv2 <- ndiv[ID.idx][idx]
-				didx <- which(ndiv2 == min(ndiv2))
-				if(length(didx) == 1){
-					idx <- idx[didx]
-				}else{
-					kinsum2 <- kinsum[ID.idx][idx[didx]]
-					kidx <- which(kinsum2 == min(kinsum2))[1]
-					idx <- idx[didx[kidx]]
-				}
-			}
-			# update
-			rel.idx <- append(rel.idx, ID.idx[idx])
-			indKINsub[idx,] <- FALSE; indKINsub[,idx] <- FALSE
-			numrel <- colSums(indKINsub)
-		}
-
-		# unrelateds from this component
-		unrel.idx <- ID.idx[!(ID.idx %in% rel.idx)]
-
-		# append
-		ridx <- append(ridx, rel.idx)
-		uidx <- append(uidx, unrel.idx)
-	}
+    # compute number of relatives for each sample
+    nrel <- sapply(rellist, length)
+    # set aside samples with no relatives
+    unrels <- names(nrel[nrel == 0])
+    # subset rellist, nrel to those with relatives
+    rellist <- rellist[!(names(rellist) %in% unrels)]
+    nrel <- nrel[nrel > 0]
 
 
-	# collect results
-	if(!is.null(ridx)){
-		ridx <- as.numeric(sort(ridx))
-		rels <- IDs[ridx]
-	}else{
-		rels <- NULL
-	}
-	uidx <- as.numeric(sort(uidx))
-	unrels <- IDs[uidx]
-		
-	# return results
-	return(list(rels = rels, unrels=unrels))
+    # update logicial indicator of which samples in kinobj still need to be read
+    kin.read <- kin.id.all %in% names(nrel)
+    # update the vector of ids we are reading
+    kin.id <- kin.id.all[kin.read]
+    # compute 'total kinship' values
+    kinsum <- .apply(kinobj, MARGIN = 2, 
+                     FUN = function(x){ sum(x[x > kin.thresh]) },
+                     selection = list(kin.read, kin.read))
+    names(kinsum) <- kin.id
+    kinsum <- unlist(kinsum)
+
+
+    if(verbose) message('Identifying pairs of divergent samples using divergence threshold ', div.thresh)
+    # logical indicator of which samples in divobj need divergence measures
+    div.read.col <- div.id.all %in% kin.id
+    # vector of ids we are reading
+    div.id <- div.id.all[div.read]
+    div.id.col <- div.id.all[div.read.col]
+    # create list of divergent pairs for each sample
+    divlist <- .apply(divobj, MARGIN = 2, 
+                      FUN = function(x){ div.id[x < div.thresh] }, 
+                      selection = list(div.read, div.read.col))
+    names(divlist) <- div.id.col
+
+    # create a vector matching ids of rellist and divlist
+    idx <- match(names(divlist), names(rellist))
+    # not divergent if actually related
+    for(i in 1:length(divlist)){
+        j <- idx[i]
+        divlist[[i]] <- divlist[[i]][!(divlist[[i]] %in% rellist[[j]])]
+    }
+
+    # compute number of divergent pairs for each sample
+    ndiv <- sapply(divlist, length)
+
+    # clean up
+    rm(divlist); rm(div.id.all); rm(div.read); rm(div.read.col); rm(div.id); rm(div.id.col)
+
+
+    # empty vector to store related set
+    rels <- NULL
+
+
+    # take care of user specified unrel.set
+    if(!is.null(unrel.set)){
+        if(verbose) message('Forcing samles specified in unrel.set into the unrelated set')
+        # add these samples to unrels
+        unrels <- unique(append(unrels, unrel.set))
+
+        # identify samples related to a sample in unrel.set
+        rel.new <- names(rellist)[sapply(rellist, function(x){ any(x %in% unrel.set) })]
+        # append rel.new to the master relative list
+        rels <- append(rels, rel.new)
+
+        # remove unrel.set and rel.new from rellist
+        keep <- !(names(nrel) %in% c(unrel.set, rel.new))
+        rellist <- rellist[keep]
+        # recompute nrel
+        nrel <- sapply(rellist, length)
+
+        # identify any with no relatives left
+        unrel.new <- names(nrel[nrel == 0])
+        if(length(unrel.new) > 0){
+            # append unrel.new to the master unrelated list
+            unrels <- append(unrels, unrel.new)
+            
+            # remove unrel.new from rellist and nrel
+            keep <- !(names(nrel) %in% unrel.new)
+            rellist <- rellist[keep]
+            nrel <- nrel[keep]
+        }
+    }
+
+
+    if(verbose) message('Paritioning samples into unrelated and related sets...')
+    # iterate
+    iter <- 0
+    while(length(nrel) > 0){
+        iter <- iter + 1
+        if(verbose & iter %% 1000 == 0) message('    ...', iter, ' samples added to related.set...')
+        
+        # who has the most relatives
+        rel.new <- names(nrel)[nrel == max(nrel)]
+        if(length(rel.new) > 1){
+            # who has the least divergent pairs
+            ndiv2 <- ndiv[names(ndiv) %in% rel.new]
+            rel.new <- names(ndiv2)[ndiv2 == min(ndiv2)]
+            if(length(rel.new) > 1){
+                # who has the lowest 'total kinship'
+                kinsum2 <- kinsum[names(kinsum) %in% rel.new]
+                rel.new <- names(kinsum2)[kinsum2 == min(kinsum2)][1]
+            }
+        }
+
+        # append rel.new to the master relative list
+        rels <- append(rels, rel.new)
+        
+        # remove rel.new from rellist and nrel
+        keep <- names(nrel) != rel.new
+        rellist <- rellist[keep]
+        nrel <- nrel[keep]
+
+        # subtract 1 from nrel for those related to rel.new
+        nrel <- nrel - ifelse(sapply(rellist, function(x){ rel.new %in% x }), 1, 0)
+        
+        # identify any with no relatives left
+        unrel.new <- names(nrel[nrel == 0])
+        if(length(unrel.new) > 0){
+            # append unrel.new to the master unrelated list
+            unrels <- append(unrels, unrel.new)
+            
+            # remove unrel.new from rellist and nrel
+            keep <- !(names(nrel) %in% unrel.new)
+            rellist <- rellist[keep]
+            nrel <- nrel[keep]
+        }
+    }
+
+    # return results
+    return(list(rels = rels, unrels = unrels))
+
+}
+
+
+.readSampleId <- function(x, ...) UseMethod(".readSampleId", x)
+.readSampleId.matrix <- function(x) {
+    colnames(x)
+}
+
+.readSampleId.Matrix <- function(x) {
+    colnames(x)
+}
+
+.readSampleId.gds.class <- function(x) {
+    read.gdsn(index.gdsn(x, 'sample.id'))
+}
+
+
+.apply <- function(x, MARGIN, FUN, selection, ...) UseMethod(".apply", x)
+.apply.matrix <- function(x, MARGIN, FUN, selection) {
+    apply(x[selection[[1]], selection[[2]]], MARGIN = MARGIN, FUN = FUN)
+}
+
+.apply.Matrix <- function(x, MARGIN, FUN, selection) {
+    apply(x[selection[[1]], selection[[2]]], MARGIN = MARGIN, FUN = FUN)
+}
+
+.apply.gds.class <- function(x, MARGIN, FUN, selection) {
+    apply.gdsn(index.gdsn(x, 'kinship'), margin = MARGIN, FUN = FUN,
+               selection = selection)
 }
