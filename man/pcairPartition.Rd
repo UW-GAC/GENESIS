@@ -37,7 +37,7 @@ Matrix objects from the \pkg{\link{Matrix}} package are also supported.
 
 \seealso{
 	\code{\link{pcair}} which uses this function for finding principal components in the presence of related individuals.
-	\code{\link{king2mat}} for creating a matrix of kinship coefficent estimates or pairwise ancestry divergence measures from KING output text files that can be used as \code{kinobj} or \code{divobj}.
+	\code{\link{kingToMatrix}} for creating a matrix of kinship coefficent estimates or pairwise ancestry divergence measures from KING output text files that can be used as \code{kinobj} or \code{divobj}.
 	\code{\link{kin2gds}} and \code{\link{mat2gds}} for saving kinship matrices to GDS.
 }
 \examples{

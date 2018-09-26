@@ -102,16 +102,12 @@ HapMap_genoData
 
 It is possible to identify a subset of mutually unrelated individuals in a sample based solely on pairwise measures of genetic relatedness (i.e. kinship coefficients).  However, in order to obtain accurate population structure inference for the entire sample, it is important that the ancestries of all individuals in the sample are represented by at least one individual in this subset.  In order to identify a mutually unrelated and ancestry representative subset of individuals, PC-AiR also utilizes measures of ancestry divergence.  These measures are calculated using the KING-robust kinship coefficient estimator (Manichaikul et al., 2010), which provides systematically negative estimates for unrelated pairs of individuals with different ancestry.  The number of negative pairwise estimates that an individual has provides information regarding how different that individual's ancestry is from the rest of the sample, which helps to prioritize individuals that should be kept in the ancestry representative subset.
 
-The relevant output from the KING software is two text files with the file extensions .kin0 and .kin.  The `king2mat` function can be used to extract the kinship coefficients (which we use as divergence measures) from this output and create a matrix usable by the `GENESIS` functions.  The `iids` input of the `king2mat` function should be used to ensure that the output matrix orders individuals in the same way as the `GenotypeData` object.
+The relevant output from the KING software is two text files with the file extensions .kin0 and .kin.  The `kingToMatrix` function can be used to extract the kinship coefficients (which we use as divergence measures) from this output and create a matrix usable by the `GENESIS` functions.
 
 ```{r}
-# read individual IDs from GenotypeData object
-iids <- getScanID(HapMap_genoData)
-head(iids)
 # create matrix of KING estimates
-KINGmat <- king2mat(file.kin0 = system.file("extdata", "MXL_ASW.kin0", package="GENESIS"), 
-    				file.kin = system.file("extdata", "MXL_ASW.kin", package="GENESIS"), 
-					iids = iids)
+KINGmat <- kingToMatrix(file.king = c(system.file("extdata", "MXL_ASW.kin0", package="GENESIS"), 
+    				      system.file("extdata", "MXL_ASW.kin", package="GENESIS")))
 KINGmat[1:5,1:5]
 ```
 
@@ -221,6 +217,7 @@ mypcrelate <- openfn.gds("tmp_pcrelate.gds")
 Functions are provided for easily reading the output from `pcrelate` (either a class `pcrelate` object or a GDS file) and making a table of pairwise relatedness estimates, a table of individual inbreeding coeficients, and a genetic relationship matrix (GRM).
 
 ```{r}
+iids <- getScanID(HapMap_genoData)
 pcrelateReadKinship(pcrelObj = mypcrelate, scan.include = iids[1:40], kin.thresh = 2^(-9/2))
 pcrelateReadInbreed(pcrelObj = mypcrelate, scan.include = iids[1:40], f.thresh = 2^(-11/2))
 pcrelateMakeGRM(pcrelObj = mypcrelate, scan.include = iids[1:5], scaleKin = 2)

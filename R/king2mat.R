@@ -1,4 +1,6 @@
 king2mat <- function(file.kin0, file.kin=NULL, iids=NULL, type="kinship", verbose=TRUE){
+    .Deprecated("kingToMatrix")
+    
     # read in the files
     if(verbose){ message("Reading .kin0 file...") }
     tmp0 <- read.table(file.kin0, header=TRUE);
@@ -76,20 +78,4 @@ king2mat <- function(file.kin0, file.kin=NULL, iids=NULL, type="kinship", verbos
     
     # return results
     return(kingMat)
-}
-
-
-mat2gds <- function(mat, gdsfile) {
-    gds <- createfn.gds(gdsfile)
-    add.gdsn(gds, "sample.id", colnames(mat))
-    add.gdsn(gds, "kinship", mat)
-    closefn.gds(gds)
-}
-
-
-kin2gds <- function(ibdobj, gdsfile) {
-    gds <- createfn.gds(gdsfile)
-    add.gdsn(gds, "sample.id", ibdobj$sample.id)
-    add.gdsn(gds, "kinship", ibdobj$kinship)
-    closefn.gds(gds)
 }

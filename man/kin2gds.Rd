@@ -18,14 +18,14 @@ mat2gds(mat, gdsfile)
   When using \code{pcair} or \code{pcairPartition} with large sample sizes, it can be more memory efficient to read data from GDS files. \code{kin2gds} and \code{mat2gds} store kinship matrices in GDS files for use with these functions.
 }
 \author{Stephanie M. Gogarten}
-\seealso{\code{\link{king2mat}}, \code{\link[SNPRelate]{snpgdsIBDKING}}}
+\seealso{\code{\link{kingToMatrix}}, \code{\link[SNPRelate]{snpgdsIBDKING}}}
 \examples{
 library(gdsfmt)
 
 # KING results from the command-line program
 file.kin0 <- system.file("extdata", "MXL_ASW.kin0", package="GENESIS")
 file.kin <- system.file("extdata", "MXL_ASW.kin", package="GENESIS")
-KINGmat <- king2mat(file.kin0 = file.kin0, file.kin = file.kin, type="kinship")
+KINGmat <- kingToMatrix(file.king = c(file.kin0, file.kin))
 gdsfile <- tempfile()
 mat2gds(KINGmat, gdsfile)
 gds <- openfn.gds(gdsfile)
