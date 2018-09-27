@@ -1,26 +1,15 @@
 
-calcBetaISAF <- function(gdsobj, pcs, training.set, snp.include){
-
-	V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = training.set)
+calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include){
+	# create matrix of PCs
+	V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include)
 
 	# matrix product of V
 	VVtVi <- tcrossprod(V, chol2inv(chol(crossprod(V))))
 	### do we store this matrix? it is npcs x nunrels in dimension ###
 
 	### this could be parallelized by blocks of variants in snp.include ###
+	# calculate betas for PCs at each variant
 	.calcBetaISAF(gdsobj, snp.include, VVtVi)
-
-}
-
-.calcBetaISAF <- function(gdsobj, snp.include, VVtVi){
-
-	# load genotype data
-	seqSetFilter(gdsobj, variant.sel = snp.include)
-	G <- altDosage(gdsobj)
-
-	# compute beta estimates
-	beta <- crossprod(G, VVtVi)
-	### beta is a matrix of variants x PCs; needs to be saved, not sure of the best format ###
 }
 
 .createPCMatrix <- function(gdsobj, pcs, sample.include){
@@ -32,12 +21,25 @@ calcBetaISAF <- function(gdsobj, pcs, training.set, snp.include){
 		stop('all samples must be in pcs')
 	}
 
-	# subset and re-order pcs if needed; append intercept
-	V <- pcs[match(sample.id, rownames(pcs)),]
+	# subset and re-order pcs if needed
+	V <- pcs[match(sample.id, rownames(pcs)), , drop = FALSE]
+	# append intercept
 	V <- cbind(rep(1, nrow(V)), V)
 
 	return(V)
 }
+
+.calcBetaISAF <- function(gdsobj, VVtVi, snp.include){
+	# load genotype data
+	seqSetFilter(gdsobj, variant.sel = snp.include)
+	G <- altDosage(gdsobj)
+
+	# compute beta estimates
+	beta <- crossprod(G, VVtVi)
+	### beta is a matrix of variants x PCs; needs to be saved, not sure of the best format ###
+}
+
+
 
 
 
@@ -53,14 +55,43 @@ V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include
 # load genotype data
 seqSetFilter(gdsobj, variant.sel = snp.include, sample.id = rownames(V))
 G <- altDosage(gdsobj)
+### rownames(V) needs to match rownames(G) - it should based on the .createPCMatrix() function
 
-# index of missing values
-filt.idx <- which(is.na(G))
+# load betas for the current block of variants (colnames(G))
+beta.block <- # something
+### rownames of beta.block needs to match colnames of G
 
-# get ISAF estimates (i.e. 0.5*fitted values)
-mu <- 0.5*tcrossprod(V, beta)
-# fix boundary cases
-mu <- apply(mu, 2, .muBoundaryFn, thresh = 0.025)
+# estimate individual specific allele frequencies
+mu <- .estISAF(V, beta.block, bound.method = bound.method, bound.thresh = bound.thresh)
+
+.estISAF <- function(V, beta, bound.method = c('truncate','filter'), bound.thresh){
+	# get ISAF estimates (i.e. 0.5*fitted values)
+	mu <- 0.5*tcrossprod(V, beta)
+	# fix boundary cases
+	if(bound.method == 'truncate'){
+		mu <- apply(mu, 2, .muBoundaryTrunc, thresh = bound.thresh)
+	}else if(bound.method == 'filter'){
+		mu <- apply(mu, 2, .muBoundaryFilt, thresh = bound.thresh)
+	}else{
+		stop('bound.method must be one of `truncate` or `filter`')
+	}
+	return(mu)
+}
+
+# function to truncate boundary issues with ISAFs
+.muBoundaryTrunc <- function(x, thresh){
+    x[x < thresh] <- thresh
+    x[x > (1 - thresh)] <- (1 - thresh)
+    return(x)
+}
+
+# function to filter boundary issues with ISAFs
+.muBoundaryFilt <- function(x, thresh){
+    x[x < thresh] <- NA
+    x[x > (1 - thresh)] <- NA
+    return(x)
+}
+
 
 if(scale != 'none'){
 	# calculate mu(1-mu)
@@ -68,41 +99,89 @@ if(scale != 'none'){
 }
 
 
+if(scale == 'variant'){
+	# compute number of overlapping snps by pair
+	nonmiss <- !(is.na(G) | is.na(mu))
+	nsnp <- crossprod(nonmiss)
+	# index of missing values
+	filt.idx <- which(!nonmiss)
+	rm(nonmiss)
+}else{
+	# index of missing values
+	filt.idx <- which(is.na(G) | is.na(mu))
+}
+
+
+filt.idx <- which(is.na(G) | is.na(mu))
+
+
+
+
+
+# calculate kinship values for the block of variants
 if(scale = 'overall'){
-	kinList <- .calcKinIndOvr(G, mu, muqu, filt.idx)
+	kinList <- .calcKinOvr(G, mu, muqu, filt.idx)
 }else if(scale == 'variant'){
-	kin <- .calcKinIndVar(G, mu, muqu, filt.idx)
+	kin <- .calcKinVar(G, mu, muqu, filt.idx)
 }else if(scale == 'none'){
 	kin <- .calcKinNone(G, mu, filt.idx)
 }
 
+# calculate ibd values for the block of variants
 if(ibd.probs){
 	if(scale == 'overall'){
-		ibdList <- .calcIBDIndOvr(G, mu, muqu, filt.idx)
+		ibdList <- .calcIBDOvr(G, mu, muqu, filt.idx)
 	}else if(scale == 'variant'){
-		ibdList <- .calcIBDIndVar(G, mu, muqu, filt.idx)
+		ibdList <- .calcIBDVar(G, mu, muqu, filt.idx)
 	}
 }
 
 
+### this needs to be done outside of the parallelization; all the matrices need to be summed first ###
 
-.calcKinIndOvr <- function(G, mu, muqu, filt.idx){
+# compute final estimates
+if(scale == 'overall'){
+	kin <- kinList$kinNum/(4*kinList$kinDen)
+}else if(scale == 'variant'){
+	kin <- kin/(4*nsnp)
+}
+
+if(ibd.probs){
+	if(scale == 'overall'){
+		k2 <- ibdList$k2Num/ibdList$k2Den
+		k0 <- ibdList$k0Num/ibdList$k0Den
+	}else if(scale == 'variant'){
+		k2 <- ibdList$k2/nsnp
+		k0 <- ibdList$k0/nsnp
+	}
+
+	# correct k2 for HW departure
+	f <- 2*diag(kin) - 1
+	fprod <- tcrossprod(f)
+	k2 <- k2 - fprod
+
+	# use alternate k0 estimator for non-1st degree relatives
+	k0.idx <- which(kin < 2^(-5/2))
+	k0[k0.idx] <- 1 - 4*kin[k0.idx] + k2[k0.idx]
+}
+
+
+
+.calcKinOvr <- function(G, mu, muqu, filt.idx){
 	# residuals
-	R <- G - 2*mu
+	R <- G - 2*mu	
 	# set missing values to 0 (i.e. no contribution from that variant)
 	R[filt.idx] <- 0
+	muqu[filt.idx] <- 0
 	# numerator (crossprod of residuals)
 	kinNum <- tcrossprod(R)
-
-	# set missing value to 0 (i.e. no contribution from that variant)
-	muqu[filt.idx] <- 0
 	# denominator (needs to be multipled by 2 when all put together)
 	kinDen <- tcrossprod(sqrt(muqu))
 
 	return(list(kinNum = kinNum, kinDen = kinDen))
 }
 
-.calcKinIndVar <- function(G, mu, muqu, filt.idx){
+.calcKinVar <- function(G, mu, muqu, filt.idx){
 	# scaled residuals
 	R <- (G - 2*mu)/sqrt(muqu)
 	# set missing values to 0 (i.e. no contribution from that variant)
@@ -124,7 +203,7 @@ if(ibd.probs){
 	return(kin)
 }
 
-.calcIBDIndOvr <- function(G, mu, muqu, filt.idx){
+.calcIBDOvr <- function(G, mu, muqu, filt.idx){
 	# opposite allele frequency
 	qu <- 1 - mu
 
@@ -157,7 +236,7 @@ if(ibd.probs){
 	return(list(k0Num = k0Num, k0Den = k0Den, k2Num = k2Num, k2Den = k2Den))
 }
 
-.calcIBDIndVar <- function(G, mu, muqu, filt.idx){
+.calcIBDVar <- function(G, mu, muqu, filt.idx){
 	# opposite allele frequency
 	qu <- 1 - mu
 
@@ -188,98 +267,6 @@ if(ibd.probs){
 
 	return(list(k0 = k0, k2 = k2))
 }
-
-
-# function to fix boundary issues with ISAFs
-.muBoundaryFn <- function(x, thresh){
-    x[x < thresh] <- thresh
-    x[x > (1 - thresh)] <- (1 - thresh)
-    return(x)
-}
-
-
-
-
-
-
-
-
-
-##### I'd like to just get rid of the population frequency based calculations #####
-
-
-
-### freq.type == 'population' ###
-p <- 0.5*colMeans(G[rownames(G) %in% training.set,], na.rm = TRUE)
-
-if(scale != 'none'){
-	# calculate p(1-p)
-	pq <- p*(1-p)
-}
-
-
-.calcKinPopOvr <- function(G, p, pq){
-	# residuals
-	R <- sweep(G, MARGIN = 2, STATS = 2*p, FUN = '-')
-	# set missing values to 0 (i.e. no contribution from that variant)
-	R[filt.idx] <- 0
-	# numerator (crossprod of residuals)
-	kinNum <- tcrossprod(R)
-
-	# create matrix for denominator computation
-	pqMat <- matrix(sqrt(pq), nrow = nrow(G), ncol = ncol(G), byrow = TRUE)
-	# set missing value to 0 (i.e. no contribution from that variant)
-	pqMat[filt.idx] <- 0
-	# denominator (needs to be multipled by 2 when all put together)
-	kinDen <- tcrossprod(pqMat)
-
-	return(list(kinNum = kinNum, kinDen = kinDen))
-}
-
-.calcKinPopVar <- function(G, p, pq){
-	# residuals
-	R <- sweep(G, MARGIN = 2, STATS = 2*p, FUN = '-')
-	# scaled residuals
-	R <- sweep(R, MARGIN = 2, STATS = sqrt(pq), FUN = '/')
-	# set missing values to 0 (i.e. no contribution from that variant)
-	R[filt.idx] <- 0
-	# crossprod of scaled residuals
-	kin <- tcrossprod(R)
-
-	return(kin)
-}
-
-.calcIBDPopOvr <- function(G, p, pq){
-	# indicator matrices of homozygotes
-	Iaa <- G == 0
-	IAA <- G == 2
-
-	# dominance coded genotype matrix
-	Gd <- matrix(p, nrow = nrow(G), ncol = ncol(G), byrow = TRUE)
-	Gd[G == 1] <- 0
-	Gd[IAA] <- 1 - Gd[IAA]
-	Gd <- sweep(Gd, MARGIN = 2, STATS = pq, FUN = '-')
-
-	# set missing values to 0 (i.e. no contribution from that variant)
-	Iaa[filt.idx] <- 0
-	IAA[filt.idx] <- 0
-	Gd[filt.idx] <- 0
-	mu[filt.idx] <- 0
-	qu[filt.idx] <- 0
-	muqu[filt.idx] <- 0
-
-	# k0	
-	k0Num <- tcrossprod(IAA, Iaa) + tcrossprod(Iaa, IAA)
-	k0Den <- tcrossprod(mu^2, qu^2) + tcrossprod(qu^2, mu^2)
-
-	# k2
-	k2Num <- tcrossprod(Gd)
-	k2Den <- tcrossprod(muqu)
-
-	return(list(k0Num = k0Num, k0Den = k0Den, k2Num = k2Num, k2Den = k2Den))
-}
-
-
 
 
 
