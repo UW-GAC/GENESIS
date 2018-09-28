@@ -2,12 +2,19 @@
 \alias{assocTestAggregate}
 \alias{assocTestAggregate-methods}
 \alias{assocTestAggregate,SeqVarIterator-method}
+\alias{assocTestAggregate,GenotypeIterator-method}
 
 \title{Aggregate Association Testing}
 \description{\code{assocTestAggregate} performs aggregate association tests using the null model fit with \code{\link{fitNullModel}}.}
 
 \usage{
 \S4method{assocTestAggregate}{SeqVarIterator}(gdsobj, null.model, AF.max=1,
+                   weight.beta=c(1,1), weight.user=NULL,
+                   test=c("Burden", "SKAT", "SMMAT"),
+                   burden.test=c("Score", "Wald"), rho=0,
+                   pval.method=c("davies", "kuonen", "liu"),
+                   verbose=TRUE)
+\S4method{assocTestAggregate}{GenotypeIterator}(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
                    test=c("Burden", "SKAT", "SMMAT"),
                    burden.test=c("Score", "Wald"), rho=0,
