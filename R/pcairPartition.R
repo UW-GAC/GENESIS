@@ -221,7 +221,20 @@ pcairPartition <- function(kinobj, divobj,
 }
 
 .apply.Matrix <- function(x, MARGIN, FUN, selection) {
-    apply(x[selection[[1]], selection[[2]]], MARGIN = MARGIN, FUN = FUN)
+    x <- x[selection[[1]], selection[[2]]]
+    ans <- list()
+    if (MARGIN == 1) {
+        for (i in 1:nrow(x)) {
+            ans[[i]] <- FUN(x[i,])
+        }
+    } else if (MARGIN == 2) {
+        for (i in 1:ncol(x)) {
+            ans[[i]] <- FUN(x[,i])
+        }
+    } else {
+        stop("MARGIN must be 1 or 2")
+    }
+    simplify2array(ans)
 }
 
 .apply.gds.class <- function(x, MARGIN, FUN, selection) {

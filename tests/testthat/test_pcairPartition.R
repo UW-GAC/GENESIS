@@ -70,3 +70,16 @@ test_that("kinobj and divobj both Matrix", {
     expect_equal(length(mypart$rels),76)
     expect_equal(length(mypart$unrels),97)
 })
+
+test_that("apply on Matrix", {
+    x <- Matrix(matrix(1, nrow=10, ncol=20))
+    MARGIN <- 1
+    FUN <- sum
+    selection <- list(1:5, 1:10)
+    chk <- apply(x[selection[[1]], selection[[2]]], MARGIN = MARGIN, FUN = FUN)
+    expect_equal(.apply(x, MARGIN, FUN, selection), chk)
+    
+    MARGIN <- 2
+    chk <- apply(x[selection[[1]], selection[[2]]], MARGIN = MARGIN, FUN = FUN)
+    expect_equal(.apply(x, MARGIN, FUN, selection), chk)
+})
