@@ -227,10 +227,12 @@ pcairPartition <- function(kinobj, divobj,
         for (i in 1:nrow(x)) {
             ans[[i]] <- FUN(x[i,])
         }
+        names(ans) <- rownames(x)
     } else if (MARGIN == 2) {
         for (i in 1:ncol(x)) {
             ans[[i]] <- FUN(x[,i])
         }
+        names(ans) <- colnames(x)
     } else {
         stop("MARGIN must be 1 or 2")
     }
