@@ -243,3 +243,58 @@ pcairPartition <- function(kinobj, divobj,
     apply.gdsn(index.gdsn(x, 'kinship'), margin = MARGIN, FUN = FUN,
                selection = selection)
 }
+
+
+.apply.Matrix_v2 <- function (x, MARGIN, FUN, selection, maxelem = 2^31 - 1){
+    
+    # subset to selection
+    x <- x[selection[[1]], selection[[2]]]
+    
+    # determine number of blocks needed
+    nr <- as.numeric(nrow(x))
+    nc <- as.numeric(ncol(x))
+    nblock <- ceiling(nr*nc/maxelem)
+
+    if(nblock > 1){
+        
+        if(MARGIN  == 1){
+            # create blocks
+            bsize <- floor(nr/nblock)
+            if(bsize < 2){
+                stop('block size is too small; increase maxelem')
+            }
+            start <- 0:(nblock-1)*bsize + 1
+            stop <- c(1:(nblock-1)*bsize, nr)
+            
+            # loop through blocks
+            ans <- list()
+            for(i in 1:nblock){
+                ans[[i]] <- apply(x[start[i]:stop[i], ], 1, FUN)
+            }
+            
+        }else if(MARGIN == 2){
+            # create blocks
+            bsize <- ceiling(nc/nblock)   
+            start <- 0:(nblock-1)*bsize + 1
+            stop <- c(1:(nblock-1)*bsize, nc)
+            
+            # loop through blocks
+            ans <- list()
+            for(i in 1:nblock){
+                ans[[i]] <- apply(x[ ,start[i]:stop[i]], 2, FUN)
+            }
+            
+        }else {
+            stop("MARGIN must be 1 or 2")
+        }
+            
+        # unlist the top level
+        if(length(unique(sapply(ans, class))) > 1){
+            stop('not all elements in the output of .apply.Matrix have the same class')
+        }
+        unlist(ans, recursive = FALSE)  
+            
+    }else{
+        apply(x, MARGIN, FUN)
+    }
+}
