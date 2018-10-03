@@ -264,7 +264,7 @@ pcairPartition <- function(kinobj, divobj,
                 stop('block size is too small; increase maxelem')
             }
             start <- 0:(nblock-1)*bsize + 1
-            stop <- c(1:(nblock-1)*bsize, nc)
+            stop <- c(1:(nblock-1)*bsize, nr)
             
             # loop through blocks
             ans <- list()
