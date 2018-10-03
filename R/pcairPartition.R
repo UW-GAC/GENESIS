@@ -264,12 +264,13 @@ pcairPartition <- function(kinobj, divobj,
                 stop('block size is too small; increase maxelem')
             }
             start <- 0:(nblock-1)*bsize + 1
-            stop <- c(1:(nblock-1)*bsize, nr)
+            stop <- c(1:(nblock-1)*bsize, nc)
             
             # loop through blocks
             ans <- list()
             for(i in 1:nblock){
-                ans[[i]] <- apply(x[start[i]:stop[i], ], 1, FUN)
+                # need to coerce output of apply to a list
+                ans[[i]] <- as.list(apply(x[start[i]:stop[i], ], 1, FUN))
             }
             
         }else if(MARGIN == 2){
@@ -281,7 +282,8 @@ pcairPartition <- function(kinobj, divobj,
             # loop through blocks
             ans <- list()
             for(i in 1:nblock){
-                ans[[i]] <- apply(x[ ,start[i]:stop[i]], 2, FUN)
+                # need to coerce output of apply to a list
+                ans[[i]] <- as.list(apply(x[ ,start[i]:stop[i]], 2, FUN))
             }
             
         }else {
@@ -289,10 +291,10 @@ pcairPartition <- function(kinobj, divobj,
         }
             
         # unlist the top level
-        if(length(unique(sapply(ans, class))) > 1){
-            stop('not all elements in the output of .apply.Matrix have the same class')
-        }
-        unlist(ans, recursive = FALSE)  
+        ans <- unlist(ans, recursive = FALSE)  
+        
+        # simplify further if possible
+        simplify2array(ans)
             
     }else{
         apply(x, MARGIN, FUN)
