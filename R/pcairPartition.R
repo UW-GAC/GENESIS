@@ -274,7 +274,7 @@ pcairPartition <- function(kinobj, divobj,
             
         }else if(MARGIN == 2){
             # create blocks
-            bsize <- ceiling(nc/nblock)   
+            bsize <- floor(nc/nblock)   
             start <- 0:(nblock-1)*bsize + 1
             stop <- c(1:(nblock-1)*bsize, nc)
             
