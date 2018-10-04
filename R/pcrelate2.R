@@ -29,30 +29,14 @@ pcrelate2 <- function(	gdsobj,
 	V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include)
 	
 
-	# compute estimates for current block of samples and variants
+	# compute estimates for current blocks of samples
+
+	# compute estimates looping over blocks of variants
 	### this could be parallelized by blocks of variants in snp.include ###
-
-	# load genotype data
-	seqSetFilter(gdsobj, variant.id = snp.include, sample.id = rownames(V))
-	G <- altDosage(gdsobj)
-	### rownames(V) needs to match rownames(G) - it should based on the .createPCMatrix() function
-
-	# load betas for the current block of variants (colnames(G))
-	beta.block <- beta[match(colnames(G), rownames(beta)), , drop = FALSE]
-	### this line of code will probably be different if we save the betas; need to load correct betas
-	### rownames of beta.block needs to match colnames of G
-
-	# estimate individual specific allele frequencies
-	mu <- .estISAF(V = V, beta = beta.block, bound.method = maf.bound.method, bound.thresh = maf.thresh)
-
-
-	# compute values for estimates
-	if(scale == 'overall'){
-		estList <- .pcrCalcOvr(G = G, mu = mu, ibd.probs = ibd.probs)
-	}else if(scale == 'variant'){
-		estList <- .pcrCalcVar(G = G, mu = mu, ibd.probs = ibd.probs)
-	}else if(scale == 'none'){
-		kin <- .pcrCalcNone(G = G, mu = mu)
+	### Stephanie to build in variant iterators here ###
+	for(i in 1:nsnpblock){
+		matList <- .pcrelateVarBlock(	gdsobj = gdsobj, beta = beta, V = V, scale = scale, ibd.probs = ibd.probs, 
+										snp.include = snp.block, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
 	}
 
 
@@ -60,18 +44,18 @@ pcrelate2 <- function(	gdsobj,
 
 	# compute final estimates
 	if(scale == 'overall'){
-		kin <- estList$kinNum/(4*estList$kinDen)
+		kin <- matList$kinNum/(4*matList$kinDen)
 	}else if(scale == 'variant'){
-		kin <- estList$kin/(4*estList$nsnp)
+		kin <- matList$kin/(4*matList$nsnp)
 	}
 
 	if(ibd.probs){
 		if(scale == 'overall'){
-			k2 <- estList$k2Num/estList$k2Den
-			k0 <- estList$k0Num/estList$k0Den
+			k2 <- matList$k2Num/matList$k2Den
+			k0 <- matList$k0Num/matList$k0Den
 		}else if(scale == 'variant'){
-			k2 <- estList$k2/estList$nsnp
-			k0 <- estList$k0/estList$nsnp
+			k2 <- matList$k2/matList$nsnp
+			k0 <- matList$k0/matList$nsnp
 		}
 
 		# correct k2 for HW departure
@@ -141,10 +125,40 @@ calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include){
 }
 
 
+### this function does the pcrelate estimation for a variant block
+
+.pcrelateVarBlock <- function(gdsobj, beta, V, scale, ibd.probs, snp.include, maf.thresh, maf.bound.method){
+
+	# load genotype data
+	seqSetFilter(gdsobj, variant.id = snp.include, sample.id = rownames(V))
+	G <- altDosage(gdsobj)
+	### rownames(V) needs to match rownames(G) - it should based on the .createPCMatrix() function
+
+	# load betas for the current block of variants (colnames(G))
+	beta.block <- beta[match(colnames(G), rownames(beta)), , drop = FALSE]
+	### this line of code will probably be different if we save the betas; need to load correct betas
+	### rownames of beta.block needs to match colnames of G
+
+	# estimate individual specific allele frequencies
+	mu <- .estISAF(V = V, beta = beta.block, bound.thresh = maf.thresh, bound.method = maf.bound.method)
+
+	# compute values for estimates
+	if(scale == 'overall'){
+		matList <- .pcrCalcOvr(G = G, mu = mu, ibd.probs = ibd.probs)
+	}else if(scale == 'variant'){
+		matList <- .pcrCalcVar(G = G, mu = mu, ibd.probs = ibd.probs)
+	}else if(scale == 'none'){
+		matList <- .pcrCalcNone(G = G, mu = mu)
+	}
+
+	return(matList)
+}
+
+
 
 ### these functions are for estimating individual specific allele frequencies
 
-.estISAF <- function(V, beta, bound.method, bound.thresh){
+.estISAF <- function(V, beta, bound.thresh, bound.method){
 	# get ISAF estimates (i.e. 0.5*fitted values)
 	mu <- 0.5*tcrossprod(V, beta)
 	# fix boundary cases
