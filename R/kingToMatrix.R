@@ -62,13 +62,7 @@ kingToMatrix <- function(file.king, sample.include = NULL, thresh = NULL, verbos
     mem <- clu$membership
     if(verbose) message('    ', length(mem), ' relatives in ', clu$no, ' clusters')
     
-    
-    # make an identity matrix of unrelated samples
-    unrel.id <- setdiff(sample.include, names(mem))
-    if(verbose) message(length(unrel.id), ' samples with no relatives included...')
-    mat_unrels <- 0.5*Diagonal(length(unrel.id))
-    
-    
+
     if(clu$no > 0){
         if(verbose) message('Creating block matrices for clusters...')
         blocks <- list()
@@ -95,22 +89,29 @@ kingToMatrix <- function(file.king, sample.include = NULL, thresh = NULL, verbos
             blocks[[i]] <- submat
             block.id[[i]] <- rownames(submat)
         }
+
+        # add in identity matrix of unrelated samples
+        unrel.id <- setdiff(sample.include, names(mem))
+        if(verbose) message(length(unrel.id), ' samples with no relatives included...')
+
+        blocks[[clu$no + 1]] <- 0.5*Diagonal(length(unrel.id))
+        block.id[[clu$no + 1]] <- unrel.id
+
         # turn the list into a block-diagonal matrix
-        mat_rels <- bdiag(blocks)
-        # ids of samples with relatives
-        rel.id <- unlist(block.id)
-        
         if(verbose) message('Putting all samples together into one block diagonal matrix')
-        # create a block diagonal matrix with all samples
-        mat_sparse <- bdiag(mat_rels, mat_unrels)
-        rownames(mat_sparse) <- c(rel.id, unrel.id)
-        colnames(mat_sparse) <- c(rel.id, unrel.id)
+        mat_sparse <- bdiag(blocks)
+        # ids of samples 
+        mat.id <- unlist(block.id)
+        rownames(mat_sparse) <- mat.id
+        colnames(mat_sparse) <- mat.id
+
+        # set the matrix as symmetric (to save memory)
+        mat_sparse <- as(mat_sparse, 'symmetricMatrix')
         
         return(mat_sparse)
         
     }else{
-        rownames(mat_unrels) <- unrel.id
-        colnames(mat_unrels) <- unrel.id
-        return(mat_unrels)
+        message('No clusters identified')
+        return(NULL)
     }
 }
