@@ -220,32 +220,14 @@ pcairPartition <- function(kinobj, divobj,
     apply(x[selection[[1]], selection[[2]]], MARGIN = MARGIN, FUN = FUN)
 }
 
-.apply.Matrix <- function(x, MARGIN, FUN, selection) {
-    x <- x[selection[[1]], selection[[2]]]
-    ans <- list()
-    if (MARGIN == 1) {
-        for (i in 1:nrow(x)) {
-            ans[[i]] <- FUN(x[i,])
-        }
-        names(ans) <- rownames(x)
-    } else if (MARGIN == 2) {
-        for (i in 1:ncol(x)) {
-            ans[[i]] <- FUN(x[,i])
-        }
-        names(ans) <- colnames(x)
-    } else {
-        stop("MARGIN must be 1 or 2")
-    }
-    simplify2array(ans)
-}
-
 .apply.gds.class <- function(x, MARGIN, FUN, selection) {
     apply.gdsn(index.gdsn(x, 'kinship'), margin = MARGIN, FUN = FUN,
                selection = selection)
 }
 
-
-.apply.Matrix_v2 <- function (x, MARGIN, FUN, selection, maxelem = 2^31 - 1){
+## apply coerces its argument with as.matrix, and this fails for a matrix
+## with > 2^31 - 1 elements
+.apply.Matrix <- function (x, MARGIN, FUN, selection, maxelem = 2^30){
     
     # subset to selection
     x <- x[selection[[1]], selection[[2]]]
@@ -258,33 +240,18 @@ pcairPartition <- function(kinobj, divobj,
     if(nblock > 1){
         
         if(MARGIN  == 1){
-            # create blocks
-            bsize <- floor(nr/nblock)
-            if(bsize < 2){
-                stop('block size is too small; increase maxelem')
-            }
-            start <- 0:(nblock-1)*bsize + 1
-            stop <- c(1:(nblock-1)*bsize, nr)
-            
-            # loop through blocks
-            ans <- list()
-            for(i in 1:nblock){
+            blocks <- unname(split(1:nr, cut(1:nr, nblock)))
+            ans <- lapply(blocks, function(b) {
                 # need to coerce output of apply to a list
-                ans[[i]] <- as.list(apply(x[start[i]:stop[i], ], 1, FUN))
-            }
+                as.list(apply(x[b,], 1, FUN))
+            })
             
         }else if(MARGIN == 2){
-            # create blocks
-            bsize <- floor(nc/nblock)   
-            start <- 0:(nblock-1)*bsize + 1
-            stop <- c(1:(nblock-1)*bsize, nc)
-            
-            # loop through blocks
-            ans <- list()
-            for(i in 1:nblock){
+            blocks <- unname(split(1:nc, cut(1:nc, nblock)))
+            ans <- lapply(blocks, function(b) {
                 # need to coerce output of apply to a list
-                ans[[i]] <- as.list(apply(x[ ,start[i]:stop[i]], 2, FUN))
-            }
+                as.list(apply(x[,b], 2, FUN))
+            })
             
         }else {
             stop("MARGIN must be 1 or 2")
@@ -294,9 +261,9 @@ pcairPartition <- function(kinobj, divobj,
         ans <- unlist(ans, recursive = FALSE)  
         
         # simplify further if possible
-        simplify2array(ans)
+        return(simplify2array(ans))
             
     }else{
-        apply(x, MARGIN, FUN)
+        return(apply(x, MARGIN, FUN))
     }
 }
