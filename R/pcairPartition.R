@@ -220,26 +220,50 @@ pcairPartition <- function(kinobj, divobj,
     apply(x[selection[[1]], selection[[2]]], MARGIN = MARGIN, FUN = FUN)
 }
 
-.apply.Matrix <- function(x, MARGIN, FUN, selection) {
-    x <- x[selection[[1]], selection[[2]]]
-    ans <- list()
-    if (MARGIN == 1) {
-        for (i in 1:nrow(x)) {
-            ans[[i]] <- FUN(x[i,])
-        }
-        names(ans) <- rownames(x)
-    } else if (MARGIN == 2) {
-        for (i in 1:ncol(x)) {
-            ans[[i]] <- FUN(x[,i])
-        }
-        names(ans) <- colnames(x)
-    } else {
-        stop("MARGIN must be 1 or 2")
-    }
-    simplify2array(ans)
-}
-
 .apply.gds.class <- function(x, MARGIN, FUN, selection) {
     apply.gdsn(index.gdsn(x, 'kinship'), margin = MARGIN, FUN = FUN,
                selection = selection)
+}
+
+## apply coerces its argument with as.matrix, and this fails for a matrix
+## with > 2^31 - 1 elements
+.apply.Matrix <- function (x, MARGIN, FUN, selection, maxelem = 2^30){
+    
+    # subset to selection
+    x <- x[selection[[1]], selection[[2]]]
+    
+    # determine number of blocks needed
+    nr <- as.numeric(nrow(x))
+    nc <- as.numeric(ncol(x))
+    nblock <- ceiling(nr*nc/maxelem)
+
+    if(nblock > 1){
+        
+        if(MARGIN  == 1){
+            blocks <- unname(split(1:nr, cut(1:nr, nblock)))
+            ans <- lapply(blocks, function(b) {
+                # need to coerce output of apply to a list
+                as.list(apply(x[b,], 1, FUN))
+            })
+            
+        }else if(MARGIN == 2){
+            blocks <- unname(split(1:nc, cut(1:nc, nblock)))
+            ans <- lapply(blocks, function(b) {
+                # need to coerce output of apply to a list
+                as.list(apply(x[,b], 2, FUN))
+            })
+            
+        }else {
+            stop("MARGIN must be 1 or 2")
+        }
+            
+        # unlist the top level
+        ans <- unlist(ans, recursive = FALSE)  
+        
+        # simplify further if possible
+        return(simplify2array(ans))
+            
+    }else{
+        return(apply(x, MARGIN, FUN))
+    }
 }

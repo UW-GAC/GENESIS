@@ -72,7 +72,7 @@ test_that("kinobj and divobj both Matrix", {
 })
 
 test_that("apply on Matrix", {
-    x <- Matrix(matrix(1, nrow=10, ncol=20))
+    x <- Matrix(matrix(1, nrow=10, ncol=20, dimnames=list(1:10,1:20)))
     MARGIN <- 1
     FUN <- sum
     selection <- list(1:5, 1:10)
@@ -82,4 +82,39 @@ test_that("apply on Matrix", {
     MARGIN <- 2
     chk <- apply(x[selection[[1]], selection[[2]]], MARGIN = MARGIN, FUN = FUN)
     expect_equal(.apply(x, MARGIN, FUN, selection), chk)
+})
+
+.apply.no.blocks <- function(x, MARGIN, FUN, selection) {
+    x <- x[selection[[1]], selection[[2]]]
+    ans <- list()
+    if (MARGIN == 1) {
+        for (i in 1:nrow(x)) {
+            ans[[i]] <- FUN(x[i,])
+        }
+        names(ans) <- rownames(x)
+    } else if (MARGIN == 2) {
+        for (i in 1:ncol(x)) {
+            ans[[i]] <- FUN(x[,i])
+        }
+        names(ans) <- colnames(x)
+    } else {
+        stop("MARGIN must be 1 or 2")
+    }
+    simplify2array(ans)
+}
+
+test_that("apply on big Matrix", {
+    x <- Matrix(matrix(1, nrow=1000, ncol=2000, dimnames=list(1:1000,1:2000)))
+    MARGIN <- 1
+    FUN <- sum
+    selection <- list(1:1000, 1:2000)
+    chk <- apply(x[selection[[1]], selection[[2]]], MARGIN = MARGIN, FUN = FUN)
+    expect_equal(.apply(x, MARGIN, FUN, selection, maxelem=5e5), chk)
+    ## takes too long
+    ## expect_equal(.apply(x, MARGIN, FUN, selection, maxelem=5e5),
+    ##              .apply.no.blocks(x, MARGIN, FUN, selection))
+    
+    MARGIN <- 2
+    chk <- apply(x[selection[[1]], selection[[2]]], MARGIN = MARGIN, FUN = FUN)
+    expect_equal(.apply(x, MARGIN, FUN, selection, maxelem=5e5), chk)
 })
