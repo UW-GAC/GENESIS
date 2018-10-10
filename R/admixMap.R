@@ -164,7 +164,7 @@ admixMap <- function(admixDataList,
         
     # perform regressions
     if(v == 1){
-      local <- Matrix(local[,,1])
+      local <- local[,,1]
       Xtilde <- calcXtilde(null.model, local)
       XtX <- colSums(Xtilde^2) # vector of X^T SigmaInv X (for each SNP)
       # filter monomorphic SNPs
@@ -191,7 +191,7 @@ admixMap <- function(admixDataList,
         }
         # filter monomorphic or missing SNPs
         if(any(freq[g,]==1) || sum(freq[g,]==0)){ next }
-        Xtilde <- calcXtilde(null.model, Matrix(local[,g,]))
+        Xtilde <- calcXtilde(null.model, local[,g,])
         Ytilde <- null.model$Ytilde
         sY2 <- sum(Ytilde^2)
         XtX <- crossprod(Xtilde)

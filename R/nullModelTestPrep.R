@@ -24,6 +24,7 @@ nullModelTestPrep <- function(nullmod){
     }
 
     if (!nullmod$family$mixedmodel & (nullmod$family$family != "gaussian")){
+        ## C is a vector
         C <- sqrt(nullmod$varComp)
         CX <- X * C
         CXCXI <- tcrossprod(CX, chol2inv(chol(crossprod(CX))))
@@ -38,10 +39,11 @@ nullModelTestPrep <- function(nullmod){
 
 ##  adjust genotypes for correlation structure and fixed effects
 calcXtilde <- function(nullmod, G){
-    
     if (nullmod$family$mixedmodel | (nullmod$family$family == "gaussian")){
         C <- nullmod$cholSigmaInv
         if (length(C) > 1) { ## n by n cholSigmaInv (may be Diagonal)
+            if (is(C, "Matrix") & !is(G, "Matrix")) G <- Matrix(G)
+            if (!is(C, "Matrix") & is(G, "Matrix")) C <- Matrix(C)
             M1 <- crossprod(C, G)
         } else { ## cholSigmaInv is a scalar
             M1 <- G * C
@@ -49,9 +51,9 @@ calcXtilde <- function(nullmod, G){
     }
 
     if (!nullmod$family$mixedmodel & (nullmod$family$family != "gaussian")){
-        sigma <- sqrt(nullmod$varComp)
-        C <- Diagonal(x=sigma)
-        M1 <- crossprod(C, G)
+        ## C is a vector
+        C <- sqrt(nullmod$varComp)
+        M1 <- G * C
     }
 
     rm(G)
