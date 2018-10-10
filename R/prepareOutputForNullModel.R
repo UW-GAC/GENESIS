@@ -56,11 +56,14 @@
     
     hetResid <- TRUE
     varNames <- colnames(X) 
-    cholSigmaInv <- Diagonal(x=sqrt(diag(vc.mod$Sigma.inv)))
+    ## cholSigmaInv <- Diagonal(x=sqrt(diag(vc.mod$Sigma.inv)))
+    cholSigmaInv.diag <- sqrt(diag(vc.mod$Sigma.inv))
+    cholSigmaInv <- Diagonal(x=cholSigmaInv.diag)
     
     RSS <- vc.mod$RSS
    
-    betaCov <- as.matrix(RSS * chol2inv(chol(crossprod(crossprod(cholSigmaInv, X)))))
+    ## betaCov <- as.matrix(RSS * chol2inv(chol(crossprod(crossprod(cholSigmaInv, X)))))
+    betaCov <- as.matrix(RSS * chol2inv(chol(crossprod(cholSigmaInv.diag*X))))
     dimnames(betaCov) <- list(varNames, varNames)
     
     SE <- sqrt(diag(betaCov))
@@ -150,8 +153,10 @@
     varNames <- colnames(X) 
     
     RSS <- ifelse(family$family == "gaussian", vc.mod$RSS, 1)
-    
-    betaCov <- as.matrix(RSS * chol2inv(chol(crossprod(crossprod(cholSigmaInv, X)))))
+
+    X.tmp <- if (is(cholSigmaInv, "Matrix")) Matrix(X) else X
+    betaCov <- as.matrix(RSS * chol2inv(chol(crossprod(crossprod(cholSigmaInv, X.tmp)))))
+    rm(X.tmp)
     dimnames(betaCov) <- list(varNames, varNames)
     
     SE <- sqrt(diag(betaCov))

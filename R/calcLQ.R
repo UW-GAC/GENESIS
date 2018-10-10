@@ -1,6 +1,8 @@
 
 
 .calcLikelihoodQuantities <- function(Y, X, Sigma.inv, cholSigma.diag, PPY=FALSE){
+
+    if (is(Sigma.inv, "Matrix")) X <- Matrix(X)
     
     n <- length(Y)
     k <- ncol(X)
