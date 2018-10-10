@@ -8,6 +8,7 @@ nullModelTestPrep <- function(nullmod){
     if (nullmod$family$mixedmodel | (nullmod$family$family == "gaussian")){
         C <- nullmod$cholSigmaInv
         if (length(C) > 1) { ## n by n cholSigmaInv (may be Diagonal)
+            if (is(C, "Matrix")) X <- Matrix(X)
             CX <- crossprod(C, X)
             CXCXI <- tcrossprod(CX, chol2inv(chol(crossprod(CX))))
             CCXCXICX <- tcrossprod(tcrossprod(C, t(CXCXI)), CX)
@@ -23,12 +24,11 @@ nullModelTestPrep <- function(nullmod){
     }
 
     if (!nullmod$family$mixedmodel & (nullmod$family$family != "gaussian")){
-        sigma <- sqrt(nullmod$varComp)
-        C <- Diagonal(x=sigma)
-        CX <- X * sigma
+        C <- sqrt(nullmod$varComp)
+        CX <- X * C
         CXCXI <- tcrossprod(CX, chol2inv(chol(crossprod(CX))))
-        CCXCXICX <- tcrossprod(tcrossprod(C, t(CXCXI)), CX)
-        Ytilde <- crossprod(C, Y) - crossprod(CCXCXICX, Y)
+        CCXCXICX <- tcrossprod(CXCXI*C, CX)
+        Ytilde <- C*Y - crossprod(CCXCXICX, Y)
         resid <- nullmod$resid.marginal
     }
 

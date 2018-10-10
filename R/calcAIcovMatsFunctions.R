@@ -74,11 +74,15 @@
             ## covMati <- Diagonal( x=as.numeric( 1:n %in% group.idx[[i]] ) )
             ## IPY <- covMati %*% PY
             ## PIPY <- Sigma.inv %*% IPY - tcrossprod(tcrossprod(Sigma.inv_X, Xt_Sigma.inv_X.inv), t(IPY) %*% Sigma.inv_X)
+            ## trPi.part1 <- sum(diag(Sigma.inv)[ group.idx[[i]] ] )
+            ## trPi.part2 <- sum(diag( (crossprod( Sigma.inv_X, covMati) %*% Sigma.inv_X) %*% Xt_Sigma.inv_X.inv ))
+            
+            covMati <- as.numeric( 1:n %in% group.idx[[i]] )
             IPY <- as.numeric( 1:n %in% group.idx[[i]] ) * PY
             PIPY <- crossprod(Sigma.inv, IPY) - tcrossprod(tcrossprod(Sigma.inv_X, Xt_Sigma.inv_X.inv), crossprod(IPY, Sigma.inv_X))
             
             trPi.part1 <- sum(diag(Sigma.inv)[ group.idx[[i]] ] )
-            trPi.part2 <- sum(diag( (crossprod( Sigma.inv_X, covMati) %*% Sigma.inv_X) %*% Xt_Sigma.inv_X.inv ))
+            trPi.part2 <- sum(diag( crossprod(Sigma.inv_X*covMati, Sigma.inv_X) %*% Xt_Sigma.inv_X.inv ))
             trPi <- trPi.part1 - trPi.part2
             
             score[i] <- -0.5*(trPi - crossprod(PY[group.idx[[i]]]))
