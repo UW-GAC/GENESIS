@@ -42,8 +42,6 @@ calcXtilde <- function(nullmod, G){
     if (nullmod$family$mixedmodel | (nullmod$family$family == "gaussian")){
         C <- nullmod$cholSigmaInv
         if (length(C) > 1) { ## n by n cholSigmaInv (may be Diagonal)
-            if (is(C, "Matrix") & !is(G, "Matrix")) G <- Matrix(G)
-            if (!is(C, "Matrix") & is(G, "Matrix")) C <- Matrix(C)
             M1 <- crossprod(C, G)
         } else { ## cholSigmaInv is a scalar
             M1 <- G * C

@@ -157,6 +157,8 @@
     X.tmp <- if (is(cholSigmaInv, "Matrix")) Matrix(X) else X
     betaCov <- as.matrix(RSS * chol2inv(chol(crossprod(crossprod(cholSigmaInv, X.tmp)))))
     rm(X.tmp)
+    #betaCov <- as.matrix(RSS * chol2inv(chol(crossprod(crossprod(cholSigmaInv, X)))))
+
     dimnames(betaCov) <- list(varNames, varNames)
     
     SE <- sqrt(diag(betaCov))

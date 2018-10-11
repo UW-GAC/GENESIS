@@ -5,20 +5,14 @@ library(Biobase)
 library(gdsfmt)
 
 ## flags for running various tests
-test_any <- FALSE
 
 ## these have unpredictable errors depending on the random covariance matrix
 ## mostly of the form "a is 0-dimensional"
-test_binary <- FALSE
+test_binary <- TRUE
 
 ## unpredictable failures - check this
-test_GxE <- FALSE
+test_GxE <- TRUE
 
-## tests involving deprecated functions (assocTestSeq*)
-test_deprecated <- FALSE
-
-if (test_any) {
-    
 test_that("fitNullMod matches fitNullReg - linear", {
     dat <- .testNullInputs()
     nullmod <- .fitNullModel(dat$y, dat$X, verbose=FALSE)
@@ -111,20 +105,21 @@ test_that("fitNullMod matches fitNullMM - linear, with group", {
 
 if (test_binary) {
 test_that("fitNullMod matches fitNullMM - binary", {
-    varCompZero <- TRUE
-    while(varCompZero){
+    ## this never goes FALSE anymore
+    ## varCompZero <- TRUE
+    ## while(varCompZero){
         dat <- .testNullInputs(binary=TRUE)
         df <- .asDataFrame(dat)
         
-        glmm.genesis <- tryCatch({
+        glmm.genesis <- #tryCatch({
             fitNullMM(df, outcome="y", covars = c("X1", "X2", "X3"), covMatList=dat$cor.mat, family="binomial", verbose=FALSE)
-        }, 
-        warning = function(w){return(list(message = "warning"))},
-        error = function(e){return(list(message = "error"))}
-        )
-        if (!is.null(glmm.genesis$message)) next
-        if (glmm.genesis$varComp[1] != 0 ) varCompZero <- FALSE
-    }
+        ## }, 
+        ## warning = function(w){return(list(message = "warning"))},
+        ## error = function(e){return(list(message = "error"))}
+        ## )
+        ## if (!is.null(glmm.genesis$message)) next
+        ## if (glmm.genesis$varComp[1] != 0 ) varCompZero <- FALSE
+    ## }
 
     nullmod <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial", verbose=FALSE)
     
@@ -182,89 +177,6 @@ test_that("fitNullMod matches fitNullMM - no variance components", {
 })
 
 
-test_that("nullModelTestPrep matches calculateProjection", {
-    n <- 100
-    dat <- .testNullInputs(n)
-    geno <- .testGenoMatrix(n)
-    df <- .asDataFrame(dat)
-    
-    # basic
-    nullmod <- .fitNullModel(dat$y, dat$X, verbose=FALSE)
-    Xtilde <- calcXtilde(nullmod, geno)
-    
-    nullmod.orig <- fitNullReg(df, outcome="y", covars=c("X1", "X2", "X3"), verbose=FALSE)
-    proj <- .calculateProjection(nullmod.orig, test="", burden.test="")
-
-    expect_true(all(abs(nullmod$Xtilde - crossprod(proj$Mt, geno)) < 1e-7))
-    expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
-    
-    # with covMatList
-    nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose=FALSE)
-    Xtilde <- calcXtilde(nullmod, geno)
-
-    nullmod.orig <- fitNullMM(df, outcome="y", covars=c("X1", "X2", "X3"), covMatList=dat$cor.mat, verbose=FALSE)
-    proj <- .calculateProjection(nullmod.orig, test="", burden.test="")
-
-    expect_true(all(abs(Xtilde - crossprod(proj$Mt, geno)) < 1e-7))
-    expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
-    
-    # with group
-    nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, group.idx=dat$group.idx, verbose=FALSE)
-    Xtilde <- calcXtilde(nullmod, geno)
-
-    nullmod.orig <- fitNullMM(df, outcome="y", covars=c("X1", "X2", "X3"), covMatList=dat$cor.mat, group.var="group", verbose=FALSE)
-    proj <- .calculateProjection(nullmod.orig, test="", burden.test="")
-
-    expect_true(all(abs(Xtilde - crossprod(proj$Mt, geno)) < 1e-7))
-    expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
-})
-
-
-if (test_binary) {
-test_that("nullModelTestPrep vs calculateProjection - binary", {
-    n <- 100
-    geno <- .testGenoMatrix(n)
-    
-    ## reps <- 0
-    ## varCompZero <- TRUE
-    ## while(varCompZero & reps < 10){
-    
-    dat <- .testNullInputs(n, binary=TRUE)
-    df <- .asDataFrame(dat)	
-    
-    ## 	glmm.genesis <- tryCatch({
-    ## 		fitNullMM(df, outcome="y", covars=c("X1", "X2", "X3"), covMatList=cor.mat, family="binomial", verbose=FALSE, maxIter=10)
-    ## 				}, 
-    ## 			warning = function(w){return(list(message = "warning"))},
-    ## 			error = function(e){return(list(message = "error"))}
-    ## 			)
-    ## 	if (!is.null(glmm.genesis$message)) next
-    ## 	if (glmm.genesis$varComp[1] != 0 ) varCompZero <- FALSE
-    ##         reps <- reps + 1
-    ## }
-    ## if (varCompZero) stop("could not generate nonzero varComp")
-
-    # basic
-    nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
-    Xtilde <- calcXtilde(nullmod, geno)
-    
-    nullmod.orig <- fitNullReg(df, outcome="y", covars=c("X1", "X2", "X3"), family="binomial", verbose=FALSE)
-    proj <- .calculateProjection(nullmod.orig, test="", burden.test="")
-
-    expect_true(all(abs(Xtilde - crossprod(proj$Mt, geno)) < 1e-7))
-    expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
-    
-    # with covMatList
-    nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, family="binomial", verbose=FALSE)
-    Xtilde <- calcXtilde(nullmod, geno)
-
-    nullmod.orig <- fitNullMM(df, outcome="y", covars=c("X1", "X2", "X3"), covMatList=dat$cor.mat, family="binomial", verbose=FALSE)
-    proj <- .calculateProjection(nullmod.orig, test="", burden.test="")
-
-    expect_true(all(abs(Xtilde - crossprod(proj$Mt, geno)) < 1e-7))
-    expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
-})
-}
 
 
 test_that("fitNullModel matches fitNulMM", {
@@ -494,267 +406,6 @@ test_that("assocTestSingle matches assocTestMM - GxE", {
 }
 
 
-if (test_deprecated) {
-test_that("assocTestAggregate matches assocTestSeqWindow - Burden, Wald", {
-    svd <- .testData()
-    nullmod <- fitNullReg(sampleData(svd), outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
-    assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="Burden", burden.test="Wald", verbose=FALSE, chromosome=1)
-    
-    nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
-    seqSetFilterChrom(svd, include=1, verbose=FALSE)
-    iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
-    assoc2 <- assocTestAggregate(iterator, nullmod, test="Burden", burden.test="Wald", verbose=FALSE)
-
-    var1 <- assoc1$variantInfo[!(assoc1$variantInfo$freq %in% c(0,1)),]
-    var2 <- do.call(rbind, assoc2$variantInfo)
-    var2 <- var2[!duplicated(paste(var2$variant.id, var2$allele.index)),]
-    expect_equal(nrow(var1), nrow(var2))  
-    expect_equal(var1$variantID, var2$variant.id)
-    expect_equal(var1$allele, var2$allele.index)
-    expect_equal(var1$chr, var2$chr)
-    expect_equal(var1$pos, var2$pos)
-    expect_equal(var1$n.obs, var2$n.obs)
-    expect_equal(var1$freq, var2$freq)
-    expect_equal(var1$weight, var2$weight)
-
-    res1 <- assoc1$results[assoc1$results$dup %in% 0,]
-    res2 <- assoc2$results[assoc2$results$n.site > 0,]
-    expect_equal(res1$n.site, res2$n.site)
-    expect_equal(res1$Est, res2$Est)
-    expect_equal(res1$SE, res2$Est.SE)
-    expect_equal(res1$Wald.stat, (res2$Wald.Stat)^2)
-    expect_equal(res1$Wald.pval, res2$Wald.pval)
-    
-    seqClose(svd)
-})
-
-
-test_that("assocTestAggregate matches assocTestSeqWindow - Burden, Score", {
-    svd <- .testData()
-    nullmod <- fitNullReg(sampleData(svd), outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
-    assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="Burden", burden.test="Score", verbose=FALSE, chromosome=1)
-    
-    nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
-    seqSetFilterChrom(svd, include=1, verbose=FALSE)
-    iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
-    assoc2 <- assocTestAggregate(iterator, nullmod, test="Burden", burden.test="Score", verbose=FALSE)
-
-    res1 <- assoc1$results[assoc1$results$dup %in% 0,]
-    res2 <- assoc2$results[assoc2$results$n.site > 0,]
-    expect_equal(res1$n.site, res2$n.site)
-    expect_equal(res1$Score, res2$Score)
-    expect_equal(res1$Var, (res2$Score.SE)^2)
-    expect_equal(res1$Score.stat, (res2$Score.Stat)^2)
-    expect_equal(res1$Score.pval, res2$Score.pval)
-    
-    seqClose(svd)
-})
-
-
-test_that("assocTestAggregate matches assocTestSeqWindow - Burden, Wald, LMM", {
-    svd <- .testData()
-    grm <- .testGRM(svd)
-    nullmod <- fitNullMM(sampleData(svd), outcome="outcome", covars=c("sex", "age"), covMatList=grm, verbose=FALSE)
-    assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="Burden", burden.test="Wald", verbose=FALSE, chromosome=1)
-    
-    nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=grm, verbose=FALSE)
-    seqSetFilterChrom(svd, include=1, verbose=FALSE)
-    iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
-    assoc2 <- assocTestAggregate(iterator, nullmod, test="Burden", burden.test="Wald", verbose=FALSE)
-
-    res1 <- assoc1$results[assoc1$results$dup %in% 0,]
-    res2 <- assoc2$results[assoc2$results$n.site > 0,]
-    expect_equal(res1$n.site, res2$n.site)
-    expect_equal(res1$Est, res2$Est)
-    expect_equal(res1$SE, res2$Est.SE)
-    expect_equal(res1$Wald.stat, (res2$Wald.Stat)^2)
-    expect_equal(res1$Wald.pval, res2$Wald.pval)
-    
-    seqClose(svd)
-})
-
-
-test_that("assocTestAggregate matches assocTestSeqWindow - Burden, Score, LMM", {
-    svd <- .testData()
-    grm <- .testGRM(svd)
-    nullmod <- fitNullMM(sampleData(svd), outcome="outcome", covars=c("sex", "age"), covMatList=grm, verbose=FALSE)
-    assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="Burden", burden.test="Score", verbose=FALSE, chromosome=1)
-    
-    nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=grm, verbose=FALSE)
-    seqSetFilterChrom(svd, include=1, verbose=FALSE)
-    iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
-    assoc2 <- assocTestAggregate(iterator, nullmod, test="Burden", burden.test="Score", verbose=FALSE)
-
-    res1 <- assoc1$results[assoc1$results$dup %in% 0,]
-    res2 <- assoc2$results[assoc2$results$n.site > 0,]
-    expect_equal(res1$n.site, res2$n.site)
-    expect_equal(res1$Score, res2$Score)
-    expect_equal(res1$Var, (res2$Score.SE)^2)
-    expect_equal(res1$Score.stat, (res2$Score.Stat)^2)
-    expect_equal(res1$Score.pval, res2$Score.pval)
-    
-    seqClose(svd)
-})
-
-test_that("assocTestAggregate matches assocTestSeqWindow - Burden, Binary", {
-    svd <- .testData()
-    nullmod <- fitNullReg(sampleData(svd), outcome="status", covars=c("sex", "age"), family="binomial", verbose=FALSE)
-    assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="Burden", burden.test="Score", verbose=FALSE, chromosome=1)
-    
-    nullmod <- fitNullModel(svd, outcome="status", covars=c("sex", "age"), family="binomial", verbose=FALSE)
-    seqSetFilterChrom(svd, include=1, verbose=FALSE)
-    iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
-    assoc2 <- assocTestAggregate(iterator, nullmod, test="Burden", burden.test="Score", verbose=FALSE)
-
-    res1 <- assoc1$results[assoc1$results$dup %in% 0,]
-    res2 <- assoc2$results[assoc2$results$n.site > 0,]
-    expect_equal(res1$n.site, res2$n.site)
-    expect_equal(res1$Score, res2$Score, tolerance=1e-6)
-    expect_equal(res1$Var, (res2$Score.SE)^2, tolerance=1e-6)
-    expect_equal(res1$Score.stat, (res2$Score.Stat)^2, tolerance=1e-6)
-    expect_equal(res1$Score.pval, res2$Score.pval, tolerance=1e-6)
-    
-    seqClose(svd)
-})
-
-
-if (test_binary) {
-test_that("assocTestAggregate matches assocTestSeqWindow - Burden, Binary, LMM", {
-    svd <- .testData()
-    grm <- .testGRM(svd)
-    nullmod <- fitNullMM(sampleData(svd), outcome="status", covars=c("sex", "age"), covMatList=grm, family="binomial", verbose=FALSE)
-    assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="Burden", burden.test="Score", verbose=FALSE, chromosome=1)
-    
-    nullmod <- fitNullModel(svd, outcome="status", covars=c("sex", "age"), cov.mat=grm, family="binomial", verbose=FALSE)
-    seqSetFilterChrom(svd, include=1, verbose=FALSE)
-    iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
-    assoc2 <- assocTestAggregate(iterator, nullmod, test="Burden", burden.test="Score", verbose=FALSE)
-
-    res1 <- assoc1$results[assoc1$results$dup %in% 0,]
-    res2 <- assoc2$results[assoc2$results$n.site > 0,]
-    expect_equal(res1$n.site, res2$n.site)
-    expect_equal(res1$Score, res2$Score, tolerance=1e-6)
-    expect_equal(res1$Var, (res2$Score.SE)^2, tolerance=1e-6)
-    expect_equal(res1$Score.stat, (res2$Score.Stat)^2, tolerance=1e-6)
-    expect_equal(res1$Score.pval, res2$Score.pval, tolerance=1e-6)
-    
-    seqClose(svd)
-})
-}
-
-
-test_that("assocTestAggregate matches assocTestSeqWindow - SKAT", {
-    svd <- .testData()
-    nullmod <- fitNullReg(sampleData(svd), outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
-    assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="SKAT", verbose=FALSE, chromosome=1)
-    
-    nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
-    seqSetFilterChrom(svd, include=1, verbose=FALSE)
-    iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
-    assoc2 <- assocTestAggregate(iterator, nullmod, test="SKAT", verbose=FALSE)
-
-    res1 <- assoc1$results[assoc1$results$dup %in% 0,]
-    res2 <- assoc2$results[assoc2$results$n.site > 0,]
-    expect_equal(res1$n.site, res2$n.site)
-    expect_equal(res1$Q_0, res2$Q_0)
-    expect_equal(res1$pval_0, res2$pval_0)
-    expect_equal(res1$err_0, res2$err_0)
-    
-    seqClose(svd)
-})
-
-
-if (test_binary) {
-test_that("assocTestAggregate matches assocTestSeqWindow - SKAT, binary", {
-    svd <- .testData()
-    nullmod <- fitNullReg(sampleData(svd), outcome="status", covars=c("sex", "age"), family="binomial", verbose=FALSE)
-    assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="SKAT", verbose=FALSE, chromosome=1)
-    
-    nullmod <- fitNullModel(svd, outcome="status", covars=c("sex", "age"), family="binomial", verbose=FALSE)
-    seqSetFilterChrom(svd, include=1, verbose=FALSE)
-    iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
-    assoc2 <- assocTestAggregate(iterator, nullmod, test="SKAT", verbose=FALSE)
-
-    res1 <- assoc1$results[assoc1$results$dup %in% 0,]
-    res2 <- assoc2$results[assoc2$results$n.site > 0,]
-    expect_equal(res1$n.site, res2$n.site)
-    expect_equal(res1$Q_0, res2$Q_0, tolerance=1e-6)
-    expect_equal(res1$pval_0, res2$pval_0, tolerance=1e-6)
-    expect_equal(res1$err_0, res2$err_0, tolerance=1e-6)
-    
-    seqClose(svd)
-})
-}
-
-
-test_that("assocTestAggregate matches assocTestSeqWindow - SKAT, LMM", {
-    svd <- .testData()
-    grm <- .testGRM(svd)
-    nullmod <- fitNullMM(sampleData(svd), outcome="outcome", covars=c("sex", "age"), covMatList=grm, verbose=FALSE)
-    assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="SKAT", verbose=FALSE, chromosome=1)
-    
-    nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=grm, verbose=FALSE)
-    seqSetFilterChrom(svd, include=1, verbose=FALSE)
-    iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
-    assoc2 <- assocTestAggregate(iterator, nullmod, test="SKAT", verbose=FALSE)
-
-    res1 <- assoc1$results[assoc1$results$dup %in% 0,]
-    res2 <- assoc2$results[assoc2$results$n.site > 0,]
-    expect_equal(res1$n.site, res2$n.site)
-    expect_equal(res1$Q_0, res2$Q_0)
-    expect_equal(res1$pval_0, res2$pval_0)
-    expect_equal(res1$err_0, res2$err_0)
-    
-    seqClose(svd)
-})
-
-
-if (test_binary) {
-test_that("assocTestAggregate matches assocTestSeqWindow - SKAT, binary, LMM", {
-    svd <- .testData()
-    grm <- .testGRM(svd)
-    nullmod <- fitNullMM(sampleData(svd), outcome="status", covars=c("sex", "age"), covMatList=grm, family="binomial", verbose=FALSE)
-    assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="SKAT", verbose=FALSE, chromosome=1)
-    
-    nullmod <- fitNullModel(svd, outcome="status", covars=c("sex", "age"), cov.mat=grm, family="binomial", verbose=FALSE)
-    seqSetFilterChrom(svd, include=1, verbose=FALSE)
-    iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
-    assoc2 <- assocTestAggregate(iterator, nullmod, test="SKAT", verbose=FALSE)
-
-    res1 <- assoc1$results[assoc1$results$dup %in% 0,]
-    res2 <- assoc2$results[assoc2$results$n.site > 0,]
-    expect_equal(res1$n.site, res2$n.site)
-    expect_equal(res1$Q_0, res2$Q_0, tolerance=1e-6)
-    expect_equal(res1$pval_0, res2$pval_0, tolerance=1e-6)
-    expect_equal(res1$err_0, res2$err_0, tolerance=1e-6)
-    
-    seqClose(svd)
-})
-}
-
-
-test_that("assocTestAggregate matches assocTestSeqWindow - SKAT-O, LMM", {
-    svd <- .testData()
-    grm <- .testGRM(svd)
-    nullmod <- fitNullMM(sampleData(svd), outcome="outcome", covars=c("sex", "age"), covMatList=grm, verbose=FALSE)
-    assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="SKAT", rho=c(0,0.5,1), verbose=FALSE, chromosome=1)
-    
-    nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=grm, verbose=FALSE)
-    seqSetFilterChrom(svd, include=1, verbose=FALSE)
-    iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
-    assoc2 <- assocTestAggregate(iterator, nullmod, test="SKAT", rho=c(0,0.5,1), verbose=FALSE)
-
-    res1 <- assoc1$results[assoc1$results$dup %in% 0,]
-    res2 <- assoc2$results[assoc2$results$n.site > 0,]
-    expect_equal(res1$n.site, res2$n.site)
-    expect_equal(res1$Q_0, res2$Q_0)
-    expect_equal(res1$pval_0, res2$pval_0)
-    expect_equal(res1$err_0, res2$err_0)
-    
-    seqClose(svd)
-})
-}
-
 
 test_that("assocTestSingle matches assocTestMM - GenotypeData", {
     genoData <- .testGenoData()
@@ -913,4 +564,352 @@ GWASTools::close(genoDataList[[1]])
 unlink(tmpfile)
 })
 
-}
+
+
+
+
+## defunct functions
+    
+## test_that("nullModelTestPrep matches calculateProjection", {
+##     n <- 100
+##     dat <- .testNullInputs(n)
+##     geno <- .testGenoMatrix(n)
+##     df <- .asDataFrame(dat)
+    
+##     # basic
+##     nullmod <- .fitNullModel(dat$y, dat$X, verbose=FALSE)
+##     Xtilde <- calcXtilde(nullmod, geno)
+    
+##     nullmod.orig <- fitNullReg(df, outcome="y", covars=c("X1", "X2", "X3"), verbose=FALSE)
+##     proj <- .calculateProjection(nullmod.orig, test="", burden.test="")
+
+##     expect_true(all(abs(nullmod$Xtilde - crossprod(proj$Mt, geno)) < 1e-7))
+##     expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
+    
+##     # with covMatList
+##     nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose=FALSE)
+##     Xtilde <- calcXtilde(nullmod, geno)
+
+##     nullmod.orig <- fitNullMM(df, outcome="y", covars=c("X1", "X2", "X3"), covMatList=dat$cor.mat, verbose=FALSE)
+##     proj <- .calculateProjection(nullmod.orig, test="", burden.test="")
+
+##     expect_true(all(abs(Xtilde - crossprod(proj$Mt, geno)) < 1e-7))
+##     expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
+    
+##     # with group
+##     nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, group.idx=dat$group.idx, verbose=FALSE)
+##     Xtilde <- calcXtilde(nullmod, geno)
+
+##     nullmod.orig <- fitNullMM(df, outcome="y", covars=c("X1", "X2", "X3"), covMatList=dat$cor.mat, group.var="group", verbose=FALSE)
+##     proj <- .calculateProjection(nullmod.orig, test="", burden.test="")
+
+##     expect_true(all(abs(Xtilde - crossprod(proj$Mt, geno)) < 1e-7))
+##     expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
+## })
+
+
+## if (test_binary) {
+## test_that("nullModelTestPrep vs calculateProjection - binary", {
+##     n <- 100
+##     geno <- .testGenoMatrix(n)
+    
+##     ## reps <- 0
+##     ## varCompZero <- TRUE
+##     ## while(varCompZero & reps < 10){
+    
+##     dat <- .testNullInputs(n, binary=TRUE)
+##     df <- .asDataFrame(dat)	
+    
+##     ## 	glmm.genesis <- tryCatch({
+##     ## 		fitNullMM(df, outcome="y", covars=c("X1", "X2", "X3"), covMatList=cor.mat, family="binomial", verbose=FALSE, maxIter=10)
+##     ## 				}, 
+##     ## 			warning = function(w){return(list(message = "warning"))},
+##     ## 			error = function(e){return(list(message = "error"))}
+##     ## 			)
+##     ## 	if (!is.null(glmm.genesis$message)) next
+##     ## 	if (glmm.genesis$varComp[1] != 0 ) varCompZero <- FALSE
+##     ##         reps <- reps + 1
+##     ## }
+##     ## if (varCompZero) stop("could not generate nonzero varComp")
+
+##     # basic
+##     nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
+##     Xtilde <- calcXtilde(nullmod, geno)
+    
+##     nullmod.orig <- fitNullReg(df, outcome="y", covars=c("X1", "X2", "X3"), family="binomial", verbose=FALSE)
+##     proj <- .calculateProjection(nullmod.orig, test="", burden.test="")
+
+##     expect_true(all(abs(Xtilde - crossprod(proj$Mt, geno)) < 1e-7))
+##     expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
+    
+##     # with covMatList
+##     nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, family="binomial", verbose=FALSE)
+##     Xtilde <- calcXtilde(nullmod, geno)
+
+##     nullmod.orig <- fitNullMM(df, outcome="y", covars=c("X1", "X2", "X3"), covMatList=dat$cor.mat, family="binomial", verbose=FALSE)
+##     proj <- .calculateProjection(nullmod.orig, test="", burden.test="")
+
+##     expect_true(all(abs(Xtilde - crossprod(proj$Mt, geno)) < 1e-7))
+##     expect_true(all(abs(nullmod$resid - proj$resid) < 1e-7))
+## })
+## }
+    
+## test_that("assocTestAggregate matches assocTestSeqWindow - Burden, Wald", {
+##     svd <- .testData()
+##     nullmod <- fitNullReg(sampleData(svd), outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+##     assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="Burden", burden.test="Wald", verbose=FALSE, chromosome=1)
+    
+##     nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+##     seqSetFilterChrom(svd, include=1, verbose=FALSE)
+##     iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
+##     assoc2 <- assocTestAggregate(iterator, nullmod, test="Burden", burden.test="Wald", verbose=FALSE)
+
+##     var1 <- assoc1$variantInfo[!(assoc1$variantInfo$freq %in% c(0,1)),]
+##     var2 <- do.call(rbind, assoc2$variantInfo)
+##     var2 <- var2[!duplicated(paste(var2$variant.id, var2$allele.index)),]
+##     expect_equal(nrow(var1), nrow(var2))  
+##     expect_equal(var1$variantID, var2$variant.id)
+##     expect_equal(var1$allele, var2$allele.index)
+##     expect_equal(var1$chr, var2$chr)
+##     expect_equal(var1$pos, var2$pos)
+##     expect_equal(var1$n.obs, var2$n.obs)
+##     expect_equal(var1$freq, var2$freq)
+##     expect_equal(var1$weight, var2$weight)
+
+##     res1 <- assoc1$results[assoc1$results$dup %in% 0,]
+##     res2 <- assoc2$results[assoc2$results$n.site > 0,]
+##     expect_equal(res1$n.site, res2$n.site)
+##     expect_equal(res1$Est, res2$Est)
+##     expect_equal(res1$SE, res2$Est.SE)
+##     expect_equal(res1$Wald.stat, (res2$Wald.Stat)^2)
+##     expect_equal(res1$Wald.pval, res2$Wald.pval)
+    
+##     seqClose(svd)
+## })
+
+
+## test_that("assocTestAggregate matches assocTestSeqWindow - Burden, Score", {
+##     svd <- .testData()
+##     nullmod <- fitNullReg(sampleData(svd), outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+##     assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="Burden", burden.test="Score", verbose=FALSE, chromosome=1)
+    
+##     nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+##     seqSetFilterChrom(svd, include=1, verbose=FALSE)
+##     iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
+##     assoc2 <- assocTestAggregate(iterator, nullmod, test="Burden", burden.test="Score", verbose=FALSE)
+
+##     res1 <- assoc1$results[assoc1$results$dup %in% 0,]
+##     res2 <- assoc2$results[assoc2$results$n.site > 0,]
+##     expect_equal(res1$n.site, res2$n.site)
+##     expect_equal(res1$Score, res2$Score)
+##     expect_equal(res1$Var, (res2$Score.SE)^2)
+##     expect_equal(res1$Score.stat, (res2$Score.Stat)^2)
+##     expect_equal(res1$Score.pval, res2$Score.pval)
+    
+##     seqClose(svd)
+## })
+
+
+## test_that("assocTestAggregate matches assocTestSeqWindow - Burden, Wald, LMM", {
+##     svd <- .testData()
+##     grm <- .testGRM(svd)
+##     nullmod <- fitNullMM(sampleData(svd), outcome="outcome", covars=c("sex", "age"), covMatList=grm, verbose=FALSE)
+##     assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="Burden", burden.test="Wald", verbose=FALSE, chromosome=1)
+    
+##     nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=grm, verbose=FALSE)
+##     seqSetFilterChrom(svd, include=1, verbose=FALSE)
+##     iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
+##     assoc2 <- assocTestAggregate(iterator, nullmod, test="Burden", burden.test="Wald", verbose=FALSE)
+
+##     res1 <- assoc1$results[assoc1$results$dup %in% 0,]
+##     res2 <- assoc2$results[assoc2$results$n.site > 0,]
+##     expect_equal(res1$n.site, res2$n.site)
+##     expect_equal(res1$Est, res2$Est)
+##     expect_equal(res1$SE, res2$Est.SE)
+##     expect_equal(res1$Wald.stat, (res2$Wald.Stat)^2)
+##     expect_equal(res1$Wald.pval, res2$Wald.pval)
+    
+##     seqClose(svd)
+## })
+
+
+## test_that("assocTestAggregate matches assocTestSeqWindow - Burden, Score, LMM", {
+##     svd <- .testData()
+##     grm <- .testGRM(svd)
+##     nullmod <- fitNullMM(sampleData(svd), outcome="outcome", covars=c("sex", "age"), covMatList=grm, verbose=FALSE)
+##     assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="Burden", burden.test="Score", verbose=FALSE, chromosome=1)
+    
+##     nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=grm, verbose=FALSE)
+##     seqSetFilterChrom(svd, include=1, verbose=FALSE)
+##     iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
+##     assoc2 <- assocTestAggregate(iterator, nullmod, test="Burden", burden.test="Score", verbose=FALSE)
+
+##     res1 <- assoc1$results[assoc1$results$dup %in% 0,]
+##     res2 <- assoc2$results[assoc2$results$n.site > 0,]
+##     expect_equal(res1$n.site, res2$n.site)
+##     expect_equal(res1$Score, res2$Score)
+##     expect_equal(res1$Var, (res2$Score.SE)^2)
+##     expect_equal(res1$Score.stat, (res2$Score.Stat)^2)
+##     expect_equal(res1$Score.pval, res2$Score.pval)
+    
+##     seqClose(svd)
+## })
+
+## test_that("assocTestAggregate matches assocTestSeqWindow - Burden, Binary", {
+##     svd <- .testData()
+##     nullmod <- fitNullReg(sampleData(svd), outcome="status", covars=c("sex", "age"), family="binomial", verbose=FALSE)
+##     assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="Burden", burden.test="Score", verbose=FALSE, chromosome=1)
+    
+##     nullmod <- fitNullModel(svd, outcome="status", covars=c("sex", "age"), family="binomial", verbose=FALSE)
+##     seqSetFilterChrom(svd, include=1, verbose=FALSE)
+##     iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
+##     assoc2 <- assocTestAggregate(iterator, nullmod, test="Burden", burden.test="Score", verbose=FALSE)
+
+##     res1 <- assoc1$results[assoc1$results$dup %in% 0,]
+##     res2 <- assoc2$results[assoc2$results$n.site > 0,]
+##     expect_equal(res1$n.site, res2$n.site)
+##     expect_equal(res1$Score, res2$Score, tolerance=1e-6)
+##     expect_equal(res1$Var, (res2$Score.SE)^2, tolerance=1e-6)
+##     expect_equal(res1$Score.stat, (res2$Score.Stat)^2, tolerance=1e-6)
+##     expect_equal(res1$Score.pval, res2$Score.pval, tolerance=1e-6)
+    
+##     seqClose(svd)
+## })
+
+
+## if (test_binary) {
+## test_that("assocTestAggregate matches assocTestSeqWindow - Burden, Binary, LMM", {
+##     svd <- .testData()
+##     grm <- .testGRM(svd)
+##     nullmod <- fitNullMM(sampleData(svd), outcome="status", covars=c("sex", "age"), covMatList=grm, family="binomial", verbose=FALSE)
+##     assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="Burden", burden.test="Score", verbose=FALSE, chromosome=1)
+    
+##     nullmod <- fitNullModel(svd, outcome="status", covars=c("sex", "age"), cov.mat=grm, family="binomial", verbose=FALSE)
+##     seqSetFilterChrom(svd, include=1, verbose=FALSE)
+##     iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
+##     assoc2 <- assocTestAggregate(iterator, nullmod, test="Burden", burden.test="Score", verbose=FALSE)
+
+##     res1 <- assoc1$results[assoc1$results$dup %in% 0,]
+##     res2 <- assoc2$results[assoc2$results$n.site > 0,]
+##     expect_equal(res1$n.site, res2$n.site)
+##     expect_equal(res1$Score, res2$Score, tolerance=1e-6)
+##     expect_equal(res1$Var, (res2$Score.SE)^2, tolerance=1e-6)
+##     expect_equal(res1$Score.stat, (res2$Score.Stat)^2, tolerance=1e-6)
+##     expect_equal(res1$Score.pval, res2$Score.pval, tolerance=1e-6)
+    
+##     seqClose(svd)
+## })
+## }
+
+
+## test_that("assocTestAggregate matches assocTestSeqWindow - SKAT", {
+##     svd <- .testData()
+##     nullmod <- fitNullReg(sampleData(svd), outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+##     assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="SKAT", verbose=FALSE, chromosome=1)
+    
+##     nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+##     seqSetFilterChrom(svd, include=1, verbose=FALSE)
+##     iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
+##     assoc2 <- assocTestAggregate(iterator, nullmod, test="SKAT", verbose=FALSE)
+
+##     res1 <- assoc1$results[assoc1$results$dup %in% 0,]
+##     res2 <- assoc2$results[assoc2$results$n.site > 0,]
+##     expect_equal(res1$n.site, res2$n.site)
+##     expect_equal(res1$Q_0, res2$Q_0)
+##     expect_equal(res1$pval_0, res2$pval_0)
+##     expect_equal(res1$err_0, res2$err_0)
+    
+##     seqClose(svd)
+## })
+
+
+## if (test_binary) {
+## test_that("assocTestAggregate matches assocTestSeqWindow - SKAT, binary", {
+##     svd <- .testData()
+##     nullmod <- fitNullReg(sampleData(svd), outcome="status", covars=c("sex", "age"), family="binomial", verbose=FALSE)
+##     assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="SKAT", verbose=FALSE, chromosome=1)
+    
+##     nullmod <- fitNullModel(svd, outcome="status", covars=c("sex", "age"), family="binomial", verbose=FALSE)
+##     seqSetFilterChrom(svd, include=1, verbose=FALSE)
+##     iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
+##     assoc2 <- assocTestAggregate(iterator, nullmod, test="SKAT", verbose=FALSE)
+
+##     res1 <- assoc1$results[assoc1$results$dup %in% 0,]
+##     res2 <- assoc2$results[assoc2$results$n.site > 0,]
+##     expect_equal(res1$n.site, res2$n.site)
+##     expect_equal(res1$Q_0, res2$Q_0, tolerance=1e-6)
+##     expect_equal(res1$pval_0, res2$pval_0, tolerance=1e-6)
+##     expect_equal(res1$err_0, res2$err_0, tolerance=1e-6)
+    
+##     seqClose(svd)
+## })
+## }
+
+
+## test_that("assocTestAggregate matches assocTestSeqWindow - SKAT, LMM", {
+##     svd <- .testData()
+##     grm <- .testGRM(svd)
+##     nullmod <- fitNullMM(sampleData(svd), outcome="outcome", covars=c("sex", "age"), covMatList=grm, verbose=FALSE)
+##     assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="SKAT", verbose=FALSE, chromosome=1)
+    
+##     nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=grm, verbose=FALSE)
+##     seqSetFilterChrom(svd, include=1, verbose=FALSE)
+##     iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
+##     assoc2 <- assocTestAggregate(iterator, nullmod, test="SKAT", verbose=FALSE)
+
+##     res1 <- assoc1$results[assoc1$results$dup %in% 0,]
+##     res2 <- assoc2$results[assoc2$results$n.site > 0,]
+##     expect_equal(res1$n.site, res2$n.site)
+##     expect_equal(res1$Q_0, res2$Q_0)
+##     expect_equal(res1$pval_0, res2$pval_0)
+##     expect_equal(res1$err_0, res2$err_0)
+    
+##     seqClose(svd)
+## })
+
+
+## if (test_binary) {
+## test_that("assocTestAggregate matches assocTestSeqWindow - SKAT, binary, LMM", {
+##     svd <- .testData()
+##     grm <- .testGRM(svd)
+##     nullmod <- fitNullMM(sampleData(svd), outcome="status", covars=c("sex", "age"), covMatList=grm, family="binomial", verbose=FALSE)
+##     assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="SKAT", verbose=FALSE, chromosome=1)
+    
+##     nullmod <- fitNullModel(svd, outcome="status", covars=c("sex", "age"), cov.mat=grm, family="binomial", verbose=FALSE)
+##     seqSetFilterChrom(svd, include=1, verbose=FALSE)
+##     iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
+##     assoc2 <- assocTestAggregate(iterator, nullmod, test="SKAT", verbose=FALSE)
+
+##     res1 <- assoc1$results[assoc1$results$dup %in% 0,]
+##     res2 <- assoc2$results[assoc2$results$n.site > 0,]
+##     expect_equal(res1$n.site, res2$n.site)
+##     expect_equal(res1$Q_0, res2$Q_0, tolerance=1e-6)
+##     expect_equal(res1$pval_0, res2$pval_0, tolerance=1e-6)
+##     expect_equal(res1$err_0, res2$err_0, tolerance=1e-6)
+    
+##     seqClose(svd)
+## })
+## }
+
+
+## test_that("assocTestAggregate matches assocTestSeqWindow - SKAT-O, LMM", {
+##     svd <- .testData()
+##     grm <- .testGRM(svd)
+##     nullmod <- fitNullMM(sampleData(svd), outcome="outcome", covars=c("sex", "age"), covMatList=grm, verbose=FALSE)
+##     assoc1 <- assocTestSeqWindow(svd, nullmod, window.size=100, window.shift=50, test="SKAT", rho=c(0,0.5,1), verbose=FALSE, chromosome=1)
+    
+##     nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=grm, verbose=FALSE)
+##     seqSetFilterChrom(svd, include=1, verbose=FALSE)
+##     iterator <- SeqVarWindowIterator(svd, windowSize=1e5, windowShift=5e4, verbose=FALSE)
+##     assoc2 <- assocTestAggregate(iterator, nullmod, test="SKAT", rho=c(0,0.5,1), verbose=FALSE)
+
+##     res1 <- assoc1$results[assoc1$results$dup %in% 0,]
+##     res2 <- assoc2$results[assoc2$results$n.site > 0,]
+##     expect_equal(res1$n.site, res2$n.site)
+##     expect_equal(res1$Q_0, res2$Q_0)
+##     expect_equal(res1$pval_0, res2$pval_0)
+##     expect_equal(res1$err_0, res2$err_0)
+    
+##     seqClose(svd)
+## })
+

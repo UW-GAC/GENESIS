@@ -13,6 +13,7 @@
         if (!is.list(covMatList)){
             covMatList <- list(A = covMatList)
         }
+        covMatList <- .checkMatrixType(covMatList)
         ## # coerce to Matrix objects. should get "dspMatrix" (packed symmetric matrix)
         ## covMatList <- lapply(covMatList, function(x) {
         ##     if (!is(x, "Matrix")) x <- Matrix(x)

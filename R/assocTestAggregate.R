@@ -7,13 +7,16 @@ setMethod("assocTestAggregate",
                    test=c("Burden", "SKAT", "SMMAT"),
                    burden.test=c("Score", "Wald"), rho=0,
                    pval.method=c("davies", "kuonen", "liu"),
-                   verbose=TRUE) {
+                   sparse=TRUE, verbose=TRUE) {
 
               # check argument values
               test <- match.arg(test)
               burden.test <- match.arg(burden.test)
               pval.method <- match.arg(pval.method)
 
+              # coerce null.model if necessary
+              if (sparse) null.model <- .nullModelAsMatrix(null.model)
+              
               # filter samples to match null model
               sample.index <- .setFilterNullModel(gdsobj, null.model, verbose=verbose)
 
@@ -29,7 +32,7 @@ setMethod("assocTestAggregate",
               while (iterate) {
                   var.info <- variantInfo(gdsobj, alleles=match.alleles, expanded=TRUE)
                   
-                  geno <- expandedAltDosage(gdsobj, use.names=FALSE, sparse=TRUE)[sample.index,,drop=FALSE]
+                  geno <- expandedAltDosage(gdsobj, use.names=FALSE, sparse=sparse)[sample.index,,drop=FALSE]
 
                   if (match.alleles) {
                       index <- .matchAlleles(gdsobj, var.info)
