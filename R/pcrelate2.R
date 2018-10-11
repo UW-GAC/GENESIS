@@ -4,7 +4,9 @@ pcrelate2 <- function(	gdsobj,
 						ibd.probs = TRUE,
 						sample.include = NULL,
 						training.set = NULL,
+						sample.block.size = 5000,
 						snp.include = NULL,
+						snp.block.size = 10000,
 						maf.thresh = 0.01,
 						maf.bound.method = c('truncate', 'filter'),
 						small.samp.correct = FALSE,
@@ -19,28 +21,194 @@ pcrelate2 <- function(	gdsobj,
 	# calculate betas for individual specific allele frequencies
 	### this may be done externally from this function first; in this case we would load betas below ###
 	if(!is.null(training.set)){
-		beta <- calcBetaISAF(gdsobj = gdsobj, pcs = pcs, sample.include = training.set, snp.include = snp.include)
+		message('Calculating betas for ', ncol(pcs), ' PC(s) using ', length(training.set), ' samples in training.set...')
+		beta <- calcBetaISAF(gdsobj = gdsobj, pcs = pcs, sample.include = training.set, snp.include = snp.include, snp.block.size = snp.block.size)
 	}else{
-		beta <- calcBetaISAF(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include, snp.include = snp.include)
+		message('Calculating betas for ', ncol(pcs), ' PC(s) using ', length(sample.include), ' samples in sample.include...')
+		beta <- calcBetaISAF(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include, snp.include = snp.include, snp.block.size = snp.block.size)
 	}
 
 
-	# get PC matrix for current block of samples
-	V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include)
-	
+	# number of sample blocks
+	nsampblock <- ceiling(length(sample.include)/sample.block.size)
+	# list of samples in each block
+	if(nsampblock > 1){
+		samp.blocks <- unname(split(sample.include, cut(1:length(sample.include), nsampblock)))
+		message('Splitting ', length(sample.include), ' samples in sample.include into ', nsampblock, ' blocks...')
+	}else{
+		samp.blocks <- list(sample.include)
+	}
 
-	# compute estimates for current blocks of samples
+
+	# compute estimates for current (pair of) sample block(s)
+	### this could be parallelized by pairs of blocks of samples ###
+	### probably do this with multiple jobs? ###
+
+	outB <- NULL
+	outS <- NULL
+	for(i in 1:nsampblock){
+		for(j in i:nsampblock){
+			message('Computing Relatedness Estimates for sample block pair (', i, ',', j, ')')
+			# compute estimates for the (pair of) sample block(s)
+			estList <- .pcrelateSampBlock(	gdsobj = gdsobj, beta = beta, pcs = pcs, sample.include.block1 = samp.blocks[[i]], sample.include.block2 = samp.blocks[[j]],
+											scale = scale, ibd.probs = ibd.probs, snp.include = snp.include, snp.block.size = snp.block.size, 
+											maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
+
+			# update results with this (pair of) sample block(s)
+			if(i == j){
+				# create and rbind a data.table (self)
+				outS <- rbind(outS, data.table(ID = rownames(estList$kin), f = 2*diag(estList$kin) - 1, nsnp = diag(estList$nsnp)))
+				# melt and merge into a data.table (between samples)
+				estDTB <- .estListToDT(estList, drop.lower = TRUE)
+			}else{
+				# melt and merge into a data.table (between samples)
+				estDTB <- .estListToDT(estList, drop.lower = FALSE)
+			}
+			# rbind
+			outB <- rbind(outB, estDTB)
+		}
+	}
+	setkey(outB, ID1, ID2)
+	setkey(outS, ID)
+
+	### post processing after putting all samples together
+	if(ibd.probs){
+		# correct k2 for HW departure and use alternate k0 estimator for non-1st degree relatives
+		outB <- .fixIBDEst(outB = outB, outS = outS)
+	}
+
+	### need to rewrite the small sample correction at some point - take care of this later ###
+
+
+	return(list(outB = outB, outS = outS))
+}
+
+
+
+
+
+
+
+### function to match samples and create PC matrix
+.createPCMatrix <- function(gdsobj, pcs, sample.include){
+	# subset to sample.include
+	seqSetFilter(gdsobj, sample.id = sample.include)
+	sample.id <- seqGetData(gdsobj, 'sample.id')
+
+	if(!all(sample.id %in% rownames(pcs))) stop('all samples must be in pcs')
+
+	# subset and re-order pcs if needed
+	V <- pcs[match(sample.id, rownames(pcs)), , drop = FALSE]
+	# append intercept
+	V <- cbind(rep(1, nrow(V)), V)
+
+	return(V)
+}
+
+
+
+
+### these functions are for computing PC betas for individual specific allele frequency calculations ###
+calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include, snp.block.size){
+	# create matrix of PCs
+	V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include)
+
+	# matrix product of V
+	VVtVi <- tcrossprod(V, chol2inv(chol(crossprod(V))))
+
+	### what is below could be parallelized by blocks of variants in snp.include ###
+	### do we store the VVtVi matrix? it is npcs x nunrels in dimension ###
+
+	### Stephanie to build in variant iterators here ###
+
+	# number of snp blocks
+	nsnpblock <- ceiling(length(snp.include)/snp.block.size)
+	# list of snps in each block
+	if(nsnpblock > 1){
+		snp.blocks <- unname(split(snp.include, cut(1:length(snp.include), nsnpblock)))
+	}else{
+		snp.blocks <- list(snp.include)
+	}
+
+	beta <- NULL
+	for(k in 1:nsnpblock){
+		# calculate betas for PCs at each variant
+		beta.block <- .calcBetaISAF(gdsobj = gdsobj, VVtVi = VVtVi, snp.include = snp.blocks[[k]])
+		message('...SNP Block ', k, ' of ', nsnpblock, ' Completed: ', nrow(beta.block), ' SNPs')
+		# rbind
+		beta <- rbind(beta, beta.block)
+	}
+
+	return(beta)
+}
+
+.calcBetaISAF <- function(gdsobj, VVtVi, snp.include){
+	# load genotype data
+	seqSetFilter(gdsobj, variant.id = snp.include)
+	G <- altDosage(gdsobj)
+
+	# compute beta estimates
+	beta <- crossprod(G, VVtVi)
+	### beta is a matrix of variants x PCs; probably needs to be saved, not sure of the best format ###
+
+	return(beta)
+}
+
+
+
+### this function does the pcrelate estimation for a (pair of) sample block(s)
+.pcrelateSampBlock <- function(gdsobj, beta, pcs, sample.include.block1, sample.include.block2, scale, ibd.probs, snp.include, snp.block.size, maf.thresh, maf.bound.method){
+
+	# create (joint) PC matrix and indices
+
+	# one sample block
+	if(all(sample.include.block1 == sample.include.block2)){
+		V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include.block1)
+		idx <- 1:nrow(V)
+		jdx <- idx
+
+	# two sample blocks
+	}else{
+		# check for overlapping samples
+		if(any(sample.include.block1 %in% sample.include.block2)) stop('when using multiple sample blocks, each sample should be included in only one block')
+		V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = c(sample.include.block1, sample.include.block2))
+		idx <- which(rownames(V) %in% sample.include.block1)
+		jdx <- which(rownames(V) %in% sample.include.block2)
+	}
+	### slight inefficiency above because we create the PC Matrix for samples in block1 for each block2 when we don't have to if we are running serially; 
+	### but this seems more straightforward to parallelize
+
 
 	# compute estimates looping over blocks of variants
 	### this could be parallelized by blocks of variants in snp.include ###
 	### Stephanie to build in variant iterators here ###
-	for(i in 1:nsnpblock){
-		matList <- .pcrelateVarBlock(	gdsobj = gdsobj, beta = beta, V = V, scale = scale, ibd.probs = ibd.probs, 
-										snp.include = snp.block, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
+
+	# number of snp blocks
+	nsnpblock <- ceiling(length(snp.include)/snp.block.size)
+	# list of snps in each block
+	if(nsnpblock > 1){
+		snp.blocks <- unname(split(snp.include, cut(1:length(snp.include), nsnpblock)))
+	}else{
+		snp.blocks <- list(snp.include)
 	}
 
+	# compute estimates for each variant block; sum along the way
+	for(k in 1:nsnpblock){
+		# current variant block
+		tmpList <- .pcrelateVarBlock(	gdsobj = gdsobj, beta = beta, V = V, idx = idx, jdx = jdx, scale = scale, ibd.probs = ibd.probs, 
+										snp.include = snp.blocks[[k]], maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
 
-	### this needs to be done outside of the parallelization; all the matrices need to be summed first ###
+		# update overall (sum across variant blocks)
+		if(k == 1){
+			matList <- tmpList
+		}else{
+			for(m in 1:length(matList)){
+				matList[[m]] <- matList[[m]] + tmpList[[m]]
+			}
+		}
+		rm(tmpList)
+		message('...SNP Block ', k, ' of ', nsnpblock, ' Completed: ', length(snp.blocks[[k]]), ' SNPs')
+	}
 
 	# compute final estimates
 	if(scale == 'overall'){
@@ -57,77 +225,17 @@ pcrelate2 <- function(	gdsobj,
 			k2 <- matList$k2/matList$nsnp
 			k0 <- matList$k0/matList$nsnp
 		}
+		return(list(kin = kin, k0 = k0, k2 = k2, nsnp = matList$nsnp))
 
-		# correct k2 for HW departure
-		f <- 2*diag(kin) - 1
-		fprod <- tcrossprod(f)
-		k2 <- k2 - fprod
-
-		# use alternate k0 estimator for non-1st degree relatives
-		k0.idx <- which(kin < 2^(-5/2))
-		k0[k0.idx] <- 1 - 4*kin[k0.idx] + k2[k0.idx]
-	}
-
-	### need to rewrite the small sample correction at some point - take care of this later ###
-
-
-	return(list(kin = kin, k0 = k0, k2 = k2))
+	}else{
+		return(list(kin = kin, nsnp = matList$nsnp))
+	}	
 }
 
-
-
-
-
-### these functions are for computing PC betas for individual specific allele frequency calculations ###
-
-
-calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include){
-	# create matrix of PCs
-	V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include)
-
-	# matrix product of V
-	VVtVi <- tcrossprod(V, chol2inv(chol(crossprod(V))))
-	### do we store this matrix? it is npcs x nunrels in dimension ###
-
-	### this could be parallelized by blocks of variants in snp.include ###
-	# calculate betas for PCs at each variant
-	beta <- .calcBetaISAF(gdsobj = gdsobj, VVtVi = VVtVi, snp.include = snp.include)
-
-	return(beta)
-}
-
-
-.createPCMatrix <- function(gdsobj, pcs, sample.include){
-	# subset to sample.include
-	seqSetFilter(gdsobj, sample.id = sample.include)
-	sample.id <- seqGetData(gdsobj, 'sample.id')
-
-	if(!all(sample.id %in% rownames(pcs))) stop('all samples must be in pcs')
-
-	# subset and re-order pcs if needed
-	V <- pcs[match(sample.id, rownames(pcs)), , drop = FALSE]
-	# append intercept
-	V <- cbind(rep(1, nrow(V)), V)
-
-	return(V)
-}
-
-.calcBetaISAF <- function(gdsobj, VVtVi, snp.include){
-	# load genotype data
-	seqSetFilter(gdsobj, variant.id = snp.include)
-	G <- altDosage(gdsobj)
-
-	# compute beta estimates
-	beta <- crossprod(G, VVtVi)
-	### beta is a matrix of variants x PCs; needs to be saved, not sure of the best format ###
-
-	return(beta)
-}
 
 
 ### this function does the pcrelate estimation for a variant block
-
-.pcrelateVarBlock <- function(gdsobj, beta, V, scale, ibd.probs, snp.include, maf.thresh, maf.bound.method){
+.pcrelateVarBlock <- function(gdsobj, beta, V, idx, jdx, scale, ibd.probs, snp.include, maf.thresh, maf.bound.method){
 
 	# load genotype data
 	seqSetFilter(gdsobj, variant.id = snp.include, sample.id = rownames(V))
@@ -144,11 +252,11 @@ calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include){
 
 	# compute values for estimates
 	if(scale == 'overall'){
-		matList <- .pcrCalcOvr(G = G, mu = mu, ibd.probs = ibd.probs)
+		matList <- .pcrCalcOvr(G = G, mu = mu, idx = idx, jdx = jdx, ibd.probs = ibd.probs)
 	}else if(scale == 'variant'){
-		matList <- .pcrCalcVar(G = G, mu = mu, ibd.probs = ibd.probs)
+		matList <- .pcrCalcVar(G = G, mu = mu, idx = idx, jdx = jdx, ibd.probs = ibd.probs)
 	}else if(scale == 'none'){
-		matList <- .pcrCalcNone(G = G, mu = mu)
+		matList <- .pcrCalcNone(G = G, mu = mu, idx = idx, jdx = jdx)
 	}
 
 	return(matList)
@@ -157,7 +265,6 @@ calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include){
 
 
 ### these functions are for estimating individual specific allele frequencies
-
 .estISAF <- function(V, beta, bound.thresh, bound.method){
 	# get ISAF estimates (i.e. 0.5*fitted values)
 	mu <- 0.5*tcrossprod(V, beta)
@@ -187,35 +294,43 @@ calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include){
 }
 
 
-### all of the functions below are used for computing kinship and ibd estimates ###
 
-.pcrCalcOvr <- function(G, mu, ibd.probs){
+### all of the functions below are used for computing kinship and ibd estimates ###
+.pcrCalcOvr <- function(G, mu, ibd.probs, idx, jdx){
 	# compute mu(1 - mu)
 	muqu <- mu*(1 - mu)
 
+	# compute number of observed snps by pair
+	nonmiss <- !(is.na(G) | is.na(mu))
+	nsnp <- tcrossprod(nonmiss)
+
 	# index of missing values
-	filt.idx <- which(is.na(G) | is.na(mu))
+	filt.idx <- which(!nonmiss)
+	rm(nonmiss)
 
 	# compute kinship values
-	kinList <- .pcrCalcKinOvr(G, mu, muqu, filt.idx)
+	kinList <- .pcrCalcKinOvr(G, mu, muqu, filt.idx, idx, jdx)
 
 	if(ibd.probs){
 		# compute ibd values
-		ibdList <- .pcrCalcIBDOvr(G, mu, muqu, filt.idx)
+		ibdList <- .pcrCalcIBDOvr(G, mu, muqu, filt.idx, idx, jdx)
 
 		return(list(kinNum = kinList$kinNum, 
 					kinDen = kinList$kinDen,
 					k0Num = ibdList$k0Num,
 					k0Den = ibdList$k0Den,
 					k2Num = ibdList$k2Num,
-					k2Den = ibdList$k2Den))
+					k2Den = ibdList$k2Den,
+					nsnp = nsnp))
 
 	}else{
-		return(kinList)
+		return(list(kinNum = kinList$kinNum,
+					kinDen = kinList$kinDen,
+					nsnp = nsnp))
 	}
 }
 
-.pcrCalcKinOvr <- function(G, mu, muqu, filt.idx){
+.pcrCalcKinOvr <- function(G, mu, muqu, filt.idx, idx, jdx){
 	# residuals
 	R <- G - 2*mu
 
@@ -224,14 +339,14 @@ calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include){
 	muqu[filt.idx] <- 0
 
 	# numerator (crossprod of residuals)
-	kinNum <- tcrossprod(R)
+	kinNum <- tcrossprod(R[idx,], R[jdx,])
 	# denominator
-	kinDen <- tcrossprod(sqrt(muqu))
+	kinDen <- tcrossprod(sqrt(muqu[idx,]), sqrt(muqu[jdx,]))
 
 	return(list(kinNum = kinNum, kinDen = kinDen))
 }
 
-.pcrCalcIBDOvr <- function(G, mu, muqu, filt.idx){
+.pcrCalcIBDOvr <- function(G, mu, muqu, filt.idx, idx, jdx){
 	# opposite allele frequency
 	qu <- 1 - mu
 
@@ -254,18 +369,18 @@ calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include){
 	muqu[filt.idx] <- 0
 
 	# k0	
-	k0Num <- tcrossprod(IAA, Iaa) + tcrossprod(Iaa, IAA)
-	k0Den <- tcrossprod(mu^2, qu^2) + tcrossprod(qu^2, mu^2)
+	k0Num <- tcrossprod(IAA[idx,], Iaa[jdx,]) + tcrossprod(Iaa[idx,], IAA[jdx,])
+	k0Den <- tcrossprod(mu[idx,]^2, qu[jdx,]^2) + tcrossprod(qu[idx,]^2, mu[jdx,]^2)
 
 	# k2
-	k2Num <- tcrossprod(Gd)
-	k2Den <- tcrossprod(muqu)
+	k2Num <- tcrossprod(Gd[idx,], Gd[jdx,])
+	k2Den <- tcrossprod(muqu[idx,], muqu[jdx,])
 
 	return(list(k0Num = k0Num, k0Den = k0Den, k2Num = k2Num, k2Den = k2Den))
 }
 
 
-.pcrCalcVar <- function(G, mu, ibd.probs){
+.pcrCalcVar <- function(G, mu, ibd.probs, idx, jdx){
 	# compute mu(1 - mu)
 	muqu <- mu*(1 - mu)
 
@@ -278,11 +393,11 @@ calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include){
 	rm(nonmiss)
 
 	# compute kinship values
-	kinNum <- .pcrCalcKinVar(G, mu, muqu, filt.idx)
+	kinNum <- .pcrCalcKinVar(G, mu, muqu, filt.idx, idx, jdx)
 
 	if(ibd.probs){
 		# compute ibd values
-		ibdList <- .pcrCalcIBDVar(G, mu, muqu, filt.idx)
+		ibdList <- .pcrCalcIBDVar(G, mu, muqu, filt.idx, idx, jdx)
 
 		return(list(kinNum = kinNum,
 					k0Num = ibdList$k0Num,
@@ -294,7 +409,7 @@ calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include){
 	}
 }
 
-.pcrCalcKinVar <- function(G, mu, muqu, filt.idx){
+.pcrCalcKinVar <- function(G, mu, muqu, filt.idx, idx, jdx){
 	# scaled residuals
 	R <- (G - 2*mu)/sqrt(muqu)
 
@@ -302,12 +417,12 @@ calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include){
 	R[filt.idx] <- 0
 
 	# numerator (crossprod of scaled residuals)
-	kinNum <- tcrossprod(R)
+	kinNum <- tcrossprod(R[idx,], R[jdx,])
 	
 	return(kinNum)
 }
 
-.pcrCalcIBDVar <- function(G, mu, muqu, filt.idx){
+.pcrCalcIBDVar <- function(G, mu, muqu, filt.idx, idx, jdx){
 	# opposite allele frequency
 	qu <- 1 - mu
 
@@ -331,37 +446,72 @@ calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include){
 	Gd[filt.idx] <- 0
 
 	# k0
-	k0Num <- tcrossprod(IAA, Iaa) + tcrossprod(Iaa, IAA)
+	k0Num <- tcrossprod(IAA[idx,], Iaa[jdx,]) + tcrossprod(Iaa[idx,], IAA[jdx,])
 
 	# k2
-	k2Num <- tcrossprod(Gd)
+	k2Num <- tcrossprod(Gd[idx,], Gd[jdx,])
 
 	return(list(k0Num = k0Num, k2Num = k2Num))
 }
 
 
-.pcrCalcNone <- function(G, mu){
+.pcrCalcNone <- function(G, mu, idx, jdx){
+	# compute number of observed snps by pair
+	nonmiss <- !(is.na(G) | is.na(mu))
+	nsnp <- tcrossprod(nonmiss)
+
 	# index of missing values
-	filt.idx <- which(is.na(G) | is.na(mu))
+	filt.idx <- which(!nonmiss)
+	rm(nonmiss)
 
 	# compute kinship values
-	kin <- .pcrCalcKinNone(G, mu, filt.idx)
-	return(kin)
+	kin <- .pcrCalcKinNone(G, mu, filt.idx, idx, jdx)
+	return(list(kin = kin, nsnp = nsnp))
 }
 
-.pcrCalcKinNone <- function(G, mu, filt.idx){
+.pcrCalcKinNone <- function(G, mu, filt.idx, idx, jdx){
 	# residuals
 	R <- G - 2*mu
 
 	# set missing values to 0 (i.e. no contribution from that variant)
-	filt.idx <- which(is.na(G) | is.na(mu))	
 	R[filt.idx] <- 0
 
 	# crossprod of scaled residuals
-	kin <- tcrossprod(R)
+	kin <- tcrossprod(R[idx,], R[jdx,])
 
 	return(kin)
 }
 
 
+### functions for post processing
+.estListToDT <- function(x, drop.lower){
+	estDT <- lapply(x, .estMelt, drop.lower = drop.lower)
+	for(k in 1:length(estDT)){
+		setnames(estDT[[k]], 'value', names(estDT)[k])
+	}
+	# merge those data.tables into one data.table
+	estDT <- Reduce(merge, estDT)
+	return(estDT)
+}
 
+.estMelt <- function(x, drop.lower){
+	if(drop.lower){
+        x[lower.tri(x, diag = TRUE)] <- NA
+    }
+    x <- as.data.table(reshape2::melt(x, varnames = c('ID1', 'ID2'), na.rm = TRUE))
+    setkey(x, ID1, ID2)
+}
+
+.fixIBDEst <- function(outB, outS){
+    # correct k2 for HW departure
+    outB <- merge(outB, outS[,.(ID, f)], by.x = 'ID2', by.y = 'ID')
+    setnames(outB, 'f', 'f.2')
+    outB <- merge(outB, outS[,.(ID, f)], by.x = 'ID1', by.y = 'ID')
+    setnames(outB, 'f', 'f.1')
+    outB[, k2 := k2 - f.1*f.2][, `:=`(f.1 = NULL, f.2 = NULL)]
+    
+    # use alternate k0 estimator for non-1st degree relatives
+    outB[kin < 2^(-5/2), k0 := 1 - 4*kin + k2]
+    
+    return(outB)
+}
