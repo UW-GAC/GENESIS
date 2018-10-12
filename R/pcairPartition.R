@@ -128,6 +128,8 @@ pcairPartition <- function(kinobj, divobj,
 
         # identify samples related to a sample in unrel.set
         rel.new <- names(rellist)[sapply(rellist, function(x){ any(x %in% unrel.set) })]
+        # filter out relatives that were specified in unrel.set
+        rel.new <- rel.new[!(rel.new %in% unrel.set)]
         # append rel.new to the master relative list
         rels <- append(rels, rel.new)
 
