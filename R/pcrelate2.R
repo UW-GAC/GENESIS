@@ -10,12 +10,19 @@ pcrelate2 <- function(	gdsobj,
 						maf.thresh = 0.01,
 						maf.bound.method = c('truncate', 'filter'),
 						small.samp.correct = FALSE,
+						num.cores = 1,
 						verbose = TRUE){
 
 	# some parameter checks
 	if(maf.thresh < 0 | maf.thresh > 0.5) stop('maf.thresh must be in [0,0.5]')
 	if(scale == 'none' & ibd.probs) stop('IBD probabilities can not be calculated when `scale` == none')
 	### more to add ###
+
+
+	# set up number of cores
+	sys.cores <- parallel::detectCores(logical = TRUE)
+	doMC::registerDoMC(cores = min(c(num.cores, sys.cores)))
+	message('Using ', min(c(num.cores, sys.cores)), ' CPU cores')
 
 
 	# calculate betas for individual specific allele frequencies
@@ -130,14 +137,20 @@ calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include, snp.block.siz
 		snp.blocks <- list(snp.include)
 	}
 
-	beta <- NULL
-	for(k in 1:nsnpblock){
-		# calculate betas for PCs at each variant
+	beta <- foreach(k = 1:nsnpblock, .combine = rbind, .inorder = FALSE, .multicombine = TRUE) %dopar% {
 		beta.block <- .calcBetaISAF(gdsobj = gdsobj, VVtVi = VVtVi, snp.include = snp.blocks[[k]])
-		message('...SNP Block ', k, ' of ', nsnpblock, ' Completed: ', nrow(beta.block), ' SNPs')
-		# rbind
-		beta <- rbind(beta, beta.block)
+		beta.block
 	}
+
+	# non-parallel version
+	# beta <- NULL
+	# for(k in 1:nsnpblock){
+	# 	# calculate betas for PCs at each variant
+	# 	beta.block <- .calcBetaISAF(gdsobj = gdsobj, VVtVi = VVtVi, snp.include = snp.blocks[[k]])
+	# 	message('...SNP Block ', k, ' of ', nsnpblock, ' Completed: ', nrow(beta.block), ' SNPs')
+	# 	# rbind
+	# 	beta <- rbind(beta, beta.block)
+	# }
 
 	return(beta)
 }
@@ -193,22 +206,29 @@ calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include, snp.block.siz
 	}
 
 	# compute estimates for each variant block; sum along the way
-	for(k in 1:nsnpblock){
-		# current variant block
-		tmpList <- .pcrelateVarBlock(	gdsobj = gdsobj, beta = beta, V = V, idx = idx, jdx = jdx, scale = scale, ibd.probs = ibd.probs, 
-										snp.include = snp.blocks[[k]], maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
-
-		# update overall (sum across variant blocks)
-		if(k == 1){
-			matList <- tmpList
-		}else{
-			for(m in 1:length(matList)){
-				matList[[m]] <- matList[[m]] + tmpList[[m]]
-			}
-		}
-		rm(tmpList)
-		message('...SNP Block ', k, ' of ', nsnpblock, ' Completed: ', length(snp.blocks[[k]]), ' SNPs')
+	matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %dopar% {
+		matList.block <- .pcrelateVarBlock(	gdsobj = gdsobj, beta = beta, V = V, idx = idx, jdx = jdx, scale = scale, ibd.probs = ibd.probs, 
+                                    		snp.include = snp.blocks[[k]], maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
+		matList.block
 	}
+
+	# non-parallel version
+	# for(k in 1:nsnpblock){
+	# 	# current variant block
+	# 	tmpList <- .pcrelateVarBlock(	gdsobj = gdsobj, beta = beta, V = V, idx = idx, jdx = jdx, scale = scale, ibd.probs = ibd.probs, 
+	# 									snp.include = snp.blocks[[k]], maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
+
+	# 	# update overall (sum across variant blocks)
+	# 	if(k == 1){
+	# 		matList <- tmpList
+	# 	}else{
+	# 		for(m in 1:length(matList)){
+	# 			matList[[m]] <- matList[[m]] + tmpList[[m]]
+	# 		}
+	# 	}
+	# 	rm(tmpList)
+	# 	message('...SNP Block ', k, ' of ', nsnpblock, ' Completed: ', length(snp.blocks[[k]]), ' SNPs')
+	# }
 
 	# compute final estimates
 	if(scale == 'overall'){
@@ -230,6 +250,10 @@ calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include, snp.block.siz
 	}else{
 		return(list(kin = kin, nsnp = matList$nsnp))
 	}	
+}
+
+.matListCombine <- function(...){
+    mapply(FUN = "+", ..., SIMPLIFY = FALSE)
 }
 
 
