@@ -32,7 +32,7 @@ pcairPartition <- function(kinobj, divobj,
         kin.read <- kin.read & (kin.id.all %in% sample.include)
         div.read <- div.read & (div.id.all %in% sample.include)
 
-        if(verbose) message('Working with ', sum(kin.read), 'samples')
+        if(verbose) message('Working with ', sum(kin.read), ' samples')
     }
 
     # checks on unrel.set
@@ -122,7 +122,7 @@ pcairPartition <- function(kinobj, divobj,
 
     # take care of user specified unrel.set
     if(!is.null(unrel.set)){
-        if(verbose) message('Forcing samles specified in unrel.set into the unrelated set')
+        if(verbose) message('Forcing samples specified in unrel.set into the unrelated set')
         # add these samples to unrels
         unrels <- unique(append(unrels, unrel.set))
 
@@ -153,7 +153,7 @@ pcairPartition <- function(kinobj, divobj,
     }
 
 
-    if(verbose) message('Paritioning samples into unrelated and related sets...')
+    if(verbose) message('Partitioning samples into unrelated and related sets...')
     # iterate
     iter <- 0
     while(length(nrel) > 0){
