@@ -13,266 +13,168 @@ pcrelate2 <- function(	gdsobj,
 						num.cores = 1,
 						verbose = TRUE){
 
-	# some parameter checks
-	if(maf.thresh < 0 | maf.thresh > 0.5) stop('maf.thresh must be in [0,0.5]')
-	if(scale == 'none' & ibd.probs) stop('IBD probabilities can not be calculated when `scale` == none')
-	### more to add ###
-
-
+	# checks
+	.pcrelateChecks(gdsobj = gdsobj, pcs = pcs, scale = scale, ibd.probs = ibd.probs, sample.include = sample.include, training.set = training.set, 
+					maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
+	
 	# set up number of cores
 	sys.cores <- parallel::detectCores(logical = TRUE)
 	doMC::registerDoMC(cores = min(c(num.cores, sys.cores)))
 	message('Using ', min(c(num.cores, sys.cores)), ' CPU cores')
-
-
-	# calculate betas for individual specific allele frequencies
-	### this may be done externally from this function first; in this case we would load betas below ###
-	if(!is.null(training.set)){
-		message('Calculating betas for ', ncol(pcs), ' PC(s) using ', length(training.set), ' samples in training.set...')
-		beta <- calcBetaISAF(gdsobj = gdsobj, pcs = pcs, sample.include = training.set, snp.include = snp.include, snp.block.size = snp.block.size)
-	}else{
-		message('Calculating betas for ', ncol(pcs), ' PC(s) using ', length(sample.include), ' samples in sample.include...')
-		beta <- calcBetaISAF(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include, snp.include = snp.include, snp.block.size = snp.block.size)
-	}
-
 
 	# number of sample blocks
 	nsampblock <- ceiling(length(sample.include)/sample.block.size)
 	# list of samples in each block
 	if(nsampblock > 1){
 		samp.blocks <- unname(split(sample.include, cut(1:length(sample.include), nsampblock)))
-		message('Splitting ', length(sample.include), ' samples in sample.include into ', nsampblock, ' blocks...')
 	}else{
 		samp.blocks <- list(sample.include)
 	}
 
+	if(nsampblock == 1){
+		message('Running analysis with ', length(sample.include), ' samples...')
 
-	# compute estimates for current (pair of) sample block(s)
-	### this could be parallelized by pairs of blocks of samples ###
-	### probably do this with multiple jobs? ###
+		# create matrix of PCs
+		V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include)
+		# get index of training.set
+		if(!is.null(training.set)){
+			tidx <- sample.include %in% training.set
+			message('Betas for ', ncol(pcs), ' PC(s) will be calculated using ', sum(tidx), ' samples in training.set...')
+		}else{
+			tidx <- rep(TRUE, length(sample.include))
+			message('Betas for ', ncol(pcs), ' PC(s) will be calculated using all ', sum(tidx), ' samples in sample.include...')
+		}
+		# matrix product of V
+		VVtVi <- tcrossprod(V[tidx,], chol2inv(chol(crossprod(V[tidx,]))))
 
-	outB <- NULL
-	outS <- NULL
-	for(i in 1:nsampblock){
-		for(j in i:nsampblock){
-			message('Computing Relatedness Estimates for sample block pair (', i, ',', j, ')')
-			# compute estimates for the (pair of) sample block(s)
-			estList <- .pcrelateSampBlock(	gdsobj = gdsobj, beta = beta, pcs = pcs, sample.include.block1 = samp.blocks[[i]], sample.include.block2 = samp.blocks[[j]],
+		### Stephanie to build in variant iterators here ###
+		# number of snp blocks
+		nsnpblock <- ceiling(length(snp.include)/snp.block.size)
+		# list of snps in each block
+		if(nsnpblock > 1){
+			snp.blocks <- unname(split(snp.include, cut(1:length(snp.include), nsnpblock)))
+		}else{
+			snp.blocks <- list(snp.include)
+		}
+		message('Running PC-Relate analysis with ', length(snp.include), ' SNPs in ', nsnpblock, ' blocks...')
+
+		# for each snp block
+		matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %dopar% {
+			# read genotype data for the block
+			seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
+			G <- altDosage(gdsobj)
+
+			# calculate ISAF betas
+			beta <- crossprod(G[tidx,], VVtVi)
+
+			# calculate PC-Relate estimates
+			matList.block <- .pcrelateVarBlock(	G = G, beta = beta, V = V, idx = 1:nrow(V), jdx = 1:nrow(V), scale = scale, ibd.probs = ibd.probs, 
+                                    			snp.include = snp.blocks[[k]], maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
+			matList.block
+		}
+
+		# take ratios to compute final estimates
+		estList <- .pcrelateCalcRatio(matList = matList, scale = scale, ibd.probs = ibd.probs)
+
+		# cast to data.tables
+		dtS <- data.table(ID = rownames(estList$kin), f = 2*diag(estList$kin) - 1, nsnp = diag(estList$nsnp))
+		dtB <- .estListToDT(estList, drop.lower = TRUE)
+
+
+	}else if(nsampblock > 1){
+		message('Splitting ', length(sample.include), ' samples in sample.include into ', nsampblock, ' blocks...')
+
+		# calculate betas for individual specific allele frequencies
+		if(!is.null(training.set)){
+			message('Calculating betas for ', ncol(pcs), ' PC(s) using ', length(training.set), ' samples in training.set...')
+			beta <- calcISAFBeta(gdsobj = gdsobj, pcs = pcs, sample.include = training.set, snp.include = snp.include, snp.block.size = snp.block.size)
+		}else{
+			message('Calculating betas for ', ncol(pcs), ' PC(s) using ', length(sample.include), ' samples in sample.include...')
+			beta <- calcISAFBeta(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include, snp.include = snp.include, snp.block.size = snp.block.size)
+		}
+		### beta is a matrix of variants x PCs; needs to be saved, not sure of the best format or the best way to split this up ###
+		
+		# compute estimates for current (pair of) sample block(s)
+		### this is where we would parallelize with multiple jobs ###
+		dtS <- NULL
+		dtB <- NULL
+		for(i in 1:nsampblock){
+			for(j in i:nsampblock){
+				message('Computing Relatedness Estimates for sample block pair (', i, ',', j, ')')
+				# compute estimates for the (pair of) sample block(s)
+				out <- pcrelateSampBlock(	gdsobj = gdsobj, pcs = pcs, betaobj = beta, sample.include.block1 = samp.blocks[[i]], sample.include.block2 = samp.blocks[[j]],
 											scale = scale, ibd.probs = ibd.probs, snp.include = snp.include, snp.block.size = snp.block.size, 
 											maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
 
-			# update results with this (pair of) sample block(s)
-			if(i == j){
-				# create and rbind a data.table (self)
-				outS <- rbind(outS, data.table(ID = rownames(estList$kin), f = 2*diag(estList$kin) - 1, nsnp = diag(estList$nsnp)))
-				# melt and merge into a data.table (between samples)
-				estDTB <- .estListToDT(estList, drop.lower = TRUE)
-			}else{
-				# melt and merge into a data.table (between samples)
-				estDTB <- .estListToDT(estList, drop.lower = FALSE)
+				# update results with this (pair of) sample block(s)
+				if(i == j) dtS <- rbind(dtS, out$dtS)
+				dtB <- rbind(dtB, out$dtB)
 			}
-			# rbind
-			outB <- rbind(outB, estDTB)
 		}
 	}
-	setkey(outB, ID1, ID2)
-	setkey(outS, ID)
+
+	# order samples
+	setkey(dtB, ID1, ID2)
+	setkey(dtS, ID)
 
 	### post processing after putting all samples together
 	if(ibd.probs){
 		# correct k2 for HW departure and use alternate k0 estimator for non-1st degree relatives
-		outB <- .fixIBDEst(outB = outB, outS = outS)
+		dtB <- .fixIBDEst(dtB = dtB, dtS = dtS)
 	}
 
 	### need to rewrite the small sample correction at some point - take care of this later ###
 
 
-	return(list(outB = outB, outS = outS))
+	return(list(dtB = dtB, dtS = dtS))
 }
 
 
 
+
+
+.pcrelateChecks <- function(gdsobj, pcs, scale, ibd.probs, sample.include, training.set, maf.thresh, maf.bound.method){
+	# check parameters
+	if(!(scale %in% c('overall', 'variant', 'none'))) stop('scale should be one of `overall`, `variant`, or `none`')
+	if(scale == 'none' & ibd.probs) stop('`ibd.probs` must be FALSE when `scale` == none')
+	if(maf.thresh < 0 | maf.thresh > 0.5) stop('maf.thresh must be in [0,0.5]')
+	if(!(maf.bound.method %in% c('truncate', 'filter'))) stop('maf.bound.method should be one of `truncate` or `filter`')
+
+	# set sample filter on gdsobj
+	seqSetFilter(gdsobj, sample.id = sample.include)
+	# check sample.include 
+	if(!all(sample.include %in% seqGetData(gdsobj, 'sample.id'))) stop('All samples in sample.include must be in the gdsobj')
+	# check training.set
+	if(!all(training.set %in% sample.include)) stop('All samples in training.set must be in sample.include')
+	# check pcs
+	if(class(pcs) != 'matrix' | is.null(rownames(pcs))) stop('pcs should be a matrix of PCs with rownames set to sample.ids')
+	if(!all(sample.include %in% rownames(pcs))) stop('All samples in sample.include must be in pcs')
+}
 
 
 
 
 ### function to match samples and create PC matrix
 .createPCMatrix <- function(gdsobj, pcs, sample.include){
-	# subset to sample.include
-	seqSetFilter(gdsobj, sample.id = sample.include)
-	sample.id <- seqGetData(gdsobj, 'sample.id')
-
-	if(!all(sample.id %in% rownames(pcs))) stop('all samples must be in pcs')
-
-	# subset and re-order pcs if needed
-	V <- pcs[match(sample.id, rownames(pcs)), , drop = FALSE]
-	# append intercept
-	V <- cbind(rep(1, nrow(V)), V)
-
-	return(V)
+    # set filter to sample.include
+    seqSetFilter(gdsobj, sample.id = sample.include)
+    # subset and re-order pcs if needed
+    V <- pcs[match(seqGetData(gdsobj, 'sample.id'), rownames(pcs)), , drop = FALSE]
+    # append intercept
+    V <- cbind(rep(1, nrow(V)), V)
+    return(V)
 }
-
-
-
-
-### these functions are for computing PC betas for individual specific allele frequency calculations ###
-calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include, snp.block.size){
-	# create matrix of PCs
-	V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include)
-
-	# matrix product of V
-	VVtVi <- tcrossprod(V, chol2inv(chol(crossprod(V))))
-
-	### what is below could be parallelized by blocks of variants in snp.include ###
-	### do we store the VVtVi matrix? it is npcs x nunrels in dimension ###
-
-	### Stephanie to build in variant iterators here ###
-
-	# number of snp blocks
-	nsnpblock <- ceiling(length(snp.include)/snp.block.size)
-	# list of snps in each block
-	if(nsnpblock > 1){
-		snp.blocks <- unname(split(snp.include, cut(1:length(snp.include), nsnpblock)))
-	}else{
-		snp.blocks <- list(snp.include)
-	}
-
-	beta <- foreach(k = 1:nsnpblock, .combine = rbind, .inorder = FALSE, .multicombine = TRUE) %dopar% {
-		beta.block <- .calcBetaISAF(gdsobj = gdsobj, VVtVi = VVtVi, snp.include = snp.blocks[[k]])
-		beta.block
-	}
-
-	# non-parallel version
-	# beta <- NULL
-	# for(k in 1:nsnpblock){
-	# 	# calculate betas for PCs at each variant
-	# 	beta.block <- .calcBetaISAF(gdsobj = gdsobj, VVtVi = VVtVi, snp.include = snp.blocks[[k]])
-	# 	message('...SNP Block ', k, ' of ', nsnpblock, ' Completed: ', nrow(beta.block), ' SNPs')
-	# 	# rbind
-	# 	beta <- rbind(beta, beta.block)
-	# }
-
-	return(beta)
-}
-
-.calcBetaISAF <- function(gdsobj, VVtVi, snp.include){
-	# load genotype data
-	seqSetFilter(gdsobj, variant.id = snp.include)
-	G <- altDosage(gdsobj)
-
-	# compute beta estimates
-	beta <- crossprod(G, VVtVi)
-	### beta is a matrix of variants x PCs; probably needs to be saved, not sure of the best format ###
-
-	return(beta)
-}
-
-
-
-### this function does the pcrelate estimation for a (pair of) sample block(s)
-.pcrelateSampBlock <- function(gdsobj, beta, pcs, sample.include.block1, sample.include.block2, scale, ibd.probs, snp.include, snp.block.size, maf.thresh, maf.bound.method){
-
-	# create (joint) PC matrix and indices
-
-	# one sample block
-	if(all(sample.include.block1 == sample.include.block2)){
-		V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include.block1)
-		idx <- 1:nrow(V)
-		jdx <- idx
-
-	# two sample blocks
-	}else{
-		# check for overlapping samples
-		if(any(sample.include.block1 %in% sample.include.block2)) stop('when using multiple sample blocks, each sample should be included in only one block')
-		V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = c(sample.include.block1, sample.include.block2))
-		idx <- which(rownames(V) %in% sample.include.block1)
-		jdx <- which(rownames(V) %in% sample.include.block2)
-	}
-	### slight inefficiency above because we create the PC Matrix for samples in block1 for each block2 when we don't have to if we are running serially; 
-	### but this seems more straightforward to parallelize
-
-
-	# compute estimates looping over blocks of variants
-	### this could be parallelized by blocks of variants in snp.include ###
-	### Stephanie to build in variant iterators here ###
-
-	# number of snp blocks
-	nsnpblock <- ceiling(length(snp.include)/snp.block.size)
-	# list of snps in each block
-	if(nsnpblock > 1){
-		snp.blocks <- unname(split(snp.include, cut(1:length(snp.include), nsnpblock)))
-	}else{
-		snp.blocks <- list(snp.include)
-	}
-
-	# compute estimates for each variant block; sum along the way
-	matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %dopar% {
-		matList.block <- .pcrelateVarBlock(	gdsobj = gdsobj, beta = beta, V = V, idx = idx, jdx = jdx, scale = scale, ibd.probs = ibd.probs, 
-                                    		snp.include = snp.blocks[[k]], maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
-		matList.block
-	}
-
-	# non-parallel version
-	# for(k in 1:nsnpblock){
-	# 	# current variant block
-	# 	tmpList <- .pcrelateVarBlock(	gdsobj = gdsobj, beta = beta, V = V, idx = idx, jdx = jdx, scale = scale, ibd.probs = ibd.probs, 
-	# 									snp.include = snp.blocks[[k]], maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
-
-	# 	# update overall (sum across variant blocks)
-	# 	if(k == 1){
-	# 		matList <- tmpList
-	# 	}else{
-	# 		for(m in 1:length(matList)){
-	# 			matList[[m]] <- matList[[m]] + tmpList[[m]]
-	# 		}
-	# 	}
-	# 	rm(tmpList)
-	# 	message('...SNP Block ', k, ' of ', nsnpblock, ' Completed: ', length(snp.blocks[[k]]), ' SNPs')
-	# }
-
-	# compute final estimates
-	if(scale == 'overall'){
-		kin <- matList$kinNum/(4*matList$kinDen)
-	}else if(scale == 'variant'){
-		kin <- matList$kin/(4*matList$nsnp)
-	}
-
-	if(ibd.probs){
-		if(scale == 'overall'){
-			k2 <- matList$k2Num/matList$k2Den
-			k0 <- matList$k0Num/matList$k0Den
-		}else if(scale == 'variant'){
-			k2 <- matList$k2/matList$nsnp
-			k0 <- matList$k0/matList$nsnp
-		}
-		return(list(kin = kin, k0 = k0, k2 = k2, nsnp = matList$nsnp))
-
-	}else{
-		return(list(kin = kin, nsnp = matList$nsnp))
-	}	
-}
-
-.matListCombine <- function(...){
-    mapply(FUN = "+", ..., SIMPLIFY = FALSE)
-}
-
 
 
 ### this function does the pcrelate estimation for a variant block
-.pcrelateVarBlock <- function(gdsobj, beta, V, idx, jdx, scale, ibd.probs, snp.include, maf.thresh, maf.bound.method){
+.pcrelateVarBlock <- function(G, beta, V, idx, jdx, scale, ibd.probs, snp.include, maf.thresh, maf.bound.method){
 
-	# load genotype data
-	seqSetFilter(gdsobj, variant.id = snp.include, sample.id = rownames(V))
-	G <- altDosage(gdsobj)
-	### rownames(V) needs to match rownames(G) - it should based on the .createPCMatrix() function
-
-	# load betas for the current block of variants (colnames(G))
-	beta.block <- beta[match(colnames(G), rownames(beta)), , drop = FALSE]
-	### this line of code will probably be different if we save the betas; need to load correct betas
-	### rownames of beta.block needs to match colnames of G
+	# make sure order of G, beta, and V all line up
+	if(!all.equal(rownames(G), rownames(V))) stop('G and V do not match')
+	if(!all.equal(rownames(beta), colnames(G))) stop('G and beta do not match')
 
 	# estimate individual specific allele frequencies
-	mu <- .estISAF(V = V, beta = beta.block, bound.thresh = maf.thresh, bound.method = maf.bound.method)
+	mu <- .estISAF(beta = beta, V = V, bound.thresh = maf.thresh, bound.method = maf.bound.method)
 
 	# compute values for estimates
 	if(scale == 'overall'){
@@ -286,10 +188,13 @@ calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include, snp.block.siz
 	return(matList)
 }
 
+.matListCombine <- function(...){
+    mapply(FUN = "+", ..., SIMPLIFY = FALSE)
+}
 
 
 ### these functions are for estimating individual specific allele frequencies
-.estISAF <- function(V, beta, bound.thresh, bound.method){
+.estISAF <- function(beta, V, bound.thresh, bound.method){
 	# get ISAF estimates (i.e. 0.5*fitted values)
 	mu <- 0.5*tcrossprod(V, beta)
 	# fix boundary cases
@@ -507,7 +412,32 @@ calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include, snp.block.siz
 }
 
 
-### functions for post processing
+### functions for post processing on variant block level
+.pcrelateCalcRatio <- function(matList, scale, ibd.probs){
+	# compute final estimates
+	if(scale == 'overall'){
+		kin <- matList$kinNum/(4*matList$kinDen)
+	}else if(scale == 'variant'){
+		kin <- matList$kin/(4*matList$nsnp)
+	}
+
+	if(ibd.probs){
+		if(scale == 'overall'){
+			k2 <- matList$k2Num/matList$k2Den
+			k0 <- matList$k0Num/matList$k0Den
+		}else if(scale == 'variant'){
+			k2 <- matList$k2/matList$nsnp
+			k0 <- matList$k0/matList$nsnp
+		}
+		return(list(kin = kin, k0 = k0, k2 = k2, nsnp = matList$nsnp))
+
+	}else{
+		return(list(kin = kin, nsnp = matList$nsnp))
+	}
+}
+
+		
+### functions for post processing on sample block level
 .estListToDT <- function(x, drop.lower){
 	estDT <- lapply(x, .estMelt, drop.lower = drop.lower)
 	for(k in 1:length(estDT)){
@@ -526,16 +456,160 @@ calcBetaISAF <- function(gdsobj, pcs, sample.include, snp.include, snp.block.siz
     setkey(x, ID1, ID2)
 }
 
-.fixIBDEst <- function(outB, outS){
+
+### functions for final processing
+.fixIBDEst <- function(dtB, dtS){
     # correct k2 for HW departure
-    outB <- merge(outB, outS[,.(ID, f)], by.x = 'ID2', by.y = 'ID')
-    setnames(outB, 'f', 'f.2')
-    outB <- merge(outB, outS[,.(ID, f)], by.x = 'ID1', by.y = 'ID')
-    setnames(outB, 'f', 'f.1')
-    outB[, k2 := k2 - f.1*f.2][, `:=`(f.1 = NULL, f.2 = NULL)]
+    dtB <- merge(dtB, dtS[,.(ID, f)], by.x = 'ID2', by.y = 'ID')
+    setnames(dtB, 'f', 'f.2')
+    dtB <- merge(dtB, dtS[,.(ID, f)], by.x = 'ID1', by.y = 'ID')
+    setnames(dtB, 'f', 'f.1')
+    dtB[, k2 := k2 - f.1*f.2][, `:=`(f.1 = NULL, f.2 = NULL)]
     
     # use alternate k0 estimator for non-1st degree relatives
-    outB[kin < 2^(-5/2), k0 := 1 - 4*kin + k2]
+    dtB[kin < 2^(-5/2), k0 := 1 - 4*kin + k2]
     
-    return(outB)
+    return(dtB)
 }
+
+
+
+### exported function for computing PC betas for individual specific allele frequency calculations ###
+calcISAFBeta <- function(gdsobj, pcs, sample.include, snp.include, snp.block.size){
+	# checks
+	# if(checks) .pcrelateChecks1(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include)
+
+	# create matrix of PCs
+	V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include)
+	# matrix product of V
+	VVtVi <- tcrossprod(V, chol2inv(chol(crossprod(V))))
+	
+	### Stephanie to build in variant iterators here ###
+	# number of snp blocks
+	nsnpblock <- ceiling(length(snp.include)/snp.block.size)
+	# list of snps in each block
+	if(nsnpblock > 1){
+		snp.blocks <- unname(split(snp.include, cut(1:length(snp.include), nsnpblock)))
+	}else{
+		snp.blocks <- list(snp.include)
+	}
+	message('Running analysis with ', length(snp.include), ' SNPs in ', nsnpblock, ' blocks...')
+
+	beta <- foreach(k = 1:nsnpblock, .combine = rbind, .inorder = FALSE, .multicombine = TRUE) %dopar% {
+		# read genotype data for the block
+		seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
+		G <- altDosage(gdsobj)
+
+		# calculate ISAF betas
+		beta.block <- crossprod(G, VVtVi)
+		beta.block
+	}
+	### rather than returning and rbinding here, we may want to be writing the output to something
+
+	# non-parallel version
+	# beta <- NULL
+	# for(k in 1:nsnpblock){
+	# 	# calculate betas for PCs at each variant
+	# 	beta.block <- .calcISAFBeta(gdsobj = gdsobj, VVtVi = VVtVi, snp.include = snp.blocks[[k]])
+	# 	message('...SNP Block ', k, ' of ', nsnpblock, ' Completed: ', nrow(beta.block), ' SNPs')
+	# 	# rbind
+	# 	beta <- rbind(beta, beta.block)
+	# }
+
+	return(beta)
+}
+
+
+### exported function that does the pcrelate estimation for a (pair of) sample block(s)
+pcrelateSampBlock <- function(gdsobj, pcs, betaobj, sample.include.block1, sample.include.block2, scale, ibd.probs, snp.include, snp.block.size, maf.thresh, maf.bound.method){
+
+	# create (joint) PC matrix and indices
+	# one sample block
+	if(all(sample.include.block1 == sample.include.block2)){
+		oneblock <- TRUE
+		V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include.block1)
+		idx <- 1:nrow(V)
+		jdx <- idx
+
+	# two sample blocks
+	}else{
+		# check for overlapping samples
+		if(any(sample.include.block1 %in% sample.include.block2)) stop('when using multiple sample blocks, each sample should be included in only one block')
+		oneblock <- FALSE
+		V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = c(sample.include.block1, sample.include.block2))
+		idx <- which(rownames(V) %in% sample.include.block1)
+		jdx <- which(rownames(V) %in% sample.include.block2)
+	}
+	### slight inefficiency above because we create the PC Matrix for samples in block1 for each block2 when we don't have to if we are running serially; 
+	### but this seems more straightforward to parallelize
+
+
+	# compute estimates looping over blocks of variants
+	### this could be parallelized by blocks of variants in snp.include ###
+	### Stephanie to build in variant iterators here ###
+
+	# number of snp blocks
+	nsnpblock <- ceiling(length(snp.include)/snp.block.size)
+	# list of snps in each block
+	if(nsnpblock > 1){
+		snp.blocks <- unname(split(snp.include, cut(1:length(snp.include), nsnpblock)))
+	}else{
+		snp.blocks <- list(snp.include)
+	}
+
+	# compute estimates for each variant block; sum along the way
+	matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %dopar% {
+
+		# read genotype data for the block
+		seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
+		G <- altDosage(gdsobj)
+
+		# load betas for the current block of variants
+		beta.block <- betaobj[rownames(betaobj) %in% snp.blocks[[k]], , drop = FALSE]
+		### this line of code will probably be different if we save the betas; need to load correct betas
+		### rownames of beta.block needs to match colnames of G
+
+		matList.block <- .pcrelateVarBlock(	G = G, beta = beta.block, V = V, idx = idx, jdx = jdx, scale = scale, ibd.probs = ibd.probs, 
+                                    		snp.include = snp.blocks[[k]], maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
+		matList.block
+	}
+
+	# non-parallel version
+	# for(k in 1:nsnpblock){
+	# 	# current variant block
+	# 	tmpList <- .pcrelateVarBlock(	gdsobj = gdsobj, beta = beta, V = V, idx = idx, jdx = jdx, scale = scale, ibd.probs = ibd.probs, 
+	# 									snp.include = snp.blocks[[k]], maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
+
+	# 	# update overall (sum across variant blocks)
+	# 	if(k == 1){
+	# 		matList <- tmpList
+	# 	}else{
+	# 		for(m in 1:length(matList)){
+	# 			matList[[m]] <- matList[[m]] + tmpList[[m]]
+	# 		}
+	# 	}
+	# 	rm(tmpList)
+	# 	message('...SNP Block ', k, ' of ', nsnpblock, ' Completed: ', length(snp.blocks[[k]]), ' SNPs')
+	# }
+
+	# compute final estimates
+	estList <- .pcrelateCalcRatio(matList = matList, scale = scale, ibd.probs = ibd.probs)
+
+	# cast to data.tables
+	if(oneblock){
+		# self table
+		dtS <- data.table(ID = rownames(estList$kin), f = 2*diag(estList$kin) - 1, nsnp = diag(estList$nsnp))
+		setkey(dtS, ID)
+		# between samples table
+		dtB <- .estListToDT(estList, drop.lower = TRUE)
+	}else{
+		dtS <- NULL
+		# between samples table
+		dtB <- .estListToDT(estList, drop.lower = FALSE)
+	}
+	setkey(dtB, ID1, ID2)
+	
+	return(list(dtS = dtS, dtB = dtB))
+}
+
+
