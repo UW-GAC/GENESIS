@@ -42,7 +42,7 @@ test_that("fitNullMod matches fitNullReg - binary", {
     
     expect_equivalent(nullmod$fixef, glm.genesis$fixef)
     expect_equivalent(nullmod$betaCov, glm.genesis$betaCov)
-    expect_equivalent(nullmod$resid.marginal, glm.genesis$resid.response)
+    #expect_equivalent(nullmod$resid.marginal, glm.genesis$resid.response)
     expect_equivalent(nullmod$logLik, glm.genesis$logLik)
     expect_equivalent(nullmod$AIC, glm.genesis$AIC)
     expect_equivalent(nullmod$workingY, glm.genesis$workingY)
@@ -278,7 +278,7 @@ test_that("fitNullModel matches fitNullReg - binary", {
 
     expect_equivalent(nullmod$fixef, lmm.genesis$fixef)
     expect_equivalent(nullmod$betaCov, lmm.genesis$betaCov)
-    expect_equivalent(nullmod$resid.marginal, lmm.genesis$resid.response)
+    #expect_equivalent(nullmod$resid.marginal, lmm.genesis$resid.response)
     expect_equivalent(nullmod$logLik, lmm.genesis$logLik)
     expect_equivalent(nullmod$AIC, lmm.genesis$AIC)
     expect_equivalent(nullmod$workingY, lmm.genesis$workingY)

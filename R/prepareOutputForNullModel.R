@@ -20,7 +20,7 @@
     betaCov <- vcov(mod, complete=FALSE)
     dimnames(betaCov) <- list(varNames, varNames)
     fitted.values <- mod$fitted.values
-    resid.marginal <-  residuals(mod, type = "response")
+    resid.marginal <-  residuals(mod, type = "working")
     logLik <- as.numeric(logLik(mod))
     AIC <- AIC(mod)
     workingY <- drop(y)   
