@@ -48,7 +48,8 @@ test_that("fitNullMod matches fitNullReg - binary", {
     expect_equivalent(nullmod$workingY, glm.genesis$workingY)
     expect_equivalent(nullmod$model.matrix, glm.genesis$model.matrix)
     expect_equal(nullmod$family$family, glm.genesis$family$family)
-    expect_equivalent(nullmod$varComp, glm.genesis$sigma^2)
+    #expect_equivalent(nullmod$varComp, glm.genesis$sigma^2)
+    expect_equivalent(diag(as.matrix(nullmod$cholSigmaInv)), glm.genesis$sigma)
 })
 }
 

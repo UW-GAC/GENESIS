@@ -79,10 +79,10 @@ test_that("binary, no covMat", {
 
     nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
     expect_true(isDiagonal(nullmod$cholSigmaInv))
-    expect_true(is.matrix(nullmod$Ytilde))
-    expect_true(is.matrix(nullmod$CX))
-    expect_true(is.matrix(nullmod$CXCXI))
-    expect_true(is.numeric(nullmod$resid))
+    expect_true(is(nullmod$Ytilde, "Matrix"))
+    expect_true(is(nullmod$CX, "Matrix"))
+    expect_true(is(nullmod$CXCXI, "Matrix"))
+    expect_true(is(nullmod$resid, "Matrix"))
     expect_true(is.matrix(nullmod$model.matrix))
 })
 
@@ -90,14 +90,18 @@ test_that("binary, covMat - matrix", {
     dat <- .testNullInputs(binary=TRUE)
 
     nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, family="binomial", verbose=FALSE)
-    expect_true(is.matrix(nullmod$Ytilde))
-    expect_true(is.matrix(nullmod$CX))
-    expect_true(is.matrix(nullmod$CXCXI))
-    expect_true(is.numeric(nullmod$resid))
     if (nullmod$zeroFLAG) {
         expect_true(isDiagonal(nullmod$cholSigmaInv))
+        expect_true(is(nullmod$Ytilde, "Matrix"))
+        expect_true(is(nullmod$CX, "Matrix"))
+        expect_true(is(nullmod$CXCXI, "Matrix"))
+        expect_true(is(nullmod$resid, "Matrix"))
     } else {
         expect_true(is.matrix(nullmod$cholSigmaInv))
+        expect_true(is.matrix(nullmod$Ytilde))
+        expect_true(is.matrix(nullmod$CX))
+        expect_true(is.matrix(nullmod$CXCXI))
+        expect_true(is.numeric(nullmod$resid))
     }
     expect_true(is.matrix(nullmod$model.matrix))
 })
@@ -107,17 +111,12 @@ test_that("binary, covMat - Matrix", {
 
     nullmod <- .fitNullModel(dat$y, dat$X, Matrix(dat$cor.mat), family="binomial", verbose=FALSE)
     expect_true(is(nullmod$cholSigmaInv, "Matrix"))
+    expect_true(is(nullmod$Ytilde, "Matrix"))
+    expect_true(is(nullmod$CX, "Matrix"))
+    expect_true(is(nullmod$CXCXI, "Matrix"))
+    expect_true(is(nullmod$resid, "Matrix"))
     if (nullmod$zeroFLAG) {
         expect_true(isDiagonal(nullmod$cholSigmaInv))
-        expect_true(is.matrix(nullmod$Ytilde))
-        expect_true(is.matrix(nullmod$CX))
-        expect_true(is.matrix(nullmod$CXCXI))
-        expect_true(is.numeric(nullmod$resid))
-    } else {
-        expect_true(is(nullmod$Ytilde, "Matrix"))
-        expect_true(is(nullmod$CX, "Matrix"))
-        expect_true(is(nullmod$CXCXI, "Matrix"))
-        expect_true(is(nullmod$resid, "Matrix"))
     }
     expect_true(is.matrix(nullmod$model.matrix))
 })

@@ -1,6 +1,5 @@
 
-### preparing output arguments for regression models that are not mixed. To match mixed models, 
-## we call "sigma" varComp (because it can be viewed as a type of variance component)
+### preparing output arguments for regression models that are not mixed.
 .nullModOutReg <- function(y, X, mod, family, group.idx = NULL){
     family$mixedmodel <- FALSE
     
@@ -8,8 +7,9 @@
         varComp <- summary(mod)$sigma^2
         cholSigmaInv <- sqrt(1/varComp)
     }  else{
-        varComp <- family$variance(mod$fitted)
-        cholSigmaInv <- Diagonal(x=sqrt(1/varComp))
+        varComp <- NULL
+        vmu <- family$variance(mod$fitted)
+        cholSigmaInv <- Diagonal(x=sqrt(vmu))
     }
     
     varCompCov <- NULL

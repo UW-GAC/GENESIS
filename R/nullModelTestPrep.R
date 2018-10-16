@@ -5,7 +5,7 @@ nullModelTestPrep <- function(nullmod){
     Y <- nullmod$workingY
     X <- nullmod$model.matrix
     
-    if (nullmod$family$mixedmodel | (nullmod$family$family == "gaussian")){
+    ## if (nullmod$family$mixedmodel | (nullmod$family$family == "gaussian")){
         C <- nullmod$cholSigmaInv
         if (length(C) > 1) { ## n by n cholSigmaInv (may be Diagonal)
             if (is(C, "Matrix")) X <- Matrix(X)
@@ -21,17 +21,17 @@ nullModelTestPrep <- function(nullmod){
             Ytilde <- C*Y - crossprod(CCXCXICX, Y)
             resid <- nullmod$resid.marginal/nullmod$varComp
         }
-    }
+    ## }
 
-    if (!nullmod$family$mixedmodel & (nullmod$family$family != "gaussian")){
-        ## C is a vector
-        C <- sqrt(nullmod$varComp)
-        CX <- X * C
-        CXCXI <- tcrossprod(CX, chol2inv(chol(crossprod(CX))))
-        CCXCXICX <- tcrossprod(CXCXI*C, CX)
-        Ytilde <- C*Y - crossprod(CCXCXICX, Y)
-        resid <- nullmod$resid.marginal
-    }
+    ## if (!nullmod$family$mixedmodel & (nullmod$family$family != "gaussian")){
+    ##     ## C is a vector
+    ##     C <- sqrt(nullmod$varComp)
+    ##     CX <- X * C
+    ##     CXCXI <- tcrossprod(CX, chol2inv(chol(crossprod(CX))))
+    ##     CCXCXICX <- tcrossprod(CXCXI*C, CX)
+    ##     Ytilde <- C*Y - crossprod(CCXCXICX, Y)
+    ##     resid <- nullmod$resid.marginal
+    ## }
 
     return(list(Ytilde=Ytilde, resid=resid, CX=CX, CXCXI=CXCXI))
 }
@@ -39,20 +39,20 @@ nullModelTestPrep <- function(nullmod){
 
 ##  adjust genotypes for correlation structure and fixed effects
 calcXtilde <- function(nullmod, G){
-    if (nullmod$family$mixedmodel | (nullmod$family$family == "gaussian")){
+    ## if (nullmod$family$mixedmodel | (nullmod$family$family == "gaussian")){
         C <- nullmod$cholSigmaInv
         if (length(C) > 1) { ## n by n cholSigmaInv (may be Diagonal)
             M1 <- crossprod(C, G)
         } else { ## cholSigmaInv is a scalar
             M1 <- G * C
         }
-    }
+    ## }
 
-    if (!nullmod$family$mixedmodel & (nullmod$family$family != "gaussian")){
-        ## C is a vector
-        C <- sqrt(nullmod$varComp)
-        M1 <- G * C
-    }
+    ## if (!nullmod$family$mixedmodel & (nullmod$family$family != "gaussian")){
+    ##     ## C is a vector
+    ##     C <- sqrt(nullmod$varComp)
+    ##     M1 <- G * C
+    ## }
 
     rm(G)
     Xtilde <- M1 - tcrossprod(nullmod$CXCXI, crossprod(M1, nullmod$CX))
