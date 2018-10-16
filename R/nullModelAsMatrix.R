@@ -1,7 +1,7 @@
 .checkMatrixType <- function(covMatList) {
     isMatrix <- sapply(covMatList, is, "Matrix")
     if (any(isMatrix) & !all(isMatrix)) {
-        for (i in which(isMatrix)) {
+        for (i in which(!isMatrix)) {
             covMatList[[i]] <- Matrix(covMatList[[i]], sparse=FALSE)
         }
     }

@@ -79,7 +79,7 @@ test_that("multiple matrices", {
     expect_true(is.matrix(nullmod$cholSigmaInv))
     
     covMatList <- list(mat1, Matrix(mat2))
-    expect_equal(sapply(.checkMatrixType(covMatList), is.matrix), c(TRUE, FALSE))
+    expect_true(all(sapply(.checkMatrixType(covMatList), is, "Matrix")))
     nullmod <- .fitNullModel(dat$y, dat$X, covMatList, verbose=FALSE)
     expect_true(is(nullmod$cholSigmaInv, "Matrix"))
     
