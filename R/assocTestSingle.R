@@ -4,12 +4,15 @@ setGeneric("assocTestSingle", function(gdsobj, ...) standardGeneric("assocTestSi
 ## do we want to make imputing to the mean optional?
 setMethod("assocTestSingle",
           "SeqVarIterator",
-          function(gdsobj, null.model, test=c("Score", "Wald"), GxE=NULL, verbose=TRUE) {
+          function(gdsobj, null.model, test=c("Score", "Wald"), GxE=NULL, sparse=TRUE, verbose=TRUE) {
               test <- match.arg(test)
 
+              # coerce null.model if necessary
+              if (sparse) null.model <- .nullModelAsMatrix(null.model)
+              
               # filter samples to match null model
               sample.index <- .setFilterNullModel(gdsobj, null.model, verbose=verbose)
-              
+
               # results
               res <- list()
               n.iter <- length(variantFilter(gdsobj))
@@ -18,7 +21,7 @@ setMethod("assocTestSingle",
               while (iterate) {
                   var.info <- variantInfo(gdsobj, alleles=FALSE, expanded=TRUE)
                   
-                  geno <- expandedAltDosage(gdsobj, use.names=FALSE, sparse=TRUE)[sample.index,,drop=FALSE]
+                  geno <- expandedAltDosage(gdsobj, use.names=FALSE, sparse=sparse)[sample.index,,drop=FALSE]
                   
                   # allele frequency
                   freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index)

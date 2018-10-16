@@ -13,12 +13,13 @@
         if (!is.list(covMatList)){
             covMatList <- list(A = covMatList)
         }
-        # coerce to Matrix objects. should get "dspMatrix" (packed symmetric matrix)
-        covMatList <- lapply(covMatList, function(x) {
-            if (!is(x, "Matrix")) x <- Matrix(x)
-            if (is(x, "symmetricMatrix") & !is(x, "sparseMatrix")) x <- pack(x)
-            return(x)
-        })
+        covMatList <- .checkMatrixType(covMatList)
+        ## # coerce to Matrix objects. should get "dspMatrix" (packed symmetric matrix)
+        ## covMatList <- lapply(covMatList, function(x) {
+        ##     if (!is(x, "Matrix")) x <- Matrix(x)
+        ##     if (is(x, "symmetricMatrix") & !is(x, "sparseMatrix")) x <- pack(x)
+        ##     return(x)
+        ## })
     }
 
     if (is.null(colnames(X))){
@@ -38,22 +39,17 @@
         stop("family must be one of gaussian, binomial, or poisson")
     }
 
-    ## save original model.matrix for output, in case we need to convert to Matrix
-    X.mm <- X
-    
     if (family$family == "gaussian"){
         if (is.null(covMatList) & is.null(group.idx)) {
             mod <- lm(y ~ -1 + X)  ## prepare output based on that. 
             out <- .nullModOutReg(y, X, mod, family)
         }
         if (is.null(covMatList) & !is.null(group.idx)){
-            X <- Matrix(X)
             vc.mod <- .runWLSgaussian(y, X, group.idx = group.idx, start = start, 
                                       AIREML.tol = AIREML.tol, max.iter = max.iter, verbose = verbose)
             out <- .nullModOutWLS(y, X, vc.mod = vc.mod, family = family, group.idx = group.idx)
         }
         if (!is.null(covMatList)){
-            X <- Matrix(X)
             if (is.null(group.idx)) group.idx <- list(resid.var = 1:length(y))
             vc.mod <- .runAIREMLgaussian(y, X, start = start, covMatList = covMatList, 
                                          group.idx = group.idx, AIREML.tol = AIREML.tol, drop.zeros = drop.zeros,  
@@ -67,7 +63,6 @@
         mod <- glm(y ~ X, family = family)
         
         if (!is.null(covMatList)){ ## iterate between computing workingY and estimating VCs. 
-            X <- Matrix(X)
             iterate.out <- .iterateAIREMLworkingY(glm.mod = mod, X = X, family = family, 
                                                   start = start, covMatList = covMatList, AIREML.tol = AIREML.tol,
                                                   drop.zeros = drop.zeros, max.iter = max.iter, verbose = verbose)
@@ -90,10 +85,8 @@
     }
 
     out.class <- class(out)
-    out$model.matrix <- Matrix(out$model.matrix)
     nullprep <- nullModelTestPrep(out)
     out <- c(out, nullprep)
-    out$model.matrix <- X.mm # preserve original model.matrix object in output
     class(out) <- out.class
     
     return(out)

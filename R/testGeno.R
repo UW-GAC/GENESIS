@@ -9,8 +9,8 @@
 # E an environmental variable for optional GxE interaction analysis. 
 testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), GxE.return.cov = FALSE){
     test <- match.arg(test)
-    
-    if (is.matrix(G)) G <- Matrix(G)
+
+    G <- .genoAsMatrix(nullmod, G)
 
     if (test == "Wald" & nullmod$family$family != "gaussian"){
     	test <- "Score"
@@ -118,7 +118,8 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), G
         res.Vbetas <- vector(mode = "list", length = p)
     }
     
-    intE <- Matrix(cbind(1, E)) # add intercept the "Environmental" variable E.
+    intE <- cbind(1, E) # add intercept the "Environmental" variable E.
+    if (is(G, "Matrix")) intE <- Matrix(intE)
     
     var.names <- c("G", paste("G", colnames(E), sep = ":"))
     

@@ -184,7 +184,7 @@ test_that("missing sample.id in null model", {
     svd <- .testData()
     seqSetFilterChrom(svd, include=1, verbose=FALSE)
     n <- 10
-    seqSetFilter(svd, sample.sel=1:n)
+    seqSetFilter(svd, sample.sel=1:n, verbose=FALSE)
     iterator <- SeqVarWindowIterator(svd, windowSize=5e5, windowShift=2.5e5, verbose=FALSE)
     nullmod <- fitNullModel(pData(sampleData(svd)), outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
     expect_false("sample.id" %in% names(nullmod))

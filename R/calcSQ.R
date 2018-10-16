@@ -9,7 +9,8 @@
     
     if (is.null(vmu)){ ## this means the family is "gaussian"
         if (is.null(group.idx)){
-            Sigma <- Diagonal(x=rep(varComp[m+1],n)) + Vre
+            #Sigma <- Diagonal(x=rep(varComp[m+1],n)) + Vre
+            diagV <- rep(varComp[m+1],n)
         } else{
             g <- length(group.idx)
         
@@ -23,14 +24,20 @@
             for(i in 1:g){
                 mylevels[group.idx[[i]]] <- i # setting up vector of indicators; who is in which group
             }
-            Sigma <- Diagonal(x=(varComp[m+1:g])[mylevels] ) + Vre
+            #Sigma <- Diagonal(x=(varComp[m+1:g])[mylevels] ) + Vre
+            diagV <- (varComp[m+1:g])[mylevels]
         }
 
     ### if non-gaussian family:
     } else {
 ###        Sigma <- Sigma + diag(as.vector(vmu)/as.vector(gmuinv)^2)
-        Sigma <- Diagonal(x=as.vector(vmu)/as.vector(gmuinv)^2) + Vre
+        #Sigma <- Diagonal(x=as.vector(vmu)/as.vector(gmuinv)^2) + Vre
+        diagV <- as.vector(vmu)/as.vector(gmuinv)^2
     }
+
+    # add diagonal elements
+    Sigma <- Vre
+    diag(Sigma) <- diag(Sigma) + diagV
     
     # cholesky decomposition
     cholSigma <- chol(Sigma)
@@ -40,4 +47,3 @@
     return(list(cholSigma = cholSigma, Sigma.inv = Sigma.inv, Vre = Vre))
 
 }
-
