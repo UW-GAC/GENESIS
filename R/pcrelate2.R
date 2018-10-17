@@ -14,8 +14,10 @@ pcrelate2 <- function(	gdsobj,
 						verbose = TRUE){
 
 	# checks
-	.pcrelateChecks(pcs = pcs, scale = scale, ibd.probs = ibd.probs, sample.include = sample.include, training.set = training.set, 
-					maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
+        scale <- match.arg(scale)
+        maf.bound.method <- match.arg(maf.bound.method)
+        .pcrelateChecks(pcs = pcs, scale = scale, ibd.probs = ibd.probs, sample.include = sample.include, training.set = training.set, 
+					maf.thresh = maf.thresh)
 	
 	# set up number of cores
 	sys.cores <- parallel::detectCores(logical = TRUE)
@@ -119,12 +121,10 @@ pcrelate2 <- function(	gdsobj,
 
 
 
-.pcrelateChecks <- function(pcs, scale, ibd.probs, sample.include, training.set, maf.thresh, maf.bound.method){
+.pcrelateChecks <- function(pcs, scale, ibd.probs, sample.include, training.set, maf.thresh){
 	# check parameters
-	if(!(scale %in% c('overall', 'variant', 'none'))) stop('scale should be one of `overall`, `variant`, or `none`')
 	if(scale == 'none' & ibd.probs) stop('`ibd.probs` must be FALSE when `scale` == none')
 	if(maf.thresh < 0 | maf.thresh > 0.5) stop('maf.thresh must be in [0,0.5]')
-	if(!(maf.bound.method %in% c('truncate', 'filter'))) stop('maf.bound.method should be one of `truncate` or `filter`')
 	# check training.set
 	if(!is.null(training.set) & !all(training.set %in% sample.include)) stop('All samples in training.set must be in sample.include')
 	# check pcs
