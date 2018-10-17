@@ -10,12 +10,12 @@ testSingleVarianceComponent <- function(nullmod, varCompName, covMatList, group.
 	
 	
 	if (length(covMatList) == 1){
-		nullmod.noVarComp <- fitNullMod(nullmod$outcome, X = nullmod$model.matrix, covMatList = NULL, 
+		nullmod.noVarComp <- .fitNullModel(nullmod$outcome, X = nullmod$model.matrix, covMatList = NULL, 
 				group.idx = group.idx, family = nullmod$family$family, start = NULL,
 				AIREML.tol = AIREML.tol, max.iter= max.iter, drop.zeros = drop.zeros, verbose = verbose)
 
 	} else{
-		nullmod.noVarComp <- fitNullMod(nullmod$outcome, X = nullmod$model.matrix, covMatList = covMatList[-ind.test], 
+		nullmod.noVarComp <- .fitNullModel(nullmod$outcome, X = nullmod$model.matrix, covMatList = covMatList[-ind.test], 
 				group.idx = group.idx, family = nullmod$family$family, start = nullmod$varComp,
 				AIREML.tol = AIREML.tol, max.iter= max.iter, drop.zeros = drop.zeros, verbose = verbose)	
 		}

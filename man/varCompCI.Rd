@@ -30,11 +30,11 @@ HapMap_genoData <- GenotypeData(HapMap_geno)
 data("HapMap_ASW_MXL_KINGmat")
 
 # run PC-AiR
-mypcair <- pcair(genoData = HapMap_genoData, kinMat = HapMap_ASW_MXL_KINGmat, 
-                divMat = HapMap_ASW_MXL_KINGmat)
+mypcair <- pcair(HapMap_genoData, kinobj = HapMap_ASW_MXL_KINGmat, 
+                 divobj = HapMap_ASW_MXL_KINGmat)
                 
 # run PC-Relate
-mypcrel <- pcrelate(genoData = HapMap_genoData, pcMat = mypcair$vectors[,1],
+mypcrel <- pcrelate(HapMap_genoData, pcMat = mypcair$vectors[,1],
         		training.set = mypcair$unrels)
 close(HapMap_genoData)
 
@@ -42,15 +42,15 @@ close(HapMap_genoData)
 set.seed(4)
 pheno <- 0.2*mypcair$vectors[,1] + rnorm(mypcair$nsamp, mean = 0, sd = 1)
 
-# make ScanAnnotationDataFrame
-scanAnnot <- ScanAnnotationDataFrame(data.frame(scanID = mypcrel$sample.id, 
-              pc1 = mypcair$vectors[,1], pheno = pheno))
+# make data frame
+scanAnnot <- data.frame(scanID = mypcrel$sample.id, 
+              pc1 = mypcair$vectors[,1], pheno = pheno)
 
-# make covMatList
-covMatList <- list("Kin" = pcrelateMakeGRM(mypcrel))
+# make covariance matrix
+covMat <- pcrelateMakeGRM(mypcrel)
 
 # fit the null mixed model
-nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1", cov.mat = covMatList)
+nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1", cov.mat = covMat)
 
 # find the variance component CIs
 varCompCI(nullmod, prop = TRUE)

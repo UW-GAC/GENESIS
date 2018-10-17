@@ -10,7 +10,7 @@ varCompCI <- function(nullMMobj, prop=TRUE){
         for(i in 1:length(est)){
             deltaH <- rep(-nullMMobj$varComp[i]/(sum(nullMMobj$varComp)^2),length(nullMMobj$varComp))
             deltaH[i] <- deltaH[i] + sum(nullMMobj$varComp)/(sum(nullMMobj$varComp)^2)
-            varH <- crossprod(deltaH, crossprod(varCompCov, deltaH))
+            varH <- as.numeric(crossprod(deltaH, crossprod(varCompCov, deltaH)))
             ci[i,] <- est[i] + sqrt(varH)*qnorm(c(0.025,0.975))
         }
         ci[nullMMobj$zeroFLAG,] <- NA

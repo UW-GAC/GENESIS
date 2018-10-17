@@ -12,7 +12,7 @@ test_that("pcrelate", {
     # load saved matrix of KING-robust estimates
     data("HapMap_ASW_MXL_KINGmat")
     # PC-AiR
-    mypcs <- pcair(genoData = HapMap_genoData, kinMat = HapMap_ASW_MXL_KINGmat, divMat = HapMap_ASW_MXL_KINGmat)
+    mypcs <- pcair(HapMap_genoData, kinobj = HapMap_ASW_MXL_KINGmat, divobj = HapMap_ASW_MXL_KINGmat, verbose=FALSE)
 
     myrel <- pcrelate(genoData = HapMap_genoData, pcMat = mypcs$vectors[,1:2])
 
@@ -30,7 +30,7 @@ test_that("pcrelate_writegds", {
     # load saved matrix of KING-robust estimates
     data("HapMap_ASW_MXL_KINGmat")
     # PC-AiR
-    mypcs <- pcair(genoData = HapMap_genoData, kinMat = HapMap_ASW_MXL_KINGmat, divMat = HapMap_ASW_MXL_KINGmat)
+    mypcs <- pcair(HapMap_genoData, kinobj = HapMap_ASW_MXL_KINGmat, divobj = HapMap_ASW_MXL_KINGmat, verbose=FALSE)
 
     gds.prefix <- tempfile()
     myrel <- pcrelate(genoData = HapMap_genoData, pcMat = mypcs$vectors[,1:2], write.to.gds=TRUE, gds.prefix=gds.prefix)
@@ -54,7 +54,7 @@ test_that("pcrelate_makegrm", {
     # load saved matrix of KING-robust estimates
     data("HapMap_ASW_MXL_KINGmat")
     # PC-AiR
-    mypcs <- pcair(genoData = HapMap_genoData, kinMat = HapMap_ASW_MXL_KINGmat, divMat = HapMap_ASW_MXL_KINGmat)
+    mypcs <- pcair(HapMap_genoData, kinobj = HapMap_ASW_MXL_KINGmat, divobj = HapMap_ASW_MXL_KINGmat, verbose=FALSE)
 
     # make sure use of scan.include returns correct values
     # check with RData

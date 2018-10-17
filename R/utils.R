@@ -148,3 +148,14 @@ setMethod(".annotateAssoc",
           function(gdsobj, x) {
               x
           })
+
+setMethod(".annotateAssoc",
+          "GenotypeIterator",
+          function(gdsobj, x) {
+              filt.names <- names(snpFilter(gdsobj))
+              if (!is.null(filt.names)) {
+                  rownames(x$results) <- filt.names
+                  names(x$variantInfo) <- filt.names
+              }
+              x
+          })

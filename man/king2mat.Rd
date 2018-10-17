@@ -1,7 +1,9 @@
 \name{king2mat}
 \alias{king2mat}
 \title{Convert KING text output to an R Matrix}
-\description{\code{king2mat} is used to extract the pairwise kinship coefficient estimates or IBS0 values from the output text files of KING and put them into an R object of class \code{matrix} that can be read by the functions \code{\link{pcair}} and \code{\link{pcairPartition}}.}
+\description{\code{king2mat} is used to extract the pairwise kinship coefficient estimates or IBS0 values from the output text files of KING and put them into an R object of class \code{matrix} that can be read by the functions \code{\link{pcair}} and \code{\link{pcairPartition}}.
+This function is deprecated; use \code{\link{kingToMatrix}} instead.
+}
 \usage{
 king2mat(file.kin0, file.kin = NULL, iids = NULL, 
             type = "kinship", verbose = TRUE)
@@ -25,9 +27,11 @@ king2mat(file.kin0, file.kin = NULL, iids = NULL,
 	\code{\link{pcair}} and \code{\link{pcairPartition}} for functions that use the output matrix.
 }
 \examples{
+\dontrun{
 file.kin0 <- system.file("extdata", "MXL_ASW.kin0", package="GENESIS")
 file.kin <- system.file("extdata", "MXL_ASW.kin", package="GENESIS")
 KINGmat <- king2mat(file.kin0 = file.kin0, file.kin = file.kin, type="kinship")
+}
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

@@ -6,8 +6,8 @@ importFrom(utils, read.table)
 
 import(Biobase)
 import(gdsfmt)
-import(graph)
 import(Matrix)
+import(data.table)
 
 importFrom(GWASTools,
            GdsGenotypeReader,
@@ -27,6 +27,7 @@ importMethodsFrom(GWASTools,
                   getScanAnnotation,
                   getScanID,
                   getSnpID,
+                  getSnpVariable,
                   getVariable,
                   getSex,
                   hasSex,
@@ -37,6 +38,11 @@ importMethodsFrom(GWASTools,
 import(SeqArray)
 import(SeqVarTools)
 
+importFrom(SNPRelate,
+           snpgdsPCA,
+           snpgdsPCASNPLoading,
+           snpgdsPCASampLoading)
+
 importFrom(BiocGenerics, start, end)
 importFrom(GenomicRanges, GRanges)
 importFrom(IRanges, IRanges, findOverlaps)
@@ -44,8 +50,10 @@ importFrom(S4Vectors, mcols, queryHits, subjectHits)
 
 importFrom(dplyr, bind_rows, inner_join)
 
-export(king2mat,
-       pcair,
+export(kingToMatrix,
+       king2mat,
+       kin2gds,
+       mat2gds,
        pcairPartition,
        pcrelate,
        pcrelateMakeGRM,
@@ -62,7 +70,8 @@ export(admixMapMM,
 
 exportMethods(assocTestSingle,
               assocTestAggregate,
-              fitNullModel)
+              fitNullModel,
+              pcair)
 export(admixMap,
        nullModelInvNorm)
 

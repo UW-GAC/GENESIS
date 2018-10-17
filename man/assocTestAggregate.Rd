@@ -2,12 +2,19 @@
 \alias{assocTestAggregate}
 \alias{assocTestAggregate-methods}
 \alias{assocTestAggregate,SeqVarIterator-method}
+\alias{assocTestAggregate,GenotypeIterator-method}
 
 \title{Aggregate Association Testing}
 \description{\code{assocTestAggregate} performs aggregate association tests using the null model fit with \code{\link{fitNullModel}}.}
 
 \usage{
 \S4method{assocTestAggregate}{SeqVarIterator}(gdsobj, null.model, AF.max=1,
+                   weight.beta=c(1,1), weight.user=NULL,
+                   test=c("Burden", "SKAT", "SMMAT"),
+                   burden.test=c("Score", "Wald"), rho=0,
+                   pval.method=c("davies", "kuonen", "liu"),
+                   sparse=TRUE, verbose=TRUE)
+\S4method{assocTestAggregate}{GenotypeIterator}(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
                    test=c("Burden", "SKAT", "SMMAT"),
                    burden.test=c("Score", "Wald"), rho=0,
@@ -25,7 +32,13 @@
     \item{burden.test}{A character string specifying the type of Burden test to perform when \code{test = "Burden"}.  The possibilities are \code{"Score"} and \code{"Wald"}. \code{"Score"} can be used for any \code{null.model}. \code{"Wald"} can not be used when the \code{null.model} is from a mixed model with a binary outcome variable.}
     %\item{burden.test}{A character string specifying the type of Burden test to perform when \code{test} = "Burden".  The possibilities are "Score", "Wald", and "Firth". "Score" can be used for any \code{null.model}. "Wald" can not be used when the \code{null.model} is from a mixed model with a binary outcome variable. "Firth" can only be used when the \code{null.model} is from a logistic regression with a binary outcome variable.}
     \item{rho}{A numeric value (or vector of numeric values) in \code{[0,1]} specifying the rho parameter for SKAT. When \code{rho = 0}, a standard SKAT test is performed. When \code{rho = 1}, a score burden test is performed. When \code{rho} is a vector of values, SKAT-O is performed using each of those values as the search space for the optimal \code{rho}.}
-    \item{pval.method}{A character string specifying which method to use to calculate SKAT p-values. \code{"davies"} (the default) uses numerical integration; \code{"kuonen"} uses a saddlepoint method; and \code{"liu"} uses a moment matching approximation. If the davies method generates an error, kuonen is tried, and then liu as a last resort.}
+    \item{pval.method}{A character string specifying which method to use
+    to calculate SKAT p-values. \code{"davies"} (the default) uses
+    numerical integration; \code{"kuonen"} uses a saddlepoint method;
+    and \code{"liu"} uses a moment matching approximation. If the davies
+    method generates an error, kuonen is tried, and then liu as a last
+    resort.}
+    \item{sparse}{Logical indicator of whether to read genotypes as sparse Matrix objects; the default is \code{TRUE}. Set this to \code{FALSE} if the alternate allele dosage of the genotypes in the test are not expected to be mostly 0.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is \code{TRUE}.}
 }
 

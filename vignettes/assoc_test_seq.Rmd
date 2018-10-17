@@ -83,12 +83,12 @@ colnames(kingMat) <- rownames(kingMat) <- king$sample.id
 
 ## PC-AiR
 
-The next step is PC-AiR, in which we select a set of unrelated samples that is maximally informative about all ancestries in the sample, use this unrelated set for Principal Component Analysis (PCA), then project the relatives onto the PCs.  We use a kinship threshold of degree 3 (unrelated is less than first cousins). In this example, we use the KING estimates for both kinship (`kinMat`) and ancestry divergence (`divMat`). KING kinship estimates are negative for samples with different ancestry.
+The next step is PC-AiR, in which we select a set of unrelated samples that is maximally informative about all ancestries in the sample, use this unrelated set for Principal Component Analysis (PCA), then project the relatives onto the PCs.  We use a kinship threshold of degree 3 (unrelated is less than first cousins). In this example, we use the KING estimates for both kinship (`kinobj`) and ancestry divergence (`divobj`). KING kinship estimates are negative for samples with different ancestry.
 
 ```{r pcair}
-pcs <- pcair(seqData, kinMat=kingMat, kin.thresh=2^(-9/2),
-                      divMat=kingMat, div.thresh=-2^(-9/2),
-             snp.include=pruned, snp.block.size=22000)
+pcs <- pcair(seqData, kinobj=kingMat, kin.thresh=2^(-9/2),
+                      divobj=kingMat, div.thresh=-2^(-9/2),
+             snp.include=pruned)
 ```
 
 We need to determine which PCs are ancestry informative. To do this we need population information for the 1000 Genomes samples. We make a parallel coordinates plot, color-coding by 1000 Genomes population.
@@ -136,7 +136,7 @@ ggplot(kinship, aes(k0, kin)) +
     theme_bw()
 ```
 
-To improve our estimates for PCs and kinship, we could run another iteration of PC-AiR and PC-Relate, this time using the PC-Relate kinship estimates as the `kinMat` argument to `pcair`.  The KING matrix is still used for ancestry divergence. We could then use those new PCs to calculate revised kinship estimates.
+To improve our estimates for PCs and kinship, we could run another iteration of PC-AiR and PC-Relate, this time using the PC-Relate kinship estimates as the `kinobj` argument to `pcair`.  The KING matrix is still used for ancestry divergence. We could then use those new PCs to calculate revised kinship estimates.
 
 
 # Association tests
