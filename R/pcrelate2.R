@@ -22,7 +22,7 @@ pcrelate2 <- function(	gdsobj,
 	# set up number of cores
 	sys.cores <- parallel::detectCores(logical = TRUE)
 	doMC::registerDoMC(cores = min(c(num.cores, sys.cores)))
-	message('Using ', min(c(num.cores, sys.cores)), ' CPU cores')
+	if(verbose) message('Using ', min(c(num.cores, sys.cores)), ' CPU cores')
 
         # number of sample blocks
         if(is.null(sample.include)) sample.include <- .readSampleId(gdsobj) # need to add method for GenotypeData
@@ -35,13 +35,13 @@ pcrelate2 <- function(	gdsobj,
 	}
 
 	if(nsampblock == 1){
-		message(length(sample.include), ' samples to be included in the analysis...')
+		if(verbose) message(length(sample.include), ' samples to be included in the analysis...')
 
 		# create matrix of PCs
 		V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include)
 
 		# matrix product of V
-		VVtVi <- .calcISAFBetaPCProd(V = V, training.set = training.set)
+		VVtVi <- .calcISAFBetaPCProd(V = V, training.set = training.set, verbose = verbose)
 
 		### Stephanie to build in variant iterators here ###
 		# number of snp blocks
@@ -52,7 +52,7 @@ pcrelate2 <- function(	gdsobj,
 		}else{
 			snp.blocks <- list(snp.include)
 		}
-		message('Running PC-Relate analysis for ', length(sample.include), ' samples using ', length(snp.include), ' SNPs in ', nsnpblock, ' blocks...')
+		if(verbose) message('Running PC-Relate analysis for ', length(sample.include), ' samples using ', length(snp.include), ' SNPs in ', nsnpblock, ' blocks...')
 
 		# for each snp block
 		matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %dopar% {
@@ -77,10 +77,10 @@ pcrelate2 <- function(	gdsobj,
 
 
 	}else if(nsampblock > 1){
-		message(length(sample.include), ' samples to be included in the analysis, split into ', nsampblock, ' blocks...')
+		if(verbose) message(length(sample.include), ' samples to be included in the analysis, split into ', nsampblock, ' blocks...')
 
 		# calculate betas for individual specific allele frequencies
-		beta <- calcISAFBeta(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include, training.set = training.set, snp.include = snp.include, snp.block.size = snp.block.size)		
+		beta <- calcISAFBeta(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include, training.set = training.set, snp.include = snp.include, snp.block.size = snp.block.size, verbose = verbose)		
 		### beta is a matrix of variants x PCs; needs to be saved, not sure of the best format or the best way to split this up ###
 		
 		# compute estimates for current (pair of) sample block(s)
@@ -89,11 +89,11 @@ pcrelate2 <- function(	gdsobj,
 		kinBtwn <- NULL
 		for(i in 1:nsampblock){
 			for(j in i:nsampblock){
-				message('Running PC-Relate analysis for sample block pair (', i, ',', j, ')')
+				if(verbose) message('Running PC-Relate analysis for sample block pair (', i, ',', j, ')')
 				# compute estimates for the (pair of) sample block(s)
 				tmp <- pcrelateSampBlock(	gdsobj = gdsobj, pcs = pcs, betaobj = beta, sample.include.block1 = samp.blocks[[i]], sample.include.block2 = samp.blocks[[j]],
 											scale = scale, ibd.probs = ibd.probs, snp.include = snp.include, snp.block.size = snp.block.size, 
-											maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
+											maf.thresh = maf.thresh, maf.bound.method = maf.bound.method, verbose = verbose)
 
 				# update results with this (pair of) sample block(s)
 				if(i == j) kinSelf <- rbind(kinSelf, tmp$kinSelf)
@@ -151,15 +151,15 @@ pcrelate2 <- function(	gdsobj,
 }
 
 # function to get 
-.calcISAFBetaPCProd <- function(V, training.set){
+.calcISAFBetaPCProd <- function(V, training.set, verbose = TRUE){
 	if(!is.null(training.set)){
 		idx <- rownames(V) %in% training.set
 		VVtVi <- tcrossprod(V[idx,], chol2inv(chol(crossprod(V[idx,]))))
-		message('Betas for ', ncol(V) - 1, ' PC(s) will be calculated using ', sum(idx), ' samples in training.set...')
+		if(verbose) message('Betas for ', ncol(V) - 1, ' PC(s) will be calculated using ', sum(idx), ' samples in training.set...')
 	}else{
 		idx <- NULL
 		VVtVi <- tcrossprod(V, chol2inv(chol(crossprod(V))))
-		message('Betas for ', ncol(V) - 1, ' PC(s) will be calculated using all ', nrow(V), ' samples in sample.include...')
+		if(verbose) message('Betas for ', ncol(V) - 1, ' PC(s) will be calculated using all ', nrow(V), ' samples in sample.include...')
 	}
 	return(list(val = VVtVi, idx = idx))
 }
@@ -487,7 +487,7 @@ pcrelate2 <- function(	gdsobj,
 
 
 ### exported function for computing PC betas for individual specific allele frequency calculations ###
-calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, snp.include, snp.block.size){
+calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, snp.include, snp.block.size, verbose = TRUE){
 	# checks - add some
 
 	# create matrix of PCs
@@ -505,7 +505,7 @@ calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, snp.i
 	}else{
 		snp.blocks <- list(snp.include)
 	}
-	message('Calculating Indivdiual-Specific Allele Frequency betas for ', length(snp.include), ' SNPs in ', nsnpblock, ' blocks...')
+	if(verbose) message('Calculating Indivdiual-Specific Allele Frequency betas for ', length(snp.include), ' SNPs in ', nsnpblock, ' blocks...')
 
 	beta <- foreach(k = 1:nsnpblock, .combine = rbind, .inorder = FALSE, .multicombine = TRUE) %dopar% {
 		# read genotype data for the block
@@ -523,7 +523,7 @@ calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, snp.i
 	# for(k in 1:nsnpblock){
 	# 	# calculate betas for PCs at each variant
 	# 	beta.block <- .calcISAFBeta(gdsobj = gdsobj, VVtVi = VVtVi, snp.include = snp.blocks[[k]])
-	# 	message('...SNP Block ', k, ' of ', nsnpblock, ' Completed: ', nrow(beta.block), ' SNPs')
+	# 	if(verbose) message('...SNP Block ', k, ' of ', nsnpblock, ' Completed: ', nrow(beta.block), ' SNPs')
 	# 	# rbind
 	# 	beta <- rbind(beta, beta.block)
 	# }
@@ -533,7 +533,7 @@ calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, snp.i
 
 
 ### exported function that does the pcrelate estimation for a (pair of) sample block(s)
-pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sample.include.block2, scale, ibd.probs, snp.include, snp.block.size, maf.thresh, maf.bound.method){
+pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sample.include.block2, scale, ibd.probs, snp.include, snp.block.size, maf.thresh, maf.bound.method, verbose = TRUE){
 
 	# create (joint) PC matrix and indices
 	V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = unique(c(sample.include.block1, sample.include.block2)))
@@ -553,7 +553,7 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
 		snp.blocks <- list(snp.include)
 	}
 
-	message('Running PC-Relate analysis using ', length(snp.include), ' SNPs in ', nsnpblock, ' blocks...')
+	if(verbose) message('Running PC-Relate analysis using ', length(snp.include), ' SNPs in ', nsnpblock, ' blocks...')
 	# compute estimates for each variant block; sum along the way
 	matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %dopar% {
 		# read genotype data for the block
@@ -584,7 +584,7 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
 	# 		}
 	# 	}
 	# 	rm(tmpList)
-	# 	message('...SNP Block ', k, ' of ', nsnpblock, ' Completed: ', length(snp.blocks[[k]]), ' SNPs')
+	# 	if(verbose) message('...SNP Block ', k, ' of ', nsnpblock, ' Completed: ', length(snp.blocks[[k]]), ' SNPs')
 	# }
 
 	# take ratios to compute final estimates
