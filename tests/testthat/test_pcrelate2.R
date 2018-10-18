@@ -1,0 +1,17 @@
+context("pcrelate2 tests")
+library(SeqArray)
+
+test_that("pcrelate2", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    myrel <- pcrelate(svd, pcMat = mypcs, correct=FALSE)
+    kin <- pcrelateReadKinship(myrel)
+    myrel2 <- pcrelate2(svd, pcs = mypcs, snp.include=seqGetData(svd, "variant.id"))
+    expect_equal(myrel2$kinBtwn$ID1, kin$ID1)
+    expect_equal(myrel2$kinBtwn$ID2, kin$ID2)
+    expect_equal(myrel2$kinBtwn$kin, kin$kin)
+    expect_equal(myrel2$kinBtwn$k0, kin$k0)
+    expect_equal(myrel2$kinBtwn$k2, kin$k2)
+    expect_equal(myrel2$kinBtwn$nsnp, kin$nsnp)
+    seqClose(svd)	
+})
