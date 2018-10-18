@@ -159,19 +159,28 @@ pcrelate2 <- function(	gdsobj,
 	}else{
 		idx <- NULL
 		VVtVi <- tcrossprod(V, chol2inv(chol(crossprod(V))))
-		message('Betas for ', ncol(V) - 1, ' PC(s) will be calculated using all ', sum(idx), ' samples in sample.include...')
+		message('Betas for ', ncol(V) - 1, ' PC(s) will be calculated using all ', nrow(V), ' samples in sample.include...')
 	}
 	return(list(val = VVtVi, idx = idx))
 }
 
 # function to do actual calculation of betas
 .calcISAFBeta <- function(G, VVtVi){
+	# impute missing genotype values
+	G <- apply(G, 2, .meanImpute)
+
+	# calculate beta
 	if(is.null(VVtVi$idx)){
 		beta <- crossprod(G, VVtVi$val)
 	}else{
 		beta <- crossprod(G[VVtVi$idx, ], VVtVi$val)
 	}
 	return(beta)
+}
+
+.meanImpute <- function(x){
+    x[is.na(x)] <- mean(x, na.rm = TRUE)
+    return(x)
 }
 
 
@@ -245,14 +254,13 @@ pcrelate2 <- function(	gdsobj,
 
 	# index of missing values
 	filt.idx <- which(!nonmiss)
-	rm(nonmiss)
 
 	# compute kinship values
 	kinList <- .pcrCalcKinOvr(G, mu, muqu, filt.idx, idx, jdx)
 
 	if(ibd.probs){
 		# compute ibd values
-		ibdList <- .pcrCalcIBDOvr(G, mu, muqu, filt.idx, idx, jdx)
+		ibdList <- .pcrCalcIBDOvr(G, mu, muqu, nonmiss, filt.idx, idx, jdx)
 
 		return(list(kinNum = kinList$kinNum, 
 					kinDen = kinList$kinDen,
@@ -285,12 +293,11 @@ pcrelate2 <- function(	gdsobj,
 	return(list(kinNum = kinNum, kinDen = kinDen))
 }
 
-.pcrCalcIBDOvr <- function(G, mu, muqu, filt.idx, idx, jdx){
+.pcrCalcIBDOvr <- function(G, mu, muqu, nonmiss, filt.idx, idx, jdx){
 	# opposite allele frequency
 	qu <- 1 - mu
 
-        # indicator matrices of homozygotes
-        nonmiss <- !is.na(G)
+    # indicator matrices of homozygotes
 	Iaa <- G == 0 & nonmiss
 	IAA <- G == 2 & nonmiss
 
@@ -330,14 +337,13 @@ pcrelate2 <- function(	gdsobj,
 
 	# index of missing values
 	filt.idx <- which(!nonmiss)
-	rm(nonmiss)
 
 	# compute kinship values
 	kinNum <- .pcrCalcKinVar(G, mu, muqu, filt.idx, idx, jdx)
 
 	if(ibd.probs){
 		# compute ibd values
-		ibdList <- .pcrCalcIBDVar(G, mu, muqu, filt.idx, idx, jdx)
+		ibdList <- .pcrCalcIBDVar(G, mu, muqu, nonmiss, filt.idx, idx, jdx)
 
 		return(list(kinNum = kinNum,
 					k0Num = ibdList$k0Num,
@@ -362,12 +368,11 @@ pcrelate2 <- function(	gdsobj,
 	return(kinNum)
 }
 
-.pcrCalcIBDVar <- function(G, mu, muqu, filt.idx, idx, jdx){
+.pcrCalcIBDVar <- function(G, mu, muqu, nonmiss, filt.idx, idx, jdx){
 	# opposite allele frequency
 	qu <- 1 - mu
 
 	# indicator matrices of homozygotes
-        nonmiss <- !is.na(G)
 	Iaa <- G == 0 & nonmiss
 	IAA <- G == 2 & nonmiss
 
