@@ -8,7 +8,7 @@ pcrelate2 <- function(	gdsobj,
 						snp.include = NULL,
 						snp.block.size = 10000,
 						maf.thresh = 0.01,
-						maf.bound.method = c('truncate', 'filter'),
+						maf.bound.method = c('filter', 'truncate'),
 						small.samp.correct = FALSE,
 						num.cores = 1,
 						verbose = TRUE){
