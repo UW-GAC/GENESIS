@@ -29,3 +29,9 @@
     mypcrel <- pcrelate(seqData, pcMat=mypcair$vectors[,1:2], training.set=mypcair$unrels, verbose=FALSE, ...)
     pcrelateMakeGRM(mypcrel)
 }
+
+.testPCs <- function(seqData, ...){
+    kinship <- .testKing(seqData)
+    mypcair <- suppressWarnings(pcair(seqData, kinobj=kinship, divobj=kinship, verbose=FALSE, ...))
+    mypcair$vectors[,1:2]
+}

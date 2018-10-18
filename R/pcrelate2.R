@@ -24,8 +24,9 @@ pcrelate2 <- function(	gdsobj,
 	doMC::registerDoMC(cores = min(c(num.cores, sys.cores)))
 	message('Using ', min(c(num.cores, sys.cores)), ' CPU cores')
 
-	# number of sample blocks
-	nsampblock <- ceiling(length(sample.include)/sample.block.size)
+        # number of sample blocks
+        if(is.null(sample.include)) sample.include <- .readSampleId(gdsobj) # need to add method for GenotypeData
+        nsampblock <- ceiling(length(sample.include)/sample.block.size)
 	# list of samples in each block
 	if(nsampblock > 1){
 		samp.blocks <- unname(split(sample.include, cut(1:length(sample.include), nsampblock)))
@@ -288,13 +289,14 @@ pcrelate2 <- function(	gdsobj,
 	# opposite allele frequency
 	qu <- 1 - mu
 
-	# indicator matrices of homozygotes
-	Iaa <- G == 0
-	IAA <- G == 2
+        # indicator matrices of homozygotes
+        nonmiss <- !is.na(G)
+	Iaa <- G == 0 & nonmiss
+	IAA <- G == 2 & nonmiss
 
 	# dominance coded genotype matrix
 	Gd <- mu
-	Gd[G == 1] <- 0
+	Gd[G == 1 & nonmiss] <- 0
 	Gd[IAA] <- qu[IAA]
 	Gd <- Gd - muqu
 
@@ -365,12 +367,13 @@ pcrelate2 <- function(	gdsobj,
 	qu <- 1 - mu
 
 	# indicator matrices of homozygotes
-	Iaa <- G == 0
-	IAA <- G == 2
+        nonmiss <- !is.na(G)
+	Iaa <- G == 0 & nonmiss
+	IAA <- G == 2 & nonmiss
 
 	# dominance coded genotype matrix
 	Gd <- mu
-	Gd[G == 1] <- 0
+	Gd[G == 1 & nonmiss] <- 0
 	Gd[IAA] <- qu[IAA] 
 
 	# scale 
