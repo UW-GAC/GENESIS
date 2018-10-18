@@ -167,7 +167,7 @@ pcrelate2 <- function(	gdsobj,
 # function to do actual calculation of betas
 .calcISAFBeta <- function(G, VVtVi){
 	# impute missing genotype values
-	G <- apply(G, 2, .meanImpute)
+        G <- .meanImpute(G, freq=0.5*colMeans(G, na.rm=TRUE))
 
 	# calculate beta
 	if(is.null(VVtVi$idx)){
@@ -176,11 +176,6 @@ pcrelate2 <- function(	gdsobj,
 		beta <- crossprod(G[VVtVi$idx, ], VVtVi$val)
 	}
 	return(beta)
-}
-
-.meanImpute <- function(x){
-    x[is.na(x)] <- mean(x, na.rm = TRUE)
-    return(x)
 }
 
 
