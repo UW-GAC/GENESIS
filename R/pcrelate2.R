@@ -568,7 +568,7 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
 	V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include)
 	idx <- which(rownames(V) %in% sample.include.block1)
 	jdx <- which(rownames(V) %in% sample.include.block2)
-	oneblock <- ifelse(all(idx == jdx), TRUE, FALSE)
+	oneblock <- setequal(idx, jdx)
 	### slight inefficiency above because we create V for samples in block1 for each block2 when we don't have to if we are running serially; 
 	### but this seems more straightforward to parallelize
 
