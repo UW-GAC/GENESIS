@@ -9,6 +9,7 @@ import(gdsfmt)
 import(Matrix)
 import(data.table)
 import(doMC)
+import(foreach)
 
 importFrom(GWASTools,
            GdsGenotypeReader,
