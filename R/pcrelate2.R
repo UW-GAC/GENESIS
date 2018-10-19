@@ -137,42 +137,6 @@ pcrelate2 <- function(	gdsobj,
 }
 
 
-.readSampleId.GdsGenotypeReader <- function(x) {
-    as.character(.readSampleId(x@handler))
-}
-
-.readSampleId.GenotypeData <- function(x) {
-    .readSampleId(x@data)
-}
-
-
-.snpBlocks <- function(gdsobj, ...) UseMethod(".snpBlocks", gdsobj)
-.snpBlocks.SeqVarIterator <- function(gdsobj) {
-    variantFilter(gdsobj)
-}
-
-.snpBlocks.GenotypeIterator <- function(gdsobj) {
-    snpFilter(gdsobj)
-}
-
-
-.readGeno <- function(gdsobj, ...) UseMethod(".readGeno", gdsobj)
-.readGeno.SeqVarGDSClass <- function(gdsobj, sample.include=NULL, snp.index=NULL){
-    seqSetFilter(gdsobj, sample.id=sample.include, variant.sel=snp.index, verbose=FALSE)
-    altDosage(gdsobj)
-}
-
-.readGeno.GdsGenotypeReader <- function(gdsobj, sample.include=NULL, snp.index=NULL){
-    getGenotypeSelection(gdsobj, scanID=sample.include, snp=snp.index,
-                         transpose=TRUE, drop=FALSE)
-}
-
-.readGeno.GenotypeData <- function(gdsobj, ...){
-    .readGeno(gdsobj@data, ...)
-}
-
-
-
 ### function to match samples and create PC matrix
 .createPCMatrix <- function(gdsobj, pcs, sample.include){
     # set filter to sample.include
