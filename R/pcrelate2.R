@@ -593,7 +593,8 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
                 G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
 
 		# load betas for the current block of variants
-		beta.block <- betaobj[rownames(betaobj) %in% snp.blocks[[k]], , drop = FALSE]
+		#beta.block <- betaobj[rownames(betaobj) %in% snp.blocks[[k]], , drop = FALSE]
+		beta.block <- betaobj[colnames(G), , drop = FALSE]
 		### this line of code will probably be different if we save the betas; need to load correct betas
 
 		# calculate PC-Relate estimates
