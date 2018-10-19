@@ -1,4 +1,6 @@
 pcrelateReadInbreed <- function(pcrelObj, scan.include = NULL, f.thresh = NULL){
+    .Deprecated("pcrelate", msg="pcrelate now returns this table as 'kinSelf'")
+    
     # read in sample.id
     if(class(pcrelObj) == "gds.class"){
         sample.id <- read.gdsn(index.gdsn(pcrelObj, "sample.id"))

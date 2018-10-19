@@ -1,4 +1,24 @@
-pcrelate2 <- function(	gdsobj,
+setGeneric("pcrelate", function(gdsobj, ...) standardGeneric("pcrelate"))
+
+setMethod("pcrelate",
+          "GenotypeIterator",
+          function(gdsobj, ...) {
+              .pcrelate(gdsobj, ...)
+          })
+
+setMethod("pcrelate",
+          "SeqVarIterator",
+          function(gdsobj, ...) {
+              filt <- seqGetFilter(gdsobj)
+              out <- .pcrelate(gdsobj, ...)
+              seqSetFilter(gdsobj,
+                           sample.sel=filt$sample.sel,
+                           variant.sel=filt$variant.sel,
+                           verbose=FALSE)
+              out
+          })
+
+.pcrelate <- function(	gdsobj,
 						pcs,
 						scale = c('overall', 'variant', 'none'),
 						ibd.probs = TRUE,
@@ -117,8 +137,9 @@ pcrelate2 <- function(	gdsobj,
 
 	### need to rewrite the small sample correction at some point - take care of this later ###
 
-
-	return(list(kinBtwn = kinBtwn, kinSelf = kinSelf))
+        out <- list(kinBtwn = kinBtwn, kinSelf = kinSelf)
+        class(out) <- "pcrelate"
+	return(out)
 }
 
 
