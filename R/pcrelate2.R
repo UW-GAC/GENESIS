@@ -464,7 +464,7 @@ pcrelate2 <- function(	gdsobj,
     if(drop.lower){
         x[lower.tri(x, diag = TRUE)] <- NA
     }
-    x <- as.data.table(reshape2::melt(x, varnames = c('ID1', 'ID2'), na.rm = TRUE))
+    x <- as.data.table(reshape2::melt(x, varnames = c('ID1', 'ID2'), na.rm = TRUE, as.is = TRUE))
     setkeyv(x, c('ID1', 'ID2'))
 }
 
