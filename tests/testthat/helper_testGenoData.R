@@ -19,3 +19,18 @@
     dimnames(covMat) <- list(grm$sample.id, grm$sample.id)
     covMat
 }
+
+
+.testHMData <- function() {
+    gdsfmt::showfile.gds(closeall=TRUE, verbose=FALSE)
+    gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
+    HapMap_geno <- GWASTools::GdsGenotypeReader(gdsfile)
+    GWASTools::GenotypeData(HapMap_geno)
+}
+
+
+.testHMPCs <- function(genoData) {
+    KINGmat <- get(data("HapMap_ASW_MXL_KINGmat", package="GENESIS", envir=environment()))
+    mypcs <- pcair(genoData, kinobj = KINGmat, divobj = KINGmat, verbose=FALSE)
+    mypcs$vectors[,1:2]
+}

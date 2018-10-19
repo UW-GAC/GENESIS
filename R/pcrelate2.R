@@ -5,8 +5,8 @@ pcrelate2 <- function(	gdsobj,
 						sample.include = NULL,
 						training.set = NULL,
 						sample.block.size = 5000,
-						snp.include = NULL,
-						snp.block.size = 10000,
+						## snp.include = NULL,
+						## snp.block.size = 10000,
 						maf.thresh = 0.01,
 						maf.bound.method = c('filter', 'truncate'),
 						small.samp.correct = FALSE,
@@ -16,6 +16,7 @@ pcrelate2 <- function(	gdsobj,
 	# checks
         scale <- match.arg(scale)
         maf.bound.method <- match.arg(maf.bound.method)
+        if(is.null(sample.include)) sample.include <- .readSampleId(gdsobj)
         .pcrelateChecks(pcs = pcs, scale = scale, ibd.probs = ibd.probs, sample.include = sample.include, training.set = training.set, 
 					maf.thresh = maf.thresh)
 	
@@ -25,7 +26,6 @@ pcrelate2 <- function(	gdsobj,
 	if(verbose) message('Using ', min(c(num.cores, sys.cores)), ' CPU cores')
 
         # number of sample blocks
-        if(is.null(sample.include)) sample.include <- .readSampleId(gdsobj) # need to add method for GenotypeData
         nsampblock <- ceiling(length(sample.include)/sample.block.size)
 	# list of samples in each block
 	if(nsampblock > 1){
@@ -45,20 +45,23 @@ pcrelate2 <- function(	gdsobj,
 
 		### Stephanie to build in variant iterators here ###
 		# number of snp blocks
-		nsnpblock <- ceiling(length(snp.include)/snp.block.size)
-		# list of snps in each block
-		if(nsnpblock > 1){
-			snp.blocks <- unname(split(snp.include, cut(1:length(snp.include), nsnpblock)))
-		}else{
-			snp.blocks <- list(snp.include)
-		}
-		if(verbose) message('Running PC-Relate analysis for ', length(sample.include), ' samples using ', length(snp.include), ' SNPs in ', nsnpblock, ' blocks...')
+		## nsnpblock <- ceiling(length(snp.include)/snp.block.size)
+		## # list of snps in each block
+		## if(nsnpblock > 1){
+		## 	snp.blocks <- unname(split(snp.include, cut(1:length(snp.include), nsnpblock)))
+		## }else{
+		## 	snp.blocks <- list(snp.include)
+		## }
+                snp.blocks <- .snpBlocks(gdsobj)
+                nsnpblock <- length(snp.blocks)
+		if(verbose) message('Running PC-Relate analysis for ', length(sample.include), ' samples using ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
 
 		# for each snp block
 		matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %dopar% {
 			# read genotype data for the block
-			seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
-			G <- altDosage(gdsobj)
+			#seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
+                        #G <- altDosage(gdsobj)
+                        G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
 
 			# calculate ISAF betas
 			beta <- .calcISAFBeta(G = G, VVtVi = VVtVi)
@@ -80,7 +83,7 @@ pcrelate2 <- function(	gdsobj,
 		if(verbose) message(length(sample.include), ' samples to be included in the analysis, split into ', nsampblock, ' blocks...')
 
 		# calculate betas for individual specific allele frequencies
-		beta <- calcISAFBeta(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include, training.set = training.set, snp.include = snp.include, snp.block.size = snp.block.size, verbose = verbose)		
+		beta <- calcISAFBeta(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include, training.set = training.set, verbose = verbose)		
 		### beta is a matrix of variants x PCs; needs to be saved, not sure of the best format or the best way to split this up ###
 		
 		# compute estimates for current (pair of) sample block(s)
@@ -92,7 +95,7 @@ pcrelate2 <- function(	gdsobj,
 				if(verbose) message('Running PC-Relate analysis for sample block pair (', i, ',', j, ')')
 				# compute estimates for the (pair of) sample block(s)
 				tmp <- pcrelateSampBlock(	gdsobj = gdsobj, pcs = pcs, betaobj = beta, sample.include.block1 = samp.blocks[[i]], sample.include.block2 = samp.blocks[[j]],
-											scale = scale, ibd.probs = ibd.probs, snp.include = snp.include, snp.block.size = snp.block.size, 
+											scale = scale, ibd.probs = ibd.probs,
 											maf.thresh = maf.thresh, maf.bound.method = maf.bound.method, verbose = verbose)
 
 				# update results with this (pair of) sample block(s)
@@ -134,14 +137,47 @@ pcrelate2 <- function(	gdsobj,
 }
 
 
+.readSampleId.GdsGenotypeReader <- function(x) {
+    as.character(.readSampleId(x@handler))
+}
+
+.readSampleId.GenotypeData <- function(x) {
+    .readSampleId(x@data)
+}
+
+
+.snpBlocks <- function(gdsobj, ...) UseMethod(".snpBlocks", gdsobj)
+.snpBlocks.SeqVarIterator <- function(gdsobj) {
+    variantFilter(gdsobj)
+}
+
+.snpBlocks.GenotypeIterator <- function(gdsobj) {
+    snpFilter(gdsobj)
+}
+
+
+.readGeno <- function(gdsobj, ...) UseMethod(".readGeno", gdsobj)
+.readGeno.SeqVarGDSClass <- function(gdsobj, sample.include=NULL, snp.index=NULL){
+    seqSetFilter(gdsobj, sample.id=sample.include, variant.sel=snp.index, verbose=FALSE)
+    altDosage(gdsobj)
+}
+
+.readGeno.GdsGenotypeReader <- function(gdsobj, sample.include=NULL, snp.index=NULL){
+    getGenotypeSelection(gdsobj, scanID=sample.include, snp=snp.index,
+                         transpose=TRUE, drop=FALSE)
+}
+
+.readGeno.GenotypeData <- function(gdsobj, ...){
+    .readGeno(gdsobj@data, ...)
+}
+
 
 
 ### function to match samples and create PC matrix
 .createPCMatrix <- function(gdsobj, pcs, sample.include){
     # set filter to sample.include
-    seqSetFilter(gdsobj, sample.id = sample.include)
-    sample.id <- seqGetData(gdsobj, 'sample.id')
-    if(!all(sample.include %in% sample.id)) stop('All samples in sample.include must be in the gdsobj')
+    #seqSetFilter(gdsobj, sample.id = sample.include)
+    sample.id <- intersect(.readSampleId(gdsobj), sample.include)
 
     # subset and re-order pcs if needed
     V <- pcs[match(sample.id, rownames(pcs)), , drop = FALSE]
@@ -494,23 +530,26 @@ calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, snp.i
 	V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include)
 
 	# matrix product of V
-	VVtVi <- .calcISAFBetaPCProd(V = V, training.set = training.set)
+	VVtVi <- .calcISAFBetaPCProd(V = V, training.set = training.set, verbose = verbose)
 	
 	### Stephanie to build in variant iterators here ###
 	# number of snp blocks
-	nsnpblock <- ceiling(length(snp.include)/snp.block.size)
-	# list of snps in each block
-	if(nsnpblock > 1){
-		snp.blocks <- unname(split(snp.include, cut(1:length(snp.include), nsnpblock)))
-	}else{
-		snp.blocks <- list(snp.include)
-	}
-	if(verbose) message('Calculating Indivdiual-Specific Allele Frequency betas for ', length(snp.include), ' SNPs in ', nsnpblock, ' blocks...')
+	## nsnpblock <- ceiling(length(snp.include)/snp.block.size)
+	## # list of snps in each block
+	## if(nsnpblock > 1){
+	## 	snp.blocks <- unname(split(snp.include, cut(1:length(snp.include), nsnpblock)))
+	## }else{
+	## 	snp.blocks <- list(snp.include)
+	## }
+        snp.blocks <- .snpBlocks(gdsobj)
+        nsnpblock <- length(snp.blocks)
+	if(verbose) message('Calculating Indivdiual-Specific Allele Frequency betas for ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
 
 	beta <- foreach(k = 1:nsnpblock, .combine = rbind, .inorder = FALSE, .multicombine = TRUE) %dopar% {
 		# read genotype data for the block
-		seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
-		G <- altDosage(gdsobj)
+		#seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
+		#G <- altDosage(gdsobj)
+                G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
 
 		# calculate ISAF betas
 		beta.block <- .calcISAFBeta(G = G, VVtVi = VVtVi)
@@ -533,10 +572,11 @@ calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, snp.i
 
 
 ### exported function that does the pcrelate estimation for a (pair of) sample block(s)
-pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sample.include.block2, scale, ibd.probs, snp.include, snp.block.size, maf.thresh, maf.bound.method, verbose = TRUE){
+pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sample.include.block2, scale, ibd.probs, maf.thresh, maf.bound.method, verbose = TRUE){
 
-	# create (joint) PC matrix and indices
-	V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = unique(c(sample.include.block1, sample.include.block2)))
+        # create (joint) PC matrix and indices
+        sample.include <- unique(c(sample.include.block1, sample.include.block2))
+	V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include)
 	idx <- which(rownames(V) %in% sample.include.block1)
 	jdx <- which(rownames(V) %in% sample.include.block2)
 	oneblock <- ifelse(all(idx == jdx), TRUE, FALSE)
@@ -545,20 +585,23 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
 
 	### Stephanie to build in variant iterators here ###
 	# number of snp blocks
-	nsnpblock <- ceiling(length(snp.include)/snp.block.size)
-	# list of snps in each block
-	if(nsnpblock > 1){
-		snp.blocks <- unname(split(snp.include, cut(1:length(snp.include), nsnpblock)))
-	}else{
-		snp.blocks <- list(snp.include)
-	}
+	## nsnpblock <- ceiling(length(snp.include)/snp.block.size)
+	## # list of snps in each block
+	## if(nsnpblock > 1){
+	## 	snp.blocks <- unname(split(snp.include, cut(1:length(snp.include), nsnpblock)))
+	## }else{
+	## 	snp.blocks <- list(snp.include)
+	## }
+        snp.blocks <- .snpBlocks(gdsobj)
+        nsnpblock <- length(snp.blocks)
 
-	if(verbose) message('Running PC-Relate analysis using ', length(snp.include), ' SNPs in ', nsnpblock, ' blocks...')
+	if(verbose) message('Running PC-Relate analysis using ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
 	# compute estimates for each variant block; sum along the way
 	matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %dopar% {
 		# read genotype data for the block
-		seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
-		G <- altDosage(gdsobj)
+		#seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
+		#G <- altDosage(gdsobj)
+                G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
 
 		# load betas for the current block of variants
 		beta.block <- betaobj[rownames(betaobj) %in% snp.blocks[[k]], , drop = FALSE]
