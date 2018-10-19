@@ -106,8 +106,8 @@ pcrelate2 <- function(	gdsobj,
 	}
 
 	# order samples
-	setkey(kinSelf, ID)
-	setkey(kinBtwn, ID1, ID2)
+	setkeyv(kinSelf, 'ID')
+	setkeyv(kinBtwn, c('ID1', 'ID2'))
 
 	### post processing after putting all samples together
 	if(ibd.probs){
@@ -461,16 +461,20 @@ pcrelate2 <- function(	gdsobj,
 }
 
 .estMelt <- function(x, drop.lower){
-	if(drop.lower){
+    if(drop.lower){
         x[lower.tri(x, diag = TRUE)] <- NA
     }
     x <- as.data.table(reshape2::melt(x, varnames = c('ID1', 'ID2'), na.rm = TRUE))
-    setkey(x, ID1, ID2)
+    setkeyv(x, c('ID1', 'ID2'))
 }
 
 
 ### functions for final processing
 .fixIBDEst <- function(kinBtwn, kinSelf){
+    # keep R CMD check from warning about undefined global variables
+    `.` <- function(...) NULL
+    ID <- f <- f.1 <- f.2 <- kin <- k0 <- k2 <- NULL
+    
     # correct k2 for HW departure
     kinBtwn <- merge(kinBtwn, kinSelf[,.(ID, f)], by.x = 'ID2', by.y = 'ID')
     setnames(kinBtwn, 'f', 'f.2')
@@ -601,7 +605,7 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
 	if(oneblock){
 		# self table
 		kinSelf <- data.table(ID = rownames(estList$kin), f = 2*diag(estList$kin) - 1, nsnp = diag(estList$nsnp))
-		setkey(kinSelf, ID)
+		setkeyv(kinSelf, 'ID')
 		# between samples table
 		kinBtwn <- .estListToDT(estList, drop.lower = TRUE)
 	}else{
@@ -609,7 +613,7 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
 		# between samples table
 		kinBtwn <- .estListToDT(estList, drop.lower = FALSE)
 	}
-	setkey(kinBtwn, ID1, ID2)
+	setkeyv(kinBtwn, c('ID1', 'ID2'))
 	
 	return(list(kinSelf = kinSelf, kinBtwn = kinBtwn))
 }
