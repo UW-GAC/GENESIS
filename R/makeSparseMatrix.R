@@ -136,7 +136,7 @@ setMethod("meltMatrix",
                 x[lower.tri(x, diag = drop.diag)] <- NA
             }
             x <- as.data.table(reshape2::melt(x, varnames = c('ID1', 'ID2'), na.rm = TRUE, as.is = TRUE))
-            setkey(x, ID1, ID2)
+            setkeyv(x, c('ID1', 'ID2'))
           })
 
 setMethod("meltMatrix",
@@ -152,8 +152,30 @@ setMethod("meltMatrix",
 
             missing <- is.na(as.vector(x))
             x <- cbind(labels[!missing,], data.table(value = x[!missing])) 
-            setkey(x, ID1, ID2)
+            setkeyv(x, c('ID1', 'ID2'))
           })
+
+
+pcrelateMakeGRM <- function(pcrelobj, sample.include = NULL, thresh = NULL, scaleKin = 2, verbose = TRUE){
+    if(!requireNamespace("igraph")) stop("package 'igraph' must be installed to use this function")
+
+    # get the diagonals
+    x <- pcrelobj$kinSelf[, .(ID, f)]
+    setnames(x, 'ID', 'ID1')
+    x[, ID2 := ID1]
+    x[, kin := 0.5*(1 + f)][, f := NULL]
+
+    # append the off-diagonal
+    x <- rbind(x, pcrelobj$kinBtwn[,.(ID1, ID2, kin)])
+
+    # scale the values
+    x[, kin := scaleKin*kin]
+    
+    # set kin name to value
+    setnames(x, 'kin', 'value')
+    # call makeSparseMatrix
+    makeSparseMatrix(x = x, thresh = thresh, sample.include = sample.include, diag.value = NULL, verbose = verbose)
+}
 
 
 kingToMatrix <- function(file.king, sample.include = NULL, thresh = NULL, verbose = TRUE){
@@ -193,7 +215,7 @@ kingToMatrix <- function(file.king, sample.include = NULL, thresh = NULL, verbos
     }
         
     # check for duplicate pairs
-    setkey(king, ID1, ID2)
+    setkeyv(king, c('ID1', 'ID2'))
     if(any(duplicated(king))){
         stop('Some sample pairs are provided multiple times in file.king; please only provide one value per sample pair')
     }

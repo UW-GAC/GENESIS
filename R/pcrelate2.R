@@ -472,21 +472,13 @@ setMethod("pcrelate",
 		
 ### functions for post processing on sample block level
 .estListToDT <- function(x, drop.lower){
-	estDT <- lapply(x, .estMelt, drop.lower = drop.lower)
+	estDT <- lapply(x, meltMatrix, drop.lower = drop.lower, drop.diag = drop.lower)
 	for(k in 1:length(estDT)){
 		setnames(estDT[[k]], 'value', names(estDT)[k])
 	}
 	# merge those data.tables into one data.table
 	estDT <- Reduce(merge, estDT)
 	return(estDT)
-}
-
-.estMelt <- function(x, drop.lower){
-    if(drop.lower){
-        x[lower.tri(x, diag = TRUE)] <- NA
-    }
-    x <- as.data.table(reshape2::melt(x, varnames = c('ID1', 'ID2'), na.rm = TRUE, as.is = TRUE))
-    setkeyv(x, c('ID1', 'ID2'))
 }
 
 
