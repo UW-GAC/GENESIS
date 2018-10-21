@@ -34,7 +34,7 @@ mypcair <- pcair(HapMap_genoData, kinobj = HapMap_ASW_MXL_KINGmat,
                  divobj = HapMap_ASW_MXL_KINGmat)
                 
 # run PC-Relate
-mypcrel <- pcrelate(HapMap_genoData, pcMat = mypcair$vectors[,1],
+mypcrel <- pcrelate(HapMap_genoData, pcs = mypcair$vectors[,1],
         		training.set = mypcair$unrels)
 close(HapMap_genoData)
 

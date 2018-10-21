@@ -37,14 +37,17 @@ data("HapMap_ASW_MXL_KINGmat")
 # run PC-AiR
 mypcair <- pcair(HapMap_genoData, kinobj = HapMap_ASW_MXL_KINGmat, 
                 divobj = HapMap_ASW_MXL_KINGmat)
-                
+mypcs <- mypcair$vectors[,1,drop=FALSE]
+
+# create a GenotypeBlockIterator object
+HapMap_genoData <- GenotypeBlockIterator(HapMap_genoData) 
 # run PC-Relate
-mypcrel <- pcrelate(HapMap_genoData, pcMat = mypcair$vectors[,1],
+mypcrel <- pcrelate(HapMap_genoData, pcs = mypcs,
             	training.set = mypcair$unrels)
 
 # generate a phenotype
 set.seed(4)
-pheno <- 0.2*mypcair$vectors[,1] + rnorm(mypcair$nsamp, mean = 0, sd = 1)
+pheno <- 0.2*mypcs + rnorm(mypcair$nsamp, mean = 0, sd = 1)
 ```
 ```{r}
 # mypcair contains PCs from a previous PC-AiR analysis
@@ -52,7 +55,7 @@ pheno <- 0.2*mypcair$vectors[,1] + rnorm(mypcair$nsamp, mean = 0, sd = 1)
 # pheno is a vector of Phenotype values
 
 # make a data.frame
-mydat <- data.frame(scanID = mypcrel$sample.id, pc1 = mypcair$vectors[,1], 
+mydat <- data.frame(scanID = mypcair$sample.id, pc1 = mypcair$vectors[,1], 
                     pheno = pheno)
 head(mydat)
 

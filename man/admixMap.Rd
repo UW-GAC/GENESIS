@@ -36,6 +36,7 @@ file.copy(gdsfile, tmpfile)
 gds <- openfn.gds(tmpfile, readonly=FALSE)
 nsnp <- objdesp.gdsn(index.gdsn(gds, "snp.id"))$dim
 nsamp <- objdesp.gdsn(index.gdsn(gds, "sample.id"))$dim
+samp <- read.gdsn(index.gdsn(gds, "sample.id"))
 dosage_eur <- sample(0:2, nsnp*nsamp, replace=TRUE)
 dosage_afr <- ifelse(dosage_eur == 2, 0, sample(0:1, nsnp*nsamp, replace=TRUE))
 dosage_amer <- 2 - dosage_eur - dosage_afr
@@ -43,12 +44,6 @@ add.gdsn(gds, "dosage_eur", matrix(dosage_eur, nrow=nsamp, ncol=nsnp))
 add.gdsn(gds, "dosage_afr", matrix(dosage_afr, nrow=nsamp, ncol=nsnp))
 add.gdsn(gds, "dosage_amer", matrix(dosage_amer, nrow=nsamp, ncol=nsnp))
 closefn.gds(gds)
-        
-# read GRM
-pcrfile <- system.file("extdata", "HapMap_ASW_MXL_pcrelate.gds", package="GENESIS")
-pcr <- openfn.gds(pcrfile)
-mypcrel <- pcrelateMakeGRM(pcr)
-closefn.gds(pcr)
 
 # generate a phenotype
 set.seed(4)
@@ -56,7 +51,7 @@ pheno <- rnorm(nsamp, mean = 0, sd = 1)
 covar <- sample(0:1, nsamp, replace=TRUE)
 
 # make ScanAnnotationDataFrame
-scanAnnot <- ScanAnnotationDataFrame(data.frame(scanID = rownames(mypcrel), 
+scanAnnot <- ScanAnnotationDataFrame(data.frame(scanID = samp, 
               covar, pheno, stringsAsFactors=FALSE))
 
 # read in GDS data
@@ -71,7 +66,7 @@ for (anc in c("eur", "afr", "amer")){
 genoIterators <- lapply(genoDataList, GenotypeBlockIterator)
 
 # fit the null mixed model
-null.model <- fitNullModel(scanAnnot, outcome = "pheno", covars = "covar", cov.mat = mypcrel)
+null.model <- fitNullModel(scanAnnot, outcome = "pheno", covars = "covar")
 
 # run the association test
 myassoc <- admixMap(genoIterators, null.model)

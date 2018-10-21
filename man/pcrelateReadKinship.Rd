@@ -1,7 +1,9 @@
 \name{pcrelateReadKinship}
 \alias{pcrelateReadKinship}
 \title{Create a Table of Pairwise Kinship Coefficient and IBD Sharing Probability Estimates from PC-Relate Output}
-\description{\code{pcrelateReadKinship} is used to create a table of pairwise kinship coefficient and IBD sharing probability (k0, k1, k2) estimates from the output of \code{pcrelate}.}
+\description{\code{pcrelateReadKinship} is used to create a table of pairwise kinship coefficient and IBD sharing probability (k0, k1, k2) estimates from the output of \code{pcrelate}.
+This function is deprecated; \code{\link{pcrelate}} now returns this table as \code{kinBtwn}.
+}
 \usage{
 pcrelateReadKinship(pcrelObj, scan.include = NULL, ibd.probs = TRUE, 
             kin.thresh = NULL)

@@ -133,13 +133,13 @@ If better estimates of kinship coefficients are available, then the `kinobj` inp
 
 ###  Reference Population Samples
 
-As PCA is an unsupervised method, it is often difficult to identify what population structure each of the top PCs represents.  In order to provide some understanding of the inferred structure, it is sometimes recommended to include reference population samples of known ancestry in the analysis.  If the data set contains such reference population samples, we may want to use only those individuals as the "unrelated subset" for performing the PCA and predict values for all other sample individuals.  This can be accomplished by setting the input `unrel.set` equal to a vector, `IDs`, of the individual IDs for the reference population samples.
-
-```{r, eval=FALSE}
+```{r, echo=FALSE, eval=FALSE}
+# As PCA is an unsupervised method, it is often difficult to identify what population structure each of the top PCs represents.  In order to provide some understanding of the inferred structure, it is sometimes recommended to include reference population samples of known ancestry in the analysis.  If the data set contains such reference population samples, we may want to use only those individuals as the "unrelated subset" for performing the PCA and predict values for all other sample individuals.  This can be accomplished by setting the input `unrel.set` equal to a vector, `IDs`, of the individual IDs for the reference population samples.
 mypcair <- pcair(HapMap_genoData, unrel.set = IDs)
 ```
 
-If, instead, we want to make sure that these reference population samples are included in the "unrelated subset," but also allow for the PC-AiR algorithm to select additional individuals from the sample to be a part of the "unrelated subset," then this can be accomplished by using the inputs `kinobj`, `divobj`, and `unrel.set` together.
+
+As PCA is an unsupervised method, it is often difficult to identify what population structure each of the top PCs represents.  In order to provide some understanding of the inferred structure, it is sometimes recommended to include reference population samples of known ancestry in the analysis.  If the data set contains such reference population samples, we may want to make sure that these reference population samples are included in the "unrelated subset." This can be accomplished by setting the input `unrel.set` equal to a vector, `IDs`, of the individual IDs for the reference population samples.
 
 ```{r, eval=FALSE}
 mypcair <- pcair(HapMap_genoData, kinobj = KINGmat, divobj = KINGmat, unrel.set = IDs)
@@ -192,43 +192,38 @@ The default is to plot PC values as black dots and blue pluses for individuals i
 
 PC-Relate uses the ancestry representative principal components (PCs) calculated from PC-AiR to adjust for the population structure and ancestry of individuals in the sample and provide accurate estimates of recent genetic relatedness due to family structure. The `pcrelate` function performs the PC-Relate analysis.
 
-The `training.set` input of the `pcrelate` function allows for the specification of which samples are used to estimate the ancestry adjustment at each SNP. The adjustment tends to perform best when close relatives are excluded from `training.set`, so the individuals in the "unrelated subset" from the PC-AiR analysis are typically a good choice. However, when an "unrelated subset" is not available, the adjustment still works well when estimated using all samples (`training.set = NULL`). 
+The `training.set` input of the `pcrelate` function allows for the specification of which samples are used to estimate the ancestry adjustment at each SNP. The adjustment tends to perform best when close relatives are excluded from `training.set`, so the individuals in the "unrelated subset" from the PC-AiR analysis are typically a good choice. However, when an "unrelated subset" is not available, the adjustment still works well when estimated using all samples (`training.set = NULL`).
+
+In order to run PC-Relate, we first need to create an iterator object to read SNPs in blocks.
 
 ```{r}
 # run PC-Relate
-mypcrelate <- pcrelate(HapMap_genoData, pcMat = mypcair$vectors[,1:2], 
+HapMap_genoData <- GenotypeBlockIterator(HapMap_genoData, snpBlock=20000) 
+mypcrelate <- pcrelate(HapMap_genoData, pcs = mypcair$vectors[,1:2], 
                        training.set = mypcair$unrels)
 ```
-* `genoData` is a `GenotypeData` class object
-* `pcMat` is a matrix whose columns are the PCs used for the ancestry adjustment
+* `genoData` is a `GenotypeIterator` class object
+* `pcs` is a matrix whose columns are the PCs used for the ancestry adjustment
 * `training.set` is a vector of individual IDs specifying which samples are used to esimate the ancestry adjustment at each SNP
 
 If estimates of IBD sharing probabilities are not desired, then setting the input `ibd.probs = FALSE` will speed up the computation.
 
 ## Output from PC-Relate
 
-The `pcrelate` function will either return an object of class `pcrelate` (when the input `write.to.gds = FALSE`) or it will save the output to a GDS file (when the input `write.to.gds = TRUE`). Saving the output to a GDS file is useful for large samples, as it allows for efficient storage and access to the estimates (see the package `gdsfmt` for more details). The following command can be used to read in the results from a previous PC-Relate analysis saved to the GDS file "tmp_pcrelate.gds"
+The `pcrelate` function will either return an object of class `pcrelate`, which is a list of two data.frames: `kinBtwn` with pairwise kinship values, and `kinSelf` with inbreeding coefficients.
 
-```{r, eval=FALSE}
-library(gdsfmt)
-mypcrelate <- openfn.gds("tmp_pcrelate.gds")
-```
-
-Functions are provided for easily reading the output from `pcrelate` (either a class `pcrelate` object or a GDS file) and making a table of pairwise relatedness estimates, a table of individual inbreeding coeficients, and a genetic relationship matrix (GRM).
+A function is provided for making a genetic relationship matrix (GRM). Using a threshold for kinship will create a sparse matrix by setting kinship for pairs less than the threshold to 0. This can be useful to reduce memory usage for very large sample sizes.
 
 ```{r}
-iids <- getScanID(HapMap_genoData)
-pcrelateReadKinship(pcrelObj = mypcrelate, scan.include = iids[1:40], kin.thresh = 2^(-9/2))
-pcrelateReadInbreed(pcrelObj = mypcrelate, scan.include = iids[1:40], f.thresh = 2^(-11/2))
-pcrelateMakeGRM(pcrelObj = mypcrelate, scan.include = iids[1:5], scaleKin = 2)
+iids <- as.character(getScanID(HapMap_genoData))
+pcrelateMakeGRM(mypcrelate, sample.include = iids[1:5], thresh = 2^(-11/2), scaleKin = 2)
 ```
 ```{r, echo=FALSE}
 close(HapMap_genoData)
 ```
-* `pcrelObj` is the output from `pcrelate`; either a class `pcrelate` object or a GDS file
-* `scan.include` is a vector of individual IDs specifying which individuals to include in the table or matrix
-* `kin.thresh` specifies a minimum kinship coefficient value to include in the table
-* `f.thresh` specifies a minimum inbreeding coefficient value to include in the table
+* `pcrelobj` is the output from `pcrelate`; either a class `pcrelate` object or a GDS file
+* `sample.include` is a vector of individual IDs specifying which individuals to include in the table or matrix
+* `thresh` specifies a minimum kinship coefficient value to include in the GRM
 * `scaleKin` specifies a factor to multiply the kinship coefficients by in the GRM
 
 # References

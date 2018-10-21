@@ -24,7 +24,7 @@ makeSparseMatrix(x, thresh = NULL, sample.include = NULL, diag.value = NULL, ver
 
 \author{Matthew P. Conomos}
 \seealso{
-	\code{\link{kingToMatrix}}} for functions that use this function.
+	\code{\link{kingToMatrix}} for functions that use this function.
 }
 % \examples{
 % KING --robust

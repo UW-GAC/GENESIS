@@ -131,7 +131,8 @@ mypcair <- pcair(HapMap_genoData, kinobj = HapMap_ASW_MXL_KINGmat,
                 divobj = HapMap_ASW_MXL_KINGmat)
 
 # run PC-Relate
-mypcrel <- pcrelate(HapMap_genoData, pcMat = mypcair$vectors[,1],
+HapMap_genoData <- GenotypeBlockIterator(HapMap_genoData, snpBlock=20000)
+mypcrel <- pcrelate(HapMap_genoData, pcs = mypcair$vectors[,1,drop=FALSE],
     			training.set = mypcair$unrels)
 close(HapMap_genoData)
 
@@ -139,11 +140,11 @@ close(HapMap_genoData)
 set.seed(4)
 pheno <- 0.2*mypcair$vectors[,1] + rnorm(mypcair$nsamp, mean = 0, sd = 1)
 
-annot <- data.frame(sample.id = mypcrel$sample.id, 
+annot <- data.frame(sample.id = mypcair$sample.id, 
                     pc1 = mypcair$vectors[,1], pheno = pheno)
 
 # make cov.mat
-cov.mat <- pcrelateMakeGRM(mypcrel)
+cov.mat <- pcrelateMakeGRM(mypcrel, verbose=FALSE)[annot$sample.id, annot$sample.id]
 
 # fit the null mixed model
 nullmod <- fitNullModel(annot, outcome = "pheno", covars = "pc1", cov.mat = cov.mat)
