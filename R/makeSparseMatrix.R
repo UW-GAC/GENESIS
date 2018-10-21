@@ -157,14 +157,18 @@ setMethod("meltMatrix",
 
 
 pcrelateMakeGRM <- function(pcrelobj, sample.include = NULL, thresh = NULL, scaleKin = 2, verbose = TRUE){
+    # keep R CMD check from warning about undefined global variables
+    ID <- f <- ID1 <- ID2 <- kin <- NULL
+    `.` <- function(...) NULL
+    
     # get the diagonals
-    x <- pcrelobj$kinSelf[, .(ID, f)]
+    x <- as.data.table(pcrelobj$kinSelf)[, .(ID, f)]
     setnames(x, 'ID', 'ID1')
     x[, ID2 := ID1]
     x[, kin := 0.5*(1 + f)][, f := NULL]
 
     # append the off-diagonal
-    x <- rbind(x, pcrelobj$kinBtwn[,.(ID1, ID2, kin)])
+    x <- rbind(x, as.data.table(pcrelobj$kinBtwn)[,.(ID1, ID2, kin)])
 
     # scale the values
     x[, kin := scaleKin*kin]
@@ -178,7 +182,7 @@ pcrelateMakeGRM <- function(pcrelobj, sample.include = NULL, thresh = NULL, scal
 
 kingToMatrix <- function(file.king, sample.include = NULL, thresh = NULL, verbose = TRUE){
     # keep R CMD check from warning about undefined global variables
-    ID1 <- ID2 <- PropIBD <- Kinship <- NULL
+    ID1 <- ID2 <- PropIBD <- Kinship <- value <- NULL
     `.` <- function(...) NULL
     
     # read in the king results and subset columns
