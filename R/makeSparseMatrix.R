@@ -157,8 +157,6 @@ setMethod("meltMatrix",
 
 
 pcrelateMakeGRM <- function(pcrelobj, sample.include = NULL, thresh = NULL, scaleKin = 2, verbose = TRUE){
-    if(!requireNamespace("igraph")) stop("package 'igraph' must be installed to use this function")
-
     # get the diagonals
     x <- pcrelobj$kinSelf[, .(ID, f)]
     setnames(x, 'ID', 'ID1')
@@ -179,8 +177,6 @@ pcrelateMakeGRM <- function(pcrelobj, sample.include = NULL, thresh = NULL, scal
 
 
 kingToMatrix <- function(file.king, sample.include = NULL, thresh = NULL, verbose = TRUE){
-    if(!requireNamespace("igraph")) stop("package 'igraph' must be installed to use this function")
-
     # keep R CMD check from warning about undefined global variables
     ID1 <- ID2 <- PropIBD <- Kinship <- NULL
     `.` <- function(...) NULL
