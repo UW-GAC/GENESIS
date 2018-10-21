@@ -137,7 +137,7 @@ setMethod("pcrelate",
 
 	### need to rewrite the small sample correction at some point - take care of this later ###
 
-        out <- list(kinBtwn = kinBtwn, kinSelf = kinSelf)
+        out <- list(kinBtwn = as.data.frame(kinBtwn), kinSelf = as.data.frame(kinSelf))
         class(out) <- "pcrelate"
 	return(out)
 }
