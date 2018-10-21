@@ -2,15 +2,59 @@ setGeneric("pcrelate", function(gdsobj, ...) standardGeneric("pcrelate"))
 
 setMethod("pcrelate",
           "GenotypeIterator",
-          function(gdsobj, ...) {
-              .pcrelate(gdsobj, ...)
+          function(gdsobj,
+                      pcs,
+                      scale = c('overall', 'variant', 'none'),
+                      ibd.probs = TRUE,
+                      sample.include = NULL,
+                      training.set = NULL,
+                      sample.block.size = 5000,
+                      maf.thresh = 0.01,
+                      maf.bound.method = c('filter', 'truncate'),
+                      small.samp.correct = FALSE,
+                      num.cores = 1,
+                      verbose = TRUE) {
+              .pcrelate(gdsobj, 
+                      pcs = pcs,
+                      scale = scale,
+                      ibd.probs = ibd.probs,
+                      sample.include = sample.include,
+                      training.set = training.set,
+                      sample.block.size = sample.block.size,
+                      maf.thresh = maf.thresh,
+                      maf.bound.method = maf.bound.method,
+                      small.samp.correct = small.samp.correct,
+                      num.cores = num.cores,
+                      verbose = verbose)
           })
 
 setMethod("pcrelate",
           "SeqVarIterator",
-          function(gdsobj, ...) {
+          function(gdsobj,
+                      pcs,
+                      scale = c('overall', 'variant', 'none'),
+                      ibd.probs = TRUE,
+                      sample.include = NULL,
+                      training.set = NULL,
+                      sample.block.size = 5000,
+                      maf.thresh = 0.01,
+                      maf.bound.method = c('filter', 'truncate'),
+                      small.samp.correct = FALSE,
+                      num.cores = 1,
+                      verbose = TRUE) {
               filt <- seqGetFilter(gdsobj)
-              out <- .pcrelate(gdsobj, ...)
+              out <- .pcrelate(gdsobj, 
+                      pcs = pcs,
+                      scale = scale,
+                      ibd.probs = ibd.probs,
+                      sample.include = sample.include,
+                      training.set = training.set,
+                      sample.block.size = sample.block.size,
+                      maf.thresh = maf.thresh,
+                      maf.bound.method = maf.bound.method,
+                      small.samp.correct = small.samp.correct,
+                      num.cores = num.cores,
+                      verbose = verbose)
               seqSetFilter(gdsobj,
                            sample.sel=filt$sample.sel,
                            variant.sel=filt$variant.sel,
@@ -18,20 +62,20 @@ setMethod("pcrelate",
               out
           })
 
-.pcrelate <- function(	gdsobj,
-						pcs,
-						scale = c('overall', 'variant', 'none'),
-						ibd.probs = TRUE,
-						sample.include = NULL,
-						training.set = NULL,
-						sample.block.size = 5000,
-						## snp.include = NULL,
-						## snp.block.size = 10000,
-						maf.thresh = 0.01,
-						maf.bound.method = c('filter', 'truncate'),
-						small.samp.correct = FALSE,
-						num.cores = 1,
-						verbose = TRUE){
+.pcrelate <- function(gdsobj,
+                      pcs,
+                      scale = c('overall', 'variant', 'none'),
+                      ibd.probs = TRUE,
+                      sample.include = NULL,
+                      training.set = NULL,
+                      sample.block.size = 5000,
+                      ## snp.include = NULL,
+                      ## snp.block.size = 10000,
+                      maf.thresh = 0.01,
+                      maf.bound.method = c('filter', 'truncate'),
+                      small.samp.correct = FALSE,
+                      num.cores = 1,
+                      verbose = TRUE){
 
 	# checks
         scale <- match.arg(scale)

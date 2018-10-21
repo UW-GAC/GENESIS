@@ -8,7 +8,10 @@
 \title{Make a sparse matrix from a dense matrix or a table of pairwise values}
 \description{\code{makeSparseMatrix} is used to create a sparse block-diagonal matrix from a dense matrix or a table of pairwise values, using a user-specified threshold for sparsity. An object of class \code{Matrix} will be returned. A sparse matrix may be useful for fitting the association test null model with \code{\link{fitNullModel}} when working with very large sample sizes.}
 \usage{
-makeSparseMatrix(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE)
+\S4method{makeSparseMatrix}{data.table}(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE)
+\S4method{makeSparseMatrix}{data.frame}(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE)
+\S4method{makeSparseMatrix}{matrix}(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE)
+\S4method{makeSparseMatrix}{Matrix}(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE)
 }
 \arguments{
   \item{x}{An object to coerce to a sparse matrix. May be of class \code{matrix}, \code{Matrix}, \code{data.frame}, or \code{data.table}.}

@@ -5,7 +5,19 @@
 \title{PC-Relate: Model-Free Estimation of Recent Genetic Relatedness}
 \description{\code{pcrelate} is used to estimate kinship coefficients, IBD sharing probabilities, and inbreeding coefficients using genome-wide SNP data.  PC-Relate accounts for population structure (ancestry) among sample individuals through the use of ancestry representative principal components (PCs) to provide accurate relatedness estimates due only to recent family (pedigree) structure.}
 \usage{
-pcrelate(gdsobj,
+\S4method{pcrelate}{GenotypeIterator}(gdsobj,
+	pcs,
+	scale = c('overall', 'variant', 'none'),
+	ibd.probs = TRUE,
+	sample.include = NULL,
+	training.set = NULL,
+	sample.block.size = 5000,
+	maf.thresh = 0.01,
+	maf.bound.method = c('filter', 'truncate'),
+	small.samp.correct = FALSE,
+	num.cores = 1,
+	verbose = TRUE)
+\S4method{pcrelate}{SeqVarIterator}(gdsobj,
 	pcs,
 	scale = c('overall', 'variant', 'none'),
 	ibd.probs = TRUE,
@@ -75,7 +87,7 @@ mypcair <- pcair(HapMap_genoData, kinobj = HapMap_ASW_MXL_KINGmat,
 # create a GenotypeBlockIterator object
 HapMap_genoData <- GenotypeBlockIterator(HapMap_genoData)
 # run PC-Relate
-mypcrel <- pcrelate(HapMap_genoData, pcs = mypcair$vectors[,1],
+mypcrel <- pcrelate(HapMap_genoData, pcs = mypcair$vectors[,1,drop=FALSE],
 				training.set = mypcair$unrels)
 head(mypcrel$kinBwtn)
 head(mypcrel$kinSelf)
