@@ -1,4 +1,4 @@
-pcrelateMakeGRM <- function(pcrelObj, scan.include = NULL, scaleKin = 2){
+pcrelateMakeGRM1 <- function(pcrelObj, scan.include = NULL, scaleKin = 2){
     # read in sample.id
     if(class(pcrelObj) == "gds.class"){
         sample.id <- read.gdsn(index.gdsn(pcrelObj, "sample.id"))
