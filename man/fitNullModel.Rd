@@ -143,7 +143,7 @@ pheno <- 0.2*mypcair$vectors[,1] + rnorm(mypcair$nsamp, mean = 0, sd = 1)
 annot <- data.frame(sample.id = mypcair$sample.id, 
                     pc1 = mypcair$vectors[,1], pheno = pheno)
 
-# make cov.mat
+# make covariance matrix
 cov.mat <- pcrelateMakeGRM(mypcrel, verbose=FALSE)[annot$sample.id, annot$sample.id]
 
 # fit the null mixed model
