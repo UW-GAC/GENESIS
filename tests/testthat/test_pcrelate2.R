@@ -25,13 +25,25 @@ test_that("pcrelate2 - variant blocks", {
     seqClose(svd)
 })
 
-test_that("pcrelate2 - sample blocks", {
+test_that("pcrelate2 - 2 sample blocks", {
     svd <- .testData()
     mypcs <- .testPCs(svd)
     myrel <- pcrelate1(svd, pcMat = mypcs, correct=FALSE, verbose=FALSE)
     kin <- pcrelateReadKinship1(myrel)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
     myrel2 <- pcrelate(iterator, pcs = mypcs, sample.block.size=50, verbose=FALSE)
+    cols <- c("ID1", "ID2", "kin", "k0", "k2", "nsnp")
+    expect_equal(myrel2$kinBtwn[,cols], kin[,cols])
+    seqClose(svd)
+})
+
+test_that("pcrelate2 - >2 sample blocks", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    myrel <- pcrelate1(svd, pcMat = mypcs, correct=FALSE, verbose=FALSE)
+    kin <- pcrelateReadKinship1(myrel)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, sample.block.size=20, verbose=FALSE)
     cols <- c("ID1", "ID2", "kin", "k0", "k2", "nsnp")
     expect_equal(myrel2$kinBtwn[,cols], kin[,cols])
     seqClose(svd)
@@ -45,6 +57,19 @@ test_that("pcrelate2 - sample include", {
     kin <- pcrelateReadKinship1(myrel)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
     myrel2 <- pcrelate(iterator, pcs = mypcs, sample.include=samp.incl, verbose=FALSE)
+    cols <- c("ID1", "ID2", "kin", "k0", "k2", "nsnp")
+    expect_equal(myrel2$kinBtwn[,cols], kin[,cols])
+    seqClose(svd)
+})
+
+test_that("pcrelate2 - sample filter", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    seqSetFilter(svd, sample.sel=1:20, verbose=FALSE)
+    myrel <- pcrelate1(svd, pcMat = mypcs, correct=FALSE, verbose=FALSE)
+    kin <- pcrelateReadKinship1(myrel)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, verbose=FALSE)
     cols <- c("ID1", "ID2", "kin", "k0", "k2", "nsnp")
     expect_equal(myrel2$kinBtwn[,cols], kin[,cols])
     seqClose(svd)

@@ -92,6 +92,12 @@ setMethod(".readSampleId",
               .readSampleId(x@data)
           })
 
+setMethod(".readSampleId",
+          "SeqVarGDSClass",
+          function(x) {
+              seqGetData(x, "sample.id")
+          })
+
 
 
 setGeneric(".readGeno", function(gdsobj, ...) standardGeneric(".readGeno"))

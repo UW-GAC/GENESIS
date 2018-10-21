@@ -80,7 +80,7 @@ setMethod("pcrelate",
 	# checks
         scale <- match.arg(scale)
         maf.bound.method <- match.arg(maf.bound.method)
-        if(is.null(sample.include)) sample.include <- .readSampleId(gdsobj)
+        sample.include <- .sampleInclude(gdsobj, sample.include)
         .pcrelateChecks(pcs = pcs, scale = scale, ibd.probs = ibd.probs, sample.include = sample.include, training.set = training.set, 
 					maf.thresh = maf.thresh)
 	
@@ -102,7 +102,7 @@ setMethod("pcrelate",
 		if(verbose) message(length(sample.include), ' samples to be included in the analysis...')
 
 		# create matrix of PCs
-		V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include)
+		V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
 
 		# matrix product of V
 		VVtVi <- .calcISAFBetaPCProd(V = V, training.set = training.set, verbose = verbose)
@@ -202,18 +202,25 @@ setMethod("pcrelate",
 }
 
 
-### function to match samples and create PC matrix
-.createPCMatrix <- function(gdsobj, pcs, sample.include){
-    # set filter to sample.include
-    #seqSetFilter(gdsobj, sample.id = sample.include)
-    sample.id <- intersect(.readSampleId(gdsobj), sample.include)
+### get sample ids in same order as gdsobj
+.sampleInclude <- function(gdsobj, sample.include) {
+    sample.id <- .readSampleId(gdsobj)
+    if (!is.null(sample.include)) {
+        sample.id <- intersect(sample.id, sample.include)
+    }
+    return(as.character(sample.id))
+}
 
+
+### function to match samples and create PC matrix
+.createPCMatrix <- function(pcs, sample.include){
     # subset and re-order pcs if needed
-    V <- pcs[match(sample.id, rownames(pcs)), , drop = FALSE]
+    V <- pcs[match(sample.include, rownames(pcs)), , drop = FALSE]
     # append intercept
     V <- cbind(rep(1, nrow(V)), V)
     return(V)
 }
+
 
 # function to get 
 .calcISAFBetaPCProd <- function(V, training.set, verbose = TRUE){
@@ -249,8 +256,8 @@ setMethod("pcrelate",
 .pcrelateVarBlock <- function(G, beta, V, idx, jdx, scale, ibd.probs, maf.thresh, maf.bound.method){
 
 	# make sure order of G, beta, and V all line up
-	if(!all.equal(colnames(G), rownames(beta))) stop('G and beta do not match')
-	if(!all.equal(rownames(G), rownames(V))) stop('G and V do not match')
+	if(!identical(colnames(G), rownames(beta))) stop('G and beta do not match')
+	if(!identical(rownames(G), rownames(V))) stop('G and V do not match')
 
 	# estimate individual specific allele frequencies
 	mu <- .estISAF(beta = beta, V = V, bound.thresh = maf.thresh, bound.method = maf.bound.method)
@@ -552,7 +559,7 @@ calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, snp.i
 	# checks - add some
 
 	# create matrix of PCs
-	V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include)
+	V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
 
 	# matrix product of V
 	VVtVi <- .calcISAFBetaPCProd(V = V, training.set = training.set, verbose = verbose)
@@ -601,7 +608,7 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
 
         # create (joint) PC matrix and indices
         sample.include <- unique(c(sample.include.block1, sample.include.block2))
-	V <- .createPCMatrix(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include)
+	V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
 	idx <- which(rownames(V) %in% sample.include.block1)
 	jdx <- which(rownames(V) %in% sample.include.block2)
 	oneblock <- setequal(idx, jdx)
