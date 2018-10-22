@@ -55,7 +55,7 @@ setMethod("makeSparseMatrix",
     # create graph of relatives
     if(verbose) message("Identifying clusters of relatives...")
     if(is.null(thresh)){
-        g <- igraph::graph_from_data_frame(x[ID1 != ID2])
+        g <- igraph::graph_from_data_frame(x[ID1 != ID2 & value != 0])
     }else{
         g <- igraph::graph_from_data_frame(x[ID1 != ID2 & value > thresh])
     }
@@ -136,6 +136,7 @@ setMethod("meltMatrix",
                 x[lower.tri(x, diag = drop.diag)] <- NA
             }
             x <- as.data.table(reshape2::melt(x, varnames = c('ID1', 'ID2'), na.rm = TRUE, as.is = TRUE))
+            x <- x[,`:=`(ID1 = as.character(ID1), ID2 = as.character(ID2))]
             setkeyv(x, c('ID1', 'ID2'))
           })
 
