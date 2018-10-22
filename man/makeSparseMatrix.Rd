@@ -14,7 +14,7 @@
 \S4method{makeSparseMatrix}{Matrix}(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE)
 }
 \arguments{
-  \item{x}{An object to coerce to a sparse matrix. May be of class \code{matrix}, \code{Matrix}, \code{data.frame}, or \code{data.table}.}
+  \item{x}{An object to coerce to a sparse matrix. May be of class \code{matrix}, \code{Matrix}, \code{data.frame}, or \code{data.table}. When a \code{matrix} or \code{Matrix}, row and column names should be set to sample.ids; when a data.frame or data.table, should have 3 columns: ID1, ID2, and value.}
   \item{thresh}{Value threshold for clustering samples to make the output matrix sparse block-diagonal. When \code{NULL}, no clustering is done. See 'Details'.}
   \item{sample.include}{An optional vector of sample.id indicating all samples that should be included in the output matrix; see 'Details' for usage.}
   \item{diag.value}{When \code{NULL} (by Default), values for the diagonal of the output matrix should be provided in \code{x}. Setting \code{diag.value} to a numeric value will make all values on the diagonal of the output matrix that value.}
