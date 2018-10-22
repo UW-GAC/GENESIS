@@ -187,6 +187,7 @@ setMethod("pcrelate",
 
 	# small sample correction
 	if(small.samp.correct){
+		message('Performing Small Sample Correction...')
 		out <- .pcrelateSmallSampCorrect(kinBtwn = kinBtwn, kinSelf = kinSelf, pcs = pcs, sample.include = sample.include, ibd.probs = ibd.probs)
 		kinBtwn <- out$kinBtwn
 		kinSelf <- out$kinSelf
