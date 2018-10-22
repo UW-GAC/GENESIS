@@ -83,13 +83,13 @@ setMethod(".readSampleId",
 setMethod(".readSampleId",
           "GdsGenotypeReader",
           function(x) {
-              as.character(.readSampleId(x@handler))
+              getScanID(x)
           })
 
 setMethod(".readSampleId",
           "GenotypeData",
           function(x) {
-              .readSampleId(x@data)
+              getScanID(x)
           })
 
 setMethod(".readSampleId",

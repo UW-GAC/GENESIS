@@ -36,8 +36,8 @@ setMethod("makeSparseMatrix",
     ID1 <- ID2 <- value <- NULL
     `.` <- function(...) NULL
 
-	# check sample.include
-	if(!is.null(sample.include)){
+    # check sample.include
+    if(!is.null(sample.include)){
         # subset to samples in sample.include
         if(verbose) message('Using ', length(sample.include), ' samples in sample.include')
         x <- x[ID1 %in% sample.include & ID2 %in% sample.include]
