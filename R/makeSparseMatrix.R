@@ -4,7 +4,7 @@ setMethod("makeSparseMatrix",
           "matrix",
           function(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE){
           	# melt to a data.table
-          	x <- meltMatrix(x = x, drop.lower = TRUE, drop.diag = ifelse(is.null(diag.value), FALSE, TRUE))
+          	x <- meltMatrix(x = x, drop.lower = TRUE, drop.diag = !is.null(diag.value))
           	.makeSparseMatrix(x = x, thresh = thresh, sample.include = sample.include, diag.value = diag.value, verbose = verbose)
           })
 
@@ -12,7 +12,7 @@ setMethod("makeSparseMatrix",
           "Matrix",
           function(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE){
           	# melt to a data.table
-          	x <- meltMatrix(x = x, drop.lower = TRUE, drop.diag = ifelse(is.null(diag.value), FALSE, TRUE))
+          	x <- meltMatrix(x = x, drop.lower = TRUE, drop.diag = !is.null(diag.value))
           	.makeSparseMatrix(x = x, thresh = thresh, sample.include = sample.include, diag.value = diag.value, verbose = verbose)
           })
 
@@ -49,9 +49,9 @@ setMethod("makeSparseMatrix",
 
     # check for diag values
     if(is.null(diag.value)){
-    	if(!all.equal(sort(x[ID1 == ID2, ID1]), sort(sample.include))) stop('When `diag.value` is NULL, diagonal values must be provided for all samples')
+    	if(!setequal(x[ID1 == ID2, ID1], sample.include)) stop('When `diag.value` is NULL, diagonal values must be provided for all samples')
     }
-    
+
     # create graph of relatives
     if(verbose) message("Identifying clusters of relatives...")
     if(is.null(thresh)){
