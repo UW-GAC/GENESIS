@@ -62,11 +62,11 @@ setMethod("makeSparseMatrix",
     # extract cluster membership
     clu <- igraph::components(g)
     mem <- clu$membership
-    if(verbose) message("    ", length(mem), " relatives in ", clu$no, " clusters")
     
     blocks <- list()
     block.id <- list()
     if(clu$no > 0){
+        if(verbose) message("    ", length(mem), " relatives in ", clu$no, " clusters")
         if(verbose) message("Creating block matrices for clusters...")
         for(i in 1:clu$no){
             # samples in the cluster
@@ -95,12 +95,12 @@ setMethod("makeSparseMatrix",
             block.id[[i]] <- rownames(submat)
         }
     }else{
-        if(verbose) message("No clusters identified")
+        if(verbose) message("    No clusters identified")
     }
         
     # add in identity matrix of unrelated samples
     unrel.id <- setdiff(sample.include, names(mem))
-    if(verbose) message(length(unrel.id), " samples with no relatives included...")
+    if(verbose) message(length(unrel.id), " samples with no relatives included")
 
     if(is.null(diag.value)){
         # data for the diagonal
@@ -113,8 +113,13 @@ setMethod("makeSparseMatrix",
     }
 
     # create block diagonal matrix
-    if(verbose) message("Putting all samples together into one block diagonal matrix")
-    mat_sparse <- bdiag(blocks)
+    if(length(blocks) > 1){
+        if(verbose) message("Putting all samples together into one block diagonal matrix")
+        mat_sparse <- bdiag(blocks)
+    }else{
+        mat_sparse <- Matrix(blocks[[1]])
+    } 
+    
     # ids of samples
     mat.id <- unlist(block.id)
     rownames(mat_sparse) <- mat.id
