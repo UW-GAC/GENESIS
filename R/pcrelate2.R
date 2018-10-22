@@ -586,9 +586,6 @@ setMethod("pcrelate",
     setnames(tmp, 'kin', 'newval')
     setkeyv(tmp, c('ID1', 'ID2'))
     
-    # filter to samples with small values
-    tmp <- tmp[newval < 2^(-11/2)]
-    
     # get the PC matrix
     V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
     
@@ -599,19 +596,20 @@ setMethod("pcrelate",
         colnames(Acov) <- rownames(V)
         Avec <- meltMatrix(Acov, drop.lower = TRUE, drop.diag = FALSE)
         tmp <- Avec[tmp, on = c('ID1', 'ID2')]
-        tmp[, newval := lm(formula = as.formula(newval ~ value), data = tmp)$residuals]
+        coef <- lm(formula = as.formula(newval ~ value), data = tmp[newval < 2^(-11/2)])$coef
+        tmp[, newval := newval - coef[1] - coef[2]*value]
         tmp[, value := NULL]
     }
     
     # merge back into kinBtwn
     kinBtwn <- tmp[kinBtwn, on = c('ID1', 'ID2')]
-    kinBtwn[!is.na(newval), kin := newval][, newval := NULL]
+    kinBtwn[, kin := newval][, newval := NULL]
     
     # merge back into kinSelf
     tmp <- tmp[ID1 == ID2][, ID2 := NULL]
     setnames(tmp, 'ID1', 'ID')
     kinSelf <- tmp[kinSelf, on = 'ID']
-    kinSelf[!is.na(newval), f := newval][, newval := NULL]
+    kinSelf[, f := newval][, newval := NULL]
     
     
     ### k2 estimates
@@ -623,7 +621,7 @@ setMethod("pcrelate",
         setkeyv(tmp, c('ID1', 'ID2'))
         
         # filter to samples with small values
-        tmp <- tmp[kin < 2^(-11/2)][, kin := NULL]
+        # tmp <- tmp[kin < 2^(-11/2)][, kin := NULL]
         
         for(k in 2:ncol(V)){
             Acov <- tcrossprod(V[,k])
@@ -631,14 +629,15 @@ setMethod("pcrelate",
             colnames(Acov) <- rownames(V)
             Avec <- meltMatrix(Acov, drop.lower = TRUE, drop.diag = FALSE)
             tmp <- Avec[tmp, on = c('ID1', 'ID2')]
-            tmp[, value.sq := value^2]
-            tmp[, newval := lm(formula = as.formula(newval ~ value + value.sq), data = tmp)$residuals]
-            tmp[, `:=`(value = NULL, value.sq = NULL)]
+            coef <- lm(formula = as.formula(newval ~ value + I(value^2)), data = tmp[kin < 2^(-11/2)])$coef
+            tmp[, newval := newval - coef[1] - coef[2]*value - coef[3]*value^2]
+            tmp[, value := NULL]
         }
+        tmp[, kin := NULL]
         
         # merge back into kinBtwn
         kinBtwn <- tmp[kinBtwn, on = c('ID1', 'ID2')]
-        kinBtwn[!is.na(newval), k2 := newval][, newval := NULL]
+        kinBtwn[, k2 := newval][, newval := NULL]
         
         
         # temporary data.table to store values
@@ -647,8 +646,8 @@ setMethod("pcrelate",
         setkeyv(tmp, c('ID1', 'ID2'))
         
         # filter to samples with small values
-        tmp <- tmp[newval < 2^(-9/2)]
-        tmp[, newval := lm(formula = as.formula(newval ~ kin), data = tmp)$residuals]
+        coef <- lm(formula = as.formula(newval ~ kin), data = tmp[newval < 2^(-9/2)])$coef
+        tmp[, newval := newval - coef[1] - coef[2]*kin]
         tmp[, kin := NULL]
         
         # merge back into kinBtwn
