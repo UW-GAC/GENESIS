@@ -78,10 +78,10 @@ setMethod("pcrelate",
                       verbose = TRUE){
 
 	# checks
-        scale <- match.arg(scale)
-        maf.bound.method <- match.arg(maf.bound.method)
-        sample.include <- .sampleInclude(gdsobj, sample.include)
-        .pcrelateChecks(pcs = pcs, scale = scale, ibd.probs = ibd.probs, sample.include = sample.include, training.set = training.set, 
+	scale <- match.arg(scale)
+	maf.bound.method <- match.arg(maf.bound.method)
+	sample.include <- .sampleInclude(gdsobj, sample.include)
+	.pcrelateChecks(pcs = pcs, scale = scale, ibd.probs = ibd.probs, sample.include = sample.include, training.set = training.set, 
 					maf.thresh = maf.thresh)
 	
 	# set up number of cores
@@ -89,8 +89,15 @@ setMethod("pcrelate",
 	doMC::registerDoMC(cores = min(c(num.cores, sys.cores)))
 	if(verbose) message('Using ', min(c(num.cores, sys.cores)), ' CPU cores')
 
-        # number of sample blocks
-        nsampblock <- ceiling(length(sample.include)/sample.block.size)
+	# number of sample blocks
+	nsampblock <- ceiling(length(sample.include)/sample.block.size)
+
+	# check for small sample correction
+	if(small.samp.correct){
+		small.samp.correct <- (nsampblock == 1) & (scale != 'none')
+		if(!small.samp.correct) warning('small.samp.correct can only be used when all samples are analyzed in one block and `scale != none`')
+	}
+
 	# list of samples in each block
 	if(nsampblock > 1){
 		samp.blocks <- unname(split(sample.include, cut(1:length(sample.include), nsampblock)))
@@ -169,23 +176,30 @@ setMethod("pcrelate",
 		}
 	}
 
+	### post processing after putting all samples together
+
 	# order samples
 	setkeyv(kinSelf, 'ID')
 	setkeyv(kinBtwn, c('ID1', 'ID2'))
 
-	### post processing after putting all samples together
-	if(ibd.probs){
-		# correct k2 for HW departure and use alternate k0 estimator for non-1st degree relatives
-		kinBtwn <- .fixIBDEst(kinBtwn = kinBtwn, kinSelf = kinSelf)
+	# correct k2 for HW departure 
+	if(ibd.probs) kinBtwn <- .fixK2Est(kinBtwn = kinBtwn, kinSelf = kinSelf)
+
+	# small sample correction
+	if(small.samp.correct){
+		out <- .pcrelateSmallSampCorrect(kinBtwn = kinBtwn, kinSelf = kinSelf, pcs = pcs, sample.include = sample.include, ibd.probs = ibd.probs)
+		kinBtwn <- out$kinBtwn
+		kinSelf <- out$kinSelf
 	}
 
-	### need to rewrite the small sample correction at some point - take care of this later ###
-
-        out <- list(kinBtwn = as.data.frame(kinBtwn), kinSelf = as.data.frame(kinSelf))
-        class(out) <- "pcrelate"
+	# use alternate k0 estimator for non-1st degree relatives
+	if(ibd.probs) kinBtwn <- .fixK0Est(kinBtwn = kinBtwn)
+	
+	# return output
+    out <- list(kinBtwn = as.data.frame(kinBtwn), kinSelf = as.data.frame(kinSelf))
+    class(out) <- "pcrelate"
 	return(out)
 }
-
 
 
 
@@ -534,7 +548,7 @@ setMethod("pcrelate",
 
 
 ### functions for final processing
-.fixIBDEst <- function(kinBtwn, kinSelf){
+.fixK2Est <- function(kinBtwn, kinSelf){
     # keep R CMD check from warning about undefined global variables
     `.` <- function(...) NULL
     ID <- f <- f.1 <- f.2 <- kin <- k0 <- k2 <- NULL
@@ -546,11 +560,104 @@ setMethod("pcrelate",
     setnames(kinBtwn, 'f', 'f.1')
     kinBtwn[, k2 := k2 - f.1*f.2][, `:=`(f.1 = NULL, f.2 = NULL)]
     
+    return(kinBtwn)
+}
+
+.fixK0Est <- function(kinBtwn){
+    # keep R CMD check from warning about undefined global variables
+    kin <- k0 <- k2 <- NULL
+    
     # use alternate k0 estimator for non-1st degree relatives
     kinBtwn[kin < 2^(-5/2), k0 := 1 - 4*kin + k2]
     
     return(kinBtwn)
 }
+
+.pcrelateSmallSampCorrect <- function(kinBtwn, kinSelf, pcs, sample.include, ibd.probs){
+    
+    ### kinship estimates
+    
+    # temporary data.table to store values
+    tmp <- kinSelf[, .(ID, f)]
+    setnames(tmp, c('ID','f'), c('ID1', 'kin'))
+    tmp[, ID2 := ID1]
+    tmp <- rbind(kinBtwn[, .(ID1, ID2, kin)], tmp)
+    setnames(tmp, 'kin', 'newval')
+    setkeyv(tmp, c('ID1', 'ID2'))
+    
+    # filter to samples with small values
+    tmp <- tmp[newval < 2^(-11/2)]
+    
+    # get the PC matrix
+    V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
+    
+    # make adjustment for each PC
+    for(k in 2:ncol(V)){
+        Acov <- tcrossprod(V[,k])
+        rownames(Acov) <- rownames(V)
+        colnames(Acov) <- rownames(V)
+        Avec <- meltMatrix(Acov, drop.lower = TRUE, drop.diag = FALSE)
+        tmp <- Avec[tmp, on = c('ID1', 'ID2')]
+        tmp[, newval := lm(formula = as.formula(newval ~ value), data = tmp)$residuals]
+        tmp[, value := NULL]
+    }
+    
+    # merge back into kinBtwn
+    kinBtwn <- tmp[kinBtwn, on = c('ID1', 'ID2')]
+    kinBtwn[!is.na(newval), kin := newval][, newval := NULL]
+    
+    # merge back into kinSelf
+    tmp <- tmp[ID1 == ID2][, ID2 := NULL]
+    setnames(tmp, 'ID1', 'ID')
+    kinSelf <- tmp[kinSelf, on = 'ID']
+    kinSelf[!is.na(newval), f := newval][, newval := NULL]
+    
+    
+    ### k2 estimates
+
+    if(ibd.probs){
+        # temporary data.table to store values
+        tmp <- kinBtwn[, .(ID1, ID2, kin, k2)]
+        setnames(tmp, 'k2', 'newval')
+        setkeyv(tmp, c('ID1', 'ID2'))
+        
+        # filter to samples with small values
+        tmp <- tmp[kin < 2^(-11/2)][, kin := NULL]
+        
+        for(k in 2:ncol(V)){
+            Acov <- tcrossprod(V[,k])
+            rownames(Acov) <- rownames(V)
+            colnames(Acov) <- rownames(V)
+            Avec <- meltMatrix(Acov, drop.lower = TRUE, drop.diag = FALSE)
+            tmp <- Avec[tmp, on = c('ID1', 'ID2')]
+            tmp[, value.sq := value^2]
+            tmp[, newval := lm(formula = as.formula(newval ~ value + value.sq), data = tmp)$residuals]
+            tmp[, `:=`(value = NULL, value.sq = NULL)]
+        }
+        
+        # merge back into kinBtwn
+        kinBtwn <- tmp[kinBtwn, on = c('ID1', 'ID2')]
+        kinBtwn[!is.na(newval), k2 := newval][, newval := NULL]
+        
+        
+        # temporary data.table to store values
+        tmp <- kinBtwn[, .(ID1, ID2, kin, k2)]
+        setnames(tmp, 'k2', 'newval')
+        setkeyv(tmp, c('ID1', 'ID2'))
+        
+        # filter to samples with small values
+        tmp <- tmp[newval < 2^(-9/2)]
+        tmp[, newval := lm(formula = as.formula(newval ~ kin), data = tmp)$residuals]
+        tmp[, kin := NULL]
+        
+        # merge back into kinBtwn
+        kinBtwn <- tmp[kinBtwn, on = c('ID1', 'ID2')]
+        kinBtwn[!is.na(newval), k2 := newval][, newval := NULL]
+    }
+    
+    return(list(kinBtwn = kinBtwn, kinSelf = kinSelf))
+}
+
 
 
 

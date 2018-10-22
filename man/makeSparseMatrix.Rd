@@ -27,7 +27,7 @@
 
 \author{Matthew P. Conomos}
 \seealso{
-	\code{\link{kingToMatrix}} for functions that use this function.
+	\code{\link{kingToMatrix}} and \code{\link{pcrelateMakeGRM}} for functions that use this function.
 }
 % \examples{
 % KING --robust
