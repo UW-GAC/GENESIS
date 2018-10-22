@@ -12,6 +12,10 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+```
+
 # Overview
 
 This vignette provides a description of how to use the GENESIS package to run genetic association tests on array (SNP) data. GENESIS uses mixed models for genetic association testing, as PC-AiR PCs can be used as fixed effect covariates to adjust for population stratification, and a kinship matrix (or genetic relationship matrix) estimated from PC-Relate can be used to account for phenotype correlation due to genetic similarity among samples.
@@ -22,9 +26,10 @@ This vignette provides a description of how to use the GENESIS package to run ge
 
 The `fitNullModel` function in the `GENESIS` package reads sample data from either a standard `data.frame` class object or a `ScanAnnotationDataFrame` class object as created by the `GWASTools` package.  This object must contain all of the outcome and covariate data for all samples to be included in the mixed model analysis.  Additionally, this object must include a variable called "scanID" which contains a unique identifier for each sample in the analysis. While a standard `data.frame` can be used, we recommend using a `ScanAnnotationDataFrame` object, as it can be paired with the genotype data (see below) to ensure matching of sample phenotype and genotype data. Through the use of `GWASTools`, a `ScanAnnotationDataFrame` class object can easily be created from a `data.frame` class object. Example R code for creating a `ScanAnnotationDataFrame` object is presented below.  Much more detail can be found in the `GWASTools` package reference manual.
 
-```{r, echo=FALSE, message=FALSE}
+```{r, echo=FALSE}
 library(GENESIS)
 library(GWASTools)
+
 # file path to GDS file
 gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
 # read in GDS data
@@ -151,7 +156,7 @@ A linear mixed model (LMM) should be fit when analyzing a quantitative phenotype
 ```{r}
 # fit the null mixed model
 nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1", cov.mat = myGRM, 
-                     family = gaussian)
+                        family = gaussian)
 ```
 * the first argument is the class `ScanAnnotationDataFrame` or `data.frame` object containing the sample data
 * `outcome` specifies the name of the outcome variable in `scanAnnot`
@@ -165,14 +170,14 @@ The Average Information REML (AIREML) procedure is used to estimate the variance
 The model can be fit with multiple fixed effect covariates by setting `covars` equal to vector of covariate names. For example, if we wanted to include the variables "pc1", "pc2", "sex", and "age" all as covariates in the model:
 ```{r, eval=FALSE}
 nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = c("pc1","pc2","sex","age"), 
-                     cov.mat = myGRM, family = gaussian)
+                        cov.mat = myGRM, family = gaussian)
 ```
 
 #### Multiple Random Effects
 The model also can be fit with multiple random effects. This is done by setting `cov.mat` equal to a list of matrices. For example, if we wanted to include a polygenic random effect with covariance structure given by the matrix "myGRM" and a household random effect with covariance structure specified by the matrix "H":
 ```{r, eval=FALSE}
 nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1"
-                     cov.mat = list("GRM" = myGRM, "House" = H), family = gaussian)
+                        cov.mat = list("GRM" = myGRM, "House" = H), family = gaussian)
 ```
 The names of the matrices in `cov.mat` determine the names of the variance component parameters. Therefore, in this example, the output printed to the R console will include `Sigma^2_GRM` for the random effect specified by "myGRM", `Sigma^2_House` for the random effect specified by "H", and `Sigma^2_E` for the residual variance component.  
 
@@ -183,7 +188,7 @@ Note: the row and column names of each matrix used to specify the covariance str
 LMMs are typically fit under an assumption of constant (homogeneous) residual variance for all observations. However, for some outcomes, there may be evidence that different groups of observations have different residual variances, in which case the assumption of homoscedasticity is violated. `group.var` can be used in order to fit separate (heterogeneous) residual variance components by some grouping variable. For example, if we have a categorical variable "race" in our `scanAnnot`, then we can estimate a different residual variance component for each unique value of "race" by using the following code:
 ```{r, eval=FALSE}
 nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1", cov.mat = myGRM, 
-                     family = gaussian, group.var = "race")
+                        family = gaussian, group.var = "race")
 ```
 In this example, the residual variance component `Sigma^2_E` is replaced with group specific residual variance components `Sigma^2_race1`, `Sigma^2_race2`, ..., where "race1", "race2", ... are the unique values of the "race" variable.
 
@@ -192,7 +197,7 @@ In this example, the residual variance component `Sigma^2_E` is replaced with gr
 Ideally, a generalized linear mixed model (GLMM) would be fit for a binary phenotype; however, fitting a GLMM is much more computationally demanding than fitting an LMM. To provide a compuationally efficient approach to fitting such a model, `fitNullModel` uses the penalized quasi-likelihood (PQL) approximation to the GLMM (Breslow and Clayton). The implementation of this procedure in `GENESIS` is the same as in GMMAT (Chen et al.), and more details can be found in that manuscript.  If our outcome variable, "pheno", were binary, then the same R code could be used to fit the null model, but with `family = binomial`.
 ```{r, eval=FALSE}
 nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1", cov.mat = myGRM, 
-                     family = binomial)
+                        family = binomial)
 ```
 Multiple fixed effect covariates and multiple random effects can be specified for binary phenotypes in the same way as they are for quantitative phenotypes. `group.var` does not apply here.
 

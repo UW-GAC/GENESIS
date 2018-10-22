@@ -12,6 +12,10 @@ vignette: >
   \usepackage[utf8]{inputenc}
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+```
+
 # Overview 
 
 GENESIS provides statistical methodology for analyzing genetic data from samples with population structure and/or familial relatedness. This vignette provides a description of how to use GENESIS for inferring population structure, as well as estimating relatedness measures such as kinship coefficients, identity by descent (IBD) sharing probabilities, and inbreeding coefficients. GENESIS uses PC-AiR for population structure inference that is robust to known or cryptic relatedness, and it uses PC-Relate for accurate relatedness estimation in the presence of population structure, admixutre, and departures from Hardy-Weinberg equilibrium.
@@ -82,11 +86,11 @@ Once the PLINK files have been converted to a GDS file, then a `GenotypeData` ob
 
 To demonstrate PC-AiR and PC-Relate analyses with the `GENESIS` package, we analyze SNP data from the Mexican Americans in Los Angeles, California (MXL) and African American individuals in the southwestern USA (ASW) population samples of HapMap 3.  Mexican Americans and African Americans have a diverse ancestral background, and familial relatives are present in these data. Genotype data at a subset of 20K autosomal SNPs for 173 individuals are provided as a GDS file. 
 
-```{r, echo=FALSE, message=FALSE}
+```{r, echo=FALSE}
 library(GENESIS)
 library(GWASTools)
 ```
-```{r}
+```{r]}
 # read in GDS data
 gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
 HapMap_geno <- GdsGenotypeReader(filename = gdsfile)
@@ -134,6 +138,7 @@ If better estimates of kinship coefficients are available, then the `kinobj` inp
 ###  Reference Population Samples
 
 ```{r, echo=FALSE, eval=FALSE}
+#kinobj and divobj are now required arguments
 # As PCA is an unsupervised method, it is often difficult to identify what population structure each of the top PCs represents.  In order to provide some understanding of the inferred structure, it is sometimes recommended to include reference population samples of known ancestry in the analysis.  If the data set contains such reference population samples, we may want to use only those individuals as the "unrelated subset" for performing the PCA and predict values for all other sample individuals.  This can be accomplished by setting the input `unrel.set` equal to a vector, `IDs`, of the individual IDs for the reference population samples.
 mypcair <- pcair(HapMap_genoData, unrel.set = IDs)
 ```
@@ -211,6 +216,10 @@ If estimates of IBD sharing probabilities are not desired, then setting the inpu
 ## Output from PC-Relate
 
 The `pcrelate` function will either return an object of class `pcrelate`, which is a list of two data.frames: `kinBtwn` with pairwise kinship values, and `kinSelf` with inbreeding coefficients.
+
+```{r}
+plot(mypcrelate$kinBtwn$k0, mypcrelate$kinBtwn$kin, xlab="k0", ylab="kinship")
+```
 
 A function is provided for making a genetic relationship matrix (GRM). Using a threshold for kinship will create a sparse matrix by setting kinship for pairs less than the threshold to 0. This can be useful to reduce memory usage for very large sample sizes.
 
