@@ -165,7 +165,8 @@ test_that("pcrelate2 - scale=none", {
     grm <- pcrelateMakeGRM1(myrel)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
     myrel2 <- pcrelate(iterator, pcs = mypcs, scale="none", ibd.probs=FALSE, verbose=FALSE)
-    grm2 <- pcrelateMakeGRM(myrel2)
+    grm2 <- pcrelateMakeGRM(myrel2, verbose=FALSE)
+    expect_equivalent(grm, as.matrix(grm2))
     seqClose(svd)
 })
 
@@ -177,5 +178,17 @@ test_that("pcrelate2 - method=truncate", {
     myrel.t <- pcrelate(iterator, pcs = mypcs, maf.bound.method="truncate", verbose=FALSE)
     expect_true(all(myrel.t$nsnp > myrel.f$nsnp))
     expect_equal(myrel.t$kin, myrel.f$kin, tolerance=0.01)
+    seqClose(svd)
+})
+
+test_that("pcrelate2 - make GRM", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    myrel <- pcrelate1(svd, pcMat = mypcs, correct=FALSE, verbose=FALSE)
+    grm <- pcrelateMakeGRM1(myrel)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, verbose=FALSE)
+    grm2 <- pcrelateMakeGRM(myrel2, verbose=FALSE)
+    expect_equivalent(grm, as.matrix(grm2))
     seqClose(svd)
 })
