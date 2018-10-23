@@ -191,7 +191,7 @@ setMethod("pcrelate",
 	}
 
 	# correct k2 - HW departure and small sample
-	kinBtwn <- .correctK2(kinBtwn = kinBtwn, kinSelf = kinSelf, small.samp.correct = small.samp.correct, pcs = pcs, sample.include = sample.include)
+	if(ibd.probs) kinBtwn <- .correctK2(kinBtwn = kinBtwn, kinSelf = kinSelf, small.samp.correct = small.samp.correct, pcs = pcs, sample.include = sample.include)
 
 	# use alternate k0 estimator for non-1st degree relatives
 	if(ibd.probs) kinBtwn <- .correctK0(kinBtwn = kinBtwn)
@@ -516,22 +516,26 @@ setMethod("pcrelate",
 	# compute final estimates
 	if(scale == 'overall'){
 		kin <- matList$kinNum/(4*matList$kinDen)
-	}else if(scale == 'variant'){
-		kin <- matList$kin/(4*matList$nsnp)
-	}
-
-	if(ibd.probs){
-		if(scale == 'overall'){
+		if(ibd.probs){
 			k2 <- matList$k2Num/matList$k2Den
 			k0 <- matList$k0Num/matList$k0Den
-		}else if(scale == 'variant'){
+			return(list(kin = kin, k0 = k0, k2 = k2, nsnp = matList$nsnp))
+		}else{
+			return(list(kin = kin, nsnp = matList$nsnp))
+		}
+
+	}else if(scale == 'variant'){
+		kin <- matList$kin/(4*matList$nsnp)
+		if(ibd.probs){
 			k2 <- matList$k2/matList$nsnp
 			k0 <- matList$k0/matList$nsnp
+			return(list(kin = kin, k0 = k0, k2 = k2, nsnp = matList$nsnp))
+		}else{
+			return(list(kin = kin, nsnp = matList$nsnp))
 		}
-		return(list(kin = kin, k0 = k0, k2 = k2, nsnp = matList$nsnp))
 
-	}else{
-		return(list(kin = kin, nsnp = matList$nsnp))
+	}else if(scale == 'none'){
+		return(list(kin = matList$kin, nsnp = matList$nsnp))
 	}
 }
 
