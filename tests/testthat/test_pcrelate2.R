@@ -145,3 +145,37 @@ test_that("pcrelate2 - small sample correction", {
     expect_equal(myrel2$kinBtwn[,cols], kin[,cols])
     seqClose(svd)
 })
+
+test_that("pcrelate2 - scale=variant", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    myrel <- pcrelate1(svd, pcMat = mypcs, correct=FALSE, scale="variant", verbose=FALSE)
+    kin <- pcrelateReadKinship1(myrel)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, scale="variant", verbose=FALSE)
+    cols <- c("ID1", "ID2", "kin", "k0", "k2", "nsnp")
+    expect_equal(myrel2$kinBtwn[,cols], kin[,cols])
+    seqClose(svd)
+})
+
+test_that("pcrelate2 - scale=none", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    myrel <- pcrelate1(svd, pcMat = mypcs, correct=FALSE, scale="none", ibd.probs=FALSE, verbose=FALSE)
+    grm <- pcrelateMakeGRM1(myrel)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, scale="none", ibd.probs=FALSE, verbose=FALSE)
+    grm2 <- pcrelateMakeGRM(myrel2)
+    seqClose(svd)
+})
+
+test_that("pcrelate2 - method=truncate", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel.f <- pcrelate(iterator, pcs = mypcs, maf.bound.method="filter", verbose=FALSE)
+    myrel.t <- pcrelate(iterator, pcs = mypcs, maf.bound.method="truncate", verbose=FALSE)
+    expect_true(all(myrel.t$nsnp > myrel.f$nsnp))
+    expect_equal(myrel.t$kin, myrel.f$kin, tolerance=0.01)
+    seqClose(svd)
+})
