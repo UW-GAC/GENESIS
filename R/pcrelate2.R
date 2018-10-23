@@ -524,7 +524,7 @@ setMethod("pcrelate",
 			return(list(kin = kin, nsnp = matList$nsnp))
 		}
 
-	}else if(scale == 'variant'){
+	}else{
 		kin <- matList$kin/(4*matList$nsnp)
 		if(ibd.probs){
 			k2 <- matList$k2/matList$nsnp
@@ -533,9 +533,6 @@ setMethod("pcrelate",
 		}else{
 			return(list(kin = kin, nsnp = matList$nsnp))
 		}
-
-	}else if(scale == 'none'){
-		return(list(kin = matList$kin, nsnp = matList$nsnp))
 	}
 }
 
