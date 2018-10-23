@@ -81,7 +81,7 @@ setMethod("assocTestSingle",
                                          stringsAsFactors=FALSE)
                   
                   geno <- getGenotypeSelection(gdsobj, scanID=sample.id, order="selection",
-                                               transpose=TRUE)
+                                               transpose=TRUE, use.names=FALSE, drop=FALSE)
                   
                   # allele frequency
                   freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index)
