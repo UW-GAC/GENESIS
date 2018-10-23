@@ -550,6 +550,10 @@ setMethod("pcrelate",
 
 ### functions for final processing
 .correctKin <- function(kinBtwn, kinSelf, pcs, sample.include){
+    # keep R CMD check from warning about undefined global variables
+    `.` <- function(...) NULL
+    ID <- f <- ID1 <- ID2 <- kin <- newval <- value <- NULL
+    
     # temporary data.table to store values
     tmp <- kinSelf[, .(ID, f)]
     setnames(tmp, c('ID','f'), c('ID1', 'kin'))
@@ -589,7 +593,7 @@ setMethod("pcrelate",
 .correctK2 <- function(kinBtwn, kinSelf, small.samp.correct, pcs, sample.include){
     # keep R CMD check from warning about undefined global variables
     `.` <- function(...) NULL
-    ID <- f <- f.1 <- f.2 <- kin <- k0 <- k2 <- NULL
+    ID <- f <- f.1 <- f.2 <- kin <- k0 <- k2 <- ID1 <- ID2 <- newval <- value <- NULL
     
     # correct k2 for HW departure
     kinBtwn <- merge(kinBtwn, kinSelf[,.(ID, f)], by.x = 'ID2', by.y = 'ID')

@@ -137,6 +137,7 @@ setGeneric("meltMatrix", function(x, ...) standardGeneric("meltMatrix"))
 setMethod("meltMatrix",
           "matrix",
           function(x, drop.lower = FALSE, drop.diag = FALSE){
+            ID1 <- ID2 <- NULL
             if(drop.lower){
                 x[lower.tri(x, diag = drop.diag)] <- NA
             }
