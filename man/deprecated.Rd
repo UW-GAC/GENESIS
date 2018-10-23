@@ -17,6 +17,9 @@
     \item{assocTestMM: \code{\link{assocTestSingle}}}
     \item{fitNullMM: \code{\link{fitNullModel}}}
     \item{fitNullReg: \code{\link{fitNullModel}}}
+    \item{king2mat: \code{\link{kingToMatrix}}}
+    \item{pcrelateReadInbreed: \code{\link{pcrelate}}}
+    \item{pcrelateReadKinship: \code{\link{pcrelate}}}
 
   }
 }
