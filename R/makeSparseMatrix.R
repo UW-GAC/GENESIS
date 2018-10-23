@@ -102,14 +102,16 @@ setMethod("makeSparseMatrix",
     unrel.id <- setdiff(sample.include, names(mem))
     if(verbose) message(length(unrel.id), " samples with no relatives included")
 
-    if(is.null(diag.value)){
-        # data for the diagonal
-        ddat <- x[ID1 == ID2, .(ID1, value)][data.table(ID1 = unrel.id), on = 'ID1']
-        blocks[[clu$no + 1]] <- Diagonal(n = nrow(ddat), x = ddat$value)
-        block.id[[clu$no + 1]] <- ddat$ID1
-    }else{
-        blocks[[clu$no + 1]] <- Diagonal(n = length(unrel.id), x = diag.value)
-        block.id[[clu$no + 1]] <- unrel.id
+    if(length(unrel.id) > 0) {
+        if(is.null(diag.value)){
+            # data for the diagonal
+            ddat <- x[ID1 == ID2, .(ID1, value)][data.table(ID1 = unrel.id), on = 'ID1']
+            blocks[[clu$no + 1]] <- Diagonal(n = nrow(ddat), x = ddat$value)
+            block.id[[clu$no + 1]] <- ddat$ID1
+        }else{
+            blocks[[clu$no + 1]] <- Diagonal(n = length(unrel.id), x = diag.value)
+            block.id[[clu$no + 1]] <- unrel.id
+        }
     }
 
     # create block diagonal matrix
