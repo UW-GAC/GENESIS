@@ -8,6 +8,8 @@ import(Biobase)
 import(gdsfmt)
 import(Matrix)
 import(data.table)
+import(doMC)
+import(foreach)
 
 importFrom(GWASTools,
            GdsGenotypeReader,
@@ -55,7 +57,6 @@ export(kingToMatrix,
        kin2gds,
        mat2gds,
        pcairPartition,
-       pcrelate,
        pcrelateMakeGRM,
        pcrelateReadInbreed,
        pcrelateReadKinship)
@@ -71,7 +72,8 @@ export(admixMapMM,
 exportMethods(assocTestSingle,
               assocTestAggregate,
               fitNullModel,
-              pcair)
+              pcair,
+              pcrelate)
 export(admixMap,
        nullModelInvNorm)
 

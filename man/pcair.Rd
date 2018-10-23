@@ -13,7 +13,7 @@
                             kin.thresh = 2^(-11/2), div.thresh = -2^(-11/2),
                             unrel.set = NULL, 
                             sample.include = NULL, snp.include = NULL,
-                            num.thread = 1L, verbose = TRUE, ...)
+                            num.cores = 1L, verbose = TRUE, ...)
 \S4method{pcair}{SNPGDSFileClass}(gdsobj, ...)
 \S4method{pcair}{GdsGenotypeReader}(gdsobj, ...)
 \S4method{pcair}{GenotypeData}(gdsobj, ...)
@@ -28,9 +28,9 @@
   \item{unrel.set}{An optional vector of IDs for identifying individuals that are forced into the unrelated subset.  See 'Details' for how this interacts with \code{kinobj}.}
   \item{sample.include}{An optional vector of IDs for selecting samples to consider for either set.}
   \item{snp.include}{An optional vector of snp or variant IDs to use in the analysis.}
-  \item{num.thread}{Number of threads; passed to \code{\link{snpgdsPCA}}.}
+  \item{num.cores}{The number of cores to use.}
   \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is TRUE.}
-  \item{\dots}{Additional arguments to pass to \code{\link{snpgdsPCA}}.}
+  \item{\dots}{Additional arguments to pass to \code{\link{snpgdsPCA}}, such as \code{eigen.cnt} to control the number of PCs returned.}
 }
 \details{The basic premise of PC-AiR is to partition the entire sample of individuals into an ancestry representative 'unrelated subset' and a 'related set', perform standard PCA on the 'unrelated subset', and predict PC values for the 'related subset'.
 	

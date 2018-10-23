@@ -11,7 +11,7 @@ setMethod("pcair",
                    unrel.set = NULL,
                    sample.include = NULL,
                    snp.include = NULL,
-                   num.thread = 1L,
+                   num.cores = 1L,
                    verbose = TRUE,
                    ...) {
               .pcair(gdsobj = gdsobj, 
@@ -22,7 +22,7 @@ setMethod("pcair",
                      unrel.set = unrel.set,
                      sample.include = sample.include,
                      snp.include = snp.include,
-                     num.thread = num.thread,
+                     num.cores = num.cores,
                      verbose = verbose,
                      ...)
           })
@@ -66,7 +66,7 @@ setMethod("pcair",
                    unrel.set = NULL,
                    sample.include = NULL,
                    snp.include = NULL,
-                   num.thread = 1L,
+                   num.cores = 1L,
                    verbose = TRUE,
                    ...) {
 
@@ -84,7 +84,7 @@ setMethod("pcair",
     ## suppressMessages gets rid of the hint to use snpgdsOpen
     pca.unrel <- suppressMessages(
         snpgdsPCA(gdsobj, sample.id = part$unrels, snp.id = snp.include,
-                  num.thread = num.thread, verbose = verbose, ...)
+                  num.thread = num.cores, verbose = verbose, ...)
     )
 
     if(length(part$rels > 0)){
@@ -92,12 +92,12 @@ setMethod("pcair",
         if(verbose){  message("Predicting PC Values for the Related Set...") }
         snp.load <- suppressMessages(
             snpgdsPCASNPLoading(pca.unrel, gdsobj = gdsobj,
-                                num.thread = num.thread, verbose = verbose)
+                                num.thread = num.cores, verbose = verbose)
         )
         samp.load <- suppressMessages(
             snpgdsPCASampLoading(snp.load, gdsobj = gdsobj,
                                  sample.id = part$rels,
-                                 num.thread = num.thread, verbose = verbose)
+                                 num.thread = num.cores, verbose = verbose)
         )
 
         # combine unrelated and related PCs and order as in GDS file

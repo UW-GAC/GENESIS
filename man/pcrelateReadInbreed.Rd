@@ -1,7 +1,8 @@
 \name{pcrelateReadInbreed}
 \alias{pcrelateReadInbreed}
 \title{Create a Table of Inbreeding Coefficient Estimates from PC-Relate Output}
-\description{\code{pcrelateReadInbreed} is used to create a table of inbreeding coefficient estimates from the output of \code{pcrelate}.}
+\description{\code{pcrelateReadInbreed} is used to create a table of inbreeding coefficient estimates from the output of \code{pcrelate}.
+This function is deprecated; \code{\link{pcrelate}} now returns this table as \code{kinSelf}.}
 \usage{
 pcrelateReadInbreed(pcrelObj, scan.include = NULL, f.thresh = NULL)
 }

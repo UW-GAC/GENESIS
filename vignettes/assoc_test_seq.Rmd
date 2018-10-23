@@ -105,7 +105,7 @@ pc.df$sample.id <- row.names(pcs$vectors)
 pc.df <- left_join(pc.df, pData(annot), by="sample.id")
 
 pop.cols <- setNames(brewer.pal(12, "Paired"),
-                 c("ACB", "ASW", "CEU", "GBR", "CHB", "JPT", "CLM", "MXL", "LWK", "YRI", "GIH", "PUR"))
+    c("ACB", "ASW", "CEU", "GBR", "CHB", "JPT", "CLM", "MXL", "LWK", "YRI", "GIH", "PUR"))
 
 ggplot(pc.df, aes(PC1, PC2, color=Population)) + geom_point() +
     scale_color_manual(values=pop.cols)
@@ -119,15 +119,17 @@ ggparcoord(pc.df, columns=1:10, groupColumn="Population", scale="uniminmax") +
 
 ## PC-Relate
 
-The first 2 PCs separate populations, so we use them to compute kinship estimates adjusting for ancestry.
+The first 2 PCs separate populations, so we use them to compute kinship estimates adjusting for ancestry. The `pcrelate` method requires creating a SeqVarBlockIterator object, which should iterate over the pruned SNPs only.
 
 ```{r pcrelate}
-pcrel <- pcrelate(seqData, pcMat=pcs$vectors[,1:2], training.set=pcs$unrels,
-                  snp.include=pruned, snp.block.size=22000)
+seqSetFilter(seqData, variant.id=pruned)
+iterator <- SeqVarBlockIterator(seqData, variantBlock=20000, verbose=FALSE)
+pcrel <- pcrelate(iterator, pcs=pcs$vectors[,1:2], training.set=pcs$unrels)
+seqResetFilter(seqData, verbose=FALSE)
 ```
 
 ```{r pcrelate_plot}
-kinship <- pcrelateReadKinship(pcrel)
+kinship <- pcrel$kinBtwn
 
 ggplot(kinship, aes(k0, kin)) +
     geom_hline(yintercept=2^(-seq(3,9,2)/2), linetype="dashed", color="grey") +

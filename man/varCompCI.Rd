@@ -32,25 +32,25 @@ data("HapMap_ASW_MXL_KINGmat")
 # run PC-AiR
 mypcair <- pcair(HapMap_genoData, kinobj = HapMap_ASW_MXL_KINGmat, 
                  divobj = HapMap_ASW_MXL_KINGmat)
-                
+
 # run PC-Relate
-mypcrel <- pcrelate(HapMap_genoData, pcMat = mypcair$vectors[,1],
-        		training.set = mypcair$unrels)
+HapMap_genoData <- GenotypeBlockIterator(HapMap_genoData, snpBlock=20000)
+mypcrel <- pcrelate(HapMap_genoData, pcs = mypcair$vectors[,1,drop=FALSE],
+    			training.set = mypcair$unrels)
 close(HapMap_genoData)
 
 # generate a phenotype
 set.seed(4)
 pheno <- 0.2*mypcair$vectors[,1] + rnorm(mypcair$nsamp, mean = 0, sd = 1)
 
-# make data frame
-scanAnnot <- data.frame(scanID = mypcrel$sample.id, 
-              pc1 = mypcair$vectors[,1], pheno = pheno)
+annot <- data.frame(sample.id = mypcair$sample.id, 
+                    pc1 = mypcair$vectors[,1], pheno = pheno)
 
 # make covariance matrix
-covMat <- pcrelateMakeGRM(mypcrel)
+cov.mat <- pcrelateMakeGRM(mypcrel, verbose=FALSE)[annot$sample.id, annot$sample.id]
 
 # fit the null mixed model
-nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1", cov.mat = covMat)
+nullmod <- fitNullModel(annot, outcome = "pheno", covars = "pc1", cov.mat = cov.mat)
 
 # find the variance component CIs
 varCompCI(nullmod, prop = TRUE)
