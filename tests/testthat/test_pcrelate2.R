@@ -133,3 +133,15 @@ test_that("pcrelate2 - GenotypeData - sample include", {
     expect_equivalent(myrel2$kinBtwn[,cols], kin[,cols])
     GWASTools::close(gd)
 })
+
+test_that("pcrelate2 - small sample correction", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    myrel <- pcrelate1(svd, pcMat = mypcs, correct=TRUE, verbose=FALSE)
+    kin <- pcrelateReadKinship1(myrel)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, small.samp.correct = TRUE, verbose=FALSE)
+    cols <- c("ID1", "ID2", "kin", "k0", "k2", "nsnp")
+    expect_equal(myrel2$kinBtwn[,cols], kin[,cols])
+    seqClose(svd)
+})

@@ -184,7 +184,7 @@ setMethod("pcrelate",
 
 	# correct kinship - small sample
 	if(small.samp.correct){
-		message('Performing Small Sample Correction...')
+		if(verbose) message('Performing Small Sample Correction...')
 		out <- .correctKin(kinBtwn = kinBtwn, kinSelf = kinSelf, pcs = pcs, sample.include = sample.include)
 		kinBtwn <- out$kinBtwn
 		kinSelf <- out$kinSelf
