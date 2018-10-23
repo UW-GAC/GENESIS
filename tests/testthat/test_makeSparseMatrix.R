@@ -2,9 +2,10 @@ context("makeSparseMatrix tests")
 
 test_that("no clusters", {
     x <- diag(x=1:10)
-    sm <- makeSparseMatrix(x)
+    sm <- makeSparseMatrix(x, verbose=FALSE)
     expect_true(is(sm, "sparseMatrix"))
     expect_true(isDiagonal(sm))
+    expect_true(setequal(diag(x), diag(sm)))
 })
 
 test_that("two clusters", {
@@ -15,4 +16,3 @@ test_that("two clusters", {
     sm <- makeSparseMatrix(x)
     expect_true(is(sm, "sparseMatrix"))
 })
-

@@ -23,7 +23,7 @@
 \details{\code{sample.include} has two primary functions: 1) It can be used to subset samples provided in \code{x}. 2) \code{sample.include} can include sample.id not in \code{x}; these additional samples will be included in the output matrix, with a value of 0 for all off-diagonal elements, and the value provided by \code{diag.value} for the diagonal elements. When left \code{NULL}, the function will determine the list of samples from what is observed in \code{x}.
 
 \code{thresh} sets a threhsold for clustering samples such that any pair with a value greater than \code{thresh} is in the same cluster. All values within a cluster are kept, even if they are below \code{thresh}. All values between clusters are set to 0, creating a sparse, block-diagonal matrix. When \code{thresh} is \code{NULL}, no clustering is done and all samples are returned in one block. This feature is useful when converting a data.frame of kinship estimates to a matrix.}
-\value{An object of class '\code{Matrix}'.}
+\value{An object of class '\code{Matrix}'. Samples may be in a different order than in the input \code{x}, as samples are sorted by ID or rowname within each block (including within the block of unrelateds).}
 
 \author{Matthew P. Conomos}
 \seealso{
