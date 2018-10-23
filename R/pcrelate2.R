@@ -182,19 +182,19 @@ setMethod("pcrelate",
 	setkeyv(kinSelf, 'ID')
 	setkeyv(kinBtwn, c('ID1', 'ID2'))
 
-	# correct k2 for HW departure 
-	if(ibd.probs) kinBtwn <- .fixK2Est(kinBtwn = kinBtwn, kinSelf = kinSelf)
-
-	# small sample correction
+	# correct kinship - small sample
 	if(small.samp.correct){
 		message('Performing Small Sample Correction...')
-		out <- .pcrelateSmallSampCorrect(kinBtwn = kinBtwn, kinSelf = kinSelf, pcs = pcs, sample.include = sample.include, ibd.probs = ibd.probs)
+		out <- .correctKin(kinBtwn = kinBtwn, kinSelf = kinSelf, pcs = pcs, sample.include = sample.include)
 		kinBtwn <- out$kinBtwn
 		kinSelf <- out$kinSelf
 	}
 
+	# correct k2 - HW departure and small sample
+	kinBtwn <- .correctK2(kinBtwn = kinBtwn, kinSelf = kinSelf, small.samp.correct = small.samp.correct, pcs = pcs, sample.include = sample.include)
+
 	# use alternate k0 estimator for non-1st degree relatives
-	if(ibd.probs) kinBtwn <- .fixK0Est(kinBtwn = kinBtwn)
+	if(ibd.probs) kinBtwn <- .correctK0(kinBtwn = kinBtwn)
 	
 	# return output
     out <- list(kinBtwn = as.data.frame(kinBtwn), kinSelf = as.data.frame(kinSelf))
@@ -549,35 +549,7 @@ setMethod("pcrelate",
 
 
 ### functions for final processing
-.fixK2Est <- function(kinBtwn, kinSelf){
-    # keep R CMD check from warning about undefined global variables
-    `.` <- function(...) NULL
-    ID <- f <- f.1 <- f.2 <- kin <- k0 <- k2 <- NULL
-    
-    # correct k2 for HW departure
-    kinBtwn <- merge(kinBtwn, kinSelf[,.(ID, f)], by.x = 'ID2', by.y = 'ID')
-    setnames(kinBtwn, 'f', 'f.2')
-    kinBtwn <- merge(kinBtwn, kinSelf[,.(ID, f)], by.x = 'ID1', by.y = 'ID')
-    setnames(kinBtwn, 'f', 'f.1')
-    kinBtwn[, k2 := k2 - f.1*f.2][, `:=`(f.1 = NULL, f.2 = NULL)]
-    
-    return(kinBtwn)
-}
-
-.fixK0Est <- function(kinBtwn){
-    # keep R CMD check from warning about undefined global variables
-    kin <- k0 <- k2 <- NULL
-    
-    # use alternate k0 estimator for non-1st degree relatives
-    kinBtwn[kin < 2^(-5/2), k0 := 1 - 4*kin + k2]
-    
-    return(kinBtwn)
-}
-
-.pcrelateSmallSampCorrect <- function(kinBtwn, kinSelf, pcs, sample.include, ibd.probs){
-    
-    ### kinship estimates
-    
+.correctKin <- function(kinBtwn, kinSelf, pcs, sample.include){
     # temporary data.table to store values
     tmp <- kinSelf[, .(ID, f)]
     setnames(tmp, c('ID','f'), c('ID1', 'kin'))
@@ -610,53 +582,68 @@ setMethod("pcrelate",
     setnames(tmp, 'ID1', 'ID')
     kinSelf <- tmp[kinSelf, on = 'ID']
     kinSelf[, f := newval][, newval := NULL]
-    
-    
-    ### k2 estimates
 
-    if(ibd.probs){
-        # temporary data.table to store values
-        tmp <- kinBtwn[, .(ID1, ID2, kin, k2)]
-        setnames(tmp, 'k2', 'newval')
-        setkeyv(tmp, c('ID1', 'ID2'))
-        
-        # filter to samples with small values
-        # tmp <- tmp[kin < 2^(-11/2)][, kin := NULL]
-        
-        for(k in 2:ncol(V)){
-            Acov <- tcrossprod(V[,k])
-            rownames(Acov) <- rownames(V)
-            colnames(Acov) <- rownames(V)
-            Avec <- meltMatrix(Acov, drop.lower = TRUE, drop.diag = FALSE)
-            tmp <- Avec[tmp, on = c('ID1', 'ID2')]
-            coef <- lm(formula = as.formula(newval ~ value + I(value^2)), data = tmp[kin < 2^(-11/2)])$coef
-            tmp[, newval := newval - coef[1] - coef[2]*value - coef[3]*value^2]
-            tmp[, value := NULL]
-        }
-        tmp[, kin := NULL]
-        
-        # merge back into kinBtwn
-        kinBtwn <- tmp[kinBtwn, on = c('ID1', 'ID2')]
-        kinBtwn[, k2 := newval][, newval := NULL]
-        
-        
-        # temporary data.table to store values
-        tmp <- kinBtwn[, .(ID1, ID2, kin, k2)]
-        setnames(tmp, 'k2', 'newval')
-        setkeyv(tmp, c('ID1', 'ID2'))
-        
-        # filter to samples with small values
-        coef <- lm(formula = as.formula(newval ~ kin), data = tmp[newval < 2^(-9/2)])$coef
-        tmp[, newval := newval - coef[1] - coef[2]*kin]
-        tmp[, kin := NULL]
-        
-        # merge back into kinBtwn
-        kinBtwn <- tmp[kinBtwn, on = c('ID1', 'ID2')]
-        kinBtwn[!is.na(newval), k2 := newval][, newval := NULL]
-    }
-    
     return(list(kinBtwn = kinBtwn, kinSelf = kinSelf))
 }
+
+.correctK2 <- function(kinBtwn, kinSelf, small.samp.correct, pcs, sample.include){
+    # keep R CMD check from warning about undefined global variables
+    `.` <- function(...) NULL
+    ID <- f <- f.1 <- f.2 <- kin <- k0 <- k2 <- NULL
+    
+    # correct k2 for HW departure
+    kinBtwn <- merge(kinBtwn, kinSelf[,.(ID, f)], by.x = 'ID2', by.y = 'ID')
+    setnames(kinBtwn, 'f', 'f.2')
+    kinBtwn <- merge(kinBtwn, kinSelf[,.(ID, f)], by.x = 'ID1', by.y = 'ID')
+    setnames(kinBtwn, 'f', 'f.1')
+    kinBtwn[, k2 := k2 - f.1*f.2][, `:=`(f.1 = NULL, f.2 = NULL)]
+
+    if(small.samp.correct){
+	    # temporary data.table to store values
+	    tmp <- kinBtwn[, .(ID1, ID2, kin, k2)]
+	    setnames(tmp, 'k2', 'newval')
+	    setkeyv(tmp, c('ID1', 'ID2'))
+
+	    # get the PC matrix
+		V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
+
+		# make adjustment for each PC
+		for(k in 2:ncol(V)){
+	        Acov <- tcrossprod(V[,k])
+	        rownames(Acov) <- rownames(V)
+	        colnames(Acov) <- rownames(V)
+	        Avec <- meltMatrix(Acov, drop.lower = TRUE, drop.diag = FALSE)
+	        tmp <- Avec[tmp, on = c('ID1', 'ID2')]
+	        coef <- lm(formula = as.formula(newval ~ value + I(value^2)), data = tmp[kin < 2^(-11/2)])$coef
+	        tmp[, newval := newval - coef[1] - coef[2]*value - coef[3]*value^2]
+	        tmp[, value := NULL]
+	    }
+	    
+	    # make adjustment for kinship
+	    coef <- lm(formula = as.formula(newval ~ kin), data = tmp[newval < 2^(-9/2)])$coef
+	    tmp[, newval := newval - coef[1] - coef[2]*kin]
+	    tmp[, kin := NULL]
+	    
+	    # merge back into kinBtwn
+	    kinBtwn <- tmp[kinBtwn, on = c('ID1', 'ID2')]
+	    kinBtwn[!is.na(newval), k2 := newval][, newval := NULL]
+	}
+    
+    return(kinBtwn)
+}
+
+.correctK0 <- function(kinBtwn){
+    # keep R CMD check from warning about undefined global variables
+    kin <- k0 <- k2 <- NULL
+    
+    # use alternate k0 estimator for non-1st degree relatives
+    kinBtwn[kin < 2^(-5/2), k0 := 1 - 4*kin + k2]
+    
+    return(kinBtwn)
+}
+
+
+
 
 
 
