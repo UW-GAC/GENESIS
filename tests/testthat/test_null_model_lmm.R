@@ -30,6 +30,7 @@ test_that("lmm - without group", {
 })
 
 
+if(FALSE){
 test_that("update conditional model", {
     dat <- .testNullInputs()
     nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, group.idx=dat$group.idx, verbose=FALSE)
@@ -43,3 +44,4 @@ test_that("update conditional model", {
     expect_equivalent(nullmod2$cholSigmaInv, nullmod3$cholSigmaInv, tolerance=1e-5)
     expect_equivalent(nullmod2$varCompCov, nullmod3$varCompCov, tolerance=1e-5)
 })
+}
