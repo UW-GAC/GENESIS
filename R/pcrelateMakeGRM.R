@@ -1,4 +1,9 @@
-pcrelateMakeGRM1 <- function(pcrelObj, scan.include = NULL, scaleKin = 2){
+pcrelateMakeGRM <- function(pcrelObj, scan.include = NULL, scaleKin = 2){
+    .Deprecated("pcrelateToMatrix")
+    if ("kinBtwn" %in% names(pcrelObj)) {
+        return(pcrelateToMatrix(pcrelObj, sample.include = scan.include, scaleKin = scaleKin, verbose = FALSE))
+    }
+    
     # read in sample.id
     if(class(pcrelObj) == "gds.class"){
         sample.id <- read.gdsn(index.gdsn(pcrelObj, "sample.id"))

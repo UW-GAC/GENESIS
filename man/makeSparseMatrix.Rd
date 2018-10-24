@@ -27,16 +27,9 @@
 
 \author{Matthew P. Conomos}
 \seealso{
-	\code{\link{kingToMatrix}} and \code{\link{pcrelateMakeGRM}} for functions that use this function.
+	\code{\link{kingToMatrix}} and \code{\link{pcrelateToMatrix}} for functions that use this function.
 }
 % \examples{
-% KING --robust
-% file.king <- c(system.file("extdata", "MXL_ASW.kin0", package="GENESIS"), system.file("extdata", "MXL_ASW.kin", package="GENESIS"))
-% KINGmat <- kingToMatrix(file.king = file.king)
-
-% KING --ibdseg
-% file.king <- system.file("extdata", "HapMap.seg", package="GENESIS")
-% KINGmat <- kingToMatrix(file.king = file.king)
 % }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

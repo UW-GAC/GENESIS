@@ -165,7 +165,21 @@ setMethod("meltMatrix",
           })
 
 
-pcrelateMakeGRM <- function(pcrelobj, sample.include = NULL, thresh = NULL, scaleKin = 2, verbose = TRUE){
+
+setGeneric("pcrelateToMatrix", function(pcrelobj, ...) standardGeneric("pcrelateToMatrix"))
+
+setOldClass("pcrelate")
+setMethod("pcrelateToMatrix",
+          "pcrelate",
+          function(pcrelobj, sample.include = NULL, thresh = NULL, scaleKin = 2, verbose = TRUE) {
+              .pcrelateToMatrix(pcrelobj = pcrelobj,
+                                sample.include = sample.include,
+                                thresh = thresh,
+                                scaleKin = scaleKin,
+                                verbose = verbose)
+          })
+
+.pcrelateToMatrix <- function(pcrelobj, sample.include = NULL, thresh = NULL, scaleKin = 2, verbose = TRUE){
     # keep R CMD check from warning about undefined global variables
     ID <- f <- ID1 <- ID2 <- kin <- NULL
     `.` <- function(...) NULL
@@ -189,7 +203,28 @@ pcrelateMakeGRM <- function(pcrelobj, sample.include = NULL, thresh = NULL, scal
 }
 
 
-kingToMatrix <- function(file.king, sample.include = NULL, thresh = NULL, verbose = TRUE){
+setGeneric("kingToMatrix", function(king, ...) standardGeneric("kingToMatrix"))
+
+setMethod("kingToMatrix",
+          "character",
+          function(king, sample.include = NULL, thresh = NULL, verbose = TRUE) {
+              .kingToMatrix(file.king = king,
+                            sample.include = sample.include,
+                            thresh = thresh,
+                            verbose = verbose)
+          })
+
+setOldClass("snpgdsIBDClass")
+setMethod("kingToMatrix",
+          "snpgdsIBDClass",
+          function(king, sample.include = NULL, thresh = NULL, verbose = TRUE) {
+              ID <- king$sample.id
+              king <- king$kinship
+              dimnames(king) <- list(ID, ID)
+              makeSparseMatrix(x = king, thresh = thresh, sample.include = sample.include, diag.value = 0.5, verbose = verbose)
+          })
+
+.kingToMatrix <- function(file.king, sample.include = NULL, thresh = NULL, verbose = TRUE){
     # keep R CMD check from warning about undefined global variables
     ID1 <- ID2 <- PropIBD <- Kinship <- value <- NULL
     `.` <- function(...) NULL

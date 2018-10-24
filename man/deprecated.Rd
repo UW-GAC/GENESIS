@@ -18,6 +18,7 @@
     \item{fitNullMM: \code{\link{fitNullModel}}}
     \item{fitNullReg: \code{\link{fitNullModel}}}
     \item{king2mat: \code{\link{kingToMatrix}}}
+    \item{pcrelateMakeGRM: \code{\link{pcrelateToMatrix}}}
     \item{pcrelateReadInbreed: \code{\link{pcrelate}}}
     \item{pcrelateReadKinship: \code{\link{pcrelate}}}
 

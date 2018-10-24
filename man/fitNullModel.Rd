@@ -144,7 +144,7 @@ annot <- data.frame(sample.id = mypcair$sample.id,
                     pc1 = mypcair$vectors[,1], pheno = pheno)
 
 # make covariance matrix
-cov.mat <- pcrelateMakeGRM(mypcrel, verbose=FALSE)[annot$sample.id, annot$sample.id]
+cov.mat <- pcrelateToMatrix(mypcrel, verbose=FALSE)[annot$sample.id, annot$sample.id]
 
 # fit the null mixed model
 nullmod <- fitNullModel(annot, outcome = "pheno", covars = "pc1", cov.mat = cov.mat)

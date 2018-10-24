@@ -52,30 +52,33 @@ importFrom(S4Vectors, mcols, queryHits, subjectHits)
 
 importFrom(dplyr, bind_rows, inner_join)
 
-export(kingToMatrix,
-       king2mat,
-       kin2gds,
-       mat2gds,
-       pcairPartition,
-       pcrelateMakeGRM,
-       pcrelateReadInbreed,
-       pcrelateReadKinship)
-
+# deprecated/defunct
 export(admixMapMM,
        assocTestMM,
        assocTestSeq,
        assocTestSeqWindow,
        fitNullMM,
        fitNullReg,
-       varCompCI)
+       king2mat,
+       pcrelateMakeGRM,
+       pcrelateReadInbreed,
+       pcrelateReadKinship)
 
 exportMethods(assocTestSingle,
               assocTestAggregate,
               fitNullModel,
+              kingToMatrix,
+              makeSparseMatrix,
               pcair,
-              pcrelate)
+              pcrelate,
+              pcrelateToMatrix)
+
 export(admixMap,
-       nullModelInvNorm)
+       kin2gds,
+       mat2gds,
+       nullModelInvNorm,
+       pcairPartition,
+       varCompCI)
 
 S3method(plot, pcair)
 S3method(summary, pcair)

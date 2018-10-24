@@ -28,7 +28,7 @@
     mypcair <- suppressWarnings(pcair(seqData, kinobj=kinship, divobj=kinship, verbose=FALSE, ...))
     seqData <- SeqVarTools:::SeqVarBlockIterator(seqData, verbose=FALSE)
     mypcrel <- pcrelate(seqData, pcs=mypcair$vectors[,1:2], training.set=mypcair$unrels, verbose=FALSE, ...)
-    pcrelateMakeGRM(mypcrel, verbose=FALSE)
+    pcrelateToMatrix(mypcrel, verbose=FALSE)
 }
 
 .testPCs <- function(seqData, ...){

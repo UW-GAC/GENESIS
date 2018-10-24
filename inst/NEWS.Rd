@@ -2,8 +2,11 @@
 \title{NEWS for GENESIS}
 \section{Version 2.12.0}{
     \itemize{
-        \item pcair and pcrelate have been completely rewritten to run much faster and with much less memory, taking advantage of multiple cores. Some argument names have changed; see the documentation. The output of pcrelate is now a list of data.frames instead of a list of matrices; this is more efficient for large sample sizes. pcrelateReadKinship and pcrelateReadInbreed are deprecated, as these tables are now returned by pcrelate.
-        \item fitNullMM, fitNullReg, assocTestMM, and admixMapMM are deprecated. assocTestSeq and assocTestSeqWindow are defunct. Use fitNullModel, assocTestSingle, assocTestAggregate, and admixMap instead.
+      \item pcair and pcrelate have been completely rewritten to run much faster and with much less memory, taking advantage of multiple cores. Some argument names have changed; see the documentation. The output of pcrelate is now a list of data.frames instead of a list of matrices; this is more efficient for large sample sizes.
+      \item pcrelateReadKinship and pcrelateReadInbreed are deprecated, as these tables are now returned by pcrelate.
+      \item pcrelateMakeGRM is deprecated; use pcrelateToMatrix with new pcrelate output format.
+      \item king2mat is deprecated; use kingToMatrix instead.
+      \item fitNullMM, fitNullReg, assocTestMM, and admixMapMM are deprecated. assocTestSeq and assocTestSeqWindow are defunct. Use fitNullModel, assocTestSingle, assocTestAggregate, and admixMap instead.
     }
 }
 \section{Version 2.11.15}{

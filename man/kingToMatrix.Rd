@@ -1,19 +1,22 @@
 \name{kingToMatrix}
 \alias{kingToMatrix}
+\alias{kingToMatrix,character-method}
+\alias{kingToMatrix,snpgdsIBDClass-method}
 \title{Convert KING text output to an R Matrix}
 \description{\code{kingToMatrix} is used to extract the pairwise kinship coefficient estimates from the output text files of KING --ibdseg or KING --robust and put them into an R object of class \code{Matrix}. One use of this matrix is that it can be read by the functions \code{\link{pcair}} and \code{\link{pcairPartition}}.}
 \usage{
-kingToMatrix(file.king, sample.include = NULL, thresh = NULL, verbose = TRUE)
+\S4method{kingToMatrix}{character}(king, sample.include = NULL, thresh = NULL, verbose = TRUE)
+\S4method{kingToMatrix}{snpgdsIBDClass}(king, sample.include = NULL, thresh = NULL, verbose = TRUE)
 }
 \arguments{
-  \item{file.king}{File name of the text file storing output from KING. This can be a vector of multiple file names if the KING output is stored in multiple files; see 'Details'.}
+  \item{king}{Output from KING, either a \code{snpgdsIBDClass} object from \code{\link{snpgdsIBDKING}} or a character vector of one or more file names output from the command-line version of KING; see 'Details'.}
   \item{sample.include}{An optional vector of sample.id indicating all samples that should be included in the output matrix; see 'Details' for usage.}
   \item{thresh}{Kinship threshold for clustering samples to make the output matrix sparse block-diagonal. When \code{NULL}, no clustering is done. See 'Details'.}
   \item{verbose}{A logical indicating whether or not to print status updates to the console; the default is TRUE.}
 }
-\details{\code{file.king} can be a vector of multiple file names if your KING output is stored in multiple files; e.g. KING --robust run with family IDs returns a .kin and a .kin0 file for pairs within and not within the same family, respectively.
+\details{\code{king} can be a vector of multiple file names if your KING output is stored in multiple files; e.g. KING --robust run with family IDs returns a .kin and a .kin0 file for pairs within and not within the same family, respectively.
 
-\code{sample.include} has two primary functions: 1) It can be used to subset the KING output. 2) \code{sample.include} can include sample.id not in \code{file.king}; this ensures that all samples will be in the output matrix when reading KING --ibdseg output, which likely does not contain all pairs. When left \code{NULL}, the function will determine the list of samples from what is observed in \code{file.king}. It is recommended to use \code{sample.include} to ensure all of your samples are included in the output matrix.
+\code{sample.include} has two primary functions: 1) It can be used to subset the KING output. 2) \code{sample.include} can include sample.id not in \code{king}; this ensures that all samples will be in the output matrix when reading KING --ibdseg output, which likely does not contain all pairs. When left \code{NULL}, the function will determine the list of samples from what is observed in \code{king}. It is recommended to use \code{sample.include} to ensure all of your samples are included in the output matrix.
 
 \code{thresh} sets a threhsold for clustering samples such that any pair with an estimated kinship value greater than \code{thresh} is in the same cluster. All pairwise estimates within a cluster are kept, even if they are below \code{thresh}. All pairwise estimates between clusters are set to 0, creating a sparse, block-diagonal matrix. When \code{thresh} is \code{NULL}, no clustering is done and all samples are returned in one block. This feature is useful when converting KING --ibdseg or KING --robust estimates to be used as a kinship matrix, if you have a lower threshold that you consider 'related'. This feature should not be used when converting KING --robust estimates to be used as \code{divobj} in \code{\link{pcair}} or \code{\link{pcairPartition}}, as PC-AiR requires the negative estimates to identify ancestrally divergent pairs.}
 \value{An object of class '\code{Matrix}' with pairwise kinship coefficients by KING --ibdseg or KING --robust for each pair of individuals in the sample.  The estimates are on both the upper and lower triangle of the matrix, and the diagonal is arbitrarily set to 0.5. sample.id are set as the column and row names of the matrix.}
@@ -29,11 +32,18 @@ kingToMatrix(file.king, sample.include = NULL, thresh = NULL, verbose = TRUE)
 \examples{
 # KING --robust
 file.king <- c(system.file("extdata", "MXL_ASW.kin0", package="GENESIS"), system.file("extdata", "MXL_ASW.kin", package="GENESIS"))
-KINGmat <- kingToMatrix(file.king = file.king)
+KINGmat <- kingToMatrix(file.king)
 
 # KING --ibdseg
 file.king <- system.file("extdata", "HapMap.seg", package="GENESIS")
-KINGmat <- kingToMatrix(file.king = file.king)
+KINGmat <- kingToMatrix(file.king)
+
+# SNPRelate
+library(SNPRelate)
+gds <- snpgdsOpen(system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS"))
+king <- snpgdsIBDKING(gds)
+KINGmat <- kingToMatrix(king)
+snpgdsClose(gds)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

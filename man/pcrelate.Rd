@@ -68,7 +68,7 @@
 }
 \author{Matthew P. Conomos}
 \seealso{
-	\code{\link{pcrelateMakeGRM}}
+	\code{\link{pcrelateToMatrix}}
 }
 \examples{
 library(GWASTools)
@@ -93,7 +93,7 @@ mypcrel <- pcrelate(HapMap_genoData, pcs = mypcair$vectors[,1,drop=FALSE],
 head(mypcrel$kinBwtn)
 head(mypcrel$kinSelf)
 
-grm <- pcrelateMakeGRM(mypcrel)
+grm <- pcrelateToMatrix(mypcrel)
 dim(grm)
 
 close(HapMap_genoData)

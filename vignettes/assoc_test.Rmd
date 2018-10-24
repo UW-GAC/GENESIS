@@ -132,10 +132,10 @@ HapMap_genoData
 
 ## Reading in the GRM from PC-Relate
 
-A mixed model for genetic association testing typically includes a genetic relationship matrix (GRM) to account for genetic similarity among sample individuals. If we are using kinship coefficient estimates from PC-Relate to construct this GRM, then the function `pcrelateMakeGRM` should be used to provide the matrix in the appropriate format for `fitNullModel`.
+A mixed model for genetic association testing typically includes a genetic relationship matrix (GRM) to account for genetic similarity among sample individuals. If we are using kinship coefficient estimates from PC-Relate to construct this GRM, then the function `pcrelateToMatrix` should be used to provide the matrix in the appropriate format for `fitNullModel`.
 
 ```{r}
-myGRM <- pcrelateMakeGRM(mypcrel)
+myGRM <- pcrelateToMatrix(mypcrel)
 myGRM[1:5,1:5]
 ```
 Note that both the row and column names of this matrix are the same scanIDs as used in the scan annotation data.

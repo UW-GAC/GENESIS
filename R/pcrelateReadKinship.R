@@ -1,9 +1,7 @@
 pcrelateReadKinship <- function(pcrelObj, scan.include = NULL, ibd.probs = TRUE, kin.thresh = NULL){
     .Deprecated("pcrelate", msg="pcrelate now returns this table as 'kinBtwn'")
-    return(pcrelObj$kinBtwn)
-}
-
-pcrelateReadKinship1 <- function(pcrelObj, scan.include = NULL, ibd.probs = TRUE, kin.thresh = NULL){
+    if ("kinBtwn" %in% names(pcrelObj)) return(pcrelObj$kinBtwn)
+    
     # read in sample.id
     if(class(pcrelObj) == "gds.class"){
         sample.id <- read.gdsn(index.gdsn(pcrelObj, "sample.id"))

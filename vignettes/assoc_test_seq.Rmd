@@ -78,7 +78,7 @@ pruned <- unlist(snpset, use.names=FALSE)
 
 king <- snpgdsIBDKING(gds, snp.id=pruned, verbose=FALSE)
 kingMat <- king$kinship
-colnames(kingMat) <- rownames(kingMat) <- king$sample.id
+dimnames(kingMat) <- list(king$sample.id, king$sample.id)
 ```
 
 ## PC-AiR
@@ -155,7 +155,7 @@ annot <- AnnotatedDataFrame(pc.df)
 sampleData(seqData) <- annot
 
 # covariance matrix from pcrelate output
-grm <- pcrelateMakeGRM(pcrel, scaleKin=2)
+grm <- pcrelateToMatrix(pcrel, scaleKin=2)
 
 # fit the null model
 nullmod <- fitNullModel(seqData, outcome="outcome", 

@@ -110,8 +110,8 @@ The relevant output from the KING software is two text files with the file exten
 
 ```{r}
 # create matrix of KING estimates
-KINGmat <- kingToMatrix(file.king = c(system.file("extdata", "MXL_ASW.kin0", package="GENESIS"), 
-    				      system.file("extdata", "MXL_ASW.kin", package="GENESIS")))
+KINGmat <- kingToMatrix(c(system.file("extdata", "MXL_ASW.kin0", package="GENESIS"), 
+    			  system.file("extdata", "MXL_ASW.kin", package="GENESIS")))
 KINGmat[1:5,1:5]
 ```
 
@@ -225,7 +225,7 @@ A function is provided for making a genetic relationship matrix (GRM). Using a t
 
 ```{r}
 iids <- as.character(getScanID(HapMap_genoData))
-pcrelateMakeGRM(mypcrelate, sample.include = iids[1:5], thresh = 2^(-11/2), scaleKin = 2)
+pcrelateToMatrix(mypcrelate, sample.include = iids[1:5], thresh = 2^(-11/2), scaleKin = 2)
 ```
 ```{r, echo=FALSE}
 close(HapMap_genoData)
