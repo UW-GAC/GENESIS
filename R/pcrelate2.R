@@ -129,7 +129,7 @@ setMethod("pcrelate",
 
 		# for each snp block
 		matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %dopar% {
-			if(verbose & k %% 10 == 0) message('Running block ', k)
+			if(verbose & k %% 10 == 0) message('    Running block ', k, '...')
 
 			# read genotype data for the block
 			#seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
@@ -679,7 +679,7 @@ calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, snp.i
 	if(verbose) message('Calculating Indivdiual-Specific Allele Frequency betas for ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
 
 	beta <- foreach(k = 1:nsnpblock, .combine = rbind, .inorder = FALSE, .multicombine = TRUE) %dopar% {
-		if(verbose & k %% 10 == 0) message('Running block ', k)
+		if(verbose & k %% 10 == 0) message('    Running block ', k, '...')
 
 		# read genotype data for the block
 		#seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
@@ -733,7 +733,7 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
 	if(verbose) message('Running PC-Relate analysis using ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
 	# compute estimates for each variant block; sum along the way
 	matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %dopar% {
-		if(verbose & k %% 10 == 0) message('Running block ', k)
+		if(verbose & k %% 10 == 0) message('    Running block ', k, '...')
 		
 		# read genotype data for the block
 		#seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
