@@ -2,7 +2,7 @@
 \title{NEWS for GENESIS}
 \section{Version 2.12.0}{
     \itemize{
-      \item pcair and pcrelate have been completely rewritten to run much faster and with much less memory, taking advantage of multiple cores. Some argument names have changed; see the documentation. The output of pcrelate is now a list of data.frames instead of a list of matrices; this is more efficient for large sample sizes.
+      \item pcair and pcrelate have been completely rewritten for better consistency with other methods. Some argument names have changed; see the documentation. The output of pcrelate is now a list of data.frames instead of a list of matrices.
       \item pcrelateReadKinship and pcrelateReadInbreed are deprecated, as these tables are now returned by pcrelate.
       \item pcrelateMakeGRM is deprecated; use pcrelateToMatrix with new pcrelate output format.
       \item king2mat is deprecated; use kingToMatrix instead.

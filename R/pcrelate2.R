@@ -1,4 +1,5 @@
-setGeneric("pcrelate", function(gdsobj, ...) standardGeneric("pcrelate"))
+# defined in pcrelate.R
+#setGeneric("pcrelate", function(gdsobj, ...) standardGeneric("pcrelate"))
 
 setMethod("pcrelate",
           "GenotypeIterator",
