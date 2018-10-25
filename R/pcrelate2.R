@@ -12,7 +12,7 @@ setMethod("pcrelate",
                       maf.thresh = 0.01,
                       maf.bound.method = c('filter', 'truncate'),
                       small.samp.correct = FALSE,
-                      num.cores = 1,
+                      #num.cores = 1,
                       verbose = TRUE) {
               .pcrelate(gdsobj, 
                       pcs = pcs,
@@ -24,7 +24,7 @@ setMethod("pcrelate",
                       maf.thresh = maf.thresh,
                       maf.bound.method = maf.bound.method,
                       small.samp.correct = small.samp.correct,
-                      num.cores = num.cores,
+                      #num.cores = num.cores,
                       verbose = verbose)
           })
 
@@ -40,7 +40,7 @@ setMethod("pcrelate",
                       maf.thresh = 0.01,
                       maf.bound.method = c('filter', 'truncate'),
                       small.samp.correct = FALSE,
-                      num.cores = 1,
+                      #num.cores = 1,
                       verbose = TRUE) {
               filt <- seqGetFilter(gdsobj)
               out <- .pcrelate(gdsobj, 
@@ -53,7 +53,7 @@ setMethod("pcrelate",
                       maf.thresh = maf.thresh,
                       maf.bound.method = maf.bound.method,
                       small.samp.correct = small.samp.correct,
-                      num.cores = num.cores,
+                      #num.cores = num.cores,
                       verbose = verbose)
               seqSetFilter(gdsobj,
                            sample.sel=filt$sample.sel,
@@ -74,7 +74,7 @@ setMethod("pcrelate",
                       maf.thresh = 0.01,
                       maf.bound.method = c('filter', 'truncate'),
                       small.samp.correct = FALSE,
-                      num.cores = 1,
+                      #num.cores = 1,
                       verbose = TRUE){
 
 	# checks
@@ -85,9 +85,9 @@ setMethod("pcrelate",
 					maf.thresh = maf.thresh)
 	
 	# set up number of cores
-	sys.cores <- parallel::detectCores(logical = TRUE)
-	doMC::registerDoMC(cores = min(c(num.cores, sys.cores)))
-	if(verbose) message('Using ', min(c(num.cores, sys.cores)), ' CPU cores')
+	## sys.cores <- parallel::detectCores(logical = TRUE)
+	## doMC::registerDoMC(cores = min(c(num.cores, sys.cores)))
+	## if(verbose) message('Using ', min(c(num.cores, sys.cores)), ' CPU cores')
 
 	# number of sample blocks
 	nsampblock <- ceiling(length(sample.include)/sample.block.size)
@@ -128,7 +128,7 @@ setMethod("pcrelate",
 		if(verbose) message('Running PC-Relate analysis for ', length(sample.include), ' samples using ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
 
 		# for each snp block
-		matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %dopar% {
+		matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %do% {
 			# read genotype data for the block
 			#seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
                         #G <- altDosage(gdsobj)
@@ -676,7 +676,7 @@ calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, snp.i
         nsnpblock <- length(snp.blocks)
 	if(verbose) message('Calculating Indivdiual-Specific Allele Frequency betas for ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
 
-	beta <- foreach(k = 1:nsnpblock, .combine = rbind, .inorder = FALSE, .multicombine = TRUE) %dopar% {
+	beta <- foreach(k = 1:nsnpblock, .combine = rbind, .inorder = FALSE, .multicombine = TRUE) %do% {
 		# read genotype data for the block
 		#seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
 		#G <- altDosage(gdsobj)
@@ -728,7 +728,7 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
 
 	if(verbose) message('Running PC-Relate analysis using ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
 	# compute estimates for each variant block; sum along the way
-	matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %dopar% {
+	matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %do% {
 		# read genotype data for the block
 		#seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
 		#G <- altDosage(gdsobj)
