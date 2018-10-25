@@ -145,10 +145,12 @@ setMethod("pcrelate",
 
 		# take ratios to compute final estimates
 		estList <- .pcrelateCalcRatio(matList = matList, scale = scale, ibd.probs = ibd.probs)
+                rm(matList)
 
 		# cast to data.tables
 		kinSelf <- data.table(ID = rownames(estList$kin), f = 2*diag(estList$kin) - 1, nsnp = diag(estList$nsnp))
 		kinBtwn <- .estListToDT(estList, drop.lower = TRUE)
+                rm(estList)
 
 
 	}else if(nsampblock > 1){
@@ -765,7 +767,8 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
 
 	# take ratios to compute final estimates
 	estList <- .pcrelateCalcRatio(matList = matList, scale = scale, ibd.probs = ibd.probs)
-
+        rm(matList)
+    
 	# cast to data.tables
 	if(oneblock){
 		# self table
@@ -778,6 +781,7 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
 		# between samples table
 		kinBtwn <- .estListToDT(estList, drop.lower = FALSE)
 	}
+        rm(estList)
 	setkeyv(kinBtwn, c('ID1', 'ID2'))
 	
 	return(list(kinSelf = kinSelf, kinBtwn = kinBtwn))
