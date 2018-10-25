@@ -129,6 +129,7 @@ setMethod("pcrelate",
 
 		# for each snp block
 		matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %do% {
+			if(verbose) message('    Running block ', k, '...')
 			# read genotype data for the block
 			#seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
                         #G <- altDosage(gdsobj)
@@ -139,7 +140,6 @@ setMethod("pcrelate",
 
 			# calculate PC-Relate estimates
 			matList.block <- .pcrelateVarBlock(G = G, beta = beta, V = V, idx = 1:nrow(V), jdx = 1:nrow(V), scale = scale, ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
-			matList.block
 		}
 
 		# take ratios to compute final estimates
