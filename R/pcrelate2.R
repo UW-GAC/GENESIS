@@ -139,7 +139,7 @@ setMethod("pcrelate",
 			beta <- .calcISAFBeta(G = G, VVtVi = VVtVi)
 
 			# calculate PC-Relate estimates
-			matList.block <- .pcrelateVarBlock(G = G, beta = beta, V = V, idx = 1:nrow(V), jdx = 1:nrow(V), scale = scale, ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
+			.pcrelateVarBlock(G = G, beta = beta, V = V, idx = 1:nrow(V), jdx = 1:nrow(V), scale = scale, ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
 		}
 
 		# take ratios to compute final estimates
@@ -677,14 +677,14 @@ calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, snp.i
 	if(verbose) message('Calculating Indivdiual-Specific Allele Frequency betas for ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
 
 	beta <- foreach(k = 1:nsnpblock, .combine = rbind, .inorder = FALSE, .multicombine = TRUE) %do% {
+		if(verbose) message('    Running block ', k, '...')
 		# read genotype data for the block
 		#seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
 		#G <- altDosage(gdsobj)
                 G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
 
 		# calculate ISAF betas
-		beta.block <- .calcISAFBeta(G = G, VVtVi = VVtVi)
-		beta.block
+		.calcISAFBeta(G = G, VVtVi = VVtVi)
 	}
 	### rather than returning and rbinding here, we may want to be writing the output to something
 
@@ -729,6 +729,7 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
 	if(verbose) message('Running PC-Relate analysis using ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
 	# compute estimates for each variant block; sum along the way
 	matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %do% {
+		if(verbose) message('    Running block ', k, '...')
 		# read genotype data for the block
 		#seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
 		#G <- altDosage(gdsobj)
@@ -740,8 +741,7 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
 		### this line of code will probably be different if we save the betas; need to load correct betas
 
 		# calculate PC-Relate estimates
-		matList.block <- .pcrelateVarBlock(	G = G, beta = beta.block, V = V, idx = idx, jdx = jdx, scale = scale, ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
-		matList.block
+		.pcrelateVarBlock(	G = G, beta = beta.block, V = V, idx = idx, jdx = jdx, scale = scale, ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
 	}
 
 	# non-parallel version
