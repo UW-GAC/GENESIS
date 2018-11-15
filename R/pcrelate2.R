@@ -257,12 +257,14 @@ setMethod("pcrelate",
 # function to do actual calculation of betas
 .calcISAFBeta <- function(G, VVtVi){
 	# impute missing genotype values
-        G <- .meanImpute(G, freq=0.5*colMeans(G, na.rm=TRUE))
+    G <- .meanImpute(G, freq=0.5*colMeans(G, na.rm=TRUE))
 
 	# calculate beta
 	if(is.null(VVtVi$idx)){
+		if(!identical(rownames(G), rownames(VVtVi$val))) stop('sample order in genotypes and pcs do not match')
 		beta <- crossprod(G, VVtVi$val)
 	}else{
+		if(!identical(rownames(G)[VVtVi$idx], rownames(VVtVi$val))) stop('sample order in genotypes and pcs do not match')
 		beta <- crossprod(G[VVtVi$idx, ], VVtVi$val)
 	}
 	return(beta)
@@ -708,8 +710,8 @@ calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, snp.i
 ### exported function that does the pcrelate estimation for a (pair of) sample block(s)
 pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sample.include.block2, scale, ibd.probs, maf.thresh, maf.bound.method, verbose = TRUE){
 
-        # create (joint) PC matrix and indices
-        sample.include <- unique(c(sample.include.block1, sample.include.block2))
+    # create (joint) PC matrix and indices
+    sample.include <- unique(c(sample.include.block1, sample.include.block2))
 	V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
 	idx <- which(rownames(V) %in% sample.include.block1)
 	jdx <- which(rownames(V) %in% sample.include.block2)
@@ -726,8 +728,8 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
 	## }else{
 	## 	snp.blocks <- list(snp.include)
 	## }
-        snp.blocks <- .snpBlocks(gdsobj)
-        nsnpblock <- length(snp.blocks)
+    snp.blocks <- .snpBlocks(gdsobj)
+    nsnpblock <- length(snp.blocks)
 
 	if(verbose) message('Running PC-Relate analysis using ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
 	# compute estimates for each variant block; sum along the way
@@ -736,7 +738,7 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
 		# read genotype data for the block
 		#seqSetFilter(gdsobj, variant.id = snp.blocks[[k]])
 		#G <- altDosage(gdsobj)
-                G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
+        G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
 
 		# load betas for the current block of variants
 		#beta.block <- betaobj[rownames(betaobj) %in% snp.blocks[[k]], , drop = FALSE]
