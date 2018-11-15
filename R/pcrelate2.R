@@ -233,8 +233,7 @@ setMethod("pcrelate",
 ### function to match samples and create PC matrix
 .createPCMatrix <- function(pcs, sample.include){
     # subset and re-order pcs if needed
-    # V <- pcs[match(sample.include, rownames(pcs)), , drop = FALSE]
-    V <- pcs[rownames(pcs) %in% sample.include, , drop = FALSE]
+    V <- pcs[match(sample.include, rownames(pcs)), , drop = FALSE]
     # append intercept
     V <- cbind(rep(1, nrow(V)), V)
     return(V)
