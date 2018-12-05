@@ -13,7 +13,7 @@
                    test=c("Burden", "SKAT", "SMMAT"),
                    burden.test=c("Score", "Wald"), rho=0,
                    pval.method=c("davies", "kuonen", "liu"),
-                   sparse=TRUE, verbose=TRUE)
+                   sparse=TRUE, imputed=FALSE, verbose=TRUE)
 \S4method{assocTestAggregate}{GenotypeIterator}(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
                    test=c("Burden", "SKAT", "SMMAT"),
@@ -39,6 +39,7 @@
     method generates an error, kuonen is tried, and then liu as a last
     resort.}
     \item{sparse}{Logical indicator of whether to read genotypes as sparse Matrix objects; the default is \code{TRUE}. Set this to \code{FALSE} if the alternate allele dosage of the genotypes in the test are not expected to be mostly 0.}
+    \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is \code{TRUE}.}
 }
 
