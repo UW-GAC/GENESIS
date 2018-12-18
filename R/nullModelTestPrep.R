@@ -10,15 +10,20 @@ nullModelTestPrep <- function(nullmod){
         if (is(C, "Matrix")) X <- Matrix(X)
         CX <- crossprod(C, X)
         CXCXI <- tcrossprod(CX, chol2inv(chol(crossprod(CX))))
-        CCXCXICX <- tcrossprod(tcrossprod(C, t(CXCXI)), CX)
-        Ytilde <- crossprod(C, Y) - crossprod(CCXCXICX, Y)
+###        CCXCXICX <- tcrossprod(tcrossprod(C, t(CXCXI)), CX)
+###        Ytilde <- crossprod(C, Y) - crossprod(CCXCXICX, Y)
+###        resid <- tcrossprod(C, t(Ytilde)) - tcrossprod(CCXCXICX, t(Ytilde))
+        CY <- crossprod(C, Y)
+        Ytilde <- CY - tcrossprod(CXCXI, crossprod(CY, CX))
         resid <- tcrossprod(C, crossprod(nullmod$resid.marginal, C))
-        ## resid <- tcrossprod(C, t(Ytilde)) - tcrossprod(CCXCXICX, t(Ytilde))
+        
     } else { ## cholSigmaInv is a scalar
         CX <- X * C
         CXCXI <- tcrossprod(CX, chol2inv(chol(crossprod(CX))))
-        CCXCXICX <- tcrossprod(CXCXI*C, CX)
-        Ytilde <- C*Y - crossprod(CCXCXICX, Y)
+###        CCXCXICX <- tcrossprod(CXCXI*C, CX)
+###        Ytilde <- C*Y - crossprod(CCXCXICX, Y)
+        CY <- C*Y
+        Ytilde <- CY - tcrossprod(CXCXI, crossprod(CY, CX))
         resid <- nullmod$resid.marginal*C^2
     }
 
