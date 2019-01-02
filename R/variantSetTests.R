@@ -38,13 +38,13 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "SMMA
     #burden <- Matrix(colSums(t(G) * weights))
     burden <- colSums(t(G) * weights)
     
-    Xtilde <- calcXtilde(nullmod, burden)
+    Gtilde <- calcGtilde(nullmod, burden)
     
     if (burden.test == "Score") {
-        out <- .testGenoSingleVarScore(Xtilde, G = burden, resid = nullmod$resid) 
+        out <- .testGenoSingleVarScore(Gtilde, G = burden, resid = nullmod$resid) 
     }
     if (burden.test == "Wald"){
-        out <- .testGenoSingleVarWald(Xtilde, Ytilde = nullmod$Ytilde,
+        out <- .testGenoSingleVarWald(Gtilde, Ytilde = nullmod$Ytilde,
                                       n = length(nullmod$Ytilde), k = ncol(nullmod$model.matrix))
     }
     return(out)
@@ -56,7 +56,7 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "SMMA
                                 return.scores = FALSE, return.scores.cov = FALSE){
 
     U <- as.vector(crossprod(G, nullmod$resid))
-    G <- calcXtilde(nullmod, G)
+    G <- calcGtilde(nullmod, G)
     if (length(rho) == 1) {
         out <- .runSKATTest(scores = U, geno.adj = G,
                             weights = weights, rho = rho, pval.method = pval.method,
@@ -75,7 +75,7 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "SMMA
 .testVariantSetSMMAT <- function(nullmod, G, weights, pval.method) {
     G <- t(t(G) * weights)
     U <- as.vector(crossprod(G, nullmod$resid))
-    G <- calcXtilde(nullmod, G)
+    G <- calcGtilde(nullmod, G)
     V <- crossprod(G)
     burden.scores <- sum(U)
     burden.distMat <- sum(V)
