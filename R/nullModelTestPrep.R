@@ -1,43 +1,34 @@
 
 ## takes a null model and prepare specific arguments to streamline the testing
-nullModelTestPrep <- function(nullmod){
-    
+nullModelTestPrep <- function(nullmod){ 
     Y <- nullmod$workingY
     X <- nullmod$model.matrix
-    
     C <- nullmod$cholSigmaInv
+
     if (length(C) > 1) { ## n by n cholSigmaInv (may be Diagonal)
         if (is(C, "Matrix")) X <- Matrix(X)
-
-        qrmod <- base::qr(crossprod(C, X))
-        Ytilde <- base::qr.resid(qrmod, as.matrix(crossprod(C, Y)))
+        CX <- crossprod(C, X)
+        CXCXI <- tcrossprod(CX, chol2inv(chol(crossprod(CX))))
+        # qrmod <- base::qr(CX)
+        # Ytilde <- base::qr.resid(qrmod, as.matrix(crossprod(C, Y)))
+        CY <- crossprod(C, Y)
+        Ytilde <- CY - tcrossprod(CXCXI, crossprod(CY, CX))
         resid <- C %*% Ytilde
-
-        # CX <- crossprod(C, X)
-        # CXCXI <- tcrossprod(CX, chol2inv(chol(crossprod(CX))))
-###        CCXCXICX <- tcrossprod(tcrossprod(C, t(CXCXI)), CX)
-###        Ytilde <- crossprod(C, Y) - crossprod(CCXCXICX, Y)
-###        resid <- tcrossprod(C, t(Ytilde)) - tcrossprod(CCXCXICX, t(Ytilde))
-        # CY <- crossprod(C, Y)
-        # Ytilde <- CY - tcrossprod(CXCXI, crossprod(CY, CX))
         # resid <- tcrossprod(C, crossprod(nullmod$resid.marginal, C))
         
     } else { ## cholSigmaInv is a scalar
-
-        qrmod <- base::qr(C*X)
-        Ytilde <- base::qr.resid(qrmod, as.matrix(C*Y))
+        CX <- C*X
+        CXCXI <- tcrossprod(CX, chol2inv(chol(crossprod(CX))))
+        # qrmod <- base::qr(CX)
+        # Ytilde <- base::qr.resid(qrmod, as.matrix(C*Y))
+        CY <- C*Y
+        Ytilde <- CY - tcrossprod(CXCXI, crossprod(CY, CX))
         resid <- C*Ytilde
-
-        # CX <- X * C
-        # CXCXI <- tcrossprod(CX, chol2inv(chol(crossprod(CX))))
-###        CCXCXICX <- tcrossprod(CXCXI*C, CX)
-###        Ytilde <- C*Y - crossprod(CCXCXICX, Y)
-        # CY <- C*Y
-        # Ytilde <- CY - tcrossprod(CXCXI, crossprod(CY, CX))
         # resid <- nullmod$resid.marginal*C^2
     }
-    return(list(Ytilde = Ytilde, resid = resid, qr = qrmod))
-    # return(list(Ytilde=Ytilde, resid=resid, CX=CX, CXCXI=CXCXI))
+
+    return(list(Ytilde = Ytilde, resid = resid, CX = CX, CXCXI = CXCXI))
+    # return(list(Ytilde = Ytilde, resid = resid, CX = CX, CXCXI = CXCXI, qr = qrmod))
 }
 
 
@@ -45,11 +36,16 @@ nullModelTestPrep <- function(nullmod){
 ##  this replaces calcXtilde; changed the name to be less confusing; X is covariates and G is genotypes
 calcGtilde <- function(nullmod, G){
     C <- nullmod$cholSigmaInv
+
     if(length(C) > 1){ # n by n cholSigmaInv (may be Diagonal)
-        base::qr.resid(nullmod$qr, as.matrix(crossprod(C, G)))
-    }else{
-        base::qr.resid(nullmod$qr, as.matrix(C*G))
+        CG <- crossprod(C, G)
+    }else{ # cholSigmaInv is a scalar
+        CG <- C*G
     }
+
+    # calculate Gtilde
+    CG - tcrossprod(nullmod$CXCXI, crossprod(CG, nullmod$CX))
+    # base::qr.resid(nullmod$qr, CG) # QR seems to be slower unexpectedly
 }
 
 ##  adjust genotypes for correlation structure and fixed effects
