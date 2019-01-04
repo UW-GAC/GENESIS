@@ -8,7 +8,7 @@
 testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT"), 
                            burden.test = c("Score", "Wald"),  
                            rho = 0, pval.method = c("davies", "kuonen", "liu"),
-                           neig = 100){
+                           neig = 100, ntrace = 500){
                            # return.scores = FALSE, return.scores.cov = FALSE){
 
     test <- match.arg(test)
@@ -28,7 +28,7 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "fast
         out <- .testVariantSetSMMAT(nullmod, G, weights, pval.method)
     }
     if(test == "fastSKAT"){
-        out <- .testVariantSetFastSKAT(nullmod, G, weights, neig)
+        out <- .testVariantSetFastSKAT(nullmod, G, weights, neig, ntrace)
     }
     if(test == "fastSMMAT"){
         out <- .testVariantSetFastSMMAT(nullmod, G, weights, neig)
@@ -79,7 +79,7 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "fast
 }
 
 
-.testVariantSetFastSKAT <- function(nullmod, G, weights, neig = 100){
+.testVariantSetFastSKAT <- function(nullmod, G, weights, neig = 100, ntrace = 500){
     # multiply G by weights 
     if(is(G, "Matrix")){
         G <- G %*% Diagonal(x = weights)        
@@ -94,29 +94,48 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "fast
 
     # adjust G for covariates and random effects
     G <- calcGtilde(nullmod, G)
+
+    # dimensions of G
+    ncolG <- ncol(G)
+    nrowG <- nrow(G)
     
-    # if some condition
-    pval <- bigQF:::pchisqsum_ssvd(x = Q, M = as.matrix(crossprod(G)), n = neig, p = 10, q = 1)
-    err <- ifelse(is.na(pval), 1, 0)
+    # check if G large enough for fastSKAT
+    if(neig + 10 < min(ncolG, nrowG)){
+        # use fastSKAT
 
-    # else other condition 
-    pval <- bigQF:::pchisqsum_rsvd(x = Q, M = as.matrix(G), n = neig, p = 10, q = 3, tr2.sample.size = 100)
-    err <- ifelse(is.na(pval), 1, 0)
-
-    # else regular SKAT
-    if(length(U) == 1){
-        pval <- pchisq(as.numeric(Q/crossprod(G)), df=1, lower.tail=FALSE)
+        # if some condition
+        if(ncol(G) <= nrow(G)){
+            V <- crossprod(G) # WGPGW
+        }else{
+            V <- tcrossprod(G) # same eigenspace but smaller matrix
+        }
+        pval <- bigQF:::pchisqsum_ssvd(x = Q, M = as.matrix(V), n = neig, p = 10, q = 1)
         err <- ifelse(is.na(pval), 1, 0)
+
+        # # else other condition 
+        # pval <- bigQF:::pchisqsum_rsvd(x = Q, M = as.matrix(G), n = neig, p = 10, q = 3, tr2.sample.size = ntrace)
+        # err <- ifelse(is.na(pval), 1, 0)
+
     }else{
-        lambda <- eigen(crossprod(G), only.values = TRUE, symmetric=TRUE)$values
-        lambda <- lambda[lambda > 0]
-        pv <- .calcPval(Q = Q, lambda = lambda, pval.method = "kuonen")
-        pval <- pv["pval"]
-        err <- pv["err"]
+        # use regular SKAT
+        if(length(U) == 1){
+            pval <- pchisq(as.numeric(Q/crossprod(G)), df=1, lower.tail=FALSE)
+            err <- ifelse(is.na(pval), 1, 0)
+        }else{
+            if(ncol(G) <= nrow(G)){
+                V <- crossprod(G) # WGPGW
+            }else{
+                V <- tcrossprod(G) # same eigenspace but smaller matrix
+            }
+            lambda <- eigen(V, only.values = TRUE, symmetric=TRUE)$values
+            lambda <- lambda[lambda > 0]
+            pv <- .calcPval(Q = Q, lambda = lambda, pval.method = "kuonen")
+            pval <- pv["pval"]
+            err <- pv["err"]
+        }
     }
 
-    out <- list(Q = Q, pval = pval, err = err)
-    return(out)
+    return(list(Q = Q, pval = pval, err = err))
 }
 
 
