@@ -6,10 +6,12 @@
     if (family$family == "gaussian"){
         varComp <- summary(mod)$sigma^2
         cholSigmaInv <- sqrt(1/varComp)
+        workingY <- drop(y)
     }  else{
         varComp <- NULL
         vmu <- family$variance(mod$fitted)
         cholSigmaInv <- Diagonal(x=sqrt(vmu))
+        workingY <- .calcWorkingYnonGaussian(y, eta = mod$linear.predictors, family)$Y
     }
     
     varCompCov <- NULL
@@ -23,7 +25,6 @@
     resid.marginal <-  residuals(mod, type = "working")
     logLik <- as.numeric(logLik(mod))
     AIC <- AIC(mod)
-    workingY <- drop(y)   
     converged <- ifelse(family$family == "gaussian", TRUE, mod$converged)
     zeroFLAG <- NULL
     RSS <- ifelse(family$family == "gaussian", sum(resid.marginal^2)/varComp/(nrow(X) - ncol(X)), 1)
