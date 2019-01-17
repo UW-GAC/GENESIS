@@ -9,7 +9,7 @@ setMethod("assocTestAggregate",
                    burden.test=c("Score", "Wald"), rho=0,
                    pval.method=c("davies", "kuonen", "liu"),
                    # neig = 100, ntrace = 500,
-                   sparse=TRUE, verbose=TRUE) {
+                   sparse=TRUE, imputed=FALSE, verbose=TRUE) {
 
               # check argument values
               test <- match.arg(test)
@@ -34,7 +34,11 @@ setMethod("assocTestAggregate",
               while (iterate) {
                   var.info <- variantInfo(gdsobj, alleles=match.alleles, expanded=TRUE)
                   
-                  geno <- expandedAltDosage(gdsobj, use.names=FALSE, sparse=sparse)[sample.index,,drop=FALSE]
+                  if (!imputed) {
+                      geno <- expandedAltDosage(gdsobj, use.names=FALSE, sparse=sparse)[sample.index,,drop=FALSE]
+                  } else {
+                      geno <- imputedDosage(gdsobj, use.names=FALSE)[sample.index,,drop=FALSE]
+                  }
 
                   if (match.alleles) {
                       index <- .matchAlleles(gdsobj, var.info)
