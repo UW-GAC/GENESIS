@@ -1,5 +1,10 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.13.2}{
+    \itemize{
+        \item Add option to use imputed dosage in association tests.
+    }
+}
 \section{Version 2.12.0}{
     \itemize{
       \item pcair and pcrelate have been completely rewritten for better consistency with other methods. Some argument names have changed; see the documentation. The output of pcrelate is now a list of data.frames instead of a list of matrices.
