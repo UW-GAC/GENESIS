@@ -8,7 +8,7 @@ setMethod("assocTestAggregate",
                    # test=c("Burden", "SKAT", "SMMAT", "fastSKAT", "fastSMMAT"),
                    burden.test=c("Score", "Wald"), rho=0,
                    pval.method=c("davies", "kuonen", "liu"),
-                   neig = 100, ntrace = 500,
+                   # neig = 100, ntrace = 500,
                    sparse=TRUE, verbose=TRUE) {
 
               # check argument values
