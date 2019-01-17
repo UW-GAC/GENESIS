@@ -5,10 +5,11 @@
 ## Variant set: SKAT, burden, SKAT-O. Multiple types of p-values. Default: Davies with Kuonen if does not converge. 
 
 
-testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "SMMAT"), 
-                           burden.test = c("Score", "Wald"),  rho = 0,
-                           pval.method = c("davies", "kuonen", "liu"), 
-                           return.scores = FALSE, return.scores.cov = FALSE){
+testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "SMMAT"), # "fastSKAT", "fastSMMAT"), 
+                           burden.test = c("Score", "Wald"),
+                           rho = 0, pval.method = c("davies", "kuonen", "liu")){
+                           # neig = 100, ntrace = 500){
+                           # return.scores = FALSE, return.scores.cov = FALSE){
 
     test <- match.arg(test)
     burden.test <- match.arg(burden.test)
@@ -16,16 +17,22 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "SMMA
 
     G <- .genoAsMatrix(nullmod, G)
 
-    if (test == "SKAT") {
-        out <- .testVariantSetSKAT(nullmod, G, weights, rho, pval.method, 
-                                   return.scores, return.scores.cov)
-    }    
     if (test == "Burden") {
         out <- .testVariantSetBurden(nullmod, G, weights, burden.test)
+    }
+    if (test == "SKAT") {
+        out <- .testVariantSetSKAT(nullmod, G, weights, rho, pval.method)
+                                   # return.scores, return.scores.cov)
     }
     if (test == "SMMAT") {
         out <- .testVariantSetSMMAT(nullmod, G, weights, pval.method)
     }
+    # if(test == "fastSKAT"){
+    #     out <- .testVariantSetFastSKAT(nullmod, G, weights, neig, ntrace)
+    # }
+    # if(test == "fastSMMAT"){
+    #     out <- .testVariantSetFastSMMAT(nullmod, G, weights, neig, ntrace)
+    # }
     return(out)
 }
 
@@ -34,29 +41,30 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "SMMA
 ## create the burden score, than calls the appropriate single variant test function. 
 ## can easily implement GxE interaction with the burden score... later!
 .testVariantSetBurden <- function(nullmod, G, weights, burden.test){
+    if(is(G, "Matrix")){
+        burden <- rowSums(G %*% Diagonal(x = weights))
+    }else{
+        burden <- colSums(t(G) * weights)
+    }
     
-    #burden <- Matrix(colSums(t(G) * weights))
-    burden <- colSums(t(G) * weights)
-    
-    Xtilde <- calcXtilde(nullmod, burden)
+    Gtilde <- calcGtilde(nullmod, burden)
     
     if (burden.test == "Score") {
-        out <- .testGenoSingleVarScore(Xtilde, G = burden, resid = nullmod$resid) 
+        out <- .testGenoSingleVarScore(Gtilde, G = burden, resid = nullmod$resid) 
     }
     if (burden.test == "Wald"){
-        out <- .testGenoSingleVarWald(Xtilde, Ytilde = nullmod$Ytilde,
+        out <- .testGenoSingleVarWald(Gtilde, Ytilde = nullmod$Ytilde,
                                       n = length(nullmod$Ytilde), k = ncol(nullmod$model.matrix))
     }
     return(out)
 }
 
 
-
-.testVariantSetSKAT <- function(nullmod, G, weights, rho = 0, pval.method, 
-                                return.scores = FALSE, return.scores.cov = FALSE){
+.testVariantSetSKAT <- function(nullmod, G, weights, rho = 0, pval.method){
+                                # return.scores = FALSE, return.scores.cov = FALSE){
 
     U <- as.vector(crossprod(G, nullmod$resid))
-    G <- calcXtilde(nullmod, G)
+    G <- calcGtilde(nullmod, G)
     if (length(rho) == 1) {
         out <- .runSKATTest(scores = U, geno.adj = G,
                             weights = weights, rho = rho, pval.method = pval.method,
@@ -71,35 +79,190 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "SMMA
 }
 
 
+# .testVariantSetFastSKAT <- function(nullmod, G, weights, neig = 100, ntrace = 500){
+#     # multiply G by weights 
+#     if(is(G, "Matrix")){
+#         G <- G %*% Diagonal(x = weights)        
+#     }else{
+#         G <- t(t(G) * weights)
+#     }
+
+#     # scores
+#     U <- as.vector(crossprod(G, nullmod$resid))
+#     # test statistic
+#     Q <- sum(U^2)
+
+#     # adjust G for covariates and random effects
+#     G <- calcGtilde(nullmod, G)
+
+#     # dimensions of G
+#     ncolG <- ncol(G)
+#     nrowG <- nrow(G)
+    
+#     # check if G large enough for fastSKAT
+#     if(neig + 10 < min(ncolG, nrowG)){
+#         # use fastSKAT
+
+#         # if some condition
+#         if(ncol(G) <= nrow(G)){
+#             V <- crossprod(G) # WGPGW
+#         }else{
+#             V <- tcrossprod(G) # same eigenspace but smaller matrix
+#         }
+#         pval <- bigQF:::pchisqsum_ssvd(x = Q, M = as.matrix(V), n = neig, p = 10, q = 1)
+#         err <- ifelse(is.na(pval), 1, 0)
+
+#         # # else other condition 
+#         # pval <- bigQF:::pchisqsum_rsvd(x = Q, M = as.matrix(G), n = neig, p = 10, q = 3, tr2.sample.size = ntrace)
+#         # err <- ifelse(is.na(pval), 1, 0)
+
+#     }else{
+#         # use regular SKAT
+#         if(length(U) == 1){
+#             pval <- pchisq(as.numeric(Q/crossprod(G)), df=1, lower.tail=FALSE)
+#             err <- ifelse(is.na(pval), 1, 0)
+#         }else{
+#             if(ncol(G) <= nrow(G)){
+#                 V <- crossprod(G) # WGPGW
+#             }else{
+#                 V <- tcrossprod(G) # same eigenspace but smaller matrix
+#             }
+#             lambda <- eigen(V, only.values = TRUE, symmetric=TRUE)$values
+#             lambda <- lambda[lambda > 0]
+#             pv <- .calcPval(Q = Q, lambda = lambda, pval.method = "kuonen")
+#             pval <- pv["pval"]
+#             err <- pv["err"]
+#         }
+#     }
+
+#     return(list(Q = Q, pval = pval, err = err))
+# }
+
 
 .testVariantSetSMMAT <- function(nullmod, G, weights, pval.method) {
-    G <- t(t(G) * weights)
-    U <- as.vector(crossprod(G, nullmod$resid))
-    G <- calcXtilde(nullmod, G)
-    V <- crossprod(G)
-    burden.scores <- sum(U)
-    burden.distMat <- sum(V)
-    burden.pval <- pchisq(burden.scores^2/burden.distMat, df=1, lower.tail=FALSE)
-    V.rowSums <- rowSums(V)
-    U <- U - V.rowSums * burden.scores / burden.distMat
-    V <- V - tcrossprod(V.rowSums) / burden.distMat
-    if(mean(abs(V)) < sqrt(.Machine$double.eps)) return(list(pval_burden=burden.pval, pval_SMMAT=burden.pval, err=0))
+    # multiply G by weights 
+    if(is(G, "Matrix")){
+        G <- G %*% Diagonal(x = weights)        
+    }else{
+        G <- t(t(G) * weights)
+    }
+
+    # scores
+    U <- as.vector(crossprod(G, nullmod$resid)) # WGPY
+    U.sum <- sum(U) # 1WGPY
+
+    # adjust G for covariates and random effects
+    G <- calcGtilde(nullmod, G) # P^{1/2}GW
+
+    if(ncol(G) <= nrow(G)){
+        V <- crossprod(G) # WGPGW  # O(m^2n)
+        GG1 <- rowSums(V) # WGPGW1
+        # denominator for burden
+        V.sum <- sum(GG1) # 1WGPGW1
+        # burden p-value
+        burden.pval <- pchisq(U.sum^2/V.sum, df=1, lower.tail=FALSE)
+        # adjust for burden
+        U <- U - GG1*U.sum/V.sum
+        V <- V - tcrossprod(GG1)/V.sum  # O(m^2)
+
+    }else{
+        G.rowSums <- rowSums(G) # P^{1/2}GW1
+        GG1 <- crossprod(G, G.rowSums) # WGPGW1  # O(mn)
+        # denominator for burden
+        V.sum <- sum(GG1) # 1WGPGW1
+        # burden p-value
+        burden.pval <- pchisq(U.sum^2/V.sum, df=1, lower.tail=FALSE)
+        # adjust for burden
+        U <- U - GG1*U.sum/V.sum # WGPY - WGPGW1 * 1WGPY/(1WGPGW1)
+        G <- G - tcrossprod(G.rowSums, GG1)/V.sum # O(mn)
+        V <- crossprod(G) # O(m^2n)
+    }
+    if(mean(abs(V)) < sqrt(.Machine$double.eps)){
+        return(list(pval_burden = burden.pval, pval_theta = NA_real_, pval_SMMAT = burden.pval, err = 0))
+    }
+
+    # SMMAT test statistic
     Q <- sum(U^2)
     # lambda for p value calculation
     lambda <- eigen(V, only.values = TRUE, symmetric=TRUE)$values
     lambda <- lambda[lambda > 0]
     pv <- .calcPval(Q, lambda, pval.method)
-    pval <- pv["pval"]
-    err <- pv["err"]
-    out.pval <- tryCatch(pchisq(-2*log(burden.pval)-2*log(pval), df=4, lower.tail = FALSE), error = function(e) { NA })
-    if(is.na(out.pval)) {
+    theta.pval <- as.numeric(pv["pval"])
+    err <- as.numeric(pv["err"])
+
+    # Fisher's method to combine p-values
+    smmat.pval <- tryCatch(pchisq(-2*log(burden.pval)-2*log(theta.pval), df=4, lower.tail = FALSE), error = function(e) { NA })
+    if(is.na(smmat.pval)) {
         err <- 1
-        out.pval <- burden.pval
+        smmat.pval <- burden.pval
     }
-    out <- list(pval_burden=burden.pval, pval_SMMAT=out.pval, err=err)
-    return(out)
+    return(list(pval_burden = burden.pval, pval_theta = theta.pval, pval_SMMAT = smmat.pval, err = err))
 }
 
+
+# .testVariantSetFastSMMAT <- function(nullmod, G, weights, neig = 100, ntrace = 500) {
+#     # multiply G by weights 
+#     if(is(G, "Matrix")){
+#         G <- G %*% Diagonal(x = weights)        
+#     }else{
+#         G <- t(t(G) * weights)
+#     }
+
+#     # scores
+#     U <- as.vector(crossprod(G, nullmod$resid)) # WGPY
+#     U.sum <- sum(U) # 1WGPY
+
+#     # adjust G for covariates and random effects
+#     G <- calcGtilde(nullmod, G) # P^{1/2}GW
+
+#     if(ncol(G) <= nrow(G)){ ### figure out the right condition here
+#         V <- crossprod(G) # WGPGW  # O(m^2n)
+#         GG1 <- rowSums(V) # WGPGW1
+#         # denominator for burden
+#         V.sum <- sum(GG1) # 1WGPGW1
+#         # burden p-value
+#         burden.pval <- pchisq(U.sum^2/V.sum, df=1, lower.tail=FALSE)
+#         # adjust for burden
+#         U <- U - GG1*U.sum/V.sum
+#         V <- V - tcrossprod(GG1)/V.sum  # O(m^2)
+#         # SMMAT test statistic
+#         Q <- sum(U^2)
+
+#         if(mean(abs(V)) < sqrt(.Machine$double.eps)){
+#             return(list(pval_burden = burden.pval, pval_theta = NA_real_, pval_SMMAT = burden.pval, err = 0))
+#         }
+
+#         # p value calculation
+#         theta.pval <- bigQF:::pchisqsum_ssvd(x = Q, M = as.matrix(V), n = neig, p = 10, q = 1)
+#         err <- ifelse(is.na(theta.pval), 1, 0)
+
+#     }else{
+#         G.rowSums <- rowSums(G) # P^{1/2}GW1
+#         GG1 <- crossprod(G, G.rowSums) # WGPGW1  # O(mn)
+#         # denominator for burden
+#         V.sum <- sum(GG1) # 1WGPGW1
+#         # burden p-value
+#         burden.pval <- pchisq(U.sum^2/V.sum, df=1, lower.tail=FALSE)
+#         # adjust for burden
+#         U <- U - GG1*U.sum/V.sum # WGPY - WGPGW1 * 1WGPY/(1WGPGW1)
+#         G <- G - tcrossprod(G.rowSums, GG1)/V.sum # O(mn)
+#         # V <- crossprod(G) # O(m^2n)
+#         # SMMAT test statistic
+#         Q <- sum(U^2)
+
+#         # p value calculation
+#         theta.pval <- bigQF:::pchisqsum_rsvd(x = Q, M = as.matrix(G), n = neig, p = 10, q = 3, tr2.sample.size = ntrace)
+#         err <- ifelse(is.na(theta.pval), 1, 0)
+#     }
+
+#     # Fisher's method to combine p-values
+#     smmat.pval <- tryCatch(pchisq(-2*log(burden.pval)-2*log(theta.pval), df=4, lower.tail = FALSE), error = function(e) { NA })
+#     if(is.na(smmat.pval)) {
+#         err <- 1
+#         smmat.pval <- burden.pval
+#     }
+#     return(list(pval_burden = burden.pval, pval_theta = theta.pval, pval_SMMAT = smmat.pval, err = err))
+# }
 
 
 .runSKATTest <- function(scores, geno.adj, weights, rho, pval.method, optimal){
