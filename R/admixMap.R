@@ -165,12 +165,12 @@ admixMap <- function(admixDataList,
     # perform regressions
     if(v == 1){
       local <- local[,,1]
-      Xtilde <- calcXtilde(null.model, local)
-      XtX <- colSums(Xtilde^2) # vector of X^T SigmaInv X (for each SNP)
+      Gtilde <- calcGtilde(null.model, local)
+      GPG <- colSums(Gtilde^2) # vector of G^T P G (for each SNP)
       # filter monomorphic SNPs
-      XtX[which(freq == 0 || freq == 1)] <- NA
-      beta <- as.vector(crossprod(Xtilde,Ytilde)/XtX)
-      Vbeta <- (sY2/XtX - beta^2)/(n - k - 1) # RSS/XtX
+      GPG[which(freq == 0 || freq == 1)] <- NA
+      beta <- as.vector(crossprod(Gtilde,Ytilde)/GPG)
+      Vbeta <- (sY2/GPG - beta^2)/(n - k - 1) # RSS/GPG
       Stat <- beta^2/Vbeta
 
       res[,"Est"] <- beta
@@ -191,21 +191,21 @@ admixMap <- function(admixDataList,
         }
         # filter monomorphic or missing SNPs
         if(any(freq[g,]==1) || sum(freq[g,]==0)){ next }
-        Xtilde <- calcXtilde(null.model, local[,g,])
+        Gtilde <- calcGtilde(null.model, local[,g,])
         Ytilde <- null.model$Ytilde
         sY2 <- sum(Ytilde^2)
-        XtX <- crossprod(Xtilde)
-        XtXinv <- tryCatch( chol2inv(chol(XtX)), error=function(e){TRUE})
+        GPG <- crossprod(Gtilde)
+        GPGinv <- tryCatch( chol2inv(chol(GPG)), error=function(e){TRUE})
         # check that the error function above hasn't been called (which returns TRUE instead of the inverse matrix)
-        if(is.logical(XtXinv)){ next }
-        XtY <- crossprod(Xtilde, Ytilde)
-        betas <- crossprod(XtXinv, XtY)
-        RSS <- as.numeric((sY2 - crossprod(XtY,betas))/(n - k - v))
-        Vbetas <- XtXinv*RSS
+        if(is.logical(GPGinv)){ next }
+        GPY <- crossprod(Gtilde, Ytilde)
+        betas <- crossprod(GPGinv, GPY)
+        RSS <- as.numeric((sY2 - crossprod(GPY,betas))/(n - k - v))
+        Vbetas <- GPGinv*RSS
 
         Est[g,] <- as.vector(betas)
         SE[g,] <- as.vector(sqrt(diag(Vbetas)))
-        Joint.Stat[g] <- tryCatch( crossprod(betas,crossprod(XtX,betas))/RSS, error=function(e){NA})
+        Joint.Stat[g] <- tryCatch( crossprod(betas,crossprod(GPG,betas))/RSS, error=function(e){NA})
       } # g loop
 
       # collect results

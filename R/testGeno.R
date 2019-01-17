@@ -18,8 +18,8 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), G
     }
     
     if (test == "Wald" & is.null(E)){
-        Xtilde <- calcXtilde(nullmod, G)
-        res <- .testGenoSingleVarWald(Xtilde, nullmod$Ytilde,
+        Gtilde <- calcGtilde(nullmod, G)
+        res <- .testGenoSingleVarWald(Gtilde, nullmod$Ytilde,
                                       n=length(nullmod$Ytilde), k=ncol(nullmod$model.matrix))
     }
     
@@ -33,8 +33,8 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), G
     }
     
     if (test == "Score"){
-        Xtilde <- calcXtilde(nullmod, G)
-        res <- .testGenoSingleVarScore(Xtilde, G, nullmod$resid)
+        Gtilde <- calcGtilde(nullmod, G)
+        res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)
     }
     
     if (test == "BinomiRare"){
@@ -78,12 +78,12 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), G
 
 
 
-.testGenoSingleVarScore <- function(Xtilde, G, resid){
-    XtX <- colSums(Xtilde^2) # vector of X^T P X (for each SNP) b/c (M^T M) = P
-    score <- as.vector(crossprod(G, resid)) # X^T P Y
-    Stat <- score/sqrt(XtX)
+.testGenoSingleVarScore <- function(Gtilde, G, resid){
+    GPG <- colSums(Gtilde^2) # vector of G^T P G (for each SNP)
+    score <- as.vector(crossprod(G, resid)) # G^T P Y
+    Stat <- score/sqrt(GPG)
     
-    res <- data.frame(Score = score, Score.SE = sqrt(XtX), Score.Stat = Stat, 
+    res <- data.frame(Score = score, Score.SE = sqrt(GPG), Score.Stat = Stat, 
                       Score.pval = pchisq(Stat^2, df = 1, lower.tail = FALSE) )
     
     return(res)
@@ -91,13 +91,13 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), G
 
 
 
-.testGenoSingleVarWald <- function(Xtilde, Ytilde, n, k){
-    XtX <- colSums(Xtilde^2) # vector of X^T SigmaInv X (for each SNP)
-    XtY <- as.vector(crossprod(Xtilde, Ytilde))
-    beta <- XtY/XtX
+.testGenoSingleVarWald <- function(Gtilde, Ytilde, n, k){
+    GPG <- colSums(Gtilde^2) # vector of G^T P G (for each SNP)
+    GPY <- as.vector(crossprod(Gtilde, Ytilde)) # vector of G^T P Y (for each SNP)
+    beta <- GPY/GPG
     sY2 <- sum(Ytilde^2)
-    RSS <- as.numeric((sY2 - XtY * beta)/(n - k - 1))
-    Vbeta <- RSS/XtX
+    RSS <- as.numeric((sY2 - GPY * beta)/(n - k - 1))
+    Vbeta <- RSS/GPG
     Stat <- beta/sqrt(Vbeta)
     res <- data.frame(Est = beta, Est.SE = sqrt(Vbeta), Wald.Stat = Stat, 
                       Wald.pval = pchisq(Stat^2, df = 1, lower.tail = FALSE))
@@ -131,18 +131,18 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), G
     #if (ncol(E) == 1) res[,"cov.G.E"] <- NA
     
     for (g in 1:p) {
-        Xtilde <- calcXtilde(nullmod, G[, g] * intE)
-        XtX <- crossprod(Xtilde)
-        XtXinv <- tryCatch(chol2inv(chol(XtX)), error = function(e) {TRUE}) # this is inverse A matrix of sandwich
+        Gtilde <- calcGtilde(nullmod, G[, g] * intE)
+        GPG <- crossprod(Gtilde)
+        GPGinv <- tryCatch(chol2inv(chol(GPG)), error = function(e) {TRUE}) # this is inverse A matrix of sandwich
         # check that the error function above hasn't been called (which returns TRUE instead of the inverse matrix)
-        if (is.logical(XtXinv)) next
+        if (is.logical(GPGinv)) next
         
-        XtY <- crossprod(Xtilde, nullmod$Ytilde)
-        betas <- crossprod(XtXinv, XtY)
+        GPY <- crossprod(Gtilde, nullmod$Ytilde)
+        betas <- crossprod(GPGinv, GPY)
         res[g, grep("Est", colnames(res))] <- as.vector(betas)
         
-        RSS <- as.numeric((sY2 - crossprod(XtY, betas))/(n - k - v))
-        Vbetas <- XtXinv * RSS
+        RSS <- as.numeric((sY2 - crossprod(GPY, betas))/(n - k - v))
+        Vbetas <- GPGinv * RSS
         
         if (GxE.return.cov.mat) {
             res.Vbetas[[g]] <- Vbetas
@@ -156,7 +156,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), G
                                        error = function(e) { NA })
         
         res[g, "Joint.Stat"] <- tryCatch(sqrt(as.vector(crossprod(betas,
-                                                   crossprod(XtX, betas))/RSS)), 
+                                                   crossprod(GPG, betas))/RSS)), 
                                          error = function(e) { NA })
     }
     
@@ -174,33 +174,33 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), G
 
 
 ## G is an n by v matrix of 2 or more columns, all representing alleles of the same (multi-allelic) variant. 
-.testSingleVarMultAlleles <- function(Xtilde, Ytilde, n, k){
-    v <- ncol(Xtilde)
+.testSingleVarMultAlleles <- function(Gtilde, Ytilde, n, k){
+    v <- ncol(Gtilde)
     
-    var.names <- colnames(Xtilde)
+    var.names <- colnames(Gtilde)
     
     res <- matrix(NA, nrow = 1, ncol = length(var.names)*2 + 2,
                   dimnames = list(NULL, 
                                   c(paste0("Est.", var.names), paste0("SE.", var.names), "Joint.Stat", "Joint.Pval" ) ))
     
     
-    XtX <- crossprod(Xtilde)
-    XtXinv <- tryCatch(chol2inv(chol(XtX)), error = function(e) {TRUE})
+    GPG <- crossprod(Gtilde)
+    GPGinv <- tryCatch(chol2inv(chol(GPG)), error = function(e) {TRUE})
     
-    if (is.logical(XtXinv)) return(list(res = res, allelesCovMat = NA))
+    if (is.logical(GPGinv)) return(list(res = res, allelesCovMat = NA))
     
-    XtY <- crossprod(Xtilde, Ytilde)
-    betas <- crossprod(XtXinv, XtY) ## effect estimates of the various alleles
+    GPY <- crossprod(Gtilde, Ytilde)
+    betas <- crossprod(GPGinv, GPY) ## effect estimates of the various alleles
     res[1, grep("Est", colnames(res))] <- betas
     
     sY2 <- sum(Ytilde^2)
-    RSS <- as.numeric((sY2 - crossprod(XtY, betas))/(n - k - v))
-    Vbetas <- XtXinv * RSS
+    RSS <- as.numeric((sY2 - crossprod(GPY, betas))/(n - k - v))
+    Vbetas <- GPGinv * RSS
     
     res[1, grep(colnames(res), "SE")] <- sqrt(diag(Vbetas))
     
     res[1, "Joint.Stat"] <- tryCatch(crossprod(betas,
-                                               crossprod(XtX, betas))/RSS, 
+                                               crossprod(GPG, betas))/RSS, 
                                      error = function(e) { NA })
     
     res[,"Joint.pval"] <- pchisq(res[,"Joint.Stat"], df = v, lower.tail = FALSE)
