@@ -54,8 +54,6 @@ importFrom(dplyr, bind_rows, inner_join)
 # deprecated/defunct
 export(admixMapMM,
        assocTestMM,
-       assocTestSeq,
-       assocTestSeqWindow,
        fitNullMM,
        fitNullReg,
        king2mat,

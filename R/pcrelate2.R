@@ -1,5 +1,16 @@
-# defined in pcrelate.R
-#setGeneric("pcrelate", function(gdsobj, ...) standardGeneric("pcrelate"))
+setGeneric("pcrelate", function(gdsobj, ...) standardGeneric("pcrelate"))
+
+setMethod("pcrelate",
+          "GenotypeData",
+          function(gdsobj, ...) {
+              .Defunct("pcrelate", msg="The GenotypeData method for pcrelate is defunct. Use the GenotypeIterator method instead.")
+          })
+
+setMethod("pcrelate",
+          "SeqVarData",
+          function(gdsobj, ...) {
+              .Defunct("pcrelate", msg="The SeqVarData method for pcrelate is defunct. Use the SeqVarIterator method instead.")
+          })
 
 setMethod("pcrelate",
           "GenotypeIterator",
