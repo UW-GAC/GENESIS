@@ -122,8 +122,8 @@ nullModelInvNorm <- function(null.model, cov.mat = NULL,
     } else {
         rows <- lapply(cov.mat, rownames)
         cols <- lapply(cov.mat, colnames)
-        if (!do.call(identical, rows)) stop("dimnames of cov.mat should be identical")
-        if (!do.call(identical, cols)) stop("dimnames of cov.mat should be identical")
+        if (!do.call(identical, unname(rows))) stop("dimnames of cov.mat should be identical")
+        if (!do.call(identical, unname(cols))) stop("dimnames of cov.mat should be identical")
         if (!is.null(rows[[1]])) {
             return(rows[[1]])
         } else {

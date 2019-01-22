@@ -220,3 +220,22 @@ test_that("ScanAnnotationDataFrame", {
     nm2 <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, verbose=FALSE)
     expect_equal(nm1, nm2)
 })
+
+test_that("multiple matrices", {
+    samp <- sample(letters, 10)
+    dat <- data.frame(sample.id=samp,
+                      a=rnorm(10),
+                      b=c(rep("a",5), rep("b", 5)),
+                      stringsAsFactors=FALSE)
+    dat <- AnnotatedDataFrame(dat)
+    covMat <- crossprod(matrix(rnorm(15*2,sd=0.05),10,10, dimnames=list(samp,samp)))
+    covMat2 <- crossprod(matrix(rnorm(15*2,sd=0.05),10,10, dimnames=list(samp,samp)))
+    covMatList <- list(covMat, covMat2)
+    nm1 <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMatList, verbose=FALSE)
+
+    # name the matrices
+    covMatList <- list(a=covMat, b=covMat2)
+    nm2 <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMatList, verbose=FALSE)
+    expect_equivalent(nm1$varComp, nm2$varComp)
+    expect_equal(names(nm2$varComp[1:2]), paste0("V_", names(covMatList)))
+})

@@ -11,7 +11,7 @@
 
 \usage{
 \S4method{assocTestSingle}{SeqVarIterator}(gdsobj, null.model, test=c("Score", "Wald"),
-                GxE=NULL, sparse=TRUE, verbose=TRUE)
+                GxE=NULL, sparse=TRUE, imputed=FALSE, verbose=TRUE)
 \S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model, test=c("Score", "Wald"),
                 GxE=NULL, verbose=TRUE)
 }
@@ -24,6 +24,7 @@
     \item{GxE}{A vector of character strings specifying the names of the variables for which a genotype interaction term should be included. If \code{NULL} (default) no genotype interactions are included. See 'Details' for further information.}
     %\item{ivar.return.betaCov}{Logical indicator of whether the estimated covariance matrix of the effect size estimates (betas) for the genotype and genotype interaction terms should be returned; the default is FALSE.}
     \item{sparse}{Logical indicator of whether to read genotypes as sparse Matrix objects; the default is \code{TRUE}. Set this to \code{FALSE} if the alternate allele dosage of the genotypes in the test are not expected to be mostly 0.}
+    \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is \code{TRUE}.}
 }
 
