@@ -8,7 +8,7 @@
 testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "SMMAT"), # "fastSKAT", "fastSMMAT"), 
                            burden.test = c("Score", "Wald"),
                            rho = 0, pval.method = c("davies", "kuonen", "liu"),
-                           neig = 100, ntrace = 500){
+                           neig = 200, ntrace = 500){
                            # return.scores = FALSE, return.scores.cov = FALSE){
 
     test <- match.arg(test)
@@ -99,8 +99,8 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "SMMA
     ncolG <- ncol(G)
     nrowG <- nrow(G)
     
-    # check if G large enough for fastSKAT
-    if(neig + 10 < min(ncolG, nrowG)){
+    # check if G large enough to warrant fastSKAT approximation
+    if(neig + 10 < min(ncolG, nrowG)/6){
         # use fastSKAT
 
         # if some condition
