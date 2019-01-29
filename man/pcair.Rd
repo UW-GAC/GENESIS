@@ -9,7 +9,7 @@
 \title{PC-AiR: Principal Components Analysis in Related Samples}
 \description{\code{pcair} is used to perform a Principal Components Analysis using genome-wide SNP data for the detection of population structure in a sample.  Unlike a standard PCA, PC-AiR accounts for sample relatedness (known or cryptic) to provide accurate ancestry inference that is not confounded by family structure.}
 \usage{
-\S4method{pcair}{gds.class}(gdsobj, kinobj, divobj,
+\S4method{pcair}{gds.class}(gdsobj, kinobj = NULL, divobj = NULL,
                             kin.thresh = 2^(-11/2), div.thresh = -2^(-11/2),
                             unrel.set = NULL, 
                             sample.include = NULL, snp.include = NULL,
