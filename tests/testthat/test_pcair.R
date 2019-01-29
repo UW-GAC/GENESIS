@@ -55,3 +55,32 @@ test_that("SeqVarData", {
     expect_equal(mypcs$nsamp, 90)
     seqClose(gds)
 })
+
+
+test_that("kinobj and divobj NULL", {
+    showfile.gds(closeall=TRUE)
+    gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
+    gds <- openfn.gds(gdsfile)
+    data("HapMap_ASW_MXL_KINGmat")
+    expect_error(pcair(gds, kinobj = HapMap_ASW_MXL_KINGmat, divobj = NULL, verbose=FALSE))
+    expect_error(pcair(gds, kinobj = NULL, divobj = HapMap_ASW_MXL_KINGmat, verbose=FALSE))
+
+    samp <- rownames(HapMap_ASW_MXL_KINGmat)
+    mypcs <- pcair(gds, kinobj = NULL, divobj = NULL, unrel.set=samp[1:100], verbose=FALSE)
+    expect_equal(mypcs$rels, samp[101:173])
+    expect_equal(mypcs$unrels, samp[1:100])
+    
+    mypcs <- pcair(gds, kinobj = NULL, divobj = NULL, unrel.set=samp[1:100], sample.include=samp[1:110], verbose=FALSE)
+    expect_equal(mypcs$rels, samp[101:110])
+    expect_equal(mypcs$unrels, samp[1:100])
+
+    mypcs <- pcair(gds, kinobj = NULL, divobj = NULL, sample.include=samp[1:110], verbose=FALSE)
+    expect_null(mypcs$rels)
+    expect_equal(mypcs$unrels, samp[1:110])
+
+    mypcs <- pcair(gds, verbose=FALSE)
+    expect_null(mypcs$rels)
+    expect_equal(mypcs$unrels, samp)
+    
+    closefn.gds(gds)
+})
