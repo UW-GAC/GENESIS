@@ -208,7 +208,7 @@ pcairPartition <- function(kinobj, divobj,
 .pcairPartitionUser <- function(gdsobj, unrel.set = NULL, sample.include = NULL, verbose = TRUE){
 
     # get sample ids
-    sample.id <- as.character(read.gdsn(index.gdsn(gdsobj, "sample.id")))
+    sample.id <- as.character(.readSampleId(gdsobj))
     if(!is.null(sample.include)){
         if(!all(sample.include %in% sample.id)){
             warning('some samples in sample.include are not in gdsobj; they will not be included')
