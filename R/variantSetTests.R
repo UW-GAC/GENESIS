@@ -44,12 +44,14 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "fast
 ## create the burden score, than calls the appropriate single variant test function. 
 ## can easily implement GxE interaction with the burden score... later!
 .testVariantSetBurden <- function(nullmod, G, weights, burden.test){
+    # multiply G by weights and compute burden
     if(is(G, "Matrix")){
         burden <- rowSums(G %*% Diagonal(x = weights))
     }else{
         burden <- colSums(t(G) * weights)
     }
     
+    # adjust burden for covariates and random effects
     Gtilde <- calcGtilde(nullmod, burden)
     
     if (burden.test == "Score") {
@@ -73,62 +75,72 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "fast
     }
 
     # scores
-    U <- as.vector(crossprod(G, nullmod$resid))
-    # test statistic
+    U <- as.vector(crossprod(G, nullmod$resid)) # WGPY
+    # SKAT test statistic
     Q <- sum(U^2)
 
     # adjust G for covariates and random effects
-    G <- calcGtilde(nullmod, G)
+    G <- calcGtilde(nullmod, G) # P^{1/2}GW
 
-    ### determine which version of SKAT/fastSKAT to use
-    ncolG <- ncol(G) # number of snps
-    nrowG <- nrow(G) # number of samples
-    
-    if(min(ncolG, nrowG) > 2*neig){
-        # use fastSKAT
-        if(min(ncolG, nrowG) < 6000 + 20*neig)){
-            # use "H" method
-            if(ncolG <= nrowG){
-                V <- crossprod(G) # WGPGW  
-            }else{
-                V <- tcrossprod(G) # same eigenspace but smaller matrix
-            }
-            pval <- bigQF:::pchisqsum_ssvd(x = Q, M = as.matrix(V), n = neig, p = 10, q = 1)
+    # compute the p-value
+    out <- .calcPvalVCTest(Q = Q, G = G, pval.method = pval.method, neig = neig, ntrace = ntrace)
 
-        }else{
-            # use "G" method
-            pval <- NA_real_; pval.try = 0
-            while(is.na(pval) & pval.try < 10){
-                pval <- tryCatch(   bigQF:::pchisqsum_rsvd(x = Q, M = as.matrix(G), n = neig, p = 10, q = 3, tr2.sample.size = ntrace), 
-                                    warning = function(w){ NA_real_ }   )
-                pval.try <- pval.try + 1
-                # build in some warning that the space was re-sampled
-            }
-        }
-        err <- ifelse(is.na(pval), 1, 0)
-
-    }else{
-        # use regular SKAT
-        if(length(U) == 1){
-            pval <- pchisq(as.numeric(Q/crossprod(G)), df=1, lower.tail=FALSE)
-            err <- ifelse(is.na(pval), 1, 0)
-        }else{
-            if(ncolG <= nrowG){
-                V <- crossprod(G) # WGPGW
-            }else{
-                V <- tcrossprod(G) # same eigenspace but smaller matrix
-            }
-            lambda <- eigen(V, only.values = TRUE, symmetric=TRUE)$values
-            lambda <- lambda[lambda > 0]
-            pv <- .calcPval(Q = Q, lambda = lambda, pval.method = pval.method)
-            pval <- pv["pval"]
-            err <- pv["err"]
-        }
-    }
-
-    return(list(Q = Q, pval = pval, err = err))
+    return(list(Q = Q, pval = out$pval, err = out$err))
 }
 
+## function for SMMAT and fastSMMAT
+.testVariantSetSMMAT <- function(nullmod, G, weights, pval.method, neig, ntrace) {
+    # multiply G by weights 
+    if(is(G, "Matrix")){
+        G <- G %*% Diagonal(x = weights)        
+    }else{
+        G <- t(t(G) * weights)
+    }
+
+    # scores
+    U <- as.vector(crossprod(G, nullmod$resid)) # WGPY
+    U.sum <- sum(U) # 1WGPY
+
+    # adjust G for covariates and random effects
+    G <- calcGtilde(nullmod, G) # P^{1/2}GW
+
+    # compute burden p-value
+    G.rowSums <- rowSums(G) # P^{1/2}GW1
+    GG1 <- crossprod(G, G.rowSums) # WGPGW1  # O(mn)
+    V.sum <- sum(GG1) # 1WGPGW1
+    burden.pval <- pchisq(U.sum^2/V.sum, df=1, lower.tail=FALSE)
+
+    # adjust U and G for burden
+    U <- U - GG1*U.sum/V.sum # WGPY - WGPGW1 * 1WGPY/(1WGPGW1)
+    G <- G - tcrossprod(G.rowSums, GG1)/V.sum # O(mn)
+
+    # SMMAT test statistic
+    Q <- sum(U^2)
+
+    ### alternative to part above; seems to be slower from testing; this is how presented in SMMAT paper ###
+    # V <- crossprod(G) # WGPGW  # O(m^2n)
+    # GG1 <- rowSums(V) # WGPGW1
+    # # denominator for burden
+    # V.sum <- sum(GG1) # 1WGPGW1
+    # # burden p-value
+    # burden.pval <- pchisq(U.sum^2/V.sum, df=1, lower.tail=FALSE)
+    # # adjust for burden
+    # U <- U - GG1*U.sum/V.sum
+    # V <- V - tcrossprod(GG1)/V.sum  # O(m^2)
+
+    # compute the p-value for the "adjusted SKAT" part
+    out <- .calcPvalVCTest(Q = Q, G = G, pval.method = pval.method, neig = neig, ntrace = ntrace)
+    theta.pval <- out$pval
+    err <- out$err
+
+    # Fisher's method to combine p-values
+    smmat.pval <- tryCatch(pchisq(-2*log(burden.pval)-2*log(theta.pval), df=4, lower.tail = FALSE), error = function(e) { NA })
+    if(is.na(smmat.pval)) {
+        err <- 1
+        smmat.pval <- burden.pval
+    }
+    return(list(pval_burden = burden.pval, pval_theta = theta.pval, pval_SMMAT = smmat.pval, err = err))
+}
 
 
 ## old function for SKAT; need to make a new one for SKAT-O
@@ -149,111 +161,6 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "fast
 #     }
 #     return(out)
 # }
-
-
-
-### combine these into one SMMAT function like done with SKAT
-### need to figure out when which approach is fastest
-
-.testVariantSetSMMAT <- function(nullmod, G, weights, pval.method, neig, ntrace) {
-    # multiply G by weights 
-    if(is(G, "Matrix")){
-        G <- G %*% Diagonal(x = weights)        
-    }else{
-        G <- t(t(G) * weights)
-    }
-
-    # scores
-    U <- as.vector(crossprod(G, nullmod$resid)) # WGPY
-    U.sum <- sum(U) # 1WGPY
-
-    # adjust G for covariates and random effects
-    G <- calcGtilde(nullmod, G) # P^{1/2}GW
-
-    G.rowSums <- rowSums(G) # P^{1/2}GW1
-    GG1 <- crossprod(G, G.rowSums) # WGPGW1  # O(mn)
-    # denominator for burden
-    V.sum <- sum(GG1) # 1WGPGW1
-    # burden p-value
-    burden.pval <- pchisq(U.sum^2/V.sum, df=1, lower.tail=FALSE)
-    # adjust for burden
-    U <- U - GG1*U.sum/V.sum # WGPY - WGPGW1 * 1WGPY/(1WGPGW1)
-    G <- G - tcrossprod(G.rowSums, GG1)/V.sum # O(mn)
-
-    ### alternative to part above; seems to be slower from testing; this is how presented in SMMAT paper ###
-    # V <- crossprod(G) # WGPGW  # O(m^2n)
-    # GG1 <- rowSums(V) # WGPGW1
-    # # denominator for burden
-    # V.sum <- sum(GG1) # 1WGPGW1
-    # # burden p-value
-    # burden.pval <- pchisq(U.sum^2/V.sum, df=1, lower.tail=FALSE)
-    # # adjust for burden
-    # U <- U - GG1*U.sum/V.sum
-    # V <- V - tcrossprod(GG1)/V.sum  # O(m^2)
-
-    # SMMAT test statistic
-    Q <- sum(U^2)
-
-    ### determine which version of SMMAT/fastSMMAT to use
-    ncolG <- ncol(G) # number of snps
-    nrowG <- nrow(G) # number of samples
-
-    if(min(ncolG, nrowG) > 2*neig){
-        # fastSMMAT
-        if(min(ncolG, nrowG) < 6000 + 20*neig)){
-            # use "H" method
-            if(ncolG <= nrowG){
-                V <- crossprod(G) # O(m^2n)
-            }else{
-                V <- tcrossprod(G) # O(mn^2) same eigenspace but smaller matrix
-            }
-            if(mean(abs(V)) < sqrt(.Machine$double.eps)){
-                return(list(pval_burden = burden.pval, pval_theta = NA_real_, pval_SMMAT = burden.pval, err = 0))
-            }
-            # p value calculation
-            theta.pval <- bigQF:::pchisqsum_ssvd(x = Q, M = as.matrix(V), n = neig, p = 10, q = 1)
-
-        }else{
-            # use "G" method
-            pval <- NA_real_; pval.try = 0
-            while(is.na(pval) & pval.try < 10){
-                pval <- tryCatch(   bigQF:::pchisqsum_rsvd(x = Q, M = as.matrix(G), n = neig, p = 10, q = 3, tr2.sample.size = ntrace), 
-                                    warning = function(w){ NA_real_ }   )
-                pval.try <- pval.try + 1
-                # build in some warning that the space was re-sampled
-            }
-        }
-        err <- ifelse(is.na(pval), 1, 0)
-
-    }else{
-        # regular SMMAT
-        if(ncolG <= nrowG){
-            V <- crossprod(G) # O(m^2n)
-        }else{
-            V <- tcrossprod(G) # O(mn^2) same eigenspace but smaller matrix
-        }
-        if(mean(abs(V)) < sqrt(.Machine$double.eps)){
-            return(list(pval_burden = burden.pval, pval_theta = NA_real_, pval_SMMAT = burden.pval, err = 0))
-        }
-        # lambda for p value calculation
-        lambda <- eigen(V, only.values = TRUE, symmetric=TRUE)$values
-        lambda <- lambda[lambda > 0]
-        pv <- GENESIS:::.calcPval(Q, lambda, pval.method)
-        theta.pval <- as.numeric(pv["pval"])
-        err <- as.numeric(pv["err"])
-    }
-
-    # Fisher's method to combine p-values
-    smmat.pval <- tryCatch(pchisq(-2*log(burden.pval)-2*log(theta.pval), df=4, lower.tail = FALSE), error = function(e) { NA })
-    if(is.na(smmat.pval)) {
-        err <- 1
-        smmat.pval <- burden.pval
-    }
-    return(list(pval_burden = burden.pval, pval_theta = theta.pval, pval_SMMAT = smmat.pval, err = err))
-}
-
-
-
 .runSKATTest <- function(scores, geno.adj, weights, rho, pval.method, optimal){
     # covariance of scores
     V <- crossprod(geno.adj)
@@ -362,7 +269,65 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "fast
 }
 
 
-.calcPval <- function(Q, lambda, pval.method) {
+.calcPvalVCTest <- function(Q, G, pval.method, neig, ntrace){
+
+    ncolG <- ncol(G) # number of snps
+    nrowG <- nrow(G) # number of samples
+    
+    if(min(ncolG, nrowG) > 2*neig){
+        # use "fast" method
+        if(min(ncolG, nrowG) < 6000 + 20*neig)){
+            # use "H" method
+            if(ncolG <= nrowG){
+                V <- crossprod(G) # WGPGW  
+            }else{
+                V <- tcrossprod(G) # same eigenspace but smaller matrix
+            }
+            # if(mean(abs(V)) < sqrt(.Machine$double.eps)){
+            #     return(list(pval = NA_real_, err = 0))
+            # }
+            pval <- bigQF:::pchisqsum_ssvd(x = Q, M = as.matrix(V), n = neig, p = 10, q = 1)
+
+        }else{
+            # use "G" method
+            pval <- NA_real_; pval.try = 0
+            while(is.na(pval) & pval.try < 10){
+                pval <- tryCatch(   bigQF:::pchisqsum_rsvd(x = Q, M = as.matrix(G), n = neig, p = 10, q = 3, tr2.sample.size = ntrace), 
+                                    warning = function(w){ NA_real_ }   )
+                pval.try <- pval.try + 1
+                # build in some warning that the space was re-sampled
+            }
+        }
+        err <- ifelse(is.na(pval), 1, 0)
+
+    }else{
+        # use "regular" method
+        if(ncolG == 1){
+            pval <- pchisq(as.numeric(Q/crossprod(G)), df=1, lower.tail=FALSE)
+            err <- ifelse(is.na(pval), 1, 0)
+        }else{
+            if(ncolG <= nrowG){
+                V <- crossprod(G) # WGPGW
+            }else{
+                V <- tcrossprod(G) # same eigenspace but smaller matrix
+            }
+            # if(mean(abs(V)) < sqrt(.Machine$double.eps)){
+            #     return(list(pval = NA_real_, err = 0))
+            # }
+            lambda <- eigen(V, only.values = TRUE, symmetric=TRUE)$values
+            lambda <- lambda[lambda > 0]
+            pv <- .pchisqsum(Q = Q, lambda = lambda, pval.method = pval.method)
+            pval <- pv["pval"]
+            err <- pv["err"]
+        }
+    }
+
+    return(list(pval = pval, err = err))
+}
+
+
+### should we just change this to pchisqsum in the survey package?
+.pchisqsum <- function(Q, lambda, pval.method) {
     if(!requireNamespace("survey")) stop("package 'survey' must be installed to calculate p-values for SKAT")
     if(!requireNamespace("CompQuadForm")) stop("package 'CompQuadForm' must be installed to calculate p-values for SKAT")
     
