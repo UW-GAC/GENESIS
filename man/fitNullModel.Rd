@@ -44,7 +44,7 @@ nullModelInvNorm(null.model, cov.mat = NULL, norm.option = c("by.group", "all"),
   \item{covars}{A vector of character strings specifying the names of the fixed effect covariates in \code{x}; an intercept term is automatically included. If \code{NULL} (default) the only fixed effect covariate is the intercept term.}
   \item{cov.mat}{A matrix or list of matrices specifying the covariance structures of the random effects terms. Objects from the \pkg{\link{Matrix}} package are supported. See 'Details' for more information.}
   \item{group.var}{This variable can only be used when \code{family = "gaussian"}. A character string specifying the name of a categorical variable in \code{x} that is used to fit heterogeneous residual error variances. If \code{NULL} (default), then a standard LMM with constant residual variance for all samples is fit. See 'Details' for more information.}
-  \item{sample.id}{A vector of IDs for samples to include in the analysis.  If \code{NULL}, all samples in \code{x} are included.}
+  \item{sample.id}{A vector of IDs for samples to include in the analysis.  If \code{NULL}, all samples in \code{x} are included. This argument is ignored if \code{x} is a data.frame; see 'Details'.}
   \item{family}{A description of the error distribution to be used in the model. The default \code{"gaussian"} fits a linear model; see \code{\link{family}} for further options, and see 'Details' for more information.}
   \item{start}{A vector of starting values for the variance component estimation procedure. The function will pick reasonable starting values when left \code{NULL} (default). See 'Details' for more information.}
   \item{AIREML.tol}{The convergence threshold for the Average Information REML (AIREML) procedure used to estimate the variance components of the random effects. See 'Details' for more information.}
@@ -59,6 +59,8 @@ nullModelInvNorm(null.model, cov.mat = NULL, norm.option = c("by.group", "all"),
 }
 
 \details{
+    If \code{x} is a data.frame, the rownames of \code{x} must match the row and column names of \code{cov.mat} (if \code{cov.mat} is specified). If \code{x} is an \code{\link{AnnotatedDataFrame}} or other object containing an \code{\link{AnnotatedDataFrame}}, \code{x} will be re-ordered (if necessary) so that \code{sample.id} or \code{scanID} is in the same order as the row and column names of \code{cov.mat}.
+
     \code{cov.mat} is used to specify the covariance structures of the random effects terms in the model.  For example, to include a polygenic random effect, one matrix in \code{cov.mat} could be a kinship matrix or a genetic relationship matrix (GRM).  As another example, to include household membership as a random effect, one matrix in \code{cov.mat} should be a 0/1 matrix with a 1 in the \code{[i,j]} and \code{[j,i]} entries if individuals \code{i} and \code{j} are in the same household and 0 otherwise; the diagonals of such a matrix should all be 1.
     
     When \code{family} is not gaussian, the penalized quasi-likelihood (PQL) approximation to the generalized linear mixed model (GLMM) is fit following the procedure of GMMAT (Chen et al.).
