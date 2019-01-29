@@ -5,15 +5,17 @@
 ## Variant set: SKAT, burden, SKAT-O. Multiple types of p-values. Default: Davies with Kuonen if does not converge. 
 
 
-testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKAT-O"), 
-                           burden.test = c("Score", "Wald"),
-                           rho = 0, pval.method = c("davies", "kuonen", "liu"),
-                           neig = 200, ntrace = 500){
+testVariantSet <- function( nullmod, G, weights, 
+                            test = c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKAT-O"),
+                            burden.test = c("Score", "Wald"), 
+                            neig = 200, ntrace = 500, 
+                            rho = seq(from = 0, to = 1, by = 0.1)){
+                           # pval.method = c("davies", "kuonen", "liu"),
                            # return.scores = FALSE, return.scores.cov = FALSE){
 
     test <- match.arg(test)
     burden.test <- match.arg(burden.test)
-    pval.method <- match.arg(pval.method)
+    # pval.method <- match.arg(pval.method)
 
     G <- .genoAsMatrix(nullmod, G)
 
@@ -21,20 +23,20 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "fast
         out <- .testVariantSetBurden(nullmod, G, weights, burden.test)
     }
     if (test == "SKAT") {
-        out <- .testVariantSetSKAT(nullmod, G, weights, pval.method, neig = Inf, ntrace = Inf)
+        out <- .testVariantSetSKAT(nullmod, G, weights, neig = Inf, ntrace = Inf)
                                    # return.scores, return.scores.cov)
     }
     if(test == "fastSKAT"){
-        out <- .testVariantSetSKAT(nullmod, G, weights, pval.method, neig, ntrace)
+        out <- .testVariantSetSKAT(nullmod, G, weights, neig, ntrace)
     }
     if (test == "SMMAT") {
-        out <- .testVariantSetSMMAT(nullmod, G, weights, pval.method, neig = Inf, ntrace = Inf)
+        out <- .testVariantSetSMMAT(nullmod, G, weights, neig = Inf, ntrace = Inf)
     }
     if(test == "fastSMMAT"){
-        out <- .testVariantSetSMMAT(nullmod, G, weights, pval.method, neig, ntrace)
+        out <- .testVariantSetSMMAT(nullmod, G, weights, neig, ntrace)
     }
     if(test == "SKAT-O"){
-        out <- .testVariantSetSKATO()
+        out <- .testVariantSetSKATO(nullmod, G, weights, rho)
     }
     return(out)
 }
@@ -66,7 +68,7 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "fast
 
 
 ## new function that runs both SKAT and fastSKAT
-.testVariantSetSKAT <- function(nullmod, G, weights, pval.method, neig, ntrace){
+.testVariantSetSKAT <- function(nullmod, G, weights, neig, ntrace){
     # multiply G by weights 
     if(is(G, "Matrix")){
         G <- G %*% Diagonal(x = weights)        
@@ -83,13 +85,13 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "fast
     G <- calcGtilde(nullmod, G) # P^{1/2}GW
 
     # compute the p-value
-    out <- .calcPvalVCTest(Q = Q, G = G, pval.method = pval.method, neig = neig, ntrace = ntrace)
+    out <- .calcPvalVCTest(Q = Q, G = G, neig = neig, ntrace = ntrace)
 
-    return(list(Q = Q, pval = out$pval, err = out$err))
+    return(list(Q = Q, pval = out$pval, err = out$err, pval.method = out$pval.method))
 }
 
 ## function for SMMAT and fastSMMAT
-.testVariantSetSMMAT <- function(nullmod, G, weights, pval.method, neig, ntrace) {
+.testVariantSetSMMAT <- function(nullmod, G, weights, neig, ntrace) {
     # multiply G by weights 
     if(is(G, "Matrix")){
         G <- G %*% Diagonal(x = weights)        
@@ -129,7 +131,7 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "fast
     # V <- V - tcrossprod(GG1)/V.sum  # O(m^2)
 
     # compute the p-value for the "adjusted SKAT" part
-    out <- .calcPvalVCTest(Q = Q, G = G, pval.method = pval.method, neig = neig, ntrace = ntrace)
+    out <- .calcPvalVCTest(Q = Q, G = G, neig = neig, ntrace = ntrace)
     theta.pval <- out$pval
     err <- out$err
 
@@ -139,41 +141,129 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "fast
         err <- 1
         smmat.pval <- burden.pval
     }
-    return(list(pval_burden = burden.pval, pval_theta = theta.pval, pval_SMMAT = smmat.pval, err = err))
+    return(list(pval_burden = burden.pval, pval_theta = theta.pval, pval_SMMAT = smmat.pval, err = err, pval_theta.method = out$pval.method))
 }
 
 
-## old function for SKAT; need to make a new one for SKAT-O
-# .testVariantSetSKAT <- function(nullmod, G, weights, rho = 0, pval.method){
-#                                 # return.scores = FALSE, return.scores.cov = FALSE){
+.calcPvalVCTest <- function(Q, G, neig, ntrace){
 
-#     U <- as.vector(crossprod(G, nullmod$resid))
-#     G <- calcGtilde(nullmod, G)
-#     if (length(rho) == 1) {
-#         out <- .runSKATTest(scores = U, geno.adj = G,
-#                             weights = weights, rho = rho, pval.method = pval.method,
-#                             optimal = FALSE)
-#     } else {
-#         ## SKAT-O
-#         out <- .runSKATTest(scores = U, geno.adj = G,
-#                             weights = weights, rho = rho, pval.method = pval.method,
-#                             optimal = TRUE)
+    ncolG <- ncol(G) # number of snps
+    nrowG <- nrow(G) # number of samples
+
+    if(min(ncolG, nrowG) < 6000 + 20*neig){
+        if(ncolG <= nrowG){
+            V <- crossprod(G) # WGPGW
+        }else{
+            V <- tcrossprod(G) # same eigenspace but smaller matrix
+        }
+        if(mean(abs(V)) < sqrt(.Machine$double.eps)){
+            return(list(pval = NA_real_, err = 1, pval.method = NA_character_))
+        }
+
+        if(min(ncolG, nrowG) < 2*neig){
+            # use "regular" method
+            if(ncolG == 1){
+                pval <- pchisq(as.numeric(Q/V), df=1, lower.tail=FALSE)
+                err <- ifelse(is.na(pval), 1, 0)
+                pval.method = "integration"
+            }else{
+                lambda <- eigen(V, only.values = TRUE, symmetric=TRUE)$values
+                # lambda <- lambda[lambda > 0] 
+                pv <- tryCatch({
+                            list(pval = survey::pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, lower.tail = FALSE, method = "integration"), 
+                                 err = 0, method = "integration")
+                        }, warning = function(w){
+                            list(pval = survey::pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, lower.tail = FALSE, method = "saddlepoint"),
+                                 err = 0, method = "saddlepoint")
+                        }, error = function(e){ 
+                            list(pval = NA_real_, err = 1, method = NA_character_)
+                        })
+                pval <- pv$pval
+                err <- pv$err
+                pval.method <- pv$method
+            }
+
+        }else{
+            # use "fast H" method
+            pval <- tryCatch(   bigQF:::pchisqsum_ssvd(x = Q, M = as.matrix(V), n = neig, p = 10, q = 1, method = "saddlepoint"), 
+                                error = function(e){ NA_real_ } )
+            err <- ifelse(is.na(pval), 1, 0)
+            pval.method <- "ssvd_saddlepoint"
+        }
+
+    }else{
+        # use "fast G" method
+        pval <- NA_real_; pval.try = 0
+        while(is.na(pval) & pval.try < 10){
+            pval <- tryCatch(   bigQF:::pchisqsum_rsvd(x = Q, M = as.matrix(G), n = neig, p = 10, q = 3, tr2.sample.size = ntrace, method = "saddlepoint"), 
+                                warning = function(w){ NA_real_ }   )
+            pval.try <- pval.try + 1
+        }
+        if(is.na(pval)){
+            err <- 1
+        }else if(pval.try > 1){
+            err <- 2
+        }else{
+            err <- 0
+        }
+        pval.method <- "rsvd_saddlepoint"
+    }
+    
+    return(list(pval = pval, err = err, pval.method = pval.method))
+}
+
+
+# .calcPval <- function(Q, lambda, pval.method) {
+#     if(!requireNamespace("survey")) stop("package 'survey' must be installed to calculate p-values for SKAT")
+#     if(!requireNamespace("CompQuadForm")) stop("package 'CompQuadForm' must be installed to calculate p-values for SKAT")
+    
+#     err <- 0
+#     if(pval.method == "kuonen"){
+#         pval <- survey:::saddle(x = Q, lambda = lambda)
+#         err <- ifelse(is.na(pval), 1, 0)
+
+#     }else if(pval.method == "davies"){
+#         tmp <- suppressWarnings(CompQuadForm::davies(q = Q, lambda = lambda, acc = 1e-06))
+#         pval <- tmp$Qq
+#         if((tmp$ifault > 0) | (pval <= 0) | (pval >= 1)) {
+#             pval <- survey:::saddle(x = Q, lambda = lambda)
+#         }
+#         err <- ifelse(is.na(pval), 1, 0)
+
+#     }else if(pval.method == "liu"){
+#         pval <- CompQuadForm::liu(q = Q, lambda = lambda)
+#         err <- 0
 #     }
-#     return(out)
+    
+#     if(err > 0){
+#         pval <- CompQuadForm::liu(q = Q, lambda = lambda)
+#     }
+
+#     return(c(pval=pval, err=err))
 # }
-.runSKATTest <- function(scores, geno.adj, weights, rho, pval.method, optimal){
+
+
+
+## new function just for SKAT-O
+.testVariantSetSKATO <- function(nullmod, G, weights, rho = 0){
+#                                 # return.scores = FALSE, return.scores.cov = FALSE){
+    # scores
+    scores <- as.vector(crossprod(G, nullmod$resid))
+
+    # adjust G for covariates and random effects
+    geno.adj <- calcGtilde(nullmod, G)
+
     # covariance of scores
     V <- crossprod(geno.adj)
-    
+
     # vectors to hold output
     nrho <- length(rho)
     out.Q <- rep(NA, nrho); names(out.Q) <- paste("Q", rho, sep="_")
     out.pval <- rep(NA, nrho); names(out.pval) <- paste("pval", rho, sep="_")
     out.err <- rep(NA, nrho); names(out.err) <- paste("err", rho, sep="_")
+    lambdas <- vector("list", nrho)
 
-    # for SKAT-O need to save lambdas
-    if(optimal){ lambdas <- vector("list", nrho) }
-
+    # get p-value for each choice of rho
     for(i in 1:nrho){
         if(rho[i] == 0){
             # Variance Component Test
@@ -192,20 +282,26 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "fast
             distMat <- crossprod(cholRhoMat, crossprod(weights*t(weights*V), cholRhoMat)) # (cholRhoMat) (weights) X' P X (weights) (cholRhoMat)
         }
 
-        # lambda for p value calculation
-        lambda <- eigen(distMat, only.values = TRUE, symmetric=TRUE)$values
-        lambda <- lambda[lambda > 0]
-        if(optimal){ lambdas[[i]] <- lambda }
-
         # p value calculation
         if(length(scores) == 1){
+            lambdas[[i]] <- as.numeric(distMat)
             pval <- pchisq(as.numeric(Q/distMat), df=1, lower.tail=FALSE)
-            err <- 0
-
+            err <- ifelse(is.na(pval), 1, 0)
         }else{
-            pv <- .calcPval(Q, lambda, pval.method)
-            pval <- pv["pval"]
-            err <- pv["err"]
+            lambda <- eigen(distMat, only.values = TRUE, symmetric=TRUE)$values
+            # lambda <- lambda[lambda > 0]
+            lambdas[[i]] <- lambda
+            pv <- tryCatch({
+                        list(pval = survey::pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, lower.tail = FALSE, method = "integration"), 
+                             err = 0, method = "integration")
+                    }, warning = function(w){
+                        list(pval = survey::pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, lower.tail = FALSE, method = "saddlepoint"),
+                             err = 0, method = "saddlepoint")
+                    }, error = function(e){ 
+                        list(pval = NA_real_, err = 1, method = NA_character_)
+                    })
+            pval <- pv$pval
+            err <- pv$err
         }
 
         # update results
@@ -215,145 +311,55 @@ testVariantSet <- function(nullmod, G, weights, test = c("Burden", "SKAT", "fast
     }
     out <- as.list(c(out.Q, out.pval, out.err))
 
-    # SKAT-O
-    if(optimal){
-        if(length(scores) == 1){
-            # pvalue is the same for all rhos
-            out2 <- list(min.pval=out.pval[1], opt.rho=NA, pval_SKATO=out.pval[1])
-
-        }else{
-            # find the minimum p-value
-            minp <- min(out.pval)
-            out2 <- list(min.pval=minp, opt.rho=rho[which.min(out.pval)])
-
-            # get qmin(rho); i.e. the (1-minp)th percentile of dist of each Q
-            qmin <- rep(NA, nrho)
-            for(i in 1:nrho){
-                qmin[i] <- skatO_qchisqsum(minp, lambdas[[i]])
-            }
-
-            # calculate other terms
-            Z <- t(t(geno.adj)*weights)
-            zbar <- rowMeans(Z)
-            zbarTzbar <- sum(zbar^2)
-            M <- tcrossprod(zbar)/zbarTzbar
-            ZtImMZ <- crossprod(Z, crossprod(diag(nrow(M)) - M, Z))
-            lambda.k <- eigen(ZtImMZ, symmetric = TRUE, only.values = TRUE)
-            lambda.k <- lambda.k$values[lambda.k$values > 0]
-            mua <- sum(lambda.k)
-            sum.lambda.sq <- sum(lambda.k^2)
-            sig2a <- 2*sum.lambda.sq
-            trMatrix <- crossprod(crossprod(Z,crossprod(M,Z)),ZtImMZ)
-            sig2xi <- 4*sum(diag(trMatrix))
-            kera <- sum(lambda.k^4)/sum.lambda.sq^2 * 12
-            ldf <- 12/kera
-
-            # calculate tau(rho)
-            tau <- ncol(Z)^2*rho*zbarTzbar + (1-rho)*sum(crossprod(zbar, Z)^2)/zbarTzbar
-
-            # find min{(qmin(rho)-rho*chisq_1)/(1-rho)} with integration							
-            otherParams <- c(mu = mua, degf = ldf, varia = sig2a+sig2xi)
-            # integrate
-            re <- tryCatch({
-                integrate(integrateFxn, lower = 0, upper = 40, subdivisions = 2000, qmin = qmin, otherParams = otherParams, tau = tau, rho = rho, abs.tol = 10^-25)
-            }, error=function(e) NA)
-            out2[["pval_SKATO"]] <- 1-re[[1]]
-        }
-        
-        # update results
-        out <- c(out, out2)
-    }
-
-    # return results
-    return(out)	
-}
-
-
-.calcPvalVCTest <- function(Q, G, pval.method, neig, ntrace){
-
-    ncolG <- ncol(G) # number of snps
-    nrowG <- nrow(G) # number of samples
-    
-    if(min(ncolG, nrowG) > 2*neig){
-        # use "fast" method
-        if(min(ncolG, nrowG) < 6000 + 20*neig)){
-            # use "H" method
-            if(ncolG <= nrowG){
-                V <- crossprod(G) # WGPGW  
-            }else{
-                V <- tcrossprod(G) # same eigenspace but smaller matrix
-            }
-            # if(mean(abs(V)) < sqrt(.Machine$double.eps)){
-            #     return(list(pval = NA_real_, err = 0))
-            # }
-            pval <- bigQF:::pchisqsum_ssvd(x = Q, M = as.matrix(V), n = neig, p = 10, q = 1)
-
-        }else{
-            # use "G" method
-            pval <- NA_real_; pval.try = 0
-            while(is.na(pval) & pval.try < 10){
-                pval <- tryCatch(   bigQF:::pchisqsum_rsvd(x = Q, M = as.matrix(G), n = neig, p = 10, q = 3, tr2.sample.size = ntrace), 
-                                    warning = function(w){ NA_real_ }   )
-                pval.try <- pval.try + 1
-                # build in some warning that the space was re-sampled
-            }
-        }
-        err <- ifelse(is.na(pval), 1, 0)
+    # get SKAT-O p-value
+    if(length(scores) == 1){
+        # pvalue is the same for all rhos
+        out2 <- list(min.pval=out.pval[1], opt.rho=NA, pval_SKATO=out.pval[1])
 
     }else{
-        # use "regular" method
-        if(ncolG == 1){
-            pval <- pchisq(as.numeric(Q/crossprod(G)), df=1, lower.tail=FALSE)
-            err <- ifelse(is.na(pval), 1, 0)
-        }else{
-            if(ncolG <= nrowG){
-                V <- crossprod(G) # WGPGW
-            }else{
-                V <- tcrossprod(G) # same eigenspace but smaller matrix
-            }
-            # if(mean(abs(V)) < sqrt(.Machine$double.eps)){
-            #     return(list(pval = NA_real_, err = 0))
-            # }
-            lambda <- eigen(V, only.values = TRUE, symmetric=TRUE)$values
-            lambda <- lambda[lambda > 0]
-            pv <- .pchisqsum(Q = Q, lambda = lambda, pval.method = pval.method)
-            pval <- pv["pval"]
-            err <- pv["err"]
+        # find the minimum p-value
+        minp <- min(out.pval)
+        out2 <- list(min.pval=minp, opt.rho=rho[which.min(out.pval)])
+
+        # get qmin(rho); i.e. the (1-minp)th percentile of dist of each Q
+        qmin <- rep(NA, nrho)
+        for(i in 1:nrho){
+            qmin[i] <- skatO_qchisqsum(minp, lambdas[[i]])
         }
-    }
 
-    return(list(pval = pval, err = err))
-}
+        # calculate other terms
+        Z <- t(t(geno.adj)*weights)
+        zbar <- rowMeans(Z)
+        zbarTzbar <- sum(zbar^2)
+        M <- tcrossprod(zbar)/zbarTzbar
+        ZtImMZ <- crossprod(Z, crossprod(diag(nrow(M)) - M, Z))
+        lambda.k <- eigen(ZtImMZ, symmetric = TRUE, only.values = TRUE)
+        lambda.k <- lambda.k$values[lambda.k$values > 0]
+        mua <- sum(lambda.k)
+        sum.lambda.sq <- sum(lambda.k^2)
+        sig2a <- 2*sum.lambda.sq
+        trMatrix <- crossprod(crossprod(Z,crossprod(M,Z)),ZtImMZ)
+        sig2xi <- 4*sum(diag(trMatrix))
+        kera <- sum(lambda.k^4)/sum.lambda.sq^2 * 12
+        ldf <- 12/kera
 
+        # calculate tau(rho)
+        tau <- ncol(Z)^2*rho*zbarTzbar + (1-rho)*sum(crossprod(zbar, Z)^2)/zbarTzbar
 
-### should we just change this to pchisqsum in the survey package?
-.pchisqsum <- function(Q, lambda, pval.method) {
-    if(!requireNamespace("survey")) stop("package 'survey' must be installed to calculate p-values for SKAT")
-    if(!requireNamespace("CompQuadForm")) stop("package 'CompQuadForm' must be installed to calculate p-values for SKAT")
-    
-    err <- 0
-    if(pval.method == "kuonen"){
-        pval <- survey:::saddle(x = Q, lambda = lambda)
-        err <- ifelse(is.na(pval), 1, 0)
-
-    }else if(pval.method == "davies"){
-        tmp <- suppressWarnings(CompQuadForm::davies(q = Q, lambda = lambda, acc = 1e-06))
-        pval <- tmp$Qq
-        if((tmp$ifault > 0) | (pval <= 0) | (pval >= 1)) {
-            pval <- survey:::saddle(x = Q, lambda = lambda)
-        }
-        err <- ifelse(is.na(pval), 1, 0)
-
-    }else if(pval.method == "liu"){
-        pval <- CompQuadForm::liu(q = Q, lambda = lambda)
-        err <- 0
+        # find min{(qmin(rho)-rho*chisq_1)/(1-rho)} with integration                            
+        otherParams <- c(mu = mua, degf = ldf, varia = sig2a+sig2xi)
+        # integrate
+        re <- tryCatch({
+            integrate(integrateFxn, lower = 0, upper = 40, subdivisions = 2000, qmin = qmin, otherParams = otherParams, tau = tau, rho = rho, abs.tol = 10^-25)
+        }, error=function(e) NA)
+        out2[["pval_SKATO"]] <- 1-re[[1]]
     }
     
-    if(err > 0){
-        pval <- CompQuadForm::liu(q = Q, lambda = lambda)
-    }
+    # update results
+    out <- c(out, out2)
 
-    return(c(pval=pval, err=err))
+    # return results
+    return(out) 
 }
 
 

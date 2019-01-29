@@ -4,16 +4,17 @@ setMethod("assocTestAggregate",
           "SeqVarIterator",
           function(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
-                   test=c("Burden", "SKAT", "SMMAT", "fastSKAT", "fastSMMAT"),
-                   burden.test=c("Score", "Wald"), rho=0,
-                   pval.method=c("davies", "kuonen", "liu"),
+                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKAT-O"),
+                   burden.test=c("Score", "Wald"),
+                   # pval.method=c("davies", "kuonen", "liu"),
                    neig = 200, ntrace = 500,
+                   rho = seq(from = 0, to = 1, by = 0.1),
                    sparse=TRUE, imputed=FALSE, verbose=TRUE) {
 
               # check argument values
               test <- match.arg(test)
               burden.test <- match.arg(burden.test)
-              pval.method <- match.arg(pval.method)
+              # pval.method <- match.arg(pval.method)
 
               # coerce null.model if necessary
               if (sparse) null.model <- .nullModelAsMatrix(null.model)
@@ -92,10 +93,11 @@ setMethod("assocTestAggregate",
                       }
 
                       # do the test
-                      assoc <- testVariantSet(null.model, G=geno, weights=weight, test=test, 
-                                              burden.test=burden.test, rho=rho, 
-                                              pval.method=pval.method)
-                                              # neig = neig, ntrace = ntrace)
+                      assoc <- testVariantSet(null.model, G=geno, weights=weight, 
+                                              test=test, burden.test=burden.test, 
+                                              neig = neig, ntrace = ntrace,
+                                              rho=rho)
+                                              # pval.method=pval.method)
                       res[[i]] <- cbind(res[[i]], assoc)
                   }
 
@@ -116,15 +118,17 @@ setMethod("assocTestAggregate",
           "GenotypeIterator",
           function(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
-                   test=c("Burden", "SKAT", "SMMAT"),
-                   burden.test=c("Score", "Wald"), rho=0,
-                   pval.method=c("davies", "kuonen", "liu"),
+                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKAT-O"),
+                   burden.test=c("Score", "Wald"),
+                   # pval.method=c("davies", "kuonen", "liu"),
+                   neig = 200, ntrace = 500,
+                   rho = seq(from = 0, to = 1, by = 0.1),
                    verbose=TRUE) {
 
               # check argument values
               test <- match.arg(test)
               burden.test <- match.arg(burden.test)
-              pval.method <- match.arg(pval.method)
+              # pval.method <- match.arg(pval.method)
 
               # filter samples to match null model
               sample.id <- null.model$sample.id
@@ -195,10 +199,11 @@ setMethod("assocTestAggregate",
                       }
 
                       # do the test
-                      assoc <- testVariantSet(null.model, G=geno, weights=weight, test=test, 
-                                              burden.test=burden.test, rho=rho,
-                                              pval.method=pval.method,
-                                              neig = neig, ntrace = ntrace)
+                      assoc <- testVariantSet(null.model, G=geno, weights=weight, 
+                                              test=test, burden.test=burden.test, 
+                                              neig = neig, ntrace = ntrace,
+                                              rho=rho)
+                                              # pval.method=pval.method)
                       res[[i]] <- cbind(res[[i]], assoc)
                   }
 
