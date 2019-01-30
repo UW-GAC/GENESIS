@@ -1,5 +1,10 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.13.3}{
+    \itemize{
+        \item Restore option to run pcair without kinship matrix.
+    }
+}
 \section{Version 2.13.2}{
     \itemize{
         \item Add option to use imputed dosage in association tests.
