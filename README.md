@@ -1,3 +1,5 @@
+[![Travis build status](https://travis-ci.org/UW-GAC/GENESIS.svg?branch=master)](https://travis-ci.org/UW-GAC/GENESIS)
+
 # GENESIS
 GENetic EStimation and Inference in Structured samples (GENESIS): Statistical methods for analyzing genetic data from samples with population structure and/or relatedness
 
