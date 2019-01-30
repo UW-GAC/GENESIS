@@ -5,6 +5,8 @@ pcairPartition <- function(kinobj, divobj,
                            sample.include = NULL,
                            verbose = TRUE){
 
+    if(verbose) message('Using kinobj and divobj to partition samples into unrelated and related sets')
+
     # sample.id from kinship matrix
     kin.id.all <- .readSampleId(kinobj)
     # sample.id from divergence matrix
@@ -200,4 +202,34 @@ pcairPartition <- function(kinobj, divobj,
     # return results
     return(list(rels = rels, unrels = unrels))
 
+}
+
+
+.pcairPartitionUser <- function(gdsobj, unrel.set = NULL, sample.include = NULL, verbose = TRUE){
+
+    # get sample ids
+    sample.id <- as.character(.readSampleId(gdsobj))
+    if(!is.null(sample.include)){
+        if(!all(sample.include %in% sample.id)){
+            warning('some samples in sample.include are not in gdsobj; they will not be included')
+            sample.include <- sample.include[sample.include %in% sample.id]
+        } 
+    }else{
+        sample.include <- sample.id
+    }
+    if(verbose) message('Working with ', length(sample.include), ' samples')
+
+    if(!is.null(unrel.set)){
+        if(verbose) message('Using user specified unrel.set to parition samples into unrelated and related sets')
+        if(!all(unrel.set %in% sample.include)){
+            warning('some samples in unrel.set are not in sample.include or gdsobj; they will not be included')
+            unrel.set <- unrel.set[unrel.set %in% sample.include]
+        }
+        rels <- sample.include[!(sample.include %in% unrel.set)]
+        part <- list(rels = rels, unrels = unrel.set)
+
+    }else{
+        if(verbose) message('kinobj, divobj, and unrel.set all NULL; performing standard PCA analysis')
+        part <- list(rels = NULL, unrels = sample.include)
+    }  
 }

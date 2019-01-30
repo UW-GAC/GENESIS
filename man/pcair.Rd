@@ -9,7 +9,7 @@
 \title{PC-AiR: Principal Components Analysis in Related Samples}
 \description{\code{pcair} is used to perform a Principal Components Analysis using genome-wide SNP data for the detection of population structure in a sample.  Unlike a standard PCA, PC-AiR accounts for sample relatedness (known or cryptic) to provide accurate ancestry inference that is not confounded by family structure.}
 \usage{
-\S4method{pcair}{gds.class}(gdsobj, kinobj, divobj,
+\S4method{pcair}{gds.class}(gdsobj, kinobj = NULL, divobj = NULL,
                             kin.thresh = 2^(-11/2), div.thresh = -2^(-11/2),
                             unrel.set = NULL, 
                             sample.include = NULL, snp.include = NULL,
@@ -35,10 +35,18 @@
 \details{The basic premise of PC-AiR is to partition the entire sample of individuals into an ancestry representative 'unrelated subset' and a 'related set', perform standard PCA on the 'unrelated subset', and predict PC values for the 'related subset'.
 	
 	We recommend using software that accounts for population structure to estimate pairwise kinship coefficients to be used in \code{kinobj}.  Any pair of individuals with a pairwise kinship greater than \code{kin.thresh} will be declared 'related.'  Kinship coefficient estimates from the KING-robust software are typically used as measures of ancestry divergence in \code{divobj}.  Any pair of individuals with a pairwise divergence measure less than \code{div.thresh} will be declared ancestrally 'divergent'.  Typically, \code{kin.thresh} and \code{div.thresh} are set to be the amount of error around 0 expected in the estimate for a pair of truly unrelated individuals.
+
+	There are multiple ways to partition the sample into an ancestry representative 'unrelated subset' and a 'related subset'. In all of the scenarios described below, the set of all samples is limited to those in \code{sample.include} when it is specified (i.e. not \code{NULL}): 
+
+	If \code{kinobj} is specified, \code{divobj} is specified, and \code{unrel.set = NULL}, then the PC-AiR algorithm is used to find an 'optimal' partition of all samples (see 'References' for a paper describing the PC-AiR algorithm). 
+
+	If \code{kinobj} is specified, \code{divobj} is specified, and \code{unrel.set} is specified, then all individuals with IDs in \code{unrel.set} are forced in the 'unrelated subset' and the PC-AiR algorithm is used to partition the rest of the sample; this is especially useful for including reference samples of known ancestry in the 'unrelated subset'.
+
+	If \code{kinobj = NULL}, \code{divobj = NULL}, and \code{unrel.set} is specified, then all individuals with IDs in \code{unrel.set} are put in the 'unrelated subset' and the rest of the individuals are put in the 'related subset'.
+
+	If \code{kinobj = NULL}, \code{divobj = NULL}, and \code{unrel.set = NULL}, then the function will perform a "stanadard" PCA analysis.
 	
-	\code{kinobj} and \code{divobj} may be identical.
-		
-	There are multiple ways to partition the sample into an ancestry representative 'unrelated subset' and a 'related subset'.  If \code{unrel.set = NULL}, then the PC-AiR algorithm is used to find an 'optimal' partition (see 'References' for a paper describing the algorithm).  If \code{unrel.set} is specified, then all individuals with IDs in \code{unrel.set} are forced in the 'unrelated subset' and the PC-AiR algorithm is used to partition the rest of the sample; this is especially useful for including reference samples of known ancestry in the 'unrelated subset'.
+	NOTE: \code{kinobj} and \code{divobj} may be identical, but both must be specified when using the PC-AiR algorithm to parition samples.
 }
 \value{An object of class '\code{pcair}'.  A list including:
 	\item{vectors}{A matrix of principal components; each column is a principal component. Sample IDs are provided as rownames. The number of PCs returned can be adjusted by supplying the \code{eigen.cnt} argument, which is passed to \code{\link{snpgdsPCA}}.}
