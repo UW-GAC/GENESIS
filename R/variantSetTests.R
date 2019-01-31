@@ -6,7 +6,7 @@
 
 
 testVariantSet <- function( nullmod, G, weights, 
-                            test = c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKAT-O"),
+                            test = c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKATO"),
                             burden.test = c("Score", "Wald"), 
                             neig = 200, ntrace = 500, 
                             rho = seq(from = 0, to = 1, by = 0.1)){
@@ -35,7 +35,7 @@ testVariantSet <- function( nullmod, G, weights,
     if(test == "fastSMMAT"){
         out <- .testVariantSetSMMAT(nullmod, G, weights, neig, ntrace)
     }
-    if(test == "SKAT-O"){
+    if(test == "SKATO"){
         out <- .testVariantSetSKATO(nullmod, G, weights, rho)
     }
     return(out)
