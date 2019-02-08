@@ -70,7 +70,8 @@ setMethod("assocTestAggregate",
                   n.sample.alt <- sum(rowSums(geno, na.rm=TRUE) > 0)
                
                   # number of non-missing samples
-                  n.obs <- colSums(!is.na(geno))
+                  # n.obs <- colSums(!is.na(geno))
+                  n.obs <- nrow(geno) - colSums(is.na(geno)) # switched to this to handle large matrix issues
                   
                   # weights
                   if (is.null(weight.user)) {
