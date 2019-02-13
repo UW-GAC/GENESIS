@@ -1,5 +1,4 @@
 context("admixMap tests")
-library(SeqVarTools)
 
 .testLocal <- function(type=c("GenotypeData", "SeqVarData")) {
     type <- match.arg(type)
@@ -18,6 +17,7 @@ library(SeqVarTools)
     for (i in 1:3) {
         tmpfile[i] <- tempfile()
         file.copy(gdsfile, tmpfile[i])
+        SNPRelate::snpgdsTranspose(tmpfile[i], verbose=FALSE)
         gds <- openfn.gds(tmpfile[i], readonly=FALSE)
         write.gdsn(index.gdsn(gds, "genotype"), matrix(dosage[[i]], nrow=nsamp, ncol=nsnp))
         closefn.gds(gds)
@@ -33,7 +33,7 @@ library(SeqVarTools)
     covar <- sample(0:1, nsamp, replace=TRUE)
     
     if (type == "GenotypeData") {
-        annot <- ScanAnnotationDataFrame(data.frame(scanID = samp, 
+        annot <- GWASTools::ScanAnnotationDataFrame(data.frame(scanID = samp, 
                                                     covar, pheno, stringsAsFactors=FALSE))
         genoIterators <- lapply(tmpfile, function(x) {
             gr <- GdsGenotypeReader(x)
@@ -49,7 +49,8 @@ library(SeqVarTools)
             GenotypeBlockIterator(gd)
         })
     }
-    setNames(genoIterators, tmpfile)
+    #setNames(genoIterators, tmpfile)
+    genoIterators
 }
 
 
@@ -62,5 +63,6 @@ test_that("admixMap - GenotypeData", {
     genoIterators <- .testLocal("GenotypeData")
     null.model <- fitNullModel(genoIterators[[1]], outcome = "pheno", covars = "covar")
     myassoc <- admixMap(genoIterators, null.model)
+    myassoc1 <- admixMap1(genoIterators, null.model)
     .closeLocal(names(genoIterators))
 })
