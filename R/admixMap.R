@@ -18,12 +18,12 @@ admixMap <- function(admixDataList,
   # get sample index
     if (is(admixDataList[[1]], "GenotypeIterator")) {
         sample.index <- lapply(admixDataList, .sampleIndexNullModel, null.model)
-        if (!do.call(identical, unname(sample.index))) stop("sample IDs do not match for all elements of admixDataList")
+        if (!.listIdentical(sample.index)) stop("sample IDs do not match for all elements of admixDataList")
         sample.index <- sample.index[[1]]
         sample.id <- names(sample.index)
     } else if (is(admixDataList[[1]], "SeqVarIterator")) {
         sample.index <- lapply(admixDataList, .setFilterNullModel, null.model, verbose=verbose)
-        if (!do.call(identical, unname(sample.index))) stop("sample IDs do not match for all elements of admixDataList")
+        if (!.listIdentical(sample.index)) stop("sample IDs do not match for all elements of admixDataList")
         sample.index <- sample.index[[1]]
     } else {
         stop("admixDataList must contain GenotypeIterator or SeqVarIterator objects")
@@ -32,7 +32,7 @@ admixMap <- function(admixDataList,
 
   # get variant information
     var.info <- lapply(admixDataList, variantInfo)
-    if (!do.call(identical, unname(var.info))) stop("variants do not match for all elements of admixDataList")
+    if (!.listIdentical(var.info)) stop("variants do not match for all elements of admixDataList")
     var.info <- var.info[[1]]
     n.var <- nrow(var.info)
                

@@ -62,4 +62,5 @@ test_that("admixMap - GenotypeData", {
     genoIterators <- .testLocal("GenotypeData")
     null.model <- fitNullModel(genoIterators[[1]], outcome = "pheno", covars = "covar")
     myassoc <- admixMap(genoIterators, null.model)
+    .closeLocal(names(genoIterators))
 })
