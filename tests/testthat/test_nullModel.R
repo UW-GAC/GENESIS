@@ -239,3 +239,9 @@ test_that("multiple matrices", {
     expect_equivalent(nm1$varComp, nm2$varComp)
     expect_equal(names(nm2$varComp[1:2]), paste0("V_", names(covMatList)))
 })
+
+test_that("code for checking lists identical", {
+    expect_true(.listIdentical(list(1:10, 1:10, 1:10)))
+    expect_true(.listIdentical(list(a=1:10, b=1:10, c=1:10)))
+    expect_false(.listIdentical(list(1:10, 1:10, 11:20)))
+})
