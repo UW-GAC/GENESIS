@@ -1,11 +1,10 @@
 context("admixMap tests")
 
-.testLocal <- function(type=c("GenotypeData", "SeqVarData")) {
-    type <- match.arg(type)
+test_that("admixMap", {
     gdsfmt::showfile.gds(closeall=TRUE, verbose=FALSE)
     gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
     gds <- openfn.gds(gdsfile)
-    samp <- read.gdsn(index.gdsn(gds, "sample.id"))
+    samp <- as.character(read.gdsn(index.gdsn(gds, "sample.id")))
     nsnp <- objdesp.gdsn(index.gdsn(gds, "snp.id"))$dim
     nsamp <- objdesp.gdsn(index.gdsn(gds, "sample.id"))$dim
     closefn.gds(gds)
@@ -14,55 +13,48 @@ context("admixMap tests")
     dosage_amer <- 2 - dosage_eur - dosage_afr
     dosage <- list(dosage_eur, dosage_afr, dosage_amer)
     tmpfile <- character(3)
+    tmpfile2 <- character(3)
     for (i in 1:3) {
         tmpfile[i] <- tempfile()
         file.copy(gdsfile, tmpfile[i])
         SNPRelate::snpgdsTranspose(tmpfile[i], verbose=FALSE)
         gds <- openfn.gds(tmpfile[i], readonly=FALSE)
         write.gdsn(index.gdsn(gds, "genotype"), matrix(dosage[[i]], nrow=nsamp, ncol=nsnp))
+        # factor to character
+        delete.gdsn(index.gdsn(gds, "sample.id"))
+        add.gdsn(gds, "sample.id", samp)
+        add.gdsn(gds, "snp.allele", rep("A,A", nsnp))
         closefn.gds(gds)
-        if (type == "SeqVarData") {
-            tmpfile2 <- tempfile()
-            seqSNP2GDS(tmpfile[i], tmpfile2)
-            unlink(tmpfile[i])
-            tmpfile[i] <- tmpfile2
-        }
+
+        # convert to SeqArray
+        tmpfile2[i] <- tempfile()
+        seqSNP2GDS(tmpfile[i], tmpfile2[i], verbose=FALSE)
     }
 
     pheno <- rnorm(nsamp, mean = 0, sd = 1)
     covar <- sample(0:1, nsamp, replace=TRUE)
     
-    if (type == "GenotypeData") {
-        annot <- GWASTools::ScanAnnotationDataFrame(data.frame(scanID = samp, 
+    annot <- GWASTools::ScanAnnotationDataFrame(data.frame(scanID = samp, 
                                                     covar, pheno, stringsAsFactors=FALSE))
-        genoIterators <- lapply(tmpfile, function(x) {
-            gr <- GdsGenotypeReader(x)
-            gd <- GenotypeData(gr, scanAnnot=annot)
-            GenotypeBlockIterator(gd)
-        })
-    } else {
-        annot <- AnnotatedDataFrame(data.frame(sample.id = samp, 
-                                               covar, pheno, stringsAsFactors=FALSE))
-        genoIterators <- lapply(tmpfile, function(x) {
-            gr <- seqOpen(x)
-            gd <- GenotypeData(gr, scanAnnot=annot)
-            GenotypeBlockIterator(gd)
-        })
-    }
-    #setNames(genoIterators, tmpfile)
-    genoIterators
-}
-
-
-.closeLocal <- function(tmpfile) {
+    genoIterators <- lapply(tmpfile, function(x) {
+        gr <- GdsGenotypeReader(x)
+        gd <- GenotypeData(gr, scanAnnot=annot)
+        GenotypeBlockIterator(gd)
+    })
+    
+    annot <- AnnotatedDataFrame(data.frame(sample.id = samp, 
+                                           covar, pheno, stringsAsFactors=FALSE))
+    seqIterators <- lapply(tmpfile2, function(x) {
+        gr <- seqOpen(x)
+        gd <- SeqVarData(gr, sampleData=annot)
+        SeqVarBlockIterator(gd, verbose=FALSE)
+    })
+    
+    null.model <- fitNullModel(annot, outcome = "pheno", covars = "covar")
+    myassoc <- admixMap(genoIterators, null.model, verbose=FALSE)
+    myassoc2 <- admixMap(seqIterators, null.model, verbose=FALSE)
+    expect_equal(myassoc, myassoc2)
+    
     lapply(tmpfile, unlink)
-}
-
-
-test_that("admixMap - GenotypeData", {
-    genoIterators <- .testLocal("GenotypeData")
-    null.model <- fitNullModel(genoIterators[[1]], outcome = "pheno", covars = "covar")
-    myassoc <- admixMap(genoIterators, null.model)
-    myassoc1 <- admixMap1(genoIterators, null.model)
-    .closeLocal(names(genoIterators))
+    lapply(tmpfile2, unlink)
 })
