@@ -64,14 +64,8 @@ setMethod("assocTestSingle",
               test <- match.arg(test)
 
               # filter samples to match null model
-              sample.id <- null.model$sample.id
-              if (!is.null(sample.id)) {
-                  sample.index <- match(sample.id, getScanID(gdsobj))
-              } else {
-                  sample.index <- match(rownames(null.model$model.matrix),
-                                        sampleNames(getScanAnnotation(gdsobj)))
-                  sample.id <- getScanID(gdsobj)[sample.index]
-              }
+              sample.index <- .sampleIndexNullModel(gdsobj, null.model)
+              sample.id <- names(sample.index)
               
               # results
               res <- list()
@@ -79,10 +73,7 @@ setMethod("assocTestSingle",
               i <- 1
               iterate <- TRUE
               while (iterate) {
-                  var.info <- data.frame(variant.id=getSnpID(gdsobj),
-                                         chr=getChromosome(gdsobj, char=TRUE),
-                                         pos=getPosition(gdsobj),
-                                         stringsAsFactors=FALSE)
+                  var.info <- variantInfo(gdsobj)
                   
                   geno <- getGenotypeSelection(gdsobj, scanID=sample.id, order="selection",
                                                transpose=TRUE, use.names=FALSE, drop=FALSE)
