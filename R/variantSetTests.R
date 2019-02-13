@@ -149,6 +149,7 @@ testVariantSet <- function( nullmod, G, weights,
 
     ncolG <- ncol(G) # number of snps
     nrowG <- nrow(G) # number of samples
+    message('nsamp = ', nrowG, '; nsnp = ', ncolG)
 
     if(min(ncolG, nrowG) < 6000 + 20*neig){
         if(ncolG <= nrowG){
