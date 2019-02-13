@@ -1,10 +1,9 @@
 admixMap <- function(admixDataList,
                      null.model,
-                     #impute.local = TRUE,
                      verbose = TRUE){
 
-  # if admixDataList is GenotypeData (one file), convert to a list
-  if(class(admixDataList) == "GenotypeData"){
+  # if admixDataList is one file, convert to a list
+  if(!is.list(admixDataList)){
     admixDataList <- list(admixDataList)
   }
 
@@ -16,84 +15,32 @@ admixMap <- function(admixDataList,
     names(admixDataList) <- paste("Anc",1:v,sep="")
   }
 
-  # get scan.include
-  sample.id <- null.model$sample.id
-  if (!is.null(sample.id)) {
-      sample.index <- match(sample.id, getScanID(admixDataList[[1]]))
-  } else {
-      sample.index <- match(rownames(null.model$model.matrix),
-                            sampleNames(getScanAnnotation(admixDataList[[1]])))
-      sample.id <- getScanID(admixDataList[[1]])[sample.index]
-  }
+  # get sample index
+    if (is(admixDataList[[1]], "GenotypeIterator")) {
+        sample.index <- lapply(admixDataList, .sampleIndexNullModel, null.model)
+        if (!do.call(identical, unname(sample.index))) stop("sample IDs do not match for all elements of admixDataList")
+        sample.index <- sample.index[[1]]
+        sample.id <- names(sample.index)
+    } else if (is(admixDataList[[1]], "SeqVarIterator")) {
+        sample.index <- lapply(admixDataList, .setFilterNullModel, null.model, verbose=verbose)
+        if (!do.call(identical, unname(sample.index))) stop("sample IDs do not match for all elements of admixDataList")
+        sample.index <- sample.index[[1]]
+    } else {
+        stop("admixDataList must contain GenotypeIterator or SeqVarIterator objects")
+    }
+    n.samp <- length(sample.index)
 
-  # get chromosome information
-  chr <- getChromosome(admixDataList[[1]])
-
-  # check that items match in all elements of admixDataList
-  if(v > 1){
-    scanID <- getScanID(admixDataList[[1]])
-    for(i in 2:v){
-      # scanIDs
-      if(!all(scanID == getScanID(admixDataList[[i]]) )){
-        stop("scanIDs do not match for all elements of admixDataList")
-      }
-      # chromosomes
-      if(!all(chr == getChromosome(admixDataList[[i]]) )){
-        stop("Chromosomes do not match for all elements of admixDataList")
-      }
-    }
-  }
-
-  # Sex chromosome checks
-  Xcode <- rep(NA,v); Ycode <- rep(NA,v)
-  for(i in 1:v){
-    Xcode[i] <- XchromCode(admixDataList[[i]])
-    Ycode[i] <- YchromCode(admixDataList[[i]])
-  }
-  if(any(Xcode %in% chr)){
-    # check for matching
-    if(length(unique(Xcode)) != 1){
-      stop("X chromosome codes do not match for all elements of admixDataList")
-    }
-    # check for sex variable
-    for(i in 1:v){
-      if(!hasSex(admixDataList[[i]])){
-        stop("Sex values for the samples are required for X chromosome SNPs")
-      }
-    }
-  }
-  if(any(Ycode %in% chr)){
-    # check for matching
-    if(length(unique(Ycode)) != 1){
-      stop("Y chromosome codes do not match for all elements of admixDataList")
-    }
-    if(!all(chr == Ycode[1])){
-      stop("Y chromosome must be analyzed separately")
-    }
-    # check for sex variable
-    for(i in 1:v){
-      if(!hasSex(admixDataList[[i]])){
-        stop("Sex values for the samples are required for Y chromosome SNPs")
-      }
-      # check for matching
-      if(!all( getSex(admixDataList[[1]]) == getSex(admixDataList[[i]]) )){
-        stop("Sex values for the samples do not match for all elements of admixDataList (required for Y chr)")
-      }
-    }    
-    # check for males
-    if (!all(getSex(admixDataList[[1]], index=sample.index) == "M")){
-        stop("Y chromosome SNPs should be analyzed with only males")
-    }
-  }  
-
-  
-  #if(verbose) message("Running analysis with ", scan.include$n, " Samples and ", snp.include$n, " SNPs")
-
+  # get variant information
+    var.info <- lapply(admixDataList, variantInfo)
+    if (!do.call(identical, unname(var.info))) stop("variants do not match for all elements of admixDataList")
+    var.info <- var.info[[1]]
+    n.var <- nrow(var.info)
+               
   
   # set up results matrix
   # add in frequency of each ancestry at the SNP
   res.list <- list()
-  nv <- c("snpID","chr","n")
+  nv <- c("n.obs")
   if(v > 1){
     for(i in 1:v){
       nv <- append(nv, paste(names(admixDataList)[i],c(".freq",".Est",".SE"), sep=""))
@@ -104,59 +51,34 @@ admixMap <- function(admixDataList,
   }
 
   
-  n.iter <- length(snpFilter(admixDataList[[1]]))
+  n.iter <- length(variantFilter(admixDataList[[1]]))
   b <- 1
   iterate <- TRUE
   while (iterate) {
 
-  res <- matrix(NA, nrow=length(chr), ncol=length(nv), dimnames=list(NULL, nv))
-    
-  #if(verbose) message("Beginning Calculations...")
+  res <- matrix(NA, nrow=n.var, ncol=length(nv), dimnames=list(NULL, nv))
     
     # get local ancestry for the block
-    local <- array(NA, dim=c(length(sample.id),length(chr),v)) # indices: scan, snp, ancestry
-    for(i in 1:v){
-      local[,,i] <- getGenotypeSelection(admixDataList[[i]], scanID=sample.id, order="selection", transpose=TRUE)
-    }
+    local <- array(NA, dim=c(n.samp,n.var,v)) # indices: scan, snp, ancestry
+      for(i in 1:v){
+          if (is(admixDataList[[1]], "GenotypeIterator")) {
+              local[,,i] <- getGenotypeSelection(admixDataList[[i]], scanID=sample.id, order="selection", transpose=TRUE, use.names=FALSE, drop=FALSE)
+          } else {
+              local[,,i] <- refDosage(admixDataList[[i]], use.names=FALSE)[sample.index,,drop=FALSE]
+          }
+      }
 
     # ancestral frequency
-    freq <- 0.5*colMeans(local, dims=1, na.rm=T) # matrix:  rows are SNPs, columns are ancestries
-    # for X chr
-    chr <- getChromosome(admixDataList[[1]])
-    if(XchromCode(admixDataList[[1]]) %in% chr){
-      # which are on X chr
-      Xidx <- chr == XchromCode(admixDataList[[1]])
-      # males
-      m <- (getSex(admixDataList[[1]]) == "M")
-      f <- (getSex(admixDataList[[1]]) == "F")
-      # calculate allele freq for X
-      freq[Xidx,] <- (0.5*colSums(local[m,Xidx,], dims=1, na.rm=T) + colSums(local[f,Xidx,], dims=1, na.rm=T)) / (colSums(!is.na(local[m,Xidx,]), dims=1) + 2*colSums(!is.na(local[f,Xidx,]), dims=1) )
-    }
-    
-    # add to output
     if(v > 1){
       for(i in 1:v){
-        res[,paste(names(admixDataList)[i],".freq", sep="")] <- freq[,i]
+          freq <- .alleleFreq(admixDataList[[i]], local[,,i], sample.index=sample.index)
+          col <- if (v > 1) paste(names(admixDataList)[i],".freq", sep="") else "freq"
+          res[,col] <- freq
       }
-    }else{
-      freq <- as.vector(freq)
-      res[,"freq"] <- freq
     }
     
-    # impute missing local ancestry values
-    #if(impute.local){      
-    #  miss.idx <- which(is.na(local))
-    #  if(length(miss.idx) > 0){
-    #    freq.idx <- ceiling(miss.idx/n)
-    #    local[miss.idx] <- 2*freq[freq.idx]  # double check that this indexes in the array correctly (pretty sure it does)
-    #  }
-    #}
-    # this is imputing as population average.  would it be better to impute to individual's global ancestry?
-    ### no missing data currently - worry about this later ###
-    
     # sample size
-    n <- length(sample.id)
-    res[, "n"] <- n
+    res[, "n.obs"] <- n.samp
     
     k <- ncol(null.model$model.matrix)
     Ytilde <- null.model$Ytilde
@@ -218,13 +140,7 @@ admixMap <- function(admixDataList,
     } # else
 
   # results data frame
-  res <- as.data.frame(res)
-  
-  # add in snpID
-  res$snpID <- getSnpID(admixDataList[[1]])
-    
-  # chromosome
-  res[,"chr"] <- chr
+  res <- cbind(var.info, res)
   
     res.list[[b]] <- res
     
@@ -233,7 +149,11 @@ admixMap <- function(admixDataList,
     }
     b <- b + 1
     for (i in 1:v) {
-        iterate <- GWASTools::iterateFilter(admixDataList[[i]])
+        if (is(admixDataList[[i]], "GenotypeIterator")) {
+            iterate <- GWASTools::iterateFilter(admixDataList[[i]])
+        } else {
+            iterate <- SeqVarTools::iterateFilter(admixDataList[[i]])
+        }
     }
   }
   
