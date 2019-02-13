@@ -22,7 +22,7 @@ setMethod("validateSex",
 
 setMethod("variantInfo",
           "GenotypeData",
-          function(gdsobj) {
+          function(gdsobj, alleles=FALSE) {
               data.frame(variant.id=getSnpID(gdsobj),
                          chr=getChromosome(gdsobj, char=TRUE),
                          pos=getPosition(gdsobj),

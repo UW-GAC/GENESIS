@@ -31,7 +31,7 @@ admixMap <- function(admixDataList,
     n.samp <- length(sample.index)
 
     # get variant information
-    var.info <- lapply(admixDataList, variantInfo)
+    var.info <- lapply(admixDataList, variantInfo, alleles=FALSE)
     if (!.listIdentical(var.info)) stop("variants do not match for all elements of admixDataList")
     var.info <- var.info[[1]]
     n.var <- nrow(var.info)
@@ -152,7 +152,7 @@ admixMap <- function(admixDataList,
             if (is(admixDataList[[i]], "GenotypeIterator")) {
                 iterate <- GWASTools::iterateFilter(admixDataList[[i]])
             } else {
-                iterate <- SeqVarTools::iterateFilter(admixDataList[[i]])
+                iterate <- SeqVarTools::iterateFilter(admixDataList[[i]], verbose=verbose)
             }
         }
     }
