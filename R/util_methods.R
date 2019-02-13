@@ -103,10 +103,15 @@ setMethod(".readSampleId",
 setGeneric(".readGeno", function(gdsobj, ...) standardGeneric(".readGeno"))
 setMethod(".readGeno",
           "SeqVarGDSClass",
-          function(gdsobj, sample.include=NULL, snp.index=NULL){
+          function(gdsobj, sample.include=NULL, snp.index=NULL, allele=c("alt", "ref")){
               seqSetFilter(gdsobj, sample.id=sample.include, variant.sel=snp.index,
                            verbose=FALSE)
-              altDosage(gdsobj)
+              allele <- match.arg(allele)
+              if (allele == "alt") {
+                  return(altDosage(gdsobj))
+              } else  {
+                  return(refDosage(gdsobj))
+              }
           })
 
 setMethod(".readGeno",

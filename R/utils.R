@@ -20,6 +20,22 @@ setMethod("validateSex",
               sex
           })
 
+setMethod("variantInfo",
+          "GenotypeData",
+          function(gdsobj, alleles=FALSE) {
+              data.frame(variant.id=getSnpID(gdsobj),
+                         chr=getChromosome(gdsobj, char=TRUE),
+                         pos=getPosition(gdsobj),
+                         stringsAsFactors=FALSE)
+          })
+
+setMethod("variantFilter",
+          "GenotypeIterator",
+          function(x) {
+              snpFilter(x)
+          })
+
+
 # index is in case we had to subset geno so it no longer matches the variant filter
 # (in the case of allele matching)
 .alleleFreq <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL) {
@@ -87,6 +103,19 @@ setMethod("validateSex",
     } else {
         seq_along(seqGetData(gdsobj, "sample.id"))
     }
+}
+
+# return sample.index to match GenotypeData object to a null model
+.sampleIndexNullModel <- function(gdsobj, null.model) {
+    sample.id <- null.model$sample.id
+    if (!is.null(sample.id)) {
+        sample.index <- match(sample.id, getScanID(gdsobj))
+    } else {
+        sample.index <- match(rownames(null.model$model.matrix),
+                              sampleNames(getScanAnnotation(gdsobj)))
+        sample.id <- getScanID(gdsobj)[sample.index]
+    }
+    setNames(sample.index, sample.id)
 }
 
 .modelMatrixColumns <- function(null.model, col.name) {
