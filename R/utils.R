@@ -159,3 +159,7 @@ setMethod(".annotateAssoc",
               }
               x
           })
+
+.listIdentical <- function(x) {
+    all(sapply(x[-1], FUN = identical, x[[1]]))
+}
