@@ -10,7 +10,7 @@ admixMap(admixDataList, null.model, verbose=TRUE)
 }
 
 \arguments{
-  \item{admixDataList}{named list of \code{\link{GenotypeIterator}} objects for each ancestry}
+  \item{admixDataList}{named list of \code{\link{GenotypeIterator}} or \code{\link{SeqVarIterator}} objects for each ancestry}
     \item{null.model}{A null model object returned by \code{\link{fitNullModel}}.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is TRUE.}
 }
