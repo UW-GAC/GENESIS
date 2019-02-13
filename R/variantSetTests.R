@@ -161,6 +161,7 @@ testVariantSet <- function( nullmod, G, weights,
         }
 
         if(min(ncolG, nrowG) < 2*neig){
+            message('method = regular')
             # use "regular" method
             if(ncolG == 1){
                 pval <- pchisq(as.numeric(Q/V), df=1, lower.tail=FALSE)
@@ -185,6 +186,7 @@ testVariantSet <- function( nullmod, G, weights,
 
         }else{
             # use "fast H" method
+            message('method = fast_H')
             pval <- tryCatch(   bigQF:::pchisqsum_ssvd(x = Q, M = as.matrix(V), n = neig, p = 10, q = 1, method = "saddlepoint"), 
                                 error = function(e){ NA_real_ } )
             err <- ifelse(is.na(pval), 1, 0)
@@ -193,6 +195,7 @@ testVariantSet <- function( nullmod, G, weights,
 
     }else{
         # use "fast G" method
+        message('method = fast_G')
         pval <- NA_real_; pval.try = 0
         while(is.na(pval) & pval.try < 10){
             pval <- tryCatch(   bigQF:::pchisqsum_rsvd(x = Q, M = as.matrix(G), n = neig, p = 10, q = 3, tr2.sample.size = ntrace, method = "saddlepoint"), 
