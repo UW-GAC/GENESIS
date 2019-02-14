@@ -86,7 +86,7 @@ setMethod("assocTestAggregate",
                   }
                   
                   res[[i]] <- data.frame(n.site, n.alt, n.sample.alt)
-                  res.var[[i]] <- cbind(var.info, n.obs, freq, weight)
+                  # res.var[[i]] <- cbind(var.info, n.obs, freq, weight)
                   
                   if (n.site > 0) {
                       # mean impute missing values
@@ -192,7 +192,7 @@ setMethod("assocTestAggregate",
                   }
                   
                   res[[i]] <- data.frame(n.site, n.alt, n.sample.alt)
-                  res.var[[i]] <- cbind(var.info, n.obs, freq, weight)
+                  # res.var[[i]] <- cbind(var.info, n.obs, freq, weight)
                   
                   if (n.site > 0) {
                       # mean impute missing values
