@@ -20,7 +20,6 @@ admixMap <- function(admixDataList,
         sample.index <- lapply(admixDataList, .sampleIndexNullModel, null.model)
         if (!.listIdentical(sample.index)) stop("sample IDs do not match for all elements of admixDataList")
         sample.index <- sample.index[[1]]
-        sample.id <- names(sample.index)
     } else if (is(admixDataList[[1]], "SeqVarIterator")) {
         sample.index <- lapply(admixDataList, .setFilterNullModel, null.model, verbose=verbose)
         if (!.listIdentical(sample.index)) stop("sample IDs do not match for all elements of admixDataList")
@@ -62,7 +61,7 @@ admixMap <- function(admixDataList,
         local <- array(NA, dim=c(n.samp,n.var,v)) # indices: scan, snp, ancestry
         for(i in 1:v){
             if (is(admixDataList[[1]], "GenotypeIterator")) {
-                local[,,i] <- getGenotypeSelection(admixDataList[[i]], scanID=sample.id, order="selection", transpose=TRUE, use.names=FALSE, drop=FALSE)
+                local[,,i] <- getGenotypeSelection(admixDataList[[i]], scan=sample.index, order="selection", transpose=TRUE, use.names=FALSE, drop=FALSE)
             } else {
                 local[,,i] <- refDosage(admixDataList[[i]], use.names=FALSE)[sample.index,,drop=FALSE]
             }

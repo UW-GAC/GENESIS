@@ -99,23 +99,22 @@ setMethod("variantFilter",
 .setFilterNullModel <- function(gdsobj, null.model, verbose=TRUE) {
     if (!is.null(null.model$sample.id)) {
         seqSetFilter(gdsobj, sample.id=null.model$sample.id, verbose=verbose)
-        match(null.model$sample.id, seqGetData(gdsobj, "sample.id"))
+        sample.index <- match(null.model$sample.id, seqGetData(gdsobj, "sample.id"))
     } else {
-        seq_along(seqGetData(gdsobj, "sample.id"))
+        sample.index <- seq_along(seqGetData(gdsobj, "sample.id"))
     }
+    sample.index
 }
 
 # return sample.index to match GenotypeData object to a null model
 .sampleIndexNullModel <- function(gdsobj, null.model) {
-    sample.id <- null.model$sample.id
-    if (!is.null(sample.id)) {
-        sample.index <- match(sample.id, getScanID(gdsobj))
+    if (!is.null(null.model$sample.id)) {
+        sample.index <- match(null.model$sample.id, getScanID(gdsobj))
     } else {
         sample.index <- match(rownames(null.model$model.matrix),
                               sampleNames(getScanAnnotation(gdsobj)))
-        sample.id <- getScanID(gdsobj)[sample.index]
     }
-    setNames(sample.index, sample.id)
+    sample.index
 }
 
 .modelMatrixColumns <- function(null.model, col.name) {

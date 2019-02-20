@@ -65,7 +65,6 @@ setMethod("assocTestSingle",
 
               # filter samples to match null model
               sample.index <- .sampleIndexNullModel(gdsobj, null.model)
-              sample.id <- names(sample.index)
               
               # results
               res <- list()
@@ -75,7 +74,7 @@ setMethod("assocTestSingle",
               while (iterate) {
                   var.info <- variantInfo(gdsobj)
                   
-                  geno <- getGenotypeSelection(gdsobj, scanID=sample.id, order="selection",
+                  geno <- getGenotypeSelection(gdsobj, scan=sample.index, order="selection",
                                                transpose=TRUE, use.names=FALSE, drop=FALSE)
                   
                   # allele frequency

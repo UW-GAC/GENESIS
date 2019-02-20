@@ -129,7 +129,6 @@ setMethod("assocTestAggregate",
 
               # filter samples to match null model
               sample.index <- .sampleIndexNullModel(gdsobj, null.model)
-              sample.id <- names(sample.index)
 
               # results
               res <- list()
@@ -140,8 +139,8 @@ setMethod("assocTestAggregate",
               while (iterate) {
                   var.info <- variantInfo(gdsobj)
                   
-                  geno <- getGenotypeSelection(gdsobj, scanID=sample.id, order="selection",
-                                               transpose=TRUE)
+                  geno <- getGenotypeSelection(gdsobj, scan=sample.index, order="selection",
+                                               transpose=TRUE, use.names=FALSE, drop=FALSE)
                   
                   # allele frequency
                   freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index)
