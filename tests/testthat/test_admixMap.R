@@ -54,6 +54,9 @@ test_that("admixMap", {
     myassoc <- admixMap(genoIterators, null.model, verbose=FALSE)
     myassoc2 <- admixMap(seqIterators, null.model, verbose=FALSE)
     expect_equal(myassoc, myassoc2)
+
+    # make sure we're reading variant info correctly
+    expect_false(any(duplicated(myassoc$variant.id)))
     
     lapply(tmpfile, unlink)
     lapply(tmpfile2, unlink)

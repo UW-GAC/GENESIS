@@ -32,8 +32,6 @@ admixMap <- function(admixDataList,
     # get variant information
     var.info <- lapply(admixDataList, variantInfo, alleles=FALSE)
     if (!.listIdentical(var.info)) stop("variants do not match for all elements of admixDataList")
-    var.info <- var.info[[1]]
-    n.var <- nrow(var.info)
     
     
     # set up results matrix
@@ -54,6 +52,8 @@ admixMap <- function(admixDataList,
     b <- 1
     iterate <- TRUE
     while (iterate) {
+        var.info <- variantInfo(admixDataList[[1]], alleles=FALSE)
+        n.var <- nrow(var.info)
 
         res <- matrix(NA, nrow=n.var, ncol=length(nv), dimnames=list(NULL, nv))
         
