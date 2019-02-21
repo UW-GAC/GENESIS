@@ -30,6 +30,7 @@ setMethod("assocTestAggregate",
               res.var <- list()
               i <- 1
               n.iter <- length(variantFilter(gdsobj))
+              set.messages <- ceiling(n.iter / 100) # max messages = 100
               iterate <- TRUE
               while (iterate) {
                   var.info <- variantInfo(gdsobj, alleles=match.alleles, expanded=TRUE)
@@ -100,7 +101,7 @@ setMethod("assocTestAggregate",
                       res[[i]] <- cbind(res[[i]], assoc)
                   }
 
-                  if (verbose & i %% 100 == 0) {
+                  if (verbose & n.iter > 1 & i %% set.messages == 0) {
                       message(paste("Iteration", i , "of", n.iter, "completed"))
                   }
                   i <- i + 1
@@ -135,6 +136,7 @@ setMethod("assocTestAggregate",
               res.var <- list()
               i <- 1
               n.iter <- length(snpFilter(gdsobj))
+              set.messages <- ceiling(n.iter / 100) # max messages = 100
               iterate <- TRUE
               while (iterate) {
                   var.info <- variantInfo(gdsobj)
@@ -193,7 +195,7 @@ setMethod("assocTestAggregate",
                       res[[i]] <- cbind(res[[i]], assoc)
                   }
 
-                  if (verbose & i %% 100 == 0) {
+                  if (verbose & n.iter > 1 & i %% set.messages == 0) {
                       message(paste("Iteration", i , "of", n.iter, "completed"))
                   }
                   i <- i + 1

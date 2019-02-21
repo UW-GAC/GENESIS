@@ -16,6 +16,7 @@ setMethod("assocTestSingle",
               # results
               res <- list()
               n.iter <- length(variantFilter(gdsobj))
+              set.messages <- ceiling(n.iter / 100) # max messages = 100
               i <- 1
               iterate <- TRUE
               while (iterate) {
@@ -46,7 +47,7 @@ setMethod("assocTestSingle",
 
                   res[[i]] <- cbind(var.info, n.obs, freq, assoc)
                   
-                  if (verbose & i %% 100 == 0) {
+                  if (verbose & n.iter > 1 & i %% set.messages == 0) {
                       message(paste("Iteration", i , "of", n.iter, "completed"))
                   }
                   i <- i + 1
@@ -69,6 +70,7 @@ setMethod("assocTestSingle",
               # results
               res <- list()
               n.iter <- length(snpFilter(gdsobj))
+              set.messages <- ceiling(n.iter / 100) # max messages = 100
               i <- 1
               iterate <- TRUE
               while (iterate) {
@@ -96,7 +98,7 @@ setMethod("assocTestSingle",
 
                   res[[i]] <- cbind(var.info, n.obs, freq, assoc)
                   
-                  if (verbose & i %% 100 == 0) {
+                  if (verbose & n.iter > 1 & i %% set.messages == 0) {
                       message(paste("Iteration", i , "of", n.iter, "completed"))
                   }
                   i <- i + 1

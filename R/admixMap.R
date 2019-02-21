@@ -49,7 +49,7 @@ admixMap <- function(admixDataList,
 
     
     n.iter <- length(variantFilter(admixDataList[[1]]))
-    set.max.messages <- ceiling(n.iter / 100)
+    set.messages <- ceiling(n.iter / 100) # max messages = 100
     b <- 1
     iterate <- TRUE
     while (iterate) {
@@ -141,8 +141,8 @@ admixMap <- function(admixDataList,
         res <- cbind(var.info, res)
         
         res.list[[b]] <- res
-        
-        if (verbose & b %% set.max.messages == 0) {
+
+        if (verbose & n.iter > 1 & b %% set.messages == 0) {
             message(paste("Iteration", b , "of", n.iter, "completed"))
         }
         b <- b + 1
