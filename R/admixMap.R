@@ -49,6 +49,7 @@ admixMap <- function(admixDataList,
 
     
     n.iter <- length(variantFilter(admixDataList[[1]]))
+    set.max.messages <- ceiling(n.iter / 100)
     b <- 1
     iterate <- TRUE
     while (iterate) {
@@ -113,8 +114,6 @@ admixMap <- function(admixDataList,
                 # filter monomorphic or missing SNPs
                 if(any(freq[g,]==1) || sum(freq[g,]==0)){ next }
                 Gtilde <- calcGtilde(null.model, local[,g,])
-                Ytilde <- null.model$Ytilde
-                sY2 <- sum(Ytilde^2)
                 GPG <- crossprod(Gtilde)
                 GPGinv <- tryCatch( chol2inv(chol(GPG)), error=function(e){TRUE})
                 # check that the error function above hasn't been called (which returns TRUE instead of the inverse matrix)
@@ -143,7 +142,7 @@ admixMap <- function(admixDataList,
         
         res.list[[b]] <- res
         
-        if (verbose & b %% 100 == 0) {
+        if (verbose & b %% set.max.messages == 0) {
             message(paste("Iteration", b , "of", n.iter, "completed"))
         }
         b <- b + 1
