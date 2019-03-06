@@ -57,6 +57,10 @@ test_that("admixMap", {
 
     # make sure we're reading variant info correctly
     expect_false(any(duplicated(myassoc$variant.id)))
+
+    # check running with only one ancestry
+    GWASTools::resetIterator(genoIterators[[1]])
+    myassoc3 <- admixMap(genoIterators[[1]], null.model, verbose=FALSE)
     
     lapply(tmpfile, unlink)
     lapply(tmpfile2, unlink)
