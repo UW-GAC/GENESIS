@@ -7,6 +7,9 @@ setMethod("assocTestSingle",
           function(gdsobj, null.model, test=c("Score", "Wald"), GxE=NULL, sparse=TRUE, imputed=FALSE, verbose=TRUE) {
               test <- match.arg(test)
 
+              # don't use sparse matrices for imputed dosages
+              if (imputed) sparse <- FALSE
+
               # coerce null.model if necessary
               if (sparse) null.model <- .nullModelAsMatrix(null.model)
               
@@ -28,12 +31,21 @@ setMethod("assocTestSingle",
                       geno <- imputedDosage(gdsobj, use.names=FALSE)[sample.index,,drop=FALSE]
                   }
                   
-                  # allele frequency
-                  freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index)
-
                   # take note of number of non-missing samples
                   n.obs <- colSums(!is.na(geno))
                   
+                  # allele frequency
+                  freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index)
+                  
+                  # filter monomorphic variants
+                  keep <- .filterMonomorphic(geno, count=n.obs, freq=freq, imputed=imputed)
+                  if (!all(keep)) {
+                      var.info <- var.info[keep,,drop=FALSE]
+                      geno <- geno[,keep,drop=FALSE]
+                      n.obs <- n.obs[keep]
+                      freq <- freq[keep]
+                  }
+
                   # mean impute missing values
                   if (any(n.obs < nrow(geno))) {
                       geno <- .meanImpute(geno, freq)
@@ -43,7 +55,7 @@ setMethod("assocTestSingle",
                   if (!is.null(GxE)) GxE <- .modelMatrixColumns(null.model, GxE)
                   assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test)
                   # set monomorphs to NA - do we want to skip testing these to save time?
-                  assoc[freq %in% c(0,1),] <- NA
+                  #assoc[freq %in% c(0,1),] <- NA
 
                   res[[i]] <- cbind(var.info, n.obs, freq, assoc)
                   
@@ -79,12 +91,21 @@ setMethod("assocTestSingle",
                   geno <- getGenotypeSelection(gdsobj, scan=sample.index, order="selection",
                                                transpose=TRUE, use.names=FALSE, drop=FALSE)
                   
-                  # allele frequency
-                  freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index)
-
                   # take note of number of non-missing samples
                   n.obs <- colSums(!is.na(geno))
                   
+                  # allele frequency
+                  freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index)
+                  
+                  # filter monomorphic variants
+                  keep <- .filterMonomorphic(geno, count=n.obs, freq=freq)
+                  if (!all(keep)) {
+                      var.info <- var.info[keep,,drop=FALSE]
+                      geno <- geno[,keep,drop=FALSE]
+                      n.obs <- n.obs[keep]
+                      freq <- freq[keep]
+                  }
+
                   # mean impute missing values
                   if (any(n.obs < nrow(geno))) {
                       geno <- .meanImpute(geno, freq)
@@ -94,7 +115,7 @@ setMethod("assocTestSingle",
                   if (!is.null(GxE)) GxE <- .modelMatrixColumns(null.model, GxE)
                   assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test)
                   # set monomorphs to NA - do we want to skip testing these to save time?
-                  assoc[freq %in% c(0,1),] <- NA
+                  #assoc[freq %in% c(0,1),] <- NA
 
                   res[[i]] <- cbind(var.info, n.obs, freq, assoc)
                   

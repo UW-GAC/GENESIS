@@ -16,6 +16,9 @@ setMethod("assocTestAggregate",
               burden.test <- match.arg(burden.test)
               pval.method <- match.arg(pval.method)
 
+              # don't use sparse matrices for imputed dosages
+              if (imputed) sparse <- FALSE
+
               # coerce null.model if necessary
               if (sparse) null.model <- .nullModelAsMatrix(null.model)
               
@@ -49,16 +52,22 @@ setMethod("assocTestAggregate",
                       index <- NULL
                   }
 
+                  # number of non-missing samples
+                  n.obs <- colSums(!is.na(geno))
+                  
                   # allele frequency
                   freq <- .alleleFreq(gdsobj, geno, variant.index=index, sample.index=sample.index)
-                  # exclude monomorphic variants
-                  mono <- freq %in% c(0,1)
+                  
+                  # filter monomorphic variants
+                  keep <- .filterMonomorphic(geno, count=n.obs, freq=freq, imputed=imputed)
+
                   # exclude variants with freq > max
-                  excl <-  mono | freq > AF.max | is.na(freq)
-                  if (any(excl)) {
-                      var.info <- var.info[!excl,,drop=FALSE]
-                      geno <- geno[,!excl,drop=FALSE]
-                      freq <- freq[!excl]
+                  keep <-  keep & freq <= AF.max
+                  if (!all(keep)) {
+                      var.info <- var.info[keep,,drop=FALSE]
+                      geno <- geno[,keep,drop=FALSE]
+                      n.obs <- n.obs[keep]
+                      freq <- freq[keep]
                   }
 
                   # number of variant sites
@@ -70,9 +79,6 @@ setMethod("assocTestAggregate",
                   # number of samples with observed alternate alleles > 0
                   n.sample.alt <- sum(rowSums(geno, na.rm=TRUE) > 0)
                
-                  # number of non-missing samples
-                  n.obs <- colSums(!is.na(geno))
-                  
                   # weights
                   if (is.null(weight.user)) {
                       # Beta weights
@@ -81,7 +87,7 @@ setMethod("assocTestAggregate",
                       # user supplied weights
                       weight <- currentVariants(gdsobj)[[weight.user]][expandedVariantIndex(gdsobj)]
                       if (!is.null(index)) weight <- weight[index]
-                      weight <- weight[!excl]
+                      weight <- weight[keep]
                   }
                   
                   res[[i]] <- data.frame(n.site, n.alt, n.sample.alt)
@@ -144,16 +150,22 @@ setMethod("assocTestAggregate",
                   geno <- getGenotypeSelection(gdsobj, scan=sample.index, order="selection",
                                                transpose=TRUE, use.names=FALSE, drop=FALSE)
                   
+                  # number of non-missing samples
+                  n.obs <- colSums(!is.na(geno))
+                  
                   # allele frequency
                   freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index)
-                  # exclude monomorphic variants
-                  mono <- freq %in% c(0,1)
+                  
+                  # filter monomorphic variants
+                  keep <- .filterMonomorphic(geno, count=n.obs, freq=freq)
+
                   # exclude variants with freq > max
-                  excl <-  mono | freq > AF.max | is.na(freq)
-                  if (any(excl)) {
-                      var.info <- var.info[!excl,,drop=FALSE]
-                      geno <- geno[,!excl,drop=FALSE]
-                      freq <- freq[!excl]
+                  keep <-  keep & freq <= AF.max
+                  if (!all(keep)) {
+                      var.info <- var.info[keep,,drop=FALSE]
+                      geno <- geno[,keep,drop=FALSE]
+                      n.obs <- n.obs[keep]
+                      freq <- freq[keep]
                   }
 
                   # number of variant sites
@@ -165,9 +177,6 @@ setMethod("assocTestAggregate",
                   # number of samples with observed alternate alleles > 0
                   n.sample.alt <- sum(rowSums(geno, na.rm=TRUE) > 0)
                
-                  # number of non-missing samples
-                  n.obs <- colSums(!is.na(geno))
-                  
                   # weights
                   if (is.null(weight.user)) {
                       # Beta weights
@@ -175,7 +184,7 @@ setMethod("assocTestAggregate",
                   } else {
                       # user supplied weights
                       weight <- getSnpVariable(gdsobj, weight.user)
-                      weight <- weight[!excl]
+                      weight <- weight[keep]
                   }
                   
                   res[[i]] <- data.frame(n.site, n.alt, n.sample.alt)

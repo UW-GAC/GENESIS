@@ -9,7 +9,9 @@ test_that("assocTestSingle", {
     #nullmod <- fitNullModel(scanAnnot, outcome="status", covars="sex", cov.mat=covMat, family="binomial", verbose=FALSE)
     nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", cov.mat=covMat, verbose=FALSE)
     assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
-    expect_equal(assoc$variant.id, getSnpID(genoData))
+    freq <- GWASTools::alleleFrequency(genoData)
+    keep <- !is.na(freq[,"MAF"]) & freq[,"MAF"] > 0
+    expect_equal(assoc$variant.id, getSnpID(genoData)[keep])
 
     close(genoData)
 })

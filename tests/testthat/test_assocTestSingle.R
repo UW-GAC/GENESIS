@@ -7,7 +7,9 @@ test_that("assocTestSingle", {
     nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
     assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
     seqResetFilter(svd, verbose=FALSE)
-    expect_equal(unique(assoc$variant.id), seqGetData(svd, "variant.id"))
+    freq <- alleleFrequency(svd)
+    keep <- freq > 0 & freq < 1
+    expect_equal(unique(assoc$variant.id), seqGetData(svd, "variant.id")[keep])
     seqClose(svd)
 })
 
@@ -69,6 +71,7 @@ test_that("assocTestSingle matches regression", {
     snv <- isSNV(svd, biallelic=TRUE)
     seqSetFilter(svd, variant.sel=snv, verbose=FALSE)
     assoc1 <- regression(svd, outcome="outcome", covar=c("sex", "age"))
+    assoc1 <- assoc1[assoc1$freq > 0 & assoc1$freq < 1,]
     
     nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
