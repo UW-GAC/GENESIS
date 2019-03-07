@@ -1,5 +1,10 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.13.7}{
+    \itemize{
+        \item Remove all monomorphic variants (including all heterozygotes) from association test results.
+    }
+}
 \section{Version 2.13.3}{
     \itemize{
         \item Restore option to run pcair without kinship matrix.

@@ -5,10 +5,8 @@ setMethod("assocTestAggregate",
           function(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
                    test=c("Burden", "SKAT", "SMMAT"),
-                   # test=c("Burden", "SKAT", "SMMAT", "fastSKAT", "fastSMMAT"),
                    burden.test=c("Score", "Wald"), rho=0,
                    pval.method=c("davies", "kuonen", "liu"),
-                   # neig = 100, ntrace = 500,
                    sparse=TRUE, imputed=FALSE, verbose=TRUE) {
 
               # check argument values
@@ -103,7 +101,6 @@ setMethod("assocTestAggregate",
                       assoc <- testVariantSet(null.model, G=geno, weights=weight, test=test, 
                                               burden.test=burden.test, rho=rho, 
                                               pval.method=pval.method)
-                                              # neig = neig, ntrace = ntrace)
                       res[[i]] <- cbind(res[[i]], assoc)
                   }
 
@@ -200,7 +197,6 @@ setMethod("assocTestAggregate",
                       assoc <- testVariantSet(null.model, G=geno, weights=weight, test=test, 
                                               burden.test=burden.test, rho=rho,
                                               pval.method=pval.method)
-                                              # neig = neig, ntrace = ntrace)
                       res[[i]] <- cbind(res[[i]], assoc)
                   }
 

@@ -54,8 +54,6 @@ setMethod("assocTestSingle",
                   # do the test
                   if (!is.null(GxE)) GxE <- .modelMatrixColumns(null.model, GxE)
                   assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test)
-                  # set monomorphs to NA - do we want to skip testing these to save time?
-                  #assoc[freq %in% c(0,1),] <- NA
 
                   res[[i]] <- cbind(var.info, n.obs, freq, assoc)
                   
@@ -114,8 +112,6 @@ setMethod("assocTestSingle",
                   # do the test
                   if (!is.null(GxE)) GxE <- .modelMatrixColumns(null.model, GxE)
                   assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test)
-                  # set monomorphs to NA - do we want to skip testing these to save time?
-                  #assoc[freq %in% c(0,1),] <- NA
 
                   res[[i]] <- cbind(var.info, n.obs, freq, assoc)
                   
