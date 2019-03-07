@@ -71,10 +71,12 @@ exportMethods(assocTestSingle,
               pcrelateToMatrix)
 
 export(admixMap,
+       calcISAFBeta,
        kin2gds,
        mat2gds,
        nullModelInvNorm,
        pcairPartition,
+       pcrelateSampBlock,
        varCompCI)
 
 S3method(plot, pcair)
