@@ -224,6 +224,11 @@ setMethod("kingToMatrix",
               makeSparseMatrix(x = king, thresh = thresh, sample.include = sample.include, diag.value = 0.5, verbose = verbose)
           })
 
+.readKing <- function(x) {
+    cols <- intersect(names(fread(x, nrows=0)), c("ID1", "ID2", "PropIBD", "Kinship"))
+    fread(x, select=cols)
+}
+
 .kingToMatrix <- function(file.king, sample.include = NULL, thresh = NULL, verbose = TRUE){
     # keep R CMD check from warning about undefined global variables
     ID1 <- ID2 <- PropIBD <- Kinship <- value <- NULL
@@ -234,7 +239,7 @@ setMethod("kingToMatrix",
     
     # if multiple input files
     if(length(file.king) > 1){
-        king <- lapply(file.king, fread)
+        king <- lapply(file.king, .readKing)
         # pull out column names in common
         cnames <- Reduce(intersect, lapply(king, colnames))
         # subset and rbind
@@ -242,7 +247,7 @@ setMethod("kingToMatrix",
         
     # one input file
     }else{
-        king <- fread(file.king)
+        king <- .readKing(file.king)
     }
     
     # subset to needed columns
