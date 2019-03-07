@@ -44,7 +44,12 @@
 }
 
 \details{
-    The type of aggregate unit tested depends on the class of iterator used for \code{gdsobj}. Options include sliding windows, specific ranges of variants or selection of individual variants (ranges with width 1). See \code{\link{SeqVarIterator}} for more details.
+    The type of aggregate unit tested depends on the class of iterator
+    used for \code{gdsobj}. Options include sliding windows, specific
+    ranges of variants or selection of individual variants (ranges with
+    width 1). See \code{\link{SeqVarIterator}} for more details.
+  
+    Monomorphic variants (including variants where every sample is a heterozygote) are always omitted from the aggregate unit prior to testing.
   
     The effect size estimate is for each copy of the alternate allele.
     For multiallelic variants, each alternate allele is tested separately.

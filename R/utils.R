@@ -36,6 +36,28 @@ setMethod("variantFilter",
           })
 
 
+# check for all genotypes identical (including all hets)
+# allow a tolerance in case we have imputed dosage values rather than integer
+# return an index for subsetting rather than modifying geno
+# (so we can subset variant info also)
+# we have to compute count and freq anyway, so pass as arguments
+.filterMonomorphic <- function(geno, count, freq, imputed=FALSE) {
+    #count <- colSums(!is.na(geno))
+    if (!imputed) {
+        #freq <- 0.5*colMeans(geno, na.rm=TRUE)
+        isref <- freq == 0
+        isalt <- freq == 1
+        ishet <- colSums(geno == 1, na.rm=TRUE) == count
+    } else {
+        tol <- .Machine$double.eps ^ 0.5
+        isref <- colSums(abs(geno) < tol, na.rm=TRUE) == count
+        isalt <- colSums(abs(geno - 1) < tol, na.rm=TRUE) == count
+        ishet <- colSums(abs(geno - 2) < tol, na.rm=TRUE) == count
+    }
+    !(isref | isalt | ishet)
+}
+
+
 # index is in case we had to subset geno so it no longer matches the variant filter
 # (in the case of allele matching)
 .alleleFreq <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL) {
