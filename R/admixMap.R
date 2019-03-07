@@ -67,6 +67,7 @@ admixMap <- function(admixDataList,
                 local[,,i] <- refDosage(admixDataList[[i]], use.names=FALSE)[sample.index,,drop=FALSE]
             }
         }
+        if (any(is.na(local))) warning("missing values in local ancestry will produce NA output for this block")
 
         # ancestral frequency
         # matrix:  rows are SNPs, columns are ancestries
