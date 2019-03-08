@@ -55,7 +55,7 @@ nullModelInvNorm(null.model, cov.mat = NULL, norm.option = c("by.group", "all"),
   \item{...}{Arguments to pass to other methods.}
   \item{null.model}{The output of \code{fitNullModel}.}
   \item{norm.option}{Whether the normalization should be done separately within each value of \code{group.var} (\code{"by.group"}) or with all samples together (\code{"all"}).}
-  \item{rescale}{Controls whether to rescale the variance for each group after inverse-normal transform, restoring it to the original variance before the transform. \code{"none"} for no rescaling of the residuals; \code{"model"} for model-based rescaling, and \code{"residSD"} to rescale to the standard deviation of the marginal residuals.}
+  \item{rescale}{Controls whether to rescale the variance after inverse-normal transform, restoring it to the original variance before the transform. \code{"none"} for no rescaling of the residuals; \code{"model"} for model-based rescaling, and \code{"residSD"} to rescale to the standard deviation of the marginal residuals. See 'Details' for more information.}
 }
 
 \details{
@@ -70,6 +70,8 @@ nullModelInvNorm(null.model, cov.mat = NULL, norm.option = c("by.group", "all"),
     Let \code{m} be the number of matrices in \code{cov.mat} and let \code{g} be the number of categories in the variable specified by \code{group.var}. The length of the \code{start} vector must be \code{(m + 1)} when \code{family} is gaussian and \code{group.var} is \code{NULL}; \code{(m + g)} when \code{family} is gaussian and \code{group.var} is specified; or m when \code{family} is not gaussian.
     
     A Newton-Raphson iterative procedure with Average Information REML (AIREML) is used to estimate the variance components of the random effects. When the Euclidean distance between the new and previous variance component estimates is less than \code{AIREML.tol}, the algorithm declares convergence of the estimates. Sometimes a variance component may approach the boundary of the parameter space at 0; step-halving is used to prevent any component from becomming negative. However, when a variance component gets near the 0 boundary, the algorithm can sometimes get "stuck", preventing the other variance components from converging; if \code{drop.zeros} is TRUE, then variance components that converge to a value less than \code{AIREML.tol} will be dropped from the model and the estimation procedure will continue with the remaining variance components.
+
+    After inverse-normal transformation, the variance rescaling is done with the same grouping; i.e. if \code{norm.option == "by.group"}, rescaling is done within each group, and if \code{norm.option == "all"}, rescaling is done with all samples.
 }
   
 \value{An object of class '\code{GENESIS.nullModel}' or '\code{GENESIS.nullMixedModel}'. A list including:
