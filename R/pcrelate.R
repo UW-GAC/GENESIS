@@ -81,8 +81,6 @@ setMethod("pcrelate",
                       sample.include = NULL,
                       training.set = NULL,
                       sample.block.size = 5000,
-                      ## snp.include = NULL,
-                      ## snp.block.size = 10000,
                       maf.thresh = 0.01,
                       maf.bound.method = c('filter', 'truncate'),
                       small.samp.correct = FALSE,
@@ -92,7 +90,7 @@ setMethod("pcrelate",
     # checks
     scale <- match.arg(scale)
     maf.bound.method <- match.arg(maf.bound.method)
-    sample.include <- .sampleInclude(gdsobj, sample.include)
+    sample.include <- samplesGdsOrder(gdsobj, sample.include)
     .pcrelateChecks(pcs = pcs, scale = scale, ibd.probs = ibd.probs, sample.include = sample.include, training.set = training.set, 
                     maf.thresh = maf.thresh)
     
@@ -188,16 +186,16 @@ setMethod("pcrelate",
     # correct kinship - small sample
     if(small.samp.correct){
         if(verbose) message('Performing Small Sample Correction...')
-        out <- .correctKin(kinBtwn = kinBtwn, kinSelf = kinSelf, pcs = pcs, sample.include = sample.include)
+        out <- correctKin(kinBtwn = kinBtwn, kinSelf = kinSelf, pcs = pcs, sample.include = sample.include)
         kinBtwn <- out$kinBtwn
         kinSelf <- out$kinSelf
     }
 
     # correct k2 - HW departure and small sample
-    if(ibd.probs) kinBtwn <- .correctK2(kinBtwn = kinBtwn, kinSelf = kinSelf, small.samp.correct = small.samp.correct, pcs = pcs, sample.include = sample.include)
+    if(ibd.probs) kinBtwn <- correctK2(kinBtwn = kinBtwn, kinSelf = kinSelf, small.samp.correct = small.samp.correct, pcs = pcs, sample.include = sample.include)
 
     # use alternate k0 estimator for non-1st degree relatives
-    if(ibd.probs) kinBtwn <- .correctK0(kinBtwn = kinBtwn)
+    if(ibd.probs) kinBtwn <- correctK0(kinBtwn = kinBtwn)
     
     # return output
     out <- list(kinBtwn = as.data.frame(kinBtwn), kinSelf = as.data.frame(kinSelf))
@@ -221,7 +219,7 @@ setMethod("pcrelate",
 
 
 ### get sample ids in same order as gdsobj
-.sampleInclude <- function(gdsobj, sample.include) {
+samplesGdsOrder <- function(gdsobj, sample.include) {
     sample.id <- .readSampleId(gdsobj)
     if (!is.null(sample.include)) {
         sample.id <- intersect(sample.id, sample.include)
@@ -555,7 +553,7 @@ setMethod("pcrelate",
 
 
 ### functions for final processing
-.correctKin <- function(kinBtwn, kinSelf, pcs, sample.include){
+correctKin <- function(kinBtwn, kinSelf, pcs, sample.include = NULL){
     # keep R CMD check from warning about undefined global variables
     `.` <- function(...) NULL
     ID <- f <- ID1 <- ID2 <- kin <- newval <- value <- NULL
@@ -596,7 +594,7 @@ setMethod("pcrelate",
     return(list(kinBtwn = kinBtwn, kinSelf = kinSelf))
 }
 
-.correctK2 <- function(kinBtwn, kinSelf, small.samp.correct, pcs, sample.include){
+correctK2 <- function(kinBtwn, kinSelf, pcs, sample.include = NULL, small.samp.correct = FALSE){
     # keep R CMD check from warning about undefined global variables
     `.` <- function(...) NULL
     ID <- f <- f.1 <- f.2 <- kin <- k0 <- k2 <- ID1 <- ID2 <- newval <- value <- NULL
@@ -642,7 +640,7 @@ setMethod("pcrelate",
     return(kinBtwn)
 }
 
-.correctK0 <- function(kinBtwn){
+correctK0 <- function(kinBtwn){
     # keep R CMD check from warning about undefined global variables
     kin <- k0 <- k2 <- NULL
     
