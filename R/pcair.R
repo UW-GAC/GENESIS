@@ -121,6 +121,7 @@ setMethod("pcair",
     } else {
         method <- "Standard PCA"
         eigenvect <- pca.unrel$eigenvect
+        rownames(eigenvect) <- as.character(pca.unrel$sample.id)
     }
     eigenval <- pca.unrel$eigenval[1:ncol(pca.unrel$eigenvect)]
     
