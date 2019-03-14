@@ -91,7 +91,7 @@ admixMap <- function(admixDataList,
             Gtilde <- calcGtilde(null.model, local)
             GPG <- colSums(Gtilde^2) # vector of G^T P G (for each SNP)
             # filter monomorphic SNPs
-            GPG[which(freq == 0 || freq == 1)] <- NA
+            GPG[freq[,1] == 0 | freq[,1] == 1] <- NA
             beta <- as.vector(crossprod(Gtilde,Ytilde)/GPG)
             Vbeta <- (sY2/GPG - beta^2)/(n.samp - k - 1) # RSS/GPG
             Stat <- beta^2/Vbeta
