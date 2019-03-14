@@ -31,7 +31,8 @@
 }
 \examples{
 # KING --robust
-file.king <- c(system.file("extdata", "MXL_ASW.kin0", package="GENESIS"), system.file("extdata", "MXL_ASW.kin", package="GENESIS"))
+file.king <- c(system.file("extdata", "MXL_ASW.kin0", package="GENESIS"),
+               system.file("extdata", "MXL_ASW.kin", package="GENESIS"))
 KINGmat <- kingToMatrix(file.king)
 
 # KING --ibdseg
