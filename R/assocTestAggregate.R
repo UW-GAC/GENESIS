@@ -68,15 +68,6 @@ setMethod("assocTestAggregate",
                       freq <- freq[keep]
                   }
 
-                  # number of variant sites
-                  n.site <- length(unique(var.info$variant.id))
-
-                  # number of alternate alleles
-                  n.alt <- sum(geno, na.rm=TRUE)
-                  
-                  # number of samples with observed alternate alleles > 0
-                  n.sample.alt <- sum(rowSums(geno, na.rm=TRUE) > 0)
-               
                   # weights
                   if (is.null(weight.user)) {
                       # Beta weights
@@ -86,8 +77,27 @@ setMethod("assocTestAggregate",
                       weight <- currentVariants(gdsobj)[[weight.user]][expandedVariantIndex(gdsobj)]
                       if (!is.null(index)) weight <- weight[index]
                       weight <- weight[keep]
+                      
+                      weight0 <- is.na(weight) | weight == 0
+                      if (any(weight0)) {
+                          keep <- !weight0
+                          var.info <- var.info[keep,,drop=FALSE]
+                          geno <- geno[,keep,drop=FALSE]
+                          n.obs <- n.obs[keep]
+                          freq <- freq[keep]
+                          weight <- weight[keep]
+                      }
                   }
                   
+                  # number of variant sites
+                  n.site <- length(unique(var.info$variant.id))
+
+                  # number of alternate alleles
+                  n.alt <- sum(geno, na.rm=TRUE)
+                  
+                  # number of samples with observed alternate alleles > 0
+                  n.sample.alt <- sum(rowSums(geno, na.rm=TRUE) > 0)
+               
                   res[[i]] <- data.frame(n.site, n.alt, n.sample.alt)
                   res.var[[i]] <- cbind(var.info, n.obs, freq, weight)
                   
@@ -165,6 +175,26 @@ setMethod("assocTestAggregate",
                       freq <- freq[keep]
                   }
 
+                  # weights
+                  if (is.null(weight.user)) {
+                      # Beta weights
+                      weight <- .weightFromFreq(freq, weight.beta)
+                  } else {
+                      # user supplied weights
+                      weight <- getSnpVariable(gdsobj, weight.user)
+                      weight <- weight[keep]
+                      
+                      weight0 <- is.na(weight) | weight == 0
+                      if (any(weight0)) {
+                          keep <- !weight0
+                          var.info <- var.info[keep,,drop=FALSE]
+                          geno <- geno[,keep,drop=FALSE]
+                          n.obs <- n.obs[keep]
+                          freq <- freq[keep]
+                          weight <- weight[keep]
+                      }
+                  }
+                  
                   # number of variant sites
                   n.site <- length(unique(var.info$variant.id))
 
@@ -174,16 +204,6 @@ setMethod("assocTestAggregate",
                   # number of samples with observed alternate alleles > 0
                   n.sample.alt <- sum(rowSums(geno, na.rm=TRUE) > 0)
                
-                  # weights
-                  if (is.null(weight.user)) {
-                      # Beta weights
-                      weight <- .weightFromFreq(freq, weight.beta)
-                  } else {
-                      # user supplied weights
-                      weight <- getSnpVariable(gdsobj, weight.user)
-                      weight <- weight[keep]
-                  }
-                  
                   res[[i]] <- data.frame(n.site, n.alt, n.sample.alt)
                   res.var[[i]] <- cbind(var.info, n.obs, freq, weight)
                   
