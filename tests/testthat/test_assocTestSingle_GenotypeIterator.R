@@ -95,3 +95,26 @@ test_that("missing sample.id in null model - row names", {
     expect_equal(max(assoc$n.obs), 10)
     close(genoData)
 })
+
+test_that("MatrixGenotypeReader", {
+    genoData <- .testGenoData()
+    geno <- GWASTools::getGenotype(genoData)
+    matRdr <- MatrixGenotypeReader(geno,
+                                    snpID=getSnpID(genoData),
+                                    chromosome=getChromosome(genoData),
+                                    position=getPosition(genoData),
+                                    scanID=getScanID(genoData))
+    matData <- GenotypeData(matRdr, scanAnnot=getScanAnnotation(genoData))
+
+    iterator <- GenotypeBlockIterator(genoData, snpBlock=1000)
+    nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+
+    iterator2 <- GenotypeBlockIterator(matData, snpBlock=1000)
+    nullmod <- fitNullModel(matData, outcome="outcome", covars="sex", verbose=FALSE)
+    assoc2 <- assocTestSingle(iterator2, nullmod, verbose=FALSE)
+
+    expect_equal(assoc, assoc2)
+
+    close(genoData)
+})
