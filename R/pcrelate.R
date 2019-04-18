@@ -690,6 +690,9 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
                               maf.thresh = 0.01, maf.bound.method = c('filter', 'truncate'),
                               verbose = TRUE){
 
+    scale <- match.arg(scale)
+    maf.bound.method <- match.arg(maf.bound.method)
+    
     # create (joint) PC matrix and indices
     sample.include <- unique(c(sample.include.block1, sample.include.block2))
     V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
