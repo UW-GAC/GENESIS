@@ -66,7 +66,7 @@ setMethod("makeSparseMatrix",
     blocks <- list()
     block.id <- list()
     if(clu$no > 0){
-        if(verbose) message("    ", length(mem), " relatives in ", clu$no, " clusters")
+        if(verbose) message("    ", length(mem), " relatives in ", clu$no, " clusters; largest cluster = ", max(clu$csize))
         if(verbose) message("Creating block matrices for clusters...")
         for(i in 1:clu$no){
             # samples in the cluster
@@ -253,11 +253,9 @@ setMethod("kingToMatrix",
     # subset to needed columns
     if('PropIBD' %in% colnames(king)){
         if(verbose) message('Inferred to be KING --ibdseg output')
-        king <- king[, .(ID1, ID2, PropIBD)]
         king <- king[, value := 0.5*PropIBD][, PropIBD := NULL]
     }else if('Kinship' %in% colnames(king)){
         if(verbose) message('Inferred to be KING --robust output')
-        king <- king[, .(ID1, ID2, Kinship)]
         setnames(king, 'Kinship', 'value')
     }else{
         stop('All files in file.king must contain a column called `PropIBD` (KING --ibdseg output) or `Kinship` (KING --robust output)')
