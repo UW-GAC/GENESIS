@@ -23,7 +23,7 @@ The GENESIS package provides methodology for estimating,
 
 ## Bioconductor
 
-Release
+### Release version
 
 [http://www.bioconductor.org/packages/release/bioc/html/GENESIS.html](http://www.bioconductor.org/packages/release/bioc/html/GENESIS.html)
 
@@ -34,7 +34,7 @@ Release
 * [Reference manual](http://www.bioconductor.org/packages/release/bioc/manuals/GENESIS/man/GENESIS.pdf)
 * [News](http://bioconductor.org/packages/release/bioc/news/GENESIS/NEWS)
 
-Development
+### Development version
 
 [http://www.bioconductor.org/packages/devel/bioc/html/GENESIS.html](http://www.bioconductor.org/packages/devel/bioc/html/GENESIS.html)
 
