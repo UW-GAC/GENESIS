@@ -30,7 +30,7 @@ Depends:
 Imports: Biobase, BiocGenerics, GWASTools, gdsfmt, GenomicRanges, IRanges, S4Vectors, SeqArray, SeqVarTools, SNPRelate,
 	 data.table, dplyr, foreach, graphics, grDevices, igraph, Matrix, methods, reshape2, stats, utils
 Suggests: CompQuadForm, poibin, survey,
-    testthat, knitr, rmarkdown,
+    testthat, BiocStyle, knitr, rmarkdown,
     GWASdata, ggplot2, GGally, RColorBrewer, TxDb.Hsapiens.UCSC.hg19.knownGene
 VignetteBuilder: knitr
 biocViews: SNP, GeneticVariability, Genetics, StatisticalMethod,
