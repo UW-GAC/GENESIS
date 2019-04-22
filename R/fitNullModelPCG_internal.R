@@ -6,8 +6,8 @@
 
 ## y - outcome vector
 ## X - data.frame or model.matrix
-.fitNullModel <- function(y, X, covMatList = NULL, group.idx = NULL, family = "gaussian", start = NULL,
-                          AIREML.tol = 1e-6, max.iter = 100, drop.zeros = TRUE, verbose = TRUE){
+.fitNullModelPCG <- function(y, X, covMatList = NULL, group.idx = NULL, family = "gaussian", start = NULL,
+                          AIREML.tol = 1e-6, max.iter = 15, drop.zeros = TRUE, verbose = TRUE){
     if(!is.null(covMatList)){
         if (!is.list(covMatList)){
             covMatList <- list(A = covMatList)
@@ -50,7 +50,7 @@
         }
         if (!is.null(covMatList)){
             if (is.null(group.idx)) group.idx <- list(resid.var = 1:length(y))
-            vc.mod <- .runAIREMLgaussianPCG(y, X, start = start, covMatList = covMatList, 
+            vc.mod <- .runAIREMLgaussian(y, X, start = start, covMatList = covMatList, 
                                          group.idx = group.idx, AIREML.tol = AIREML.tol, drop.zeros = drop.zeros,  
                                          max.iter = max.iter, verbose = verbose)
             out <- .nullModOutMM(y = y, workingY = y, X = X, vc.mod = vc.mod, 

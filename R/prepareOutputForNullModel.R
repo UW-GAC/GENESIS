@@ -171,9 +171,16 @@
     
     fitted.values <- as.vector(vc.mod$fits)
     resid.marginal <-  vc.mod$residM
+
     logLik <- vc.mod$logLik
     logLikR <- vc.mod$logLikR
+    
+    if(!is.null(logLik)){
     AIC <- 2 * (ncol(X) + length(varComp)) - 2 * logLik
+    }
+    else{
+      AIC <- NULL
+      }
     
     workingY <- drop(workingY)
     

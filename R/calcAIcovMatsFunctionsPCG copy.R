@@ -1,18 +1,24 @@
-.calcAIcovMats <- function(Y, PY, covMatList, Sigma.inv, Sigma.inv_X, Xt_Sigma.inv_X.inv){
+.calcAIcovMatsPCGcopy <- function(Y, X, PY, covMatList, Sigma, Sigma.inv_X, Method){
     m <- length(covMatList)
+    n <- length(PY)
     AI <- matrix(NA, nrow =  m, ncol = m)
     score <- rep(NA, m)
     
     for (i in 1:m){
         ### PAPY <- crossprod(P,crossprod(covMatList[[i]],PY))
-        PAPY <- Sigma.inv %*% crossprod(covMatList[[i]],PY) - tcrossprod(tcrossprod(Sigma.inv_X, Xt_Sigma.inv_X.inv), t(crossprod(covMatList[[i]],PY)) %*% Sigma.inv_X)	  
-        
-        
-        trPA.part1 <- sum( Sigma.inv * covMatList[[i]] )
-        trPA.part2 <- sum(diag( (crossprod( Sigma.inv_X, covMatList[[i]]) %*% Sigma.inv_X) %*% Xt_Sigma.inv_X.inv ))
-        trPA <-  trPA.part1 - trPA.part2
-        
+        APY <- crossprod(covMatList[[i]],PY)
+        PAPY <- .LeftMP(APY, X, Sigma, Sigma.inv_X)
+        trPA <-  .LeftMPtrEst(covMatList[[i]], X, Sigma, Sigma.inv_X,Method = Method)
+        ###test section
+        #A_APYY <- crossprod(covMatList[[i]],(diag(n)-PY %*% t(Y)))
+        #score[i] <- as.numeric(-0.5*.LeftMPtrEst(A_APYY,X, Sigma, Sigma.inv_X,Method = Method))
+        # print("original var")
+        # .theoryvar(covMatList[[i]],X, Sigma, Sigma.inv_X)
+        # print("new var")
+        #.theoryvar(A_APYY,X, Sigma, Sigma.inv_X)
+        #.testtrest(covMatList[[i]], X, Sigma, Sigma.inv_X,Method = Method)
         ### score[i] <- -0.5*(sum(P*covMatList[[i]]) - crossprod(Y, PAPY)) # tr(PA) - YPAPY
+        ##test section ends
         score[i] <- as.numeric(-0.5*(trPA - crossprod(Y, PAPY))) # tr(PA) - YPAPY
         AI[i,i] <- as.numeric(0.5*crossprod(PY, crossprod(covMatList[[i]],PAPY))) # YPAPAPY
         if((i+1) <= m){
@@ -26,14 +32,15 @@
 }	
 
 
-.calcAIcovMatsResids <- function(PY, covMatList, group.idx, Sigma.inv, Sigma.inv_X, Xt_Sigma.inv_X.inv){
+.calcAIcovMatsResidsPCGcopy <- function(Y, X, PY, covMatList, Sigma, Sigma.inv_X,group.idx){
     m <- length(covMatList)
     g <- length(group.idx)
     AI <- matrix(NA, nrow =  m, ncol = g)
     
     for(i in 1:m){
         ### PAPY <- crossprod(P,crossprod(covMatList[[i]],PY))
-        PAPY <- Sigma.inv %*% crossprod(covMatList[[i]],PY) - tcrossprod(tcrossprod(Sigma.inv_X, Xt_Sigma.inv_X.inv), t(crossprod(covMatList[[i]],PY)) %*% Sigma.inv_X)	  
+        APY <- crossprod(covMatList[[i]],PY)
+        PAPY <- .LeftMP(APY, X, Sigma, Sigma.inv_X)
         
         if(g == 1){
             AI[i,1] <- as.numeric(0.5*crossprod(PY, PAPY)) # YPIPAPY
@@ -48,18 +55,21 @@
 }
 
 
-.calcAIhetvars <- function(PY, PPY, group.idx, Sigma.inv, Sigma.inv_X, Xt_Sigma.inv_X.inv){
+.calcAIhetvarsPCGcopy <- function(Y, X, PY, covMatList, Sigma, Sigma.inv_X,group.idx, Method){
     g <- length(group.idx)
     n <- length(PY)
     
     if (g == 1){
-        if (is.null(PPY)) stop("PPY must not be NULL for length(group.idx) == 1")
         ### score <-  -0.5*(sum(diag(P)) - crossprod(PY)) 
         ### AI <- 0.5*crossprod(PY,crossprod(P,PY))
+        PPY <- .LeftMP(PY, X, Sigma, Sigma.inv_X)
+        I <- diag(n)
+        trP <-  .LeftMPtrEst(I, X, Sigma, Sigma.inv_X,Method = Method)
+        #.theoryvar(I,X, Sigma, Sigma.inv_X)
+        #.testtrest(I, X, Sigma, Sigma.inv_X,Method = Method)
+        #I_IPYY <- crossprod(I,diag(n) - PY %*% t(Y))
+        #score <- -0.5*(.LeftMPtrEst(I_IPYY, X, Sigma, Sigma.inv_X,Method = Method)) #tr(PI) - YPIPY
         
-        trP.part1 <- sum(diag( Sigma.inv ))
-        trP.part2 <- sum(diag( crossprod( Sigma.inv_X) %*% Xt_Sigma.inv_X.inv ))
-        trP <-  trP.part1 - trP.part2
         score <- as.numeric(-0.5*(trP - crossprod(PY)))
         YPIPIPY <- crossprod(PY, PPY)
         AI <- 0.5*as.numeric(YPIPIPY) 
@@ -77,15 +87,15 @@
             ## trPi.part1 <- sum(diag(Sigma.inv)[ group.idx[[i]] ] )
             ## trPi.part2 <- sum(diag( (crossprod( Sigma.inv_X, covMati) %*% Sigma.inv_X) %*% Xt_Sigma.inv_X.inv ))
             
-            covMati <- as.numeric( 1:n %in% group.idx[[i]] )
-            IPY <- as.numeric( 1:n %in% group.idx[[i]] ) * PY #Not use covMati -- TIANYU
-            PIPY <- crossprod(Sigma.inv, IPY) - tcrossprod(tcrossprod(Sigma.inv_X, Xt_Sigma.inv_X.inv), crossprod(IPY, Sigma.inv_X))
-            
-            trPi.part1 <- sum(diag(Sigma.inv)[ group.idx[[i]] ] )
-            trPi.part2 <- sum(diag( crossprod(Sigma.inv_X*covMati, Sigma.inv_X) %*% Xt_Sigma.inv_X.inv ))
-            trPi <- trPi.part1 - trPi.part2
-            
-            score[i] <- -0.5*(trPi - crossprod(PY[group.idx[[i]]]))
+            I <- as.numeric( 1:n %in% group.idx[[i]] )
+            IPY <- I * PY #Not use covMati in the code above -- TIANYU
+            PIPY <- .LeftMP(IPY, X, Sigma, Sigma.inv_X)
+            #I_IPYY <- crossprod(I,diag(n) - PY %*% t(Y))
+            #score[i] <- -0.5*(.LeftMPtrEst(I_IPYY, X, Sigma, Sigma.inv_X,Method = Method)) #tr(PI) - YPIPY
+            trPI <- .LeftMPtrEst(I, X, Sigma, Sigma.inv_X,Method = Method)
+            #.testtrest(I, X, Sigma, Sigma.inv_X,Method = Method)
+            #.theoryvar(I,X, Sigma, Sigma.inv_X)
+            score[i] <- -0.5*(trPI - crossprod(PY[group.idx[[i]]])) #tr(PI) - YPIPY
             AI[i,i] <- 0.5 * crossprod(PY[group.idx[[i]]], PIPY[group.idx[[i]]])
             
             if ((i + 1) <= g) {
