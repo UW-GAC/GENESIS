@@ -27,10 +27,10 @@ Release
 
 [http://www.bioconductor.org/packages/release/bioc/html/GENESIS.html](http://www.bioconductor.org/packages/release/bioc/html/GENESIS.html)
 
-* Tutorials:
-  [PC-AiR/PC-Relate](http://bioconductor.org/packages/release/bioc/vignettes/GENESIS/inst/doc/pcair.html),
-  [GWAS](http://bioconductor.org/packages/release/bioc/vignettes/GENESIS/inst/doc/assoc_test.html),
-  [Sequence data](http://bioconductor.org/packages/release/bioc/vignettes/GENESIS/inst/doc/assoc_test_seq.html)
+* Tutorials
+  * [PC-AiR/PC-Relate](http://bioconductor.org/packages/release/bioc/vignettes/GENESIS/inst/doc/pcair.html)
+  * [GWAS](http://bioconductor.org/packages/release/bioc/vignettes/GENESIS/inst/doc/assoc_test.html)
+  * [Sequence data](http://bioconductor.org/packages/release/bioc/vignettes/GENESIS/inst/doc/assoc_test_seq.html)
 * [Reference manual](http://www.bioconductor.org/packages/release/bioc/manuals/GENESIS/man/GENESIS.pdf)
 * [News](http://bioconductor.org/packages/release/bioc/news/GENESIS/NEWS)
 
@@ -38,10 +38,10 @@ Development
 
 [http://www.bioconductor.org/packages/devel/bioc/html/GENESIS.html](http://www.bioconductor.org/packages/devel/bioc/html/GENESIS.html)
 
-* Tutorials:
-  [PC-AiR/PC-Relate](http://bioconductor.org/packages/devel/bioc/vignettes/GENESIS/inst/doc/pcair.html),
-  [GWAS](http://bioconductor.org/packages/devel/bioc/vignettes/GENESIS/inst/doc/assoc_test.html),
-  [Sequence data](http://bioconductor.org/packages/devel/bioc/vignettes/GENESIS/inst/doc/assoc_test_seq.html)
+* Tutorials
+  * [PC-AiR/PC-Relate](http://bioconductor.org/packages/devel/bioc/vignettes/GENESIS/inst/doc/pcair.html)
+  * [GWAS](http://bioconductor.org/packages/devel/bioc/vignettes/GENESIS/inst/doc/assoc_test.html)
+  * [Sequence data](http://bioconductor.org/packages/devel/bioc/vignettes/GENESIS/inst/doc/assoc_test_seq.html)
 * [Reference manual](http://www.bioconductor.org/packages/devel/bioc/manuals/GENESIS/man/GENESIS.pdf)
 * [News](http://bioconductor.org/packages/devel/bioc/news/GENESIS/NEWS)
 
