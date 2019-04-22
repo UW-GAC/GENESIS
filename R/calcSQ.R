@@ -13,7 +13,6 @@
             diagV <- rep(varComp[m+1],n)
         } else{
             g <- length(group.idx)
-        
 ###        diagV <- rep(0,nrow(covMatList[[1]]))
 ###        for(i in 1:g){
 ###            diagV[group.idx[[i]]] <- varComp[m+i]
@@ -38,12 +37,10 @@
     # add diagonal elements
     Sigma <- Vre
     diag(Sigma) <- diag(Sigma) + diagV
-    
     # cholesky decomposition
     cholSigma <- chol(Sigma)
     # inverse
     Sigma.inv <- chol2inv(cholSigma)
-
     return(list(cholSigma = cholSigma, Sigma.inv = Sigma.inv, Vre = Vre))
 
 }
