@@ -207,8 +207,9 @@ setGeneric("kingToMatrix", function(king, ...) standardGeneric("kingToMatrix"))
 
 setMethod("kingToMatrix",
           "character",
-          function(king, sample.include = NULL, thresh = NULL, verbose = TRUE) {
+          function(king, estimator, sample.include = NULL, thresh = NULL, verbose = TRUE) {
               .kingToMatrix(file.king = king,
+                            estimator = estimator,
                             sample.include = sample.include,
                             thresh = thresh,
                             verbose = verbose)
@@ -224,22 +225,27 @@ setMethod("kingToMatrix",
               makeSparseMatrix(x = king, thresh = thresh, sample.include = sample.include, diag.value = 0.5, verbose = verbose)
           })
 
-.readKing <- function(x) {
-    cols <- intersect(names(fread(x, nrows=0)), c("ID1", "ID2", "PropIBD", "Kinship"))
+.readKing <- function(x, estimator) {
+    cols <- intersect(names(fread(x, nrows=0)), c("ID1", "ID2", estimator))
     fread(x, select=cols)
 }
 
-.kingToMatrix <- function(file.king, sample.include = NULL, thresh = NULL, verbose = TRUE){
+.kingToMatrix <- function(file.king, estimator = c("PropIBD", "Kinship"), sample.include = NULL, thresh = NULL, verbose = TRUE){
     # keep R CMD check from warning about undefined global variables
     ID1 <- ID2 <- PropIBD <- Kinship <- value <- NULL
     `.` <- function(...) NULL
-    
-    # read in the king results and subset columns
-    if(verbose) message('Reading in KING output...')
+
+    # check argument values
+    estimator <- match.arg(estimator)
+    if(estimator == 'PropIBD'){
+        if(verbose) message('Reading in PropIBD estimates from KING --ibdseg output...')
+    }else if(estimator == 'Kinship'){
+        if(verbose) message('Reading in Kinship estimates from KING --kinship output...')
+    }
     
     # if multiple input files
     if(length(file.king) > 1){
-        king <- lapply(file.king, .readKing)
+        king <- lapply(file.king, .readKing, estimator = estimator)
         # pull out column names in common
         cnames <- Reduce(intersect, lapply(king, colnames))
         # subset and rbind
@@ -247,18 +253,14 @@ setMethod("kingToMatrix",
         
     # one input file
     }else{
-        king <- .readKing(file.king)
+        king <- .readKing(file.king, estimator = estimator)
     }
     
     # subset to needed columns
-    if('PropIBD' %in% colnames(king)){
-        if(verbose) message('Inferred to be KING --ibdseg output')
+    if(estimator == 'PropIBD'){
         king <- king[, value := 0.5*PropIBD][, PropIBD := NULL]
-    }else if('Kinship' %in% colnames(king)){
-        if(verbose) message('Inferred to be KING --robust output')
+    }else if(estimator == 'Kinship'){
         setnames(king, 'Kinship', 'value')
-    }else{
-        stop('All files in file.king must contain a column called `PropIBD` (KING --ibdseg output) or `Kinship` (KING --robust output)')
     }
         
     # check for duplicate pairs
