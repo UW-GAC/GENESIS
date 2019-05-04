@@ -1,4 +1,5 @@
-.runAIREMLgaussian <- function(Y, X, start, covMatList, group.idx, AIREML.tol, drop.zeros, max.iter, verbose){
+.runAIREMLgaussian <- function(Y, X, start, covMatList, group.idx, AIREML.tol, 
+                                drop.zeros, max.iter, EM.iter, verbose){
 
     # initial values
     m <- length(covMatList)
@@ -43,7 +44,7 @@
         }
         
         
-        if(reps > 1){
+        if(reps > EM.iter){
             # Average Information and Scores
             AI <- matrix(NA, nrow=(m+g), ncol=(m+g))
             score <- rep(NA,(m+g))
@@ -145,7 +146,8 @@
     # linear predictor
     eta <- as.numeric(lq$fits + crossprod(sq$Vre, lq$Sigma.inv_R)) # X\beta + Zb
     
-    return(list(varComp = sigma2.k, AI = AI, converged = converged, zeroFLAG = zeroFLAG, beta = lq$beta, residM = lq$residM, eta = eta, logLikR = lq$logLikR, logLik = lq$logLik, RSS = lq$RSS, fits = lq$fits))
+    return(list(varComp = sigma2.k, AI = AI, converged = converged, zeroFLAG = zeroFLAG, beta = lq$beta, residM = lq$residM, 
+                eta = eta, logLikR = lq$logLikR, logLik = lq$logLik, RSS = lq$RSS, fits = lq$fits, iter = reps))
     
 }
 

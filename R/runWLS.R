@@ -3,7 +3,7 @@
 # n - number of people 
 # g - the number of groups (1 to more). if g == 1 group.idx is ignored. 
 .runWLSgaussian <- function (Y, X, group.idx, start, AIREML.tol,
-                             max.iter, verbose){
+                             max.iter, EM.iter, verbose){
     n <- length(Y)
     g <- length(group.idx)
     if (g <= 1) stop("group.idx must have length > 1")
@@ -48,7 +48,7 @@
 
         
         ## Updating variances and calculating their covariance matrix
-        if (reps > 1) {
+        if (reps > EM.iter) {
             
             score.AI <- .calcAIhetvars(lq$PY, lq$PPY, group.idx,
                                        Sigma.inv = Sigma.inv, Sigma.inv_X = lq$Sigma.inv_X, Xt_Sigma.inv_X.inv = lq$Xt_Sigma.inv_X.inv)
@@ -72,7 +72,7 @@
                 (break)()
             }
         }
-        else { # first rep
+        else { # EM steps
             sigma2.kplus1 <- rep(NA, g)
 
             for (i in 1:g) {
@@ -110,7 +110,7 @@
     return(list(varComp = sigma2.k, AI = AI, converged = converged,
                 Sigma.inv = Sigma.inv, beta = lq$beta, 
                 residM = lq$residM, fits = lq$fits, eta = eta, logLikR = lq$logLikR,
-                logLik = lq$logLik, RSS = lq$RSS))
+                logLik = lq$logLik, RSS = lq$RSS, iter = reps))
 }
 
 

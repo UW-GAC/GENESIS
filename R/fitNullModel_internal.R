@@ -7,7 +7,8 @@
 ## y - outcome vector
 ## X - data.frame or model.matrix
 .fitNullModel <- function(y, X, covMatList = NULL, group.idx = NULL, family = "gaussian", start = NULL,
-                          AIREML.tol = 1e-6, max.iter = 100, drop.zeros = TRUE, verbose = TRUE){
+                          AIREML.tol = 1e-6, max.iter = 100, EM.iter = 0,
+                          drop.zeros = TRUE, verbose = TRUE){
     
     if(!is.null(covMatList)){
         if (!is.list(covMatList)){
@@ -46,14 +47,15 @@
         }
         if (is.null(covMatList) & !is.null(group.idx)){
             vc.mod <- .runWLSgaussian(y, X, group.idx = group.idx, start = start, 
-                                      AIREML.tol = AIREML.tol, max.iter = max.iter, verbose = verbose)
+                                      AIREML.tol = AIREML.tol, max.iter = max.iter, 
+                                      EM.iter = EM.iter, verbose = verbose)
             out <- .nullModOutWLS(y, X, vc.mod = vc.mod, family = family, group.idx = group.idx)
         }
         if (!is.null(covMatList)){
             if (is.null(group.idx)) group.idx <- list(resid.var = 1:length(y))
             vc.mod <- .runAIREMLgaussian(y, X, start = start, covMatList = covMatList, 
                                          group.idx = group.idx, AIREML.tol = AIREML.tol, drop.zeros = drop.zeros,  
-                                         max.iter = max.iter, verbose = verbose)
+                                         max.iter = max.iter, EM.iter = EM.iter, verbose = verbose)
             out <- .nullModOutMM(y = y, workingY = y, X = X, vc.mod = vc.mod, 
                                  family = family, covMatList = covMatList, 
                                  group.idx = group.idx, drop.zeros = drop.zeros)
@@ -65,7 +67,8 @@
         if (!is.null(covMatList)){ ## iterate between computing workingY and estimating VCs. 
             iterate.out <- .iterateAIREMLworkingY(glm.mod = mod, X = X, family = family, 
                                                   start = start, covMatList = covMatList, AIREML.tol = AIREML.tol,
-                                                  drop.zeros = drop.zeros, max.iter = max.iter, verbose = verbose)
+                                                  drop.zeros = drop.zeros, max.iter = max.iter, EM.iter = EM.iter,
+                                                  verbose = verbose)
             
             vc.mod <- iterate.out$vc.mod
             working.y <- iterate.out$working.y

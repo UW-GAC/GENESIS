@@ -1,4 +1,4 @@
-.runAIREMLother <- function(Y, X, start, covMatList, AIREML.tol, drop.zeros, max.iter, verbose, vmu, gmuinv){
+.runAIREMLother <- function(Y, X, start, covMatList, AIREML.tol, drop.zeros, max.iter, EM.iter, verbose, vmu, gmuinv){
     
     m <- length(covMatList)
     n <- length(Y)
@@ -27,11 +27,10 @@
         # print current estimates
         if(verbose) print(c(sigma2.k, lq$logLikR, lq$RSS))
 
-        if(reps > 1){
+        if(reps > EM.iter){
             # Average Information and Scores
             ### more arguments
-            covMats.score.AI <- .calcAIcovMats(Y,
-                                               lq$PY, covMatList,
+            covMats.score.AI <- .calcAIcovMats(Y, lq$PY, covMatList,
                                                Sigma.inv = sq$Sigma.inv, Sigma.inv_X = lq$Sigma.inv_X, Xt_Sigma.inv_X.inv = lq$Xt_Sigma.inv_X.inv)
             AI <- covMats.score.AI$AI
             score <- covMats.score.AI$score
@@ -103,7 +102,8 @@
     VinvR <- crossprod(sq$Sigma.inv, lq$residM)
     eta <- as.numeric(lq$fits + crossprod(sq$Vre, VinvR)) # X\beta + Zb
     
-    return(list(allZero = FALSE, varComp = sigma2.k, AI = AI, converged = converged, zeroFLAG = zeroFLAG, beta = lq$beta, residM = lq$residM, eta = eta, logLikR = lq$logLikR, logLik = lq$logLik, RSS = lq$RSS, fits = lq$fits))
+    return(list(allZero = FALSE, varComp = sigma2.k, AI = AI, converged = converged, zeroFLAG = zeroFLAG, beta = lq$beta, residM = lq$residM, 
+                eta = eta, logLikR = lq$logLikR, logLik = lq$logLik, RSS = lq$RSS, fits = lq$fits, iter = reps))
 
 }
 

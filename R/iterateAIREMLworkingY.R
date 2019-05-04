@@ -15,7 +15,7 @@
 
 
 .iterateAIREMLworkingY <- function(glm.mod, X, family, start = NULL, covMatList, AIREML.tol = 1e-6,
-                                   drop.zeros = TRUE, max.iter = 100, verbose = TRUE){
+                                   drop.zeros = TRUE, max.iter = 100, EM.iter = 0, verbose = TRUE){
     y <- glm.mod$y
     eta <- glm.mod$linear.predictors
     working.y <- .calcWorkingYnonGaussian(y, eta, family)
@@ -29,7 +29,7 @@
         
         # estimate variance components
         vc.mod <- .runAIREMLother(Y=working.y$Y, X=X, start=newstart, covMatList=covMatList, 
-                                  AIREML.tol=AIREML.tol, drop.zeros=drop.zeros, max.iter=max.iter, 
+                                  AIREML.tol=AIREML.tol, drop.zeros=drop.zeros, max.iter=max.iter, EM.iter=EM.iter,
                                   verbose=verbose, vmu=working.y$vmu, gmuinv=working.y$gmuinv)
         
         if (vc.mod$allZero == TRUE) {
