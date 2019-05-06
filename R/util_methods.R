@@ -98,6 +98,17 @@ setMethod(".readSampleId",
               seqGetData(x, "sample.id")
           })
 
+# this method assumes a KING style output file; it is NOT generic
+setMethod(".readSampleId",
+          "character",
+          function(x){
+            tmp <- fread(x, nrow = 1)
+            id1 <- tmp$id1
+            colidx <- which(colnames(tmp) == 'ID2')
+            tmp <- fread(cmd = paste("grep", id1, x), select = colidx)
+            c(id1, tmp[[1]])
+          })
+
 
 
 setGeneric(".readGeno", function(gdsobj, ...) standardGeneric(".readGeno"))

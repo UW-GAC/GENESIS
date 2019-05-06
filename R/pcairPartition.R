@@ -1,20 +1,35 @@
-pcairPartition <- function(kinobj, divobj,
+pcairPartition <- function(kinobj, divobj = NULL, divfile = NULL,
                            kin.thresh = 2^(-11/2),
                            div.thresh = -2^(-11/2),
                            unrel.set = NULL,
                            sample.include = NULL,
                            verbose = TRUE){
 
-    if(verbose) message('Using kinobj and divobj to partition samples into unrelated and related sets')
+    # keep R CMD check from warning about undefined global variables
+    ID1 <- ID2 <- ID <- Kinship <- NULL
+    `.` <- function(...) NULL
 
+    # check which divergence input
+    if(!is.null(divobj)){
+        if(verbose) message('Using kinobj and divobj to partition samples into unrelated and related sets')
+    }else if(!is.null(divfile)){
+        if(verbose) message('Using kinobj and divfile to partition samples into unrelated and related sets')
+    }else{
+        stop('One of divobj or divfile must be supplied')
+        # we could potentially make this optional, but for now implementation is faster to require it
+    }
+    
     # sample.id from kinship matrix
     kin.id.all <- .readSampleId(kinobj)
-    # sample.id from divergence matrix
-    div.id.all <- .readSampleId(divobj)
-
-    # check for ids provided
-    if(is.null(kin.id.all) | is.null(div.id.all)) {
-        stop('colnames must be provided for kinobj and divobj')
+    if(is.null(kin.id.all)) stop('colnames must be provided for kinobj')
+    if(!is.null(divobj)){
+        # sample.id from divergence matrix
+        div.id.all <- .readSampleId(divobj)
+        if(is.null(div.id.all)) stop('colnames must be provided for divobj')
+    }else{
+        # sample.id from divergence file (king text output)
+        div.id.all <- .readSampleId(divfile)
+        if(is.null(div.id.all)) stop('sample IDs could not be read from divfile')
     }
 
     # logical indicators of which samples are in both sets
@@ -97,25 +112,61 @@ pcairPartition <- function(kinobj, divobj,
     # vector of ids we are reading
     div.id <- div.id.all[div.read]
     div.id.col <- div.id.all[div.read.col]
-    # create list of divergent pairs for each sample
-    divlist <- .apply(divobj, MARGIN = 2, 
-                      FUN = function(x){ div.id[x < div.thresh] }, 
-                      selection = list(div.read, div.read.col))
-    names(divlist) <- div.id.col
+    if(!is.null(divobj)){
+        # create list of divergent pairs for each sample
+        divlist <- .apply(divobj, MARGIN = 2, 
+                          FUN = function(x){ div.id[x < div.thresh] }, 
+                          selection = list(div.read, div.read.col))
+        names(divlist) <- div.id.col
 
-    # create a vector matching ids of rellist and divlist
-    idx <- match(names(divlist), names(rellist))
-    # not divergent if actually related
-    for(i in 1:length(divlist)){
-        j <- idx[i]
-        divlist[[i]] <- divlist[[i]][!(divlist[[i]] %in% rellist[[j]])]
+        # create a vector matching ids of rellist and divlist
+        idx <- match(names(divlist), names(rellist))
+        # not divergent if actually related
+        for(i in 1:length(divlist)){
+            j <- idx[i]
+            divlist[[i]] <- divlist[[i]][!(divlist[[i]] %in% rellist[[j]])]
+        }
+
+        # compute number of divergent pairs for each sample
+        ndiv <- sapply(divlist, length)
+
+        # clean up
+        rm(divlist)
+
+    }else{
+        # determine which columns of divfile to read
+        cnames <- colnames(fread(divfile, nrow = 0))
+        colidx <- which(cnames %in% c('ID1', 'ID2', 'Kinship'))
+
+        # function to process each chunk of read in data
+        .count_ndiv <- function(x){
+            # subset
+            x <- x[Kinship < div.thresh][,Kinship := NULL]
+            x <- x[ID1 %in% div.id & ID2 %in% div.id & (ID1 %in% div.id.col | ID2 %in% div.id.col)]
+            # count 
+            tmp1 <- x[,.(ndiv = .N), by = ID1]
+            setnames(tmp1, 'ID1', 'ID')
+            tmp2 <- x[,.(ndiv = .N), by = ID2]
+            setnames(tmp2, 'ID2', 'ID')
+            # only keep counts for samples that need divergence measures
+            rbind(tmp1[ID %in% div.id.col], tmp2[ID %in% div.id.col])
+        }
+
+        # read in and process the data in chunks
+        divtab <- bigreadr::big_fread1( file = divfile, every_nlines = 1e7,
+                                        .transform = .count_ndiv,
+                                        .combine = function(x){ rbindlist(x)[,lapply(.SD, sum), by = ID] },
+                                        select = colidx, data.table = TRUE)
+
+        # compute number of divergent pairs for each sample
+        ndiv <- dat$ndiv
+        names(ndiv) <- dat$ID
+
+        # clean up
+        rm(divtab)
     }
-
-    # compute number of divergent pairs for each sample
-    ndiv <- sapply(divlist, length)
-
     # clean up
-    rm(divlist); rm(div.id.all); rm(div.read); rm(div.read.col); rm(div.id); rm(div.id.col)
+    rm(div.id.all); rm(div.read); rm(div.read.col); rm(div.id); rm(div.id.col)
 
 
     # empty vector to store related set
