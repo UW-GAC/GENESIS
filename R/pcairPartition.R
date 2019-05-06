@@ -159,8 +159,8 @@ pcairPartition <- function(kinobj, divobj = NULL, divfile = NULL,
                                         select = colidx, data.table = TRUE)
 
         # compute number of divergent pairs for each sample
-        ndiv <- dat$ndiv
-        names(ndiv) <- dat$ID
+        ndiv <- divtab$ndiv
+        names(ndiv) <- divtab$ID
 
         # clean up
         rm(divtab)

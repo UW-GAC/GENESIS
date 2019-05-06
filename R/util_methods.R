@@ -103,7 +103,7 @@ setMethod(".readSampleId",
           "character",
           function(x){
             tmp <- fread(x, nrow = 1)
-            id1 <- tmp$id1
+            id1 <- tmp$ID1
             colidx <- which(colnames(tmp) == 'ID2')
             tmp <- fread(cmd = paste("grep", id1, x), select = colidx)
             c(id1, tmp[[1]])
