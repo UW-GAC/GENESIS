@@ -129,7 +129,8 @@ The relevant output from the KING software is two text files with the file exten
 library(GENESIS)
 KINGmat <- kingToMatrix(
     c(system.file("extdata", "MXL_ASW.kin0", package="GENESIS"),
-      system.file("extdata", "MXL_ASW.kin", package="GENESIS")))
+      system.file("extdata", "MXL_ASW.kin", package="GENESIS")),
+      estimator = "Kinship")
 KINGmat[1:5,1:5]
 ```
 
