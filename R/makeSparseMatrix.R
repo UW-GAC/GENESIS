@@ -207,7 +207,7 @@ setGeneric("kingToMatrix", function(king, ...) standardGeneric("kingToMatrix"))
 
 setMethod("kingToMatrix",
           "character",
-          function(king, estimator, sample.include = NULL, thresh = NULL, verbose = TRUE) {
+          function(king, estimator = c("PropIBD", "Kinship"), sample.include = NULL, thresh = NULL, verbose = TRUE) {
               .kingToMatrix(file.king = king,
                             estimator = estimator,
                             sample.include = sample.include,
@@ -227,6 +227,7 @@ setMethod("kingToMatrix",
 
 .readKing <- function(x, estimator) {
     cols <- intersect(names(fread(x, nrows=0)), c("ID1", "ID2", estimator))
+    if (!(estimator %in% cols)) stop("Column ", estimator, " requested but not present in file")
     fread(x, select=cols)
 }
 
