@@ -43,7 +43,6 @@
 # }
 
 .pcg <- function(A, b, maxiter=500, tol=1e-5){
-  time1 <- Sys.time()
   x0 <- matrix(rep(0, length(b)))
   Minv <- 1/diag(A)
   r0 <- b - crossp(A,x0)
@@ -86,8 +85,6 @@
     print("Quit due to iter greater than maxiter, CG may not converge")
   }
    print(paste0("iter from Rcpp .pcg is",iter))
-  time2 <- Sys.time()
-  timeonPCG <<- timeonPCG + (time2 - time1)
   return(x1)
 }
 
