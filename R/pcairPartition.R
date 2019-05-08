@@ -162,8 +162,16 @@ pcairPartition <- function(kinobj, divobj = NULL, divfile = NULL,
         ndiv <- divtab$ndiv
         names(ndiv) <- divtab$ID
 
+        # include 0s for samples with no divergent pairs
+        div.id.col0 <- div.id.col[!(div.id.col %in% names(ndiv))]
+        if(length(div.id.col0) > 0){
+            ndiv0 <- rep(0, length(div.id.col0))
+            names(ndiv0) <- div.id.col0
+            ndiv <- append(ndiv, ndiv0)
+        }
+
         # clean up
-        rm(divtab)
+        rm(divtab); rm(ndiv0)
     }
     # clean up
     rm(div.id.all); rm(div.read); rm(div.read.col); rm(div.id); rm(div.id.col)
