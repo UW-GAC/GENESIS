@@ -8,9 +8,9 @@ test_that("admixMap", {
     nsnp <- objdesp.gdsn(index.gdsn(gds, "snp.id"))$dim
     nsamp <- objdesp.gdsn(index.gdsn(gds, "sample.id"))$dim
     closefn.gds(gds)
-    dosage_eur <- sample(0:2, nsnp*nsamp, replace=TRUE)
-    dosage_afr <- ifelse(dosage_eur == 2, 0, sample(0:1, nsnp*nsamp, replace=TRUE))
-    dosage_amer <- 2 - dosage_eur - dosage_afr
+    set.seed(200); dosage_eur <- sample(0:2, nsnp*nsamp, replace=TRUE)
+    set.seed(201); dosage_afr <- ifelse(dosage_eur == 2, 0, sample(0:1, nsnp*nsamp, replace=TRUE))
+    set.seed(202); dosage_amer <- 2 - dosage_eur - dosage_afr
     dosage <- list(dosage_eur, dosage_afr, dosage_amer)
     tmpfile <- character(3)
     tmpfile2 <- character(3)
@@ -31,8 +31,8 @@ test_that("admixMap", {
         seqSNP2GDS(tmpfile[i], tmpfile2[i], verbose=FALSE)
     }
 
-    pheno <- rnorm(nsamp, mean = 0, sd = 1)
-    covar <- sample(0:1, nsamp, replace=TRUE)
+    set.seed(203); pheno <- rnorm(nsamp, mean = 0, sd = 1)
+    set.seed(204); covar <- sample(0:1, nsamp, replace=TRUE)
     
     annot <- GWASTools::ScanAnnotationDataFrame(data.frame(scanID = samp, 
                                                     covar, pheno, stringsAsFactors=FALSE))

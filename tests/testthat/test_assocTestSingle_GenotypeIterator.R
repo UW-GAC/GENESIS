@@ -6,7 +6,6 @@ test_that("assocTestSingle", {
     covMat <- .testGenoDataGRM(genoData)
     iterator <- GenotypeBlockIterator(genoData, snpBlock=1000)
     
-    #nullmod <- fitNullModel(scanAnnot, outcome="status", covars="sex", cov.mat=covMat, family="binomial", verbose=FALSE)
     nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", cov.mat=covMat, verbose=FALSE)
     assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
     freq <- GWASTools::alleleFrequency(genoData)
@@ -19,7 +18,7 @@ test_that("assocTestSingle", {
 
 test_that("assocTestSingle - sample selection", {
     genoData <- .testGenoData()
-    samp <- getScanID(genoData)[sample(1:nscan(genoData), 50)]
+    set.seed(80); samp <- getScanID(genoData)[sample(1:nscan(genoData), 50)]
     iterator <- GenotypeBlockIterator(genoData, snpBlock=1000)
 
     nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", sample.id=samp, verbose=FALSE)
@@ -33,7 +32,7 @@ test_that("assocTestSingle - sample selection", {
 test_that("code to reorder samples works as expected", {
     genoData <- .testGenoData()
     sample.id <- getScanID(genoData)
-    samp.reorder <- sample(sample.id)[1:10]
+    set.seed(81); samp.reorder <- sample(sample.id)[1:10]
     sample.index <- match(samp.reorder, sample.id)
 
     geno1 <- GWASTools::getGenotype(genoData, use.names=TRUE)
@@ -47,7 +46,7 @@ test_that("code to reorder samples works as expected", {
 test_that("assocTestSingle - reorder samples", {
     genoData <- .testGenoData()
     covMat <- .testGenoDataGRM(genoData)
-    samp <- as.character(sample(getScanID(genoData), 50))
+    set.seed(82); samp <- as.character(sample(getScanID(genoData), 50))
     iterator <- GenotypeBlockIterator(genoData, snpBlock=1000)
 
     nullmod <- fitNullModel(genoData, outcome="outcome", cov.mat=covMat[samp,samp], verbose=FALSE)
@@ -62,8 +61,8 @@ test_that("assocTestSingle - reorder samples", {
     GWASTools::resetIterator(iterator)
     assoc2 <- assocTestSingle(iterator, nullmod2, verbose=FALSE)
     # this test may not be reliable - see test_nullModel.R
-    #expect_equal(assoc, assoc2, tolerance=1e-3)
-    expect_equal(assoc[,1:6], assoc2[,1:6])
+    expect_equal(assoc, assoc2)
+    #expect_equal(assoc[,1:6], assoc2[,1:6])
     
     close(genoData)
 })
