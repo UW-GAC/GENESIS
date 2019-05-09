@@ -10,7 +10,7 @@ test_that("robust", {
 	KINGmat <- kingToMatrix(c(kinfile, kin0file), verbose=FALSE)
         expect_true(setequal(rownames(KINGmat), samp))
 
-        samp.include <- sample(samp, 100)
+        set.seed(5); samp.include <- sample(samp, 100)
 	KINGmat <- kingToMatrix(c(kinfile, kin0file), sample.include=samp.include, verbose=FALSE)
         expect_true(setequal(rownames(KINGmat), samp.include))
 })

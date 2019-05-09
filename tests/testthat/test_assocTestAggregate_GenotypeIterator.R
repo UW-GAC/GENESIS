@@ -31,7 +31,7 @@ test_that("user weights", {
     snpID <- getSnpID(genoData)
     chromosome <- getChromosome(genoData)
     position <- getPosition(genoData)
-    weights <- sample(1:10, length(snpID), replace=TRUE)
+    set.seed(8); weights <- sample(1:10, length(snpID), replace=TRUE)
     genoData@snpAnnot <- SnpAnnotationDataFrame(data.frame(snpID, chromosome, position, weights))
     iterator <- GenotypeIterator(genoData, snpFilter=.testSnpFilter(genoData))
     

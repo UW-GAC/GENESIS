@@ -49,7 +49,7 @@ test_that("list", {
 test_that("user weights", {
     svd <- .testData()
     variant.id <- seqGetData(svd, "variant.id")
-    weights <- sample(1:10, length(variant.id), replace=TRUE)
+    set.seed(7); weights <- sample(1:10, length(variant.id), replace=TRUE)
     variantData(svd) <- AnnotatedDataFrame(data.frame(variant.id, weights))
     seqSetFilterChrom(svd, include=22, verbose=FALSE)
     iterator <- SeqVarWindowIterator(svd, windowSize=5e5, windowShift=2.5e5, verbose=FALSE)

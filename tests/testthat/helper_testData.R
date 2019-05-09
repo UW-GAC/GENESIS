@@ -2,11 +2,11 @@
 .testData <- function() {
     gds <- SeqVarTools:::.testSeqVarData()
     sample.id <- SeqArray::seqGetData(gds, "sample.id")
-    df <- data.frame(sample.id=sample.id,
-                     sex=sample(c("M","F"), replace=TRUE, length(sample.id)),
-                     age=rnorm(length(sample.id), mean=50, sd=10),
-                     outcome=rnorm(length(sample.id), mean=10, sd=5),
-                     status=rbinom(length(sample.id), size=1, prob=0.4),
+    set.seed(1); sex <- sample(c("M","F"), replace=TRUE, length(sample.id))
+    set.seed(2); age <- rnorm(length(sample.id), mean=50, sd=10)
+    set.seed(3); outcome <- rnorm(length(sample.id), mean=10, sd=5)
+    set.seed(4); status <- rbinom(length(sample.id), size=1, prob=0.4)
+    df <- data.frame(sample.id, sex, age, outcome, status,
                      stringsAsFactors=FALSE)
     SeqVarTools::sampleData(gds) <- Biobase::AnnotatedDataFrame(df)
     gds
