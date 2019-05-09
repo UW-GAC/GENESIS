@@ -118,3 +118,34 @@ test_that("apply on big Matrix", {
     chk <- apply(x[selection[[1]], selection[[2]]], MARGIN = MARGIN, FUN = FUN)
     expect_equal(.apply(x, MARGIN, FUN, selection, maxelem=5e5), chk)
 })
+
+
+test_that("no unrelated", {
+    data("HapMap_ASW_MXL_KINGmat")
+    Mat <- Matrix(HapMap_ASW_MXL_KINGmat)
+    thresh <- min(Mat) - 0.1
+
+    expect_error(pcairPartition(kinobj = Mat, divobj = Mat,
+                                kin.thresh=thresh, div.thresh=thresh,
+                                verbose=FALSE),
+                 "All samples related")
+})
+
+
+test_that("no related", {
+    Mat <- Diagonal(100)
+    dimnames(Mat) <- list(1:100, 1:100)
+    mypart <- pcairPartition(kinobj = Mat, divobj = Mat, verbose=FALSE)
+    expect_true(is.null(mypart$rels))
+    expect_equal(as.character(1:100), mypart$unrels)
+})
+
+
+test_that("all same number of relatives", {
+    x <- matrix(c(0.5,0.25,0.25,0.5), nrow = 2)
+    Mat <- bdiag(list(x,x,x,x,x))
+    dimnames(Mat) <- list(1:10, 1:10)
+    mypart <- pcairPartition(kinobj = Mat, divobj = Mat, verbose=FALSE)
+    expect_equal(mypart$rels, as.character(seq(1,9,2)))
+    expect_equal(mypart$unrels, as.character(seq(2,10,2)))
+})
