@@ -146,6 +146,7 @@ testVariantSet <- function( nullmod, G, weights,
 
 
 .calcPvalVCTest <- function(Q, G, neig, ntrace){
+    if(!requireNamespace("survey")) stop("package 'survey' must be installed to calculate p-values for SKAT")
 
     ncolG <- ncol(G) # number of snps
     nrowG <- nrow(G) # number of samples
