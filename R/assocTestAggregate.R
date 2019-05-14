@@ -36,7 +36,6 @@ setMethod("assocTestAggregate",
               set.messages <- ceiling(n.iter / 100) # max messages = 100
               iterate <- TRUE
               while (iterate) {
-                  message('iteration ', i)
                   var.info <- variantInfo(gdsobj, alleles=match.alleles, expanded=TRUE)
                   
                   if (!imputed) {
