@@ -46,7 +46,7 @@ calcGtilde <- function(nullmod, G){
     # calculate Gtilde
     nrowG <- as.numeric(nrow(CG))
     ncolG <- as.numeric(ncol(CG))
-    if(nrowG*ncolG <= 2^31){
+    if(length(C) == 1 || nrowG*ncolG <= 2^31){
         Gtilde <- CG - tcrossprod(nullmod$CXCXI, crossprod(CG, nullmod$CX))
         # base::qr.resid(nullmod$qr, CG) # QR seems to be slower unexpectedly
 
