@@ -31,7 +31,7 @@ test_that("user weights", {
     snpID <- getSnpID(genoData)
     chromosome <- getChromosome(genoData)
     position <- getPosition(genoData)
-    weights <- sample(1:10, length(snpID), replace=TRUE)
+    set.seed(8); weights <- sample(0:2, length(snpID), replace=TRUE)
     genoData@snpAnnot <- SnpAnnotationDataFrame(data.frame(snpID, chromosome, position, weights))
     iterator <- GenotypeIterator(genoData, snpFilter=.testSnpFilter(genoData))
     
@@ -39,7 +39,7 @@ test_that("user weights", {
     assoc <- assocTestAggregate(iterator, nullmod, weight.user="weights", verbose=FALSE)
     tmp <- do.call(rbind, assoc$variantInfo)
     annot <- getSnpAnnotation(genoData)
-    expect_equal(tmp$weight, annot$weight[annot$snpID %in% tmp$variant.id])
+    expect_equal(tmp$weight, annot$weight[annot$snpID %in% tmp$variant.id & annot$weight > 0])
 
     close(genoData)
 })

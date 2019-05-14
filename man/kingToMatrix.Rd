@@ -3,18 +3,21 @@
 \alias{kingToMatrix,character-method}
 \alias{kingToMatrix,snpgdsIBDClass-method}
 \title{Convert KING text output to an R Matrix}
-\description{\code{kingToMatrix} is used to extract the pairwise kinship coefficient estimates from the output text files of KING --ibdseg or KING --robust and put them into an R object of class \code{Matrix}. One use of this matrix is that it can be read by the functions \code{\link{pcair}} and \code{\link{pcairPartition}}.}
+\description{\code{kingToMatrix} is used to extract the pairwise kinship coefficient estimates from the output text files of KING --ibdseg, KING --kinship, or KING --related and put them into an R object of class \code{Matrix}. One use of this matrix is that it can be read by the functions \code{\link{pcair}} and \code{\link{pcairPartition}}.}
 \usage{
-\S4method{kingToMatrix}{character}(king, sample.include = NULL, thresh = NULL, verbose = TRUE)
+\S4method{kingToMatrix}{character}(king, estimator = c("PropIBD", "Kinship"), sample.include = NULL, thresh = NULL, verbose = TRUE)
 \S4method{kingToMatrix}{snpgdsIBDClass}(king, sample.include = NULL, thresh = NULL, verbose = TRUE)
 }
 \arguments{
   \item{king}{Output from KING, either a \code{snpgdsIBDClass} object from \code{\link{snpgdsIBDKING}} or a character vector of one or more file names output from the command-line version of KING; see 'Details'.}
+  \item{estimator}{Which estimates to read in when using command-line KING output; must be either "PropIBD" or "Kinship"; see 'Details'.}
   \item{sample.include}{An optional vector of sample.id indicating all samples that should be included in the output matrix; see 'Details' for usage.}
   \item{thresh}{Kinship threshold for clustering samples to make the output matrix sparse block-diagonal. When \code{NULL}, no clustering is done. See 'Details'.}
   \item{verbose}{A logical indicating whether or not to print status updates to the console; the default is TRUE.}
 }
-\details{\code{king} can be a vector of multiple file names if your KING output is stored in multiple files; e.g. KING --robust run with family IDs returns a .kin and a .kin0 file for pairs within and not within the same family, respectively.
+\details{\code{king} can be a vector of multiple file names if your KING output is stored in multiple files; e.g. KING --kinship run with family IDs returns a .kin and a .kin0 file for pairs within and not within the same family, respectively.
+
+When reading command-line KING output, the \code{estimator} argument is required to specify which estimates to read in. When reading KING --ibdseg output, only "PropIBD" will be available; when reading KING --kinship output, only "Kinship" will be available; when reading KING --related output, both "PropIBD" and "Kinship" will be available - use this argument to select which to read. See the KING documentation for details on each estimator. 
 
 \code{sample.include} has two primary functions: 1) It can be used to subset the KING output. 2) \code{sample.include} can include sample.id not in \code{king}; this ensures that all samples will be in the output matrix when reading KING --ibdseg output, which likely does not contain all pairs. When left \code{NULL}, the function will determine the list of samples from what is observed in \code{king}. It is recommended to use \code{sample.include} to ensure all of your samples are included in the output matrix.
 
@@ -30,13 +33,14 @@
 	\code{\link{pcair}} and \code{\link{pcairPartition}} for functions that use the output matrix.
 }
 \examples{
-# KING --robust
-file.king <- c(system.file("extdata", "MXL_ASW.kin0", package="GENESIS"), system.file("extdata", "MXL_ASW.kin", package="GENESIS"))
-KINGmat <- kingToMatrix(file.king)
+# KING --kinship
+file.king <- c(system.file("extdata", "MXL_ASW.kin0", package="GENESIS"),
+               system.file("extdata", "MXL_ASW.kin", package="GENESIS"))
+KINGmat <- kingToMatrix(file.king, estimator="Kinship")
 
 # KING --ibdseg
 file.king <- system.file("extdata", "HapMap.seg", package="GENESIS")
-KINGmat <- kingToMatrix(file.king)
+KINGmat <- kingToMatrix(file.king, estimator="PropIBD")
 
 # SNPRelate
 library(SNPRelate)

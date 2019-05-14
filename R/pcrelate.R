@@ -2,727 +2,742 @@ setGeneric("pcrelate", function(gdsobj, ...) standardGeneric("pcrelate"))
 
 setMethod("pcrelate",
           "GenotypeData",
-          function(gdsobj, 
-                        pcMat = NULL,
-                        freq.type = "individual",
-                        scale = "overall",
-                        ibd.probs = TRUE,
-                        scan.include = NULL,
-                        training.set = NULL,
-                        scan.block.size = 5000,
-                        snp.include = NULL,
-                        chromosome = NULL,
-                        snp.block.size = 10000,
-                        MAF = 0.01,
-                        write.to.gds = FALSE,
-                        gds.prefix = NULL,
-                        correct = TRUE,
-                   verbose = TRUE) {
-              .Deprecated("pcrelate", msg="The GenotypeData method for pcrelate is deprecated. Use the GenotypeIterator method instead.")
-              .pcrelate1(genoData = gdsobj, 
-                        pcMat = pcMat,
-                        freq.type = freq.type,
-                        scale = scale,
-                        ibd.probs = ibd.probs,
-                        scan.include = scan.include,
-                        training.set = training.set,
-                        scan.block.size = scan.block.size,
-                        snp.include = snp.include,
-                        chromosome = chromosome,
-                        snp.block.size = snp.block.size,
-                        MAF = MAF,
-                        write.to.gds = write.to.gds,
-                        gds.prefix = gds.prefix,
-                        correct = correct,
-                        verbose = verbose)
+          function(gdsobj, ...) {
+              .Defunct("pcrelate", msg="The GenotypeData method for pcrelate is defunct. Use the GenotypeIterator method instead.")
           })
 
 setMethod("pcrelate",
           "SeqVarData",
-          function(gdsobj, 
-                        pcMat = NULL,
-                        freq.type = "individual",
-                        scale = "overall",
-                        ibd.probs = TRUE,
-                        scan.include = NULL,
-                        training.set = NULL,
-                        scan.block.size = 5000,
-                        snp.include = NULL,
-                        chromosome = NULL,
-                        snp.block.size = 10000,
-                        MAF = 0.01,
-                        write.to.gds = FALSE,
-                        gds.prefix = NULL,
-                        correct = TRUE,
+          function(gdsobj, ...) {
+              .Defunct("pcrelate", msg="The SeqVarData method for pcrelate is defunct. Use the SeqVarIterator method instead.")
+          })
+
+setMethod("pcrelate",
+          "GenotypeIterator",
+          function(gdsobj,
+                   pcs,
+                   scale = c('overall', 'variant', 'none'),
+                   ibd.probs = TRUE,
+                   sample.include = NULL,
+                   training.set = NULL,
+                   sample.block.size = 5000,
+                   maf.thresh = 0.01,
+                   maf.bound.method = c('filter', 'truncate'),
+                   small.samp.correct = FALSE,
+                   #num.cores = 1,
                    verbose = TRUE) {
-              .Deprecated("pcrelate", msg="The SeqVarData method for pcrelate is deprecated. Use the SeqVarIterator method instead.")
-              .pcrelate1(genoData = gdsobj, 
-                        pcMat = pcMat,
-                        freq.type = freq.type,
+              .pcrelate(gdsobj, 
+                        pcs = pcs,
                         scale = scale,
                         ibd.probs = ibd.probs,
-                        scan.include = scan.include,
+                        sample.include = sample.include,
                         training.set = training.set,
-                        scan.block.size = scan.block.size,
-                        snp.include = snp.include,
-                        chromosome = chromosome,
-                        snp.block.size = snp.block.size,
-                        MAF = MAF,
-                        write.to.gds = write.to.gds,
-                        gds.prefix = gds.prefix,
-                        correct = correct,
+                        sample.block.size = sample.block.size,
+                        maf.thresh = maf.thresh,
+                        maf.bound.method = maf.bound.method,
+                        small.samp.correct = small.samp.correct,
+                        #num.cores = num.cores,
                         verbose = verbose)
           })
 
-.pcrelate1 <- function(   genoData, 
-                        pcMat = NULL,
-                        freq.type = "individual",
-                        scale = "overall",
-                        ibd.probs = TRUE,
-                        scan.include = NULL,
-                        training.set = NULL,
-                        scan.block.size = 5000,
-                        snp.include = NULL,
-                        chromosome = NULL,
-                        snp.block.size = 10000,
-                        MAF = 0.01,
-                        write.to.gds = FALSE,
-                        gds.prefix = NULL,
-                        correct = TRUE,
-                        verbose = TRUE){
+setMethod("pcrelate",
+          "SeqVarIterator",
+          function(gdsobj,
+                   pcs,
+                   scale = c('overall', 'variant', 'none'),
+                   ibd.probs = TRUE,
+                   sample.include = NULL,
+                   training.set = NULL,
+                   sample.block.size = 5000,
+                   maf.thresh = 0.01,
+                   maf.bound.method = c('filter', 'truncate'),
+                   small.samp.correct = FALSE,
+                   #num.cores = 1,
+                   verbose = TRUE) {
+              filt <- seqGetFilter(gdsobj)
+              out <- .pcrelate(gdsobj, 
+                               pcs = pcs,
+                               scale = scale,
+                               ibd.probs = ibd.probs,
+                               sample.include = sample.include,
+                               training.set = training.set,
+                               sample.block.size = sample.block.size,
+                               maf.thresh = maf.thresh,
+                               maf.bound.method = maf.bound.method,
+                               small.samp.correct = small.samp.correct,
+                               #num.cores = num.cores,
+                               verbose = verbose)
+              seqSetFilter(gdsobj,
+                           sample.sel=filt$sample.sel,
+                           variant.sel=filt$variant.sel,
+                           verbose=FALSE)
+              out
+          })
 
-    if(class(genoData) == "SeqVarData"){
-        # save the filter
-        seqFilt.original <- seqGetFilter(genoData)
-        # reset so indexing works
-        snp.filter <- seqGetData(genoData, "variant.id")
-        snp.include <- if(is.null(snp.include)) snp.filter else intersect(snp.include, snp.filter)
-        scan.filter <- seqGetData(genoData, "sample.id")
-        scan.include <- if(is.null(scan.include)) scan.filter else intersect(scan.include, scan.filter)
-        seqResetFilter(genoData, verbose=FALSE)
+.pcrelate <- function(gdsobj,
+                      pcs,
+                      scale = c('overall', 'variant', 'none'),
+                      ibd.probs = TRUE,
+                      sample.include = NULL,
+                      training.set = NULL,
+                      sample.block.size = 5000,
+                      maf.thresh = 0.01,
+                      maf.bound.method = c('filter', 'truncate'),
+                      small.samp.correct = FALSE,
+                      #num.cores = 1,
+                      verbose = TRUE){
+
+    # checks
+    scale <- match.arg(scale)
+    maf.bound.method <- match.arg(maf.bound.method)
+    sample.include <- samplesGdsOrder(gdsobj, sample.include)
+    .pcrelateChecks(pcs = pcs, scale = scale, ibd.probs = ibd.probs, sample.include = sample.include, training.set = training.set, 
+                    maf.thresh = maf.thresh)
+    
+    # set up number of cores
+    ## sys.cores <- parallel::detectCores(logical = TRUE)
+    ## doMC::registerDoMC(cores = min(c(num.cores, sys.cores)))
+    ## if(verbose) message('Using ', min(c(num.cores, sys.cores)), ' CPU cores')
+
+    # number of sample blocks
+    nsampblock <- ceiling(length(sample.include)/sample.block.size)
+
+    # check for small sample correction
+    if(small.samp.correct){
+        small.samp.correct <- (nsampblock == 1) & (scale != 'none')
+        if(!small.samp.correct) warning('small.samp.correct can only be used when all samples are analyzed in one block and `scale != none`')
     }
 
-    # MAF check
-    if(MAF < 0 | MAF > 0.5){ stop("MAF must be in [0,0.5]") }
-
-    # SNPs to include in analysis
-    snp.include <- getSnpIndex(genoData, snp.include, chromosome)
-    if(snp.include$n == 0){  stop("None of the SNPs in snp.include are in genoData")  }
-	# SNP blocks
-	snp.blocks <- getBlocks(snp.include$n, snp.block.size)
-	if(verbose){ message(paste("Running Analysis with",snp.include$n,"SNPs - in",snp.blocks$n,"Block(s)")) }
-
-	# Scans to include in analysis
-	scan.include <- getScanIndex(genoData, scan.include)
-    if(scan.include$n == 0){  stop("None of the samples in scan.include are in genoData")  }
-	# Scan blocks
-    scan.blocks <- getBlocks(scan.include$n, scan.block.size)
-    if(verbose){ message(paste("Running Analysis with",scan.include$n,"Samples - in",scan.blocks$n,"Block(s)")) }
-    # check number of scan blocks
-    if(scan.blocks$n > 1 & !write.to.gds){
-    	stop("When the number of Samples is > scan.block.size, output must be written to GDS (i.e. write.to.gds = TRUE) \n For large Samples it is strongly encouraged to write to GDS")
-    }
-
-    # Scans to include in training.set
-    if(is.null(training.set)){
-        # use all scans included in the analysis
-        training.set <- scan.include
+    # list of samples in each block
+    if(nsampblock > 1){
+        samp.blocks <- unname(split(sample.include, cut(1:length(sample.include), nsampblock)))
     }else{
-        # subset to training.set
-        if(!all(training.set %in% scan.include$value)){
-            stop("Not all of the scanIDs in training.set are in scan.include")
-        }
-        training.set <- getScanIndex(genoData, training.set)
+        samp.blocks <- list(sample.include)
     }
 
-    if(scale == "none" & ibd.probs == TRUE){
-        stop("IBD probabilities can only be calculated when scale does not equal 'none'")
-    }
+    if(nsampblock == 1){
+        if(verbose) message(length(sample.include), ' samples to be included in the analysis...')
 
-    # check if individual specific allele frequencies are needed
-    if(freq.type == "individual"){
-        if(is.null(pcMat)){
-            stop("pcMat is required to use individual-specific allele frequencies")
-        }
-        # convert to matrix
-        pcMat <- as.matrix(pcMat)
-        # check for rownames
-        if(is.null(rownames(pcMat))){
-            stop("pcMat must have rownames corresponding to ScanIDs")
-        }
-        # subset to scan.include
-        pcMat <- pcMat[rownames(pcMat) %in% scan.include$value, , drop=FALSE]
-        if(!all(rownames(pcMat) == scan.include$value)){
-            stop("The order of samples in pcMat does not match the order in genoData")
-        }
-        if(verbose){ message(paste("Using",ncol(pcMat),"PC(s) in pcMat to Calculate Adjusted Estimates")) }
-        # add intercept
-        pcMat <- cbind(rep(1,scan.include$n),pcMat)
-        # compute part of the Hat matrix:  (X'X)^{-1}X'
-        if(training.set$n == scan.include$n){
-            if(verbose){ message(paste("Using all",training.set$n,"Samples to Estimate PC effects on Allele Frequencies")) }
-            pcProd <- tcrossprod( chol2inv(chol(crossprod(pcMat))), pcMat )
-        }else{
-            if(verbose){ message(paste("Using",training.set$n,"Samples in training.set to Estimate PC effects on Allele Frequencies")) }
-            pcMat.sub <- pcMat[rownames(pcMat) %in% training.set$value, ]
-            pcProd <- tcrossprod( chol2inv(chol(crossprod(pcMat.sub))), pcMat.sub ); rm(pcMat.sub)
-        }
-    }
+        # create matrix of PCs
+        V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
 
-    # check if population allele frequencies are needed
-    if(freq.type == "population"){
-        if(training.set$n == scan.include$n){
-            if(verbose){ message(paste("Using all",training.set$n,"Samples to Estimate Population Allele Frequencies")) }
-        }else{
-            if(verbose){ message(paste("Using",training.set$n,"Samples in training.set to Estimate Population Allele Frequencies")) }
-        }
-    }
+        # matrix product of V
+        VVtVi <- .calcISAFBetaPCProd(V = V, training.set = training.set, verbose = verbose)
 
+        snp.blocks <- .snpBlocks(gdsobj)
+        nsnpblock <- length(snp.blocks)
+        if(verbose) message('Running PC-Relate analysis for ', length(sample.include), ' samples using ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
 
-    # set up GDS files
-    if(write.to.gds){
-        # if no gds.prefix specified
-        if(is.null(gds.prefix)){ gds.prefix <- "tmp" }
+        # for each snp block
+        matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %do% {
+            if(verbose) message('    Running block ', k, '...')
+            # read genotype data for the block
+            G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
 
-        compress <- "LZMA_RA"
+            # calculate ISAF betas
+            beta <- .calcISAFBeta(G = G, VVtVi = VVtVi)
 
-        if(verbose){ message("Creating GDS file for Allele Frequency Estimates:")}
-        # create an empty GDS file
-        gds <- createfn.gds(paste0(gds.prefix,"_freq.gds"))
-        # add sample.id (closed)
-        add.gdsn(gds, "sample.id", scan.include$value, compress=compress, closezip=TRUE)
-        # add SNP info (open to append data)
-        add.gdsn(gds, "snp.id", storage=class(snp.include$value), valdim=0, compress=compress)
-        add.gdsn(gds, "snp.position", storage="integer", valdim=0, compress=compress)
-        add.gdsn(gds, "snp.chromosome", storage="uint8", valdim=0, compress=compress)
-
-        if(freq.type == "population"){
-            add.gdsn(gds, "pop.freq", storage="float32", valdim=0, compress=compress)
-        }
-        if(freq.type == "individual"){
-            # create node for individual-specific allele frequency data
-            isaf.node <- add.gdsn(gds, "genotype", storage="float32", valdim=c(scan.include$n, 0), compress=compress)
-            put.attr.gdsn(isaf.node, "sample.order")
-        }
-        sync.gds(gds)
-
-        if(verbose){ message("Estimating Allele Frequencies...") }
-        # loop through SNP blocks
-        for(bn in 1:snp.blocks$n){
-            # keep track of time for rate reporting
-            startTime <- Sys.time()
-
-            # index of SNPs for this block
-            snp.block.idx <- snp.blocks$start[bn]:snp.blocks$end[bn]
-
-            # append SNP info
-            append.gdsn(index.gdsn(gds, "snp.id"), val = snp.include$value[snp.block.idx])
-            if(class(genoData) == "GenotypeData"){
-                append.gdsn(index.gdsn(gds, "snp.position"), val = getPosition(genoData, index = snp.include$index[snp.block.idx]))
-                append.gdsn(index.gdsn(gds, "snp.chromosome"), val = getChromosome(genoData, index = snp.include$index[snp.block.idx]))
-                # load genotype data
-                geno <- getGenotypeSelection(genoData, snp = snp.include$index[snp.block.idx], scan = training.set$index, drop = FALSE)
-            }else if(class(genoData) == "SeqVarData"){
-                # set a filter to this SNP block
-                seqSetFilter(genoData, variant.sel = snp.include$index[snp.block.idx], sample.sel = training.set$index, verbose = FALSE)
-                append.gdsn(index.gdsn(gds, "snp.position"), val = seqGetData(genoData, "position"))
-                append.gdsn(index.gdsn(gds, "snp.chromosome"), val = seqGetData(genoData, "chromosome"))
-                # load genotype data
-                geno <- t(altDosage(genoData))
-            }
-
-            if(freq.type == "population"){
-                # estimate population allele frequencies
-                phat <- 0.5*rowMeans(geno, na.rm=TRUE)
-                append.gdsn(index.gdsn(gds, "pop.freq"), val = phat)
-            }
-
-            if(freq.type == "individual"){
-                # estimate individual-specific allele frequencies
-                muhat <- estISAF(geno, pcMat, pcProd, transpose = TRUE)
-                append.gdsn(index.gdsn(gds, "genotype"), val=muhat)
-            }
-            sync.gds(gds)
-
-            endTime <- Sys.time()
-            rate <- format(endTime - startTime, digits=4)
-            if(verbose){ message(paste("...SNP Block",bn,"of",snp.blocks$n,"Completed -", rate)) }
+            # calculate PC-Relate estimates
+            .pcrelateVarBlock(G = G, beta = beta, V = V, idx = 1:nrow(V), jdx = 1:nrow(V), scale = scale, ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
         }
 
-        # put gds in readmode
-        readmode.gdsn(index.gdsn(gds, "snp.id"))
-        readmode.gdsn(index.gdsn(gds, "snp.position"))
-        readmode.gdsn(index.gdsn(gds, "snp.chromosome"))
-        if(freq.type == "population"){ readmode.gdsn(index.gdsn(gds, "pop.freq")) }
-        if(freq.type == "individual"){ readmode.gdsn(isaf.node) }
-        # cleanup
-        filename <- gds$filename
-        closefn.gds(gds)
-        cleanup.gds(filename, verbose=FALSE)
+        # take ratios to compute final estimates
+        estList <- .pcrelateCalcRatio(matList = matList, scale = scale, ibd.probs = ibd.probs)
+        rm(matList)
 
-        # read in created GDS
-        freqData <- GenotypeData(GdsGenotypeReader(filename))
+        # cast to data.tables
+        kinSelf <- data.table(ID = rownames(estList$kin), f = 2*diag(estList$kin) - 1, nsnp = diag(estList$nsnp))
+        kinBtwn <- .estListToDT(estList, drop.lower = TRUE)
+        rm(estList)
 
-        # SNPs to include in the analysis (from freqData)
-        snp.include.freq <- getSnpIndex(freqData, snp.include$value, chromosome)
-        # Scans to include in the analysis (from freqData)
-        scan.include.freq <- getScanIndex(freqData, scan.include$value)
+
+    }else if(nsampblock > 1){
+        if(verbose) message(length(sample.include), ' samples to be included in the analysis, split into ', nsampblock, ' blocks...')
+
+        # calculate betas for individual specific allele frequencies
+        beta <- calcISAFBeta(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include, training.set = training.set, verbose = verbose)		
+        ### beta is a matrix of variants x PCs; needs to be saved, not sure of the best format or the best way to split this up ###
         
+        # compute estimates for current (pair of) sample block(s)
+        ### this is where we would parallelize with multiple jobs ###
+        kinSelf <- NULL
+        kinBtwn <- NULL
+        for(i in 1:nsampblock){
+            for(j in i:nsampblock){
+                if(verbose) message('Running PC-Relate analysis for sample block pair (', i, ',', j, ')')
+                # compute estimates for the (pair of) sample block(s)
+                tmp <- pcrelateSampBlock(	gdsobj = gdsobj, pcs = pcs, betaobj = beta, sample.include.block1 = samp.blocks[[i]], sample.include.block2 = samp.blocks[[j]],
+                                         scale = scale, ibd.probs = ibd.probs,
+                                         maf.thresh = maf.thresh, maf.bound.method = maf.bound.method, verbose = verbose)
 
-    	if(verbose){ message("Creating GDS file for PC-Relate Results:")}    	
-    	# create an empty GDS file for results
-    	gds <- createfn.gds(paste0(gds.prefix,"_pcrelate.gds"))
-    	# add sample.id (closed)
-    	add.gdsn(gds, "sample.id", scan.include$value, compress=compress, closezip=TRUE)
-    	# create node for kinship values
-    	kinship.node <- add.gdsn(gds, "kinship", storage="float32", valdim=c(scan.include$n, scan.include$n))
-    	if(ibd.probs){
-    		# create node for k0/k2 values
-    		ibd.node <- add.gdsn(gds, "ibd.probs", storage="float32", valdim=c(scan.include$n, scan.include$n))
-    	}
-    	# create node for number of SNPs used
-    	nsnp.node <- add.gdsn(gds, "nsnp", storage="uint32", valdim=c(scan.include$n, scan.include$n))
-    	sync.gds(gds)
+                # update results with this (pair of) sample block(s)
+                if(i == j) kinSelf <- rbind(kinSelf, tmp$kinSelf)
+                kinBtwn <- rbind(kinBtwn, tmp$kinBtwn)
+            }
+        }
     }
 
+    ### post processing after putting all samples together
 
-    # loop through scan blocks
-    for(j in 1:scan.blocks$n){
-    	# index of scans for block j
-    	j.block.idx <- scan.blocks$start[j]:scan.blocks$end[j]
-    	j.block.n <- length(j.block.idx)
+    # order samples
+    setkeyv(kinSelf, 'ID')
+    setkeyv(kinBtwn, c('ID1', 'ID2'))
 
-    	for(i in j:1){
-            if(verbose){
-                if(scan.blocks$n == 1){ message("Computing Relatedness Estimates...") }
-                else{ message("Computing Relatedness Estimates for Scan Block Pair (",j,",",i,")...") }
-            }
-            # index of scans for block i
-    		i.block.idx <- scan.blocks$start[i]:scan.blocks$end[i]
-    		i.block.n <- length(i.block.idx)
-
-
-    		# set up empty matrix for kinship coef
-    		kin <- matrix(0, nrow=i.block.n, ncol=j.block.n)
-            if(scale == "overall"){
-                kinscale <- matrix(0, nrow=i.block.n, ncol=j.block.n)
-            }
-            # set up empty matrix for IBD probs
-    		if(ibd.probs){
-    			k2 <- matrix(0, nrow=i.block.n, ncol=j.block.n)
-                k0 <- matrix(0, nrow=i.block.n, ncol=j.block.n)
-                if(scale == "overall"){
-                    if(freq.type == "individual"){
-                        k2scale <- matrix(0, nrow=i.block.n, ncol=j.block.n)
-                        k0scale <- matrix(0, nrow=i.block.n, ncol=j.block.n)
-                    }
-                    if(freq.type == "population"){
-                        kscale <- matrix(0, nrow=i.block.n, ncol=j.block.n)
-                    }
-                }
-    		}
-            # set up empty matrix for number of SNPs used
-    		nsnp <- matrix(0, nrow=i.block.n, ncol=j.block.n)
-
-
-    		# loop through SNP blocks
-    		for(bn in 1:snp.blocks$n){
-    			# keep track of time for rate reporting
-    			startTime <- Sys.time()
-
-    			# index of SNPs for this block
-    			snp.block.idx <- snp.blocks$start[bn]:snp.blocks$end[bn]
-
-                # load genotype data
-                if(class(genoData) == "GenotypeData"){
-                    geno <- getGenotypeSelection(genoData, snp = snp.include$index[snp.block.idx], scan = scan.include$index[unique(c(i.block.idx,j.block.idx))], drop = FALSE)
-                }else if(class(genoData) == "SeqVarData"){
-                    # set a filter to these scans and this variant block
-                    seqSetFilter(genoData, variant.sel = snp.include$index[snp.block.idx], sample.sel = scan.include$index[unique(c(i.block.idx,j.block.idx))], verbose = FALSE)
-                    geno <- t(altDosage(genoData))
-                }                
-                # index for which columns of geno are in each block                 			
-    			i.geno.idx <- which(colnames(geno) %in% scan.include$value[i.block.idx])
-    			j.geno.idx <- which(colnames(geno) %in% scan.include$value[j.block.idx])
-
-                # get population allele frequencies
-                if(freq.type == "population"){
-                    if(write.to.gds){
-                        # load saved frequencies
-                        phat <- getVariable(freqData, "pop.freq", index = snp.include.freq$index[snp.block.idx])
-                    }
-                    else{
-                        # estimate frequencies
-                        phat <- 0.5*rowMeans(geno, na.rm=TRUE)
-                    }                    
-
-                    # which SNPs to filter (pop freq missing or too big/small)
-                    pop.filt <- (is.na(phat) | phat == 0 | phat == 1 | phat < MAF | phat > (1-MAF))
-                    phat <- phat[!pop.filt]
-                    geno <- geno[!pop.filt,]
-                    rm(pop.filt)
-
-                    # opposite allele frequency
-                    if(scale != "none"){
-                        qhat <- 1 - phat
-                        phatqhat <- phat*qhat
-                    }
-                }
-
-                # get individual-specific allele frequencies
-                if(freq.type == "individual"){                    
-                    if(write.to.gds){
-                        # load saved individual specific allele frequency data
-                        muhat <- getGenotypeSelection(freqData, snp = snp.include.freq$index[snp.block.idx], scan = scan.include.freq$index[unique(c(i.block.idx,j.block.idx))], drop = FALSE)
-                    }else{
-                        # estimate individual-specific allele frequencies
-                        muhat <- estISAF(geno[,scan.include$value %in% training.set$value], pcMat, pcProd, transpose = FALSE)
-                    }
-
-                    # which SNPs to filter (isaf missing or too big/small)
-                    isaf.filt <- which(is.na(muhat) | muhat == 0 | muhat == 1 | muhat < MAF | muhat > (1-MAF))
-                    muhat[isaf.filt] <- NA
-                    geno[isaf.filt] <- NA
-                    rm(isaf.filt)
-
-                    # opposite allele frequency
-                    if(scale != "none"){
-                        if(ibd.probs){
-                            quhat <- 1-muhat
-                            muhatquhat <- muhat*quhat
-                        }else{
-                            muhatquhat <- muhat*(1-muhat)
-                        }
-                    }
-                }
-
-                # determine the number of snps used for each pair
-                nonmiss <- !is.na(geno)
-                nsnp <- nsnp + crossprod(nonmiss[,i.geno.idx], nonmiss[,j.geno.idx])
-                # index of SNPs to filter
-                filt.idx <- which(!nonmiss); rm(nonmiss)
-
-
-                # kinship
-                if(freq.type == "population"){
-                    Z <- geno - 2*phat
-                    if(scale == "variant"){
-                        sigma <- sqrt(phatqhat)
-                        Z <- Z/sigma
-                    }
-                }
-                if(freq.type == "individual"){
-                    Z <- geno - 2*muhat
-                    if(scale == "variant"){
-                        Z <- Z/sqrt(muhatquhat)
-                    }
-                }
-                # set missing values to 0 (so no contribution)
-                Z[filt.idx] <- 0
-                # update kin
-                kin <- kin + crossprod(Z[,i.geno.idx], Z[,j.geno.idx]); rm(Z)
-
-                # overall scaling             
-                if(scale == "overall"){
-                    if(freq.type == "population"){
-                        phatqhatMat <- matrix(sqrt(phatqhat), nrow=length(phatqhat), ncol=ncol(geno))
-                        # set missing values to 0 (so no contribution)
-                        phatqhatMat[filt.idx] <- 0
-                        kinscale <- kinscale + crossprod(phatqhatMat[,i.geno.idx], phatqhatMat[,j.geno.idx])
-                        rm(phatqhatMat)                        
-                    }
-                    if(freq.type == "individual"){
-                        # set missing values to 0 (so no contribution)
-                        muhatquhat[filt.idx] <- 0
-                        kinscale <- kinscale + crossprod(sqrt(muhatquhat[,i.geno.idx]), sqrt(muhatquhat[,j.geno.idx]))
-                        if(!ibd.probs){ rm(muhatquhat) }
-                    }
-                }
-
-
-                if(ibd.probs){
-                    # k2
-                    # dominance coded matrix 
-                    Zd <- matrix(0, nrow = nrow(geno), ncol = ncol(geno))
-                    if(freq.type == "population"){
-                        idx0 <- which(geno == 0)
-                        idx0p <- idx0 %% nrow(Zd); idx0p[idx0p == 0] <- nrow(Zd)
-                        Zd[idx0] <- phat[idx0p]; rm(idx0); rm(idx0p)
-                        idx2 <- which(geno == 2)
-                        idx2p <- idx2 %% nrow(Zd); idx2p[idx2p == 0] <- nrow(Zd)
-                        Zd[idx2] <- qhat[idx2p]; rm(idx2); rm(idx2p)
-                        Zd <- Zd - phatqhat
-                        if(scale == "variant"){
-                            Zd <- Zd/phatqhat
-                        }
-                    }                    
-                    if(freq.type == "individual"){
-                        idx0 <- which(geno == 0)
-                        Zd[idx0] <- muhat[idx0]; rm(idx0)
-                        idx2 <- which(geno == 2)
-                        Zd[idx2] <- quhat[idx2]; rm(idx2)                    
-                        Zd <- Zd - muhatquhat
-                        if(scale == "variant"){
-                            Zd <- Zd/muhatquhat
-                        }
-                    }
-                    # set missing values to 0 (so no contribution)
-                    Zd[filt.idx] <- 0
-                    # update k2
-                    k2 <- k2 + crossprod(Zd[,i.geno.idx], Zd[,j.geno.idx]); rm(Zd)
-
-                    # k0
-                    # indicator matrices of homozygotes
-                    IAA <- geno == 2
-                    Iaa <- geno == 0
-                    if(scale == "variant"){
-                        if(freq.type == "population"){                        
-                            IAA <- IAA/phat^2
-                            Iaa <- 0.5*Iaa/qhat^2
-                            # factor of 1/2 for IAA*Iaa comes in from splitting up the two terms AA,aa vs aa,AA
-                        }
-                        if(freq.type == "individual"){
-                            IAA <- IAA/muhat^2
-                            Iaa <- 0.5*Iaa/quhat^2                            
-                            rm(quhat)
-                        }
-                    }
-                    # set missing values to 0 (so no contribution)
-                    IAA[filt.idx] <- 0
-                    Iaa[filt.idx] <- 0
-                    # update k0
-                    k0 <- k0 + crossprod(IAA[,i.geno.idx], Iaa[,j.geno.idx]) + crossprod(Iaa[,i.geno.idx], IAA[,j.geno.idx]); rm(IAA); rm(Iaa)
-
-                    # overall scaling
-                    if(scale == "overall"){
-                        if(freq.type == "population"){
-                            phatqhatMat <- matrix(phatqhat, nrow=length(phatqhat), ncol=ncol(geno))
-                            # set missing values to 0 (so no contribution)
-                            phatqhatMat[filt.idx] <- 0
-                            kscale <- kscale + crossprod(phatqhatMat[,i.geno.idx], phatqhatMat[,j.geno.idx]); rm(phatqhatMat)
-                            # this is k2scale; 2*kscale is k0scale
-                        }
-                        if(freq.type == "individual"){                            
-                            k2scale <- k2scale + crossprod(muhatquhat[,i.geno.idx], muhatquhat[,j.geno.idx])
-                            # set missing values to 0 (so no contribution)
-                            muhat[filt.idx] <- 0
-                            quhat[filt.idx] <- 0
-                            k0scale <- k0scale + crossprod(muhat[,i.geno.idx]^2, quhat[,j.geno.idx]^2) + crossprod(quhat[,i.geno.idx]^2, muhat[,j.geno.idx]^2)
-                        }                        
-                    }
-                }
-
-    			endTime <- Sys.time()
-    			rate <- format(endTime - startTime, digits=4)
-    			if(verbose){ message(paste("...SNP Block",bn,"of",snp.blocks$n,"Completed -", rate)) }
-    		}
-
-
-    		# compute kinship/inbreeding estimates
-            if(scale == "overall"){
-                kin <- kin/(4*kinscale); rm(kinscale)                
-            }else{
-                kin <- kin/(4*nsnp)
-            }
-
-
-            # small sample correction
-            kincorrect <- NULL
-            if(scan.blocks$n == 1 & correct & freq.type == "individual" & scale != "none"){
-                if(verbose){ message("Performing Small Sample Correction...")}                
-                # vectors of kinship and inbreeding values
-                kin.tmp <- kin[lower.tri(kin)]
-                f.tmp <- 2*diag(kin) - 1
-                for(k in 2:ncol(pcMat)){
-                    # tmp vector of kinship and inbreeding estimates                                       
-                    tmp <- c(kin.tmp, f.tmp)
-                    # index of sample to use to find correction
-                    idxC <- which(tmp < 2^(-11/2))
-                    tmp <- tmp[idxC]
-
-                    # covariance due to ancestry
-                    Acov <- tcrossprod(pcMat[,k])
-                    Adiag <- diag(Acov)
-                    Acov <- Acov[lower.tri(Acov)]                    
-                    Avec <- c(Acov, Adiag)[idxC]; rm(idxC)
-                    
-                    # correction factors
-                    vals <- lm(tmp ~ I(Avec))$coef; rm(tmp); rm(Avec)
-                    kincorrect <- append(kincorrect, vals)
-
-                    # update
-                    kin.tmp <- kin.tmp - vals[1] - vals[2]*Acov; rm(Acov) 
-                    f.tmp <- f.tmp - vals[1] - vals[2]*Adiag; rm(Adiag)
-                }
-                # update results                
-                kin[lower.tri(kin)] <- kin.tmp
-                kin <- t(kin); kin[lower.tri(kin)] <- kin.tmp
-                diag(kin) <- 0.5*(1 + f.tmp); rm(f.tmp)
-            }
-
-            k2correct <- NULL
-            if(ibd.probs){
-                # compute k2 estimates
-                if(scale == "overall"){
-                    if(freq.type == "population"){
-                        k2 <- k2/kscale
-                    }
-                    if(freq.type == "individual"){
-                        k2 <- k2/k2scale; rm(k2scale)
-                    }                    
-                }else{
-                    k2 <- k2/nsnp
-                }
-                # correction for HW departure                
-                if(i == j){ 
-                    f.j <- 2*diag(kin) - 1
-                    fprod <- tcrossprod(f.j)
-                }else{
-                    f.i <- 2*diag(read.gdsn(kinship.node, start=c(i.block.idx[1], i.block.idx[1]), count=c(i.block.n, i.block.n))) - 1
-                    fprod <- tcrossprod(f.i,f.j)
-                }
-                k2 <- k2 - fprod
-
-                # small sample correction
-                if(scan.blocks$n == 1 & correct & freq.type == "individual" & scale != "none"){                
-                    # vector of k2 estimates
-                    k2.tmp <- k2[lower.tri(k2)]
-                    for(k in 2:ncol(pcMat)){
-                        # index of sample to use to find correction (unrelateds)
-                        idxC <- which(kin.tmp < 2^(-11/2))
-
-                        # covariance due to ancestry
-                        Acov <- tcrossprod(pcMat[,k])
-                        Acov <- Acov[lower.tri(Acov)]
-
-                        # correction factors
-                        vals <- lm(k2.tmp[idxC] ~ I(Acov[idxC]) + I(Acov[idxC]^2))$coef; rm(idxC)
-                        k2correct <- append(k2correct, vals)
-
-                        # update
-                        k2.tmp <- k2.tmp - vals[1] - vals[2]*Acov - vals[3]*Acov^2; rm(Acov)                        
-                    }
-                    # index of sample to use to find correction
-                    idxC <- which(k2.tmp < 2^(-9/2))
-
-                    # correction factors
-                    vals <- lm(k2.tmp[idxC] ~ kin.tmp[idxC])$coef
-                    k2correct <- append(k2correct, vals)
-
-                    # update results
-                    k2.tmp <- k2.tmp - vals[1] - vals[2]*kin.tmp; rm(kin.tmp)
-                    k2[lower.tri(k2)] <- k2.tmp
-                    k2 <- t(k2); k2[lower.tri(k2)] <- k2.tmp; rm(k2.tmp)
-                }                        
-
-                # compute k0 estimates
-                if(scale == "overall"){
-                    if(freq.type == "population"){
-                        k0 <- k0/(2*kscale); rm(kscale)
-                    }
-                    if(freq.type == "individual"){
-                        k0 <- k0/k0scale; rm(k0scale)
-                    }
-                }else{
-                    k0 <- k0/nsnp
-                }
-
-                # index for 1st deg rels
-                not1stDegidx <- which(kin < 2^(-5/2))
-                k0[not1stDegidx] <- 1 - 4*kin[not1stDegidx] + k2[not1stDegidx]               
-            }
-
-
-            # set up output
-            if(i == j){
-                nsnp[upper.tri(nsnp)] <- NA
-                if(ibd.probs){
-                    k2[lower.tri(k2)] <- k0[lower.tri(k0)]                    
-                    diag(k2) <- NA
-                }
-            }
-
-            # write output
-            if(write.to.gds){
-                write.gdsn(kinship.node, kin, start=c(i.block.idx[1], j.block.idx[1]), count=c(i.block.n, j.block.n))
-                write.gdsn(nsnp.node, t(nsnp), start=c(j.block.idx[1], i.block.idx[1]), count=c(j.block.n, i.block.n))
-                if(ibd.probs){
-                    write.gdsn(ibd.node, k2, start=c(i.block.idx[1], j.block.idx[1]), count=c(i.block.n, j.block.n))
-                }
-                if(i != j){
-                    write.gdsn(kinship.node, t(kin), start=c(j.block.idx[1], i.block.idx[1]), count=c(j.block.n, i.block.n))
-                    write.gdsn(nsnp.node, matrix(NA, nrow=i.block.n, ncol=j.block.n), start=c(i.block.idx[1], j.block.idx[1]), count=c(i.block.n, j.block.n))                 
-                    if(ibd.probs){
-                        write.gdsn(ibd.node, t(k0), start=c(j.block.idx[1], i.block.idx[1]), count=c(j.block.n, i.block.n))
-                    }
-                }
-                sync.gds(gds)
-            }       
-
-    	} # j loop
-    } # i loop
-
-    if(write.to.gds){
-        # add additional information        
-        add.gdsn(gds, "kincorrect", kincorrect, closezip = TRUE)
-        add.gdsn(gds, "k2correct", k2correct, closezip = TRUE)
-        add.gdsn(gds, "freq.type", freq.type, storage="character", closezip=TRUE)
-        add.gdsn(gds, "scale", scale, storage="character", closezip=TRUE)        
-    	# compress nodes and put in readmode
-    	compression.gdsn(kinship.node, compress=compress)    	
-    	compression.gdsn(nsnp.node, compress=compress)
-    	readmode.gdsn(kinship.node)    	
-    	readmode.gdsn(nsnp.node)
-    	if(ibd.probs){
-    		compression.gdsn(ibd.node, compress=compress)
-    		readmode.gdsn(ibd.node)
-    	}
-    	# cleanup
-    	filename <- gds$filename
-    	closefn.gds(gds)
-    	close(freqData)
-    	cleanup.gds(filename, verbose=FALSE)
-
-        out <- paste("Output saved to", filename, sep=" ")
-
-    }else{
-    	if(ibd.probs){
-    		out <- list(sample.id = scan.include$value, kinship = kin, ibd.probs = k2, nsnp = nsnp, kincorrect = kincorrect, k2correct = k2correct, call = match.call(), freq.type = freq.type, scale = scale)
-    	}else{
-    		out <- list(sample.id = scan.include$value, kinship = kin, nsnp = nsnp, kincorrect = kincorrect, call = match.call(), freq.type = freq.type, scale = scale)
-    	}
-      class(out) <- "pcrelate"
+    # correct kinship - small sample
+    if(small.samp.correct){
+        if(verbose) message('Performing Small Sample Correction...')
+        out <- correctKin(kinBtwn = kinBtwn, kinSelf = kinSelf, pcs = pcs, sample.include = sample.include)
+        kinBtwn <- out$kinBtwn
+        kinSelf <- out$kinSelf
     }
 
-    if(class(genoData) == "SeqVarData"){ seqSetFilter(genoData, sample.sel = seqFilt.original$sample.sel, variant.sel = seqFilt.original$variant.sel, verbose = FALSE) }
+    # correct k2 - HW departure and small sample
+    if(ibd.probs) kinBtwn <- correctK2(kinBtwn = kinBtwn, kinSelf = kinSelf, small.samp.correct = small.samp.correct, pcs = pcs, sample.include = sample.include)
 
+    # use alternate k0 estimator for non-1st degree relatives
+    if(ibd.probs) kinBtwn <- correctK0(kinBtwn = kinBtwn)
+    
+    # return output
+    out <- list(kinBtwn = as.data.frame(kinBtwn), kinSelf = as.data.frame(kinSelf))
+    class(out) <- "pcrelate"
     return(out)
 }
 
 
 
-estISAF <- function(geno, pcMat, pcProd, transpose = FALSE){
-    # rather than compute new hat matrix for each SNP, impute missing genotype values to sample mean
-    
-    # which genotype values are missing
-    miss.idx <- which(is.na(geno))
-    # if there are missing genotype values
-    if(length(miss.idx) > 0){
-        # calculate MAF
-        pA <- 0.5*rowMeans(geno, na.rm = TRUE)
-        # number of snps in the block
-        nsnp.block <- nrow(geno)
-        # index of which snps have the missing values
-        snp.idx <- miss.idx %% nsnp.block; snp.idx[snp.idx==0] <- nsnp.block
-        # replace missing genotypes with twice the sample allele frequency
-        geno[miss.idx] <- 2*pA[snp.idx]
+
+.pcrelateChecks <- function(pcs, scale, ibd.probs, sample.include, training.set, maf.thresh){
+    # check parameters
+    if(scale == 'none' & ibd.probs) stop('`ibd.probs` must be FALSE when `scale` == none')
+    if(maf.thresh < 0 | maf.thresh > 0.5) stop('maf.thresh must be in [0,0.5]')
+    # check training.set
+    if(!is.null(training.set) & !all(training.set %in% sample.include)) stop('All samples in training.set must be in sample.include')
+    # check pcs
+    if(class(pcs) != 'matrix' | is.null(rownames(pcs))) stop('pcs should be a matrix of PCs with rownames set to sample.ids')
+    if(!all(sample.include %in% rownames(pcs))) stop('All samples in sample.include must be in pcs')
+}
+
+
+### get sample ids in same order as gdsobj
+samplesGdsOrder <- function(gdsobj, sample.include) {
+    sample.id <- .readSampleId(gdsobj)
+    if (!is.null(sample.include)) {
+        sample.id <- intersect(sample.id, sample.include)
+    }
+    return(as.character(sample.id))
+}
+
+
+### function to match samples and create PC matrix
+.createPCMatrix <- function(pcs, sample.include){
+    # subset and re-order pcs if needed
+    V <- pcs[match(sample.include, rownames(pcs)), , drop = FALSE]
+    # append intercept
+    V <- cbind(rep(1, nrow(V)), V)
+    return(V)
+}
+
+
+# function to get 
+.calcISAFBetaPCProd <- function(V, training.set, verbose = TRUE){
+    if(!is.null(training.set)){
+        idx <- rownames(V) %in% training.set
+        VVtVi <- tcrossprod(V[idx,], chol2inv(chol(crossprod(V[idx,]))))
+        if(verbose) message('Betas for ', ncol(V) - 1, ' PC(s) will be calculated using ', sum(idx), ' samples in training.set...')
+    }else{
+        idx <- NULL
+        VVtVi <- tcrossprod(V, chol2inv(chol(crossprod(V))))
+        if(verbose) message('Betas for ', ncol(V) - 1, ' PC(s) will be calculated using all ', nrow(V), ' samples in sample.include...')
+    }
+    return(list(val = VVtVi, idx = idx))
+}
+
+# function to do actual calculation of betas
+.calcISAFBeta <- function(G, VVtVi){
+    # impute missing genotype values
+    G <- .meanImpute(G, freq=0.5*colMeans(G, na.rm=TRUE))
+
+    # calculate beta
+    if(is.null(VVtVi$idx)){
+        if(!identical(rownames(G), rownames(VVtVi$val))) stop('sample order in genotypes and pcs do not match')
+        beta <- crossprod(G, VVtVi$val)
+    }else{
+        if(!identical(rownames(G)[VVtVi$idx], rownames(VVtVi$val))) stop('sample order in genotypes and pcs do not match')
+        beta <- crossprod(G[VVtVi$idx, ], VVtVi$val)
+    }
+    return(beta)
+}
+
+
+
+### this function does the pcrelate estimation for a variant block
+.pcrelateVarBlock <- function(G, beta, V, idx, jdx, scale, ibd.probs, maf.thresh, maf.bound.method){
+
+    # make sure order of G, beta, and V all line up
+    if(!identical(colnames(G), rownames(beta))) stop('G and beta do not match')
+    if(!identical(rownames(G), rownames(V))) stop('G and V do not match')
+
+    # estimate individual specific allele frequencies
+    mu <- .estISAF(beta = beta, V = V, bound.thresh = maf.thresh, bound.method = maf.bound.method)
+
+    # compute values for estimates
+    if(scale == 'overall'){
+        matList <- .pcrCalcOvr(G = G, mu = mu, idx = idx, jdx = jdx, ibd.probs = ibd.probs)
+    }else if(scale == 'variant'){
+        matList <- .pcrCalcVar(G = G, mu = mu, idx = idx, jdx = jdx, ibd.probs = ibd.probs)
+    }else if(scale == 'none'){
+        matList <- .pcrCalcNone(G = G, mu = mu, idx = idx, jdx = jdx)
     }
 
-    # matrix of individual specific allele frequencies
-    if(transpose){
-        muhat <- 0.5*tcrossprod(pcMat, tcrossprod(geno, pcProd) )
+    return(matList)
+}
+
+.matListCombine <- function(...){
+    mapply(FUN = "+", ..., SIMPLIFY = FALSE)
+}
+
+
+### these functions are for estimating individual specific allele frequencies
+.estISAF <- function(beta, V, bound.thresh, bound.method){
+    # get ISAF estimates (i.e. 0.5*fitted values)
+    mu <- 0.5*tcrossprod(V, beta)
+    # fix boundary cases
+    if(bound.method == 'truncate'){
+        mu <- apply(mu, 2, .muBoundaryTrunc, thresh = bound.thresh)
+    }else if(bound.method == 'filter'){
+        mu <- apply(mu, 2, .muBoundaryFilt, thresh = bound.thresh)
     }else{
-        muhat <- 0.5*tcrossprod( tcrossprod(geno, pcProd), pcMat)
+        stop('bound.method must be one of `truncate` or `filter`')
     }
-    return(muhat)
+    return(mu)
+}
+
+# function to truncate boundary issues with ISAFs
+.muBoundaryTrunc <- function(x, thresh){
+    x[x < thresh] <- thresh
+    x[x > (1 - thresh)] <- (1 - thresh)
+    return(x)
+}
+
+# function to filter boundary issues with ISAFs
+.muBoundaryFilt <- function(x, thresh){
+    x[x < thresh] <- NA
+    x[x > (1 - thresh)] <- NA
+    return(x)
+}
+
+
+
+### all of the functions below are used for computing kinship and ibd estimates ###
+.pcrCalcOvr <- function(G, mu, ibd.probs, idx, jdx){
+    # compute mu(1 - mu)
+    muqu <- mu*(1 - mu)
+
+    # compute number of observed snps by pair
+    nonmiss <- !(is.na(G) | is.na(mu))
+    nsnp <- tcrossprod(nonmiss)
+
+    # index of missing values
+    filt.idx <- which(!nonmiss)
+
+    # compute kinship values
+    kinList <- .pcrCalcKinOvr(G, mu, muqu, filt.idx, idx, jdx)
+
+    if(ibd.probs){
+        # compute ibd values
+        ibdList <- .pcrCalcIBDOvr(G, mu, muqu, nonmiss, filt.idx, idx, jdx)
+
+        return(list(kinNum = kinList$kinNum, 
+                    kinDen = kinList$kinDen,
+                    k0Num = ibdList$k0Num,
+                    k0Den = ibdList$k0Den,
+                    k2Num = ibdList$k2Num,
+                    k2Den = ibdList$k2Den,
+                    nsnp = nsnp))
+
+    }else{
+        return(list(kinNum = kinList$kinNum,
+                    kinDen = kinList$kinDen,
+                    nsnp = nsnp))
+    }
+}
+
+.pcrCalcKinOvr <- function(G, mu, muqu, filt.idx, idx, jdx){
+    # residuals
+    R <- G - 2*mu
+
+    # set missing values to 0 (i.e. no contribution from that variant)
+    R[filt.idx] <- 0
+    muqu[filt.idx] <- 0
+
+    # numerator (crossprod of residuals)
+    kinNum <- tcrossprod(R[idx,], R[jdx,])
+    # denominator
+    kinDen <- tcrossprod(sqrt(muqu[idx,]), sqrt(muqu[jdx,]))
+
+    return(list(kinNum = kinNum, kinDen = kinDen))
+}
+
+.pcrCalcIBDOvr <- function(G, mu, muqu, nonmiss, filt.idx, idx, jdx){
+    # opposite allele frequency
+    qu <- 1 - mu
+
+    # indicator matrices of homozygotes
+    Iaa <- G == 0 & nonmiss
+    IAA <- G == 2 & nonmiss
+
+    # dominance coded genotype matrix
+    Gd <- mu
+    Gd[G == 1 & nonmiss] <- 0
+    Gd[IAA] <- qu[IAA]
+    Gd <- Gd - muqu
+
+    # set missing values to 0 (i.e. no contribution from that variant)
+    Iaa[filt.idx] <- 0
+    IAA[filt.idx] <- 0
+    Gd[filt.idx] <- 0
+    mu[filt.idx] <- 0
+    qu[filt.idx] <- 0
+    muqu[filt.idx] <- 0
+
+    # k0	
+    k0Num <- tcrossprod(IAA[idx,], Iaa[jdx,]) + tcrossprod(Iaa[idx,], IAA[jdx,])
+    k0Den <- tcrossprod(mu[idx,]^2, qu[jdx,]^2) + tcrossprod(qu[idx,]^2, mu[jdx,]^2)
+
+    # k2
+    k2Num <- tcrossprod(Gd[idx,], Gd[jdx,])
+    k2Den <- tcrossprod(muqu[idx,], muqu[jdx,])
+
+    return(list(k0Num = k0Num, k0Den = k0Den, k2Num = k2Num, k2Den = k2Den))
+}
+
+
+.pcrCalcVar <- function(G, mu, ibd.probs, idx, jdx){
+    # compute mu(1 - mu)
+    muqu <- mu*(1 - mu)
+
+    # compute number of observed snps by pair
+    nonmiss <- !(is.na(G) | is.na(mu))
+    nsnp <- tcrossprod(nonmiss)
+
+    # index of missing values
+    filt.idx <- which(!nonmiss)
+
+    # compute kinship values
+    kinNum <- .pcrCalcKinVar(G, mu, muqu, filt.idx, idx, jdx)
+
+    if(ibd.probs){
+        # compute ibd values
+        ibdList <- .pcrCalcIBDVar(G, mu, muqu, nonmiss, filt.idx, idx, jdx)
+
+        return(list(kinNum = kinNum,
+                    k0Num = ibdList$k0Num,
+                    k2Num = ibdList$k2Num,
+                    nsnp = nsnp))
+
+    }else{
+        return(list(kinNum = kinNum, nsnp = nsnp))
+    }
+}
+
+.pcrCalcKinVar <- function(G, mu, muqu, filt.idx, idx, jdx){
+    # scaled residuals
+    R <- (G - 2*mu)/sqrt(muqu)
+
+    # set missing values to 0 (i.e. no contribution from that variant)
+    R[filt.idx] <- 0
+
+    # numerator (crossprod of scaled residuals)
+    kinNum <- tcrossprod(R[idx,], R[jdx,])
+    
+    return(kinNum)
+}
+
+.pcrCalcIBDVar <- function(G, mu, muqu, nonmiss, filt.idx, idx, jdx){
+    # opposite allele frequency
+    qu <- 1 - mu
+
+    # indicator matrices of homozygotes
+    Iaa <- G == 0 & nonmiss
+    IAA <- G == 2 & nonmiss
+
+    # dominance coded genotype matrix
+    Gd <- mu
+    Gd[G == 1 & nonmiss] <- 0
+    Gd[IAA] <- qu[IAA] 
+
+    # scale 
+    Iaa <- 0.5*Iaa/qu^2 # factor of 1/2 for IAA*Iaa comes in from splitting up the two terms AA,aa vs aa,AA
+    IAA <- IAA/mu^2
+    Gd <- Gd/muqu - 1
+
+    # set missing values to 0 (i.e. no contribution from that variant)
+    Iaa[filt.idx] <- 0
+    IAA[filt.idx] <- 0
+    Gd[filt.idx] <- 0
+
+    # k0
+    k0Num <- tcrossprod(IAA[idx,], Iaa[jdx,]) + tcrossprod(Iaa[idx,], IAA[jdx,])
+
+    # k2
+    k2Num <- tcrossprod(Gd[idx,], Gd[jdx,])
+
+    return(list(k0Num = k0Num, k2Num = k2Num))
+}
+
+
+.pcrCalcNone <- function(G, mu, idx, jdx){
+    # compute number of observed snps by pair
+    nonmiss <- !(is.na(G) | is.na(mu))
+    nsnp <- tcrossprod(nonmiss)
+
+    # index of missing values
+    filt.idx <- which(!nonmiss)
+    rm(nonmiss)
+
+    # compute kinship values
+    kin <- .pcrCalcKinNone(G, mu, filt.idx, idx, jdx)
+    return(list(kin = kin, nsnp = nsnp))
+}
+
+.pcrCalcKinNone <- function(G, mu, filt.idx, idx, jdx){
+    # residuals
+    R <- G - 2*mu
+
+    # set missing values to 0 (i.e. no contribution from that variant)
+    R[filt.idx] <- 0
+
+    # crossprod of scaled residuals
+    kin <- tcrossprod(R[idx,], R[jdx,])
+
+    return(kin)
+}
+
+
+### functions for post processing on variant block level
+.pcrelateCalcRatio <- function(matList, scale, ibd.probs){
+    # compute final estimates
+    if(scale == 'overall'){
+        kin <- matList$kinNum/(4*matList$kinDen)
+        if(ibd.probs){
+            k2 <- matList$k2Num/matList$k2Den
+            k0 <- matList$k0Num/matList$k0Den
+            return(list(kin = kin, k0 = k0, k2 = k2, nsnp = matList$nsnp))
+        }else{
+            return(list(kin = kin, nsnp = matList$nsnp))
+        }
+
+    }else{
+        kin <- matList$kin/(4*matList$nsnp)
+        if(ibd.probs){
+            k2 <- matList$k2/matList$nsnp
+            k0 <- matList$k0/matList$nsnp
+            return(list(kin = kin, k0 = k0, k2 = k2, nsnp = matList$nsnp))
+        }else{
+            return(list(kin = kin, nsnp = matList$nsnp))
+        }
+    }
+}
+
+
+### functions for post processing on sample block level
+.estListToDT <- function(x, drop.lower){
+    estDT <- lapply(x, meltMatrix, drop.lower = drop.lower, drop.diag = drop.lower)
+    for(k in 1:length(estDT)){
+        setnames(estDT[[k]], 'value', names(estDT)[k])
+    }
+    # merge those data.tables into one data.table
+    estDT <- Reduce(merge, estDT)
+    return(estDT)
+}
+
+
+### functions for final processing
+correctKin <- function(kinBtwn, kinSelf, pcs, sample.include = NULL){
+    # keep R CMD check from warning about undefined global variables
+    `.` <- function(...) NULL
+    ID <- f <- ID1 <- ID2 <- kin <- newval <- value <- NULL
+    
+    # temporary data.table to store values
+    tmp <- kinSelf[, .(ID, f)]
+    setnames(tmp, c('ID','f'), c('ID1', 'kin'))
+    tmp[, ID2 := ID1]
+    tmp <- rbind(kinBtwn[, .(ID1, ID2, kin)], tmp)
+    setnames(tmp, 'kin', 'newval')
+    setkeyv(tmp, c('ID1', 'ID2'))
+    
+    # get the PC matrix
+    V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
+    
+    # make adjustment for each PC
+    for(k in 2:ncol(V)){
+        Acov <- tcrossprod(V[,k])
+        rownames(Acov) <- rownames(V)
+        colnames(Acov) <- rownames(V)
+        Avec <- meltMatrix(Acov, drop.lower = TRUE, drop.diag = FALSE)
+        tmp <- Avec[tmp, on = c('ID1', 'ID2')]
+        coef <- lm(formula = as.formula(newval ~ value), data = tmp[newval < 2^(-11/2)])$coef
+        tmp[, newval := newval - coef[1] - coef[2]*value]
+        tmp[, value := NULL]
+    }
+    
+    # merge back into kinBtwn
+    kinBtwn <- tmp[kinBtwn, on = c('ID1', 'ID2')]
+    kinBtwn[, kin := newval][, newval := NULL]
+    
+    # merge back into kinSelf
+    tmp <- tmp[ID1 == ID2][, ID2 := NULL]
+    setnames(tmp, 'ID1', 'ID')
+    kinSelf <- tmp[kinSelf, on = 'ID']
+    kinSelf[, f := newval][, newval := NULL]
+
+    return(list(kinBtwn = kinBtwn, kinSelf = kinSelf))
+}
+
+correctK2 <- function(kinBtwn, kinSelf, pcs, sample.include = NULL, small.samp.correct = FALSE){
+    # keep R CMD check from warning about undefined global variables
+    `.` <- function(...) NULL
+    ID <- f <- f.1 <- f.2 <- kin <- k0 <- k2 <- ID1 <- ID2 <- newval <- value <- NULL
+    
+    # correct k2 for HW departure
+    kinBtwn <- merge(kinBtwn, kinSelf[,.(ID, f)], by.x = 'ID2', by.y = 'ID')
+    setnames(kinBtwn, 'f', 'f.2')
+    kinBtwn <- merge(kinBtwn, kinSelf[,.(ID, f)], by.x = 'ID1', by.y = 'ID')
+    setnames(kinBtwn, 'f', 'f.1')
+    kinBtwn[, k2 := k2 - f.1*f.2][, `:=`(f.1 = NULL, f.2 = NULL)]
+
+    if(small.samp.correct){
+        # temporary data.table to store values
+        tmp <- kinBtwn[, .(ID1, ID2, kin, k2)]
+        setnames(tmp, 'k2', 'newval')
+        setkeyv(tmp, c('ID1', 'ID2'))
+
+        # get the PC matrix
+        V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
+
+        # make adjustment for each PC
+        for(k in 2:ncol(V)){
+            Acov <- tcrossprod(V[,k])
+            rownames(Acov) <- rownames(V)
+            colnames(Acov) <- rownames(V)
+            Avec <- meltMatrix(Acov, drop.lower = TRUE, drop.diag = FALSE)
+            tmp <- Avec[tmp, on = c('ID1', 'ID2')]
+            coef <- lm(formula = as.formula(newval ~ value + I(value^2)), data = tmp[kin < 2^(-11/2)])$coef
+            tmp[, newval := newval - coef[1] - coef[2]*value - coef[3]*value^2]
+            tmp[, value := NULL]
+        }
+        
+        # make adjustment for kinship
+        coef <- lm(formula = as.formula(newval ~ kin), data = tmp[newval < 2^(-9/2)])$coef
+        tmp[, newval := newval - coef[1] - coef[2]*kin]
+        tmp[, kin := NULL]
+        
+        # merge back into kinBtwn
+        kinBtwn <- tmp[kinBtwn, on = c('ID1', 'ID2')]
+        kinBtwn[!is.na(newval), k2 := newval][, newval := NULL]
+    }
+    
+    return(kinBtwn)
+}
+
+correctK0 <- function(kinBtwn){
+    # keep R CMD check from warning about undefined global variables
+    kin <- k0 <- k2 <- NULL
+    
+    # use alternate k0 estimator for non-1st degree relatives
+    kinBtwn[kin < 2^(-5/2), k0 := 1 - 4*kin + k2]
+    
+    return(kinBtwn)
+}
+
+
+
+
+
+
+
+### exported function for computing PC betas for individual specific allele frequency calculations ###
+calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, verbose = TRUE){
+    # checks - add some
+
+    # create matrix of PCs
+    V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
+
+    # matrix product of V
+    VVtVi <- .calcISAFBetaPCProd(V = V, training.set = training.set, verbose = verbose)
+    
+    snp.blocks <- .snpBlocks(gdsobj)
+    nsnpblock <- length(snp.blocks)
+    if(verbose) message('Calculating Indivdiual-Specific Allele Frequency betas for ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
+
+    beta <- foreach(k = 1:nsnpblock, .combine = rbind, .inorder = FALSE, .multicombine = TRUE) %do% {
+        if(verbose) message('    Running block ', k, '...')
+        # read genotype data for the block
+        G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
+
+        # calculate ISAF betas
+        .calcISAFBeta(G = G, VVtVi = VVtVi)
+    }
+    ### rather than returning and rbinding here, we may want to be writing the output to something
+
+    return(beta)
+}
+
+
+### exported function that does the pcrelate estimation for a (pair of) sample block(s)
+pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sample.include.block2,
+                              scale = c('overall', 'variant', 'none'), ibd.probs = TRUE,
+                              maf.thresh = 0.01, maf.bound.method = c('filter', 'truncate'),
+                              verbose = TRUE){
+
+    scale <- match.arg(scale)
+    maf.bound.method <- match.arg(maf.bound.method)
+    
+    # create (joint) PC matrix and indices
+    sample.include <- unique(c(sample.include.block1, sample.include.block2))
+    V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
+    idx <- which(rownames(V) %in% sample.include.block1)
+    jdx <- which(rownames(V) %in% sample.include.block2)
+    oneblock <- setequal(idx, jdx)
+    ### slight inefficiency above because we create V for samples in block1 for each block2 when we don't have to if we are running serially; 
+    ### but this seems more straightforward to parallelize
+
+    snp.blocks <- .snpBlocks(gdsobj)
+    nsnpblock <- length(snp.blocks)
+
+    if(verbose) message('Running PC-Relate analysis using ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
+    # compute estimates for each variant block; sum along the way
+    matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %do% {
+        if(verbose) message('    Running block ', k, '...')
+        # read genotype data for the block
+        G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
+
+        # load betas for the current block of variants
+        beta.block <- betaobj[colnames(G), , drop = FALSE]
+        ### this line of code will probably be different if we save the betas; need to load correct betas
+
+        # calculate PC-Relate estimates
+        .pcrelateVarBlock(	G = G, beta = beta.block, V = V, idx = idx, jdx = jdx, scale = scale, ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
+    }
+
+    # take ratios to compute final estimates
+    estList <- .pcrelateCalcRatio(matList = matList, scale = scale, ibd.probs = ibd.probs)
+    rm(matList)
+    
+    # cast to data.tables
+    if(oneblock){
+        # self table
+        kinSelf <- data.table(ID = rownames(estList$kin), f = 2*diag(estList$kin) - 1, nsnp = diag(estList$nsnp))
+        setkeyv(kinSelf, 'ID')
+        # between samples table
+        kinBtwn <- .estListToDT(estList, drop.lower = TRUE)
+    }else{
+        kinSelf <- NULL
+        # between samples table
+        kinBtwn <- .estListToDT(estList, drop.lower = FALSE)
+    }
+    rm(estList)
+    setkeyv(kinBtwn, c('ID1', 'ID2'))
+    
+    return(list(kinSelf = kinSelf, kinBtwn = kinBtwn))
 }

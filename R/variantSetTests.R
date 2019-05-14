@@ -247,7 +247,6 @@ testVariantSet <- function( nullmod, G, weights,
 # }
 
 
-
 ## new function just for SKAT-O
 .testVariantSetSKATO <- function(nullmod, G, weights, rho = 0){
 #                                 # return.scores = FALSE, return.scores.cov = FALSE){

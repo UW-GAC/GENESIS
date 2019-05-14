@@ -4,7 +4,8 @@
 \title{Creates a Genetic Relationship Matrix (GRM) of Pairwise Kinship Coefficient Estimates from PC-Relate Output}
 \description{\code{pcrelateToMatrix} is used to create a genetic relationship matrix (GRM) of pairwise kinship coefficient estimates from the output of \code{pcrelate}.}
 \usage{
-\S4method{pcrelateToMatrix}{pcrelate}(pcrelobj, sample.include = NULL, thresh = NULL, scaleKin = 2, verbose = TRUE)
+\S4method{pcrelateToMatrix}{pcrelate}(pcrelobj, sample.include = NULL, thresh = NULL, scaleKin = 2, 
+                 verbose = TRUE)
 }
 \arguments{
   \item{pcrelobj}{The object containing the output from \code{pcrelate}.  This should be a list of class \code{pcrelate} containing two data.frames; \code{kinSelf} with inbreeding coefficient estimates and \code{kinBtwn} with pairwise kinship coefficient estimates.}

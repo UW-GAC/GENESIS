@@ -54,8 +54,6 @@ importFrom(dplyr, bind_rows, inner_join)
 # deprecated/defunct
 export(admixMapMM,
        assocTestMM,
-       assocTestSeq,
-       assocTestSeqWindow,
        fitNullMM,
        fitNullReg,
        king2mat,
@@ -73,10 +71,16 @@ exportMethods(assocTestSingle,
               pcrelateToMatrix)
 
 export(admixMap,
+       calcISAFBeta,
+       correctKin,
+       correctK0,
+       correctK2,
        kin2gds,
        mat2gds,
        nullModelInvNorm,
        pcairPartition,
+       pcrelateSampBlock,
+       samplesGdsOrder,
        varCompCI)
 
 S3method(plot, pcair)

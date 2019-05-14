@@ -1,8 +1,5 @@
 context("check single variant association tests")
 
-## unpredictable failures - check this
-test_GxE <- FALSE
-
 test_that("singleVarTest - linear, with group", {
     n <- 100
     dat <- .testNullInputs(n)
@@ -90,7 +87,6 @@ test_that("singleVarTest - logistic - score", {
 })
 
 
-if (test_GxE) {
 test_that("GxE", {
     n <- 100
     dat <- .testNullInputs(n)
@@ -119,4 +115,3 @@ test_that("GxE", {
 
     expect_message(test.gxe <- testGenoSingleVar(nullmod, G = geno, E = dat$X[,3,drop=FALSE], test = "Score"))
 })
-}

@@ -4,7 +4,7 @@
     
     # use GWASdata objects because they have X and Y chromosomes
     scanAnnot <- get(data("illuminaScanADF", package="GWASdata", envir=environment()))
-    scanAnnot$outcome <- rnorm(nrow(scanAnnot))
+    set.seed(45); scanAnnot$outcome <- rnorm(nrow(scanAnnot))
 
     gdsfile <- system.file("extdata", "illumina_geno.gds", package="GWASdata")
     gds <- GWASTools::GdsGenotypeReader(gdsfile)

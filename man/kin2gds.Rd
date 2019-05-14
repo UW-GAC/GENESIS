@@ -25,7 +25,7 @@ library(gdsfmt)
 # KING results from the command-line program
 file.kin0 <- system.file("extdata", "MXL_ASW.kin0", package="GENESIS")
 file.kin <- system.file("extdata", "MXL_ASW.kin", package="GENESIS")
-KINGmat <- kingToMatrix(c(file.kin0, file.kin))
+KINGmat <- kingToMatrix(c(file.kin0, file.kin), estimator="Kinship")
 gdsfile <- tempfile()
 mat2gds(KINGmat, gdsfile)
 gds <- openfn.gds(gdsfile)

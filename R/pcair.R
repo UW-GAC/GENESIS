@@ -4,8 +4,8 @@ setOldClass("gds.class")
 setMethod("pcair",
           "gds.class",
           function(gdsobj, 
-                   kinobj,
-                   divobj,
+                   kinobj = NULL,
+                   divobj = NULL,
                    kin.thresh = 2^(-11/2),
                    div.thresh = -2^(-11/2),
                    unrel.set = NULL,
@@ -59,8 +59,8 @@ setMethod("pcair",
           })
 
 .pcair <- function(gdsobj,
-                   kinobj,
-                   divobj,
+                   kinobj = NULL,
+                   divobj = NULL,
                    kin.thresh = 2^(-11/2),
                    div.thresh = -2^(-11/2),
                    unrel.set = NULL,
@@ -70,10 +70,19 @@ setMethod("pcair",
                    verbose = TRUE,
                    ...) {
 
-    part <- pcairPartition(kinobj = kinobj, divobj = divobj,
-                           kin.thresh = kin.thresh, div.thresh = div.thresh,
-                           unrel.set = unrel.set, sample.include = sample.include,
-                           verbose = verbose)
+    if(!is.null(kinobj) & !is.null(divobj)){
+      part <- pcairPartition(kinobj = kinobj, divobj = divobj,
+                             kin.thresh = kin.thresh, div.thresh = div.thresh,
+                             unrel.set = unrel.set, sample.include = sample.include,
+                             verbose = verbose)
+
+    }else if(is.null(kinobj) & is.null(divobj)){
+      part <- .pcairPartitionUser(gdsobj = gdsobj, unrel.set = unrel.set, 
+                                  sample.include = sample.include, verbose = verbose)
+
+    }else{
+      stop('kinobj and divobj must either both be specified, or both be NULL')
+    }
 
     if(verbose){
         message(paste("Unrelated Set:", length(part$unrels), "Samples",
@@ -112,6 +121,7 @@ setMethod("pcair",
     } else {
         method <- "Standard PCA"
         eigenvect <- pca.unrel$eigenvect
+        rownames(eigenvect) <- as.character(pca.unrel$sample.id)
     }
     eigenval <- pca.unrel$eigenval[1:ncol(pca.unrel$eigenvect)]
     

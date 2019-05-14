@@ -35,7 +35,7 @@ test_that("update conditional model", {
     dat <- .testNullInputs()
     nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, group.idx=dat$group.idx, verbose=FALSE)
 
-    G <- matrix(rnorm(100, 100,1))
+    set.seed(57); G <- matrix(rnorm(100, 100,1))
     nullmod2 <- updateNullModCond(nullmod, G, covMatList=dat$cor.mat, verbose=FALSE)
     nullmod3 <- .fitNullModel(dat$y, cbind(dat$X, G), dat$cor.mat, group.idx=dat$group.idx, verbose=FALSE)
 

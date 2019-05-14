@@ -20,6 +20,44 @@ setMethod("validateSex",
               sex
           })
 
+setMethod("variantInfo",
+          "GenotypeData",
+          function(gdsobj, alleles=FALSE) {
+              data.frame(variant.id=getSnpID(gdsobj),
+                         chr=getChromosome(gdsobj, char=TRUE),
+                         pos=getPosition(gdsobj),
+                         stringsAsFactors=FALSE)
+          })
+
+setMethod("variantFilter",
+          "GenotypeIterator",
+          function(x) {
+              snpFilter(x)
+          })
+
+
+# check for all genotypes identical (including all hets)
+# allow a tolerance in case we have imputed dosage values rather than integer
+# return an index for subsetting rather than modifying geno
+# (so we can subset variant info also)
+# we have to compute count and freq anyway, so pass as arguments
+.filterMonomorphic <- function(geno, count, freq, imputed=FALSE) {
+    #count <- colSums(!is.na(geno))
+    if (!imputed) {
+        #freq <- 0.5*colMeans(geno, na.rm=TRUE)
+        isref <- freq == 0
+        isalt <- freq == 1
+        ishet <- colSums(geno == 1, na.rm=TRUE) == count
+    } else {
+        tol <- .Machine$double.eps ^ 0.5
+        isref <- colSums(abs(geno) < tol, na.rm=TRUE) == count
+        isalt <- colSums(abs(geno - 1) < tol, na.rm=TRUE) == count
+        ishet <- colSums(abs(geno - 2) < tol, na.rm=TRUE) == count
+    }
+    !(isref | isalt | ishet)
+}
+
+
 # index is in case we had to subset geno so it no longer matches the variant filter
 # (in the case of allele matching)
 .alleleFreq <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL) {
@@ -83,10 +121,22 @@ setMethod("validateSex",
 .setFilterNullModel <- function(gdsobj, null.model, verbose=TRUE) {
     if (!is.null(null.model$sample.id)) {
         seqSetFilter(gdsobj, sample.id=null.model$sample.id, verbose=verbose)
-        match(null.model$sample.id, seqGetData(gdsobj, "sample.id"))
+        sample.index <- match(null.model$sample.id, seqGetData(gdsobj, "sample.id"))
     } else {
-        seq_along(seqGetData(gdsobj, "sample.id"))
+        sample.index <- seq_along(seqGetData(gdsobj, "sample.id"))
     }
+    sample.index
+}
+
+# return sample.index to match GenotypeData object to a null model
+.sampleIndexNullModel <- function(gdsobj, null.model) {
+    if (!is.null(null.model$sample.id)) {
+        sample.index <- match(null.model$sample.id, getScanID(gdsobj))
+    } else {
+        sample.index <- match(rownames(null.model$model.matrix),
+                              sampleNames(getScanAnnotation(gdsobj)))
+    }
+    sample.index
 }
 
 .modelMatrixColumns <- function(null.model, col.name) {
@@ -159,3 +209,7 @@ setMethod(".annotateAssoc",
               }
               x
           })
+
+.listIdentical <- function(x) {
+    all(sapply(x[-1], FUN = identical, x[[1]]))
+}

@@ -2,6 +2,12 @@
 \alias{pcrelate}
 \alias{pcrelate,GenotypeIterator-method}
 \alias{pcrelate,SeqVarIterator-method}
+\alias{samplesGdsOrder}
+\alias{calcISAFBeta}
+\alias{pcrelateSampBlock}
+\alias{correctKin}
+\alias{correctK2}
+\alias{correctK0}
 \title{PC-Relate: Model-Free Estimation of Recent Genetic Relatedness}
 \description{\code{pcrelate} is used to estimate kinship coefficients, IBD sharing probabilities, and inbreeding coefficients using genome-wide SNP data.  PC-Relate accounts for population structure (ancestry) among sample individuals through the use of ancestry representative principal components (PCs) to provide accurate relatedness estimates due only to recent family (pedigree) structure.}
 \usage{
@@ -27,6 +33,30 @@
 	maf.bound.method = c('filter', 'truncate'),
 	small.samp.correct = FALSE,
 	verbose = TRUE)
+samplesGdsOrder(gdsobj, sample.include)
+calcISAFBeta(gdsobj,
+        pcs,
+        sample.include,
+        training.set = NULL,
+        verbose = TRUE)
+pcrelateSampBlock(gdsobj,
+        betaobj,
+        pcs,
+        sample.include.block1,
+        sample.include.block2,
+	scale = c('overall', 'variant', 'none'),
+	ibd.probs = TRUE,
+	maf.thresh = 0.01,
+	maf.bound.method = c('filter', 'truncate'),
+	verbose = TRUE)
+correctKin(kinBtwn, kinSelf,
+        pcs,
+        sample.include = NULL)
+correctK2(kinBtwn, kinSelf,
+        pcs,
+        sample.include = NULL,
+        small.samp.correct = FALSE)
+correctK0(kinBtwn)
 }
 \arguments{
     \item{gdsobj}{An object of class \code{\link{SeqVarIterator}} from the package \pkg{\link{SeqVarTools}}, or an object of class \code{\link{GenotypeIterator}} from the package \pkg{\link{GWASTools}}, containing the genotype data for the variants and samples to be used for the analysis.}
@@ -41,7 +71,12 @@
  \item{small.samp.correct}{Logical indicator of whether to implement a small sample correction.}
   %\item{num.cores}{The number of cores to use. If \code{> 1}, multiple blocks of variants and/or samples can be analyzed in parallel.}
   \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is TRUE.}
- }
+  \item{betaobj}{Outut of \code{calcISAFBeta}.}
+  \item{sample.include.block1}{A vector of IDs for samples to include in block 1.}
+  \item{sample.include.block2}{A vector of IDs for samples to include in block 2.}
+  \item{kinBtwn}{Output of \code{pcrelateSampBlock}.}
+  \item{kinSelf}{Output of \code{pcrelateSampBlock}.}
+}
 \details{
 	The basic premise of PC-Relate is to estimate kinship coefficients, IBD sharing probabilities, and inbreeding coefficients that reflect recent family (pedigree) relatedness by conditioning out genetic similarity due to distant population structure (ancestry) with ancestry representative principal components (PCs).
 
@@ -52,6 +87,8 @@
 	The optional input \code{training.set} allows the user to specify which samples are used to estimate the ancestry effect when estimating individual-specific allele frequencies. Ideally, \code{training.set} is a set of mutually unrelated individuals.  If prior information regarding pedigree structure is available, this can be used to select \code{training.set}, or if \code{\link{pcair}} was used to obtain the PCs, then the individuals in the PC-AiR 'unrelated subset' can be used.  If no prior information is available, all individuals should be used.
 
 	The \code{sample.block.size} can be specified to alleviate memory issues when working with very large data sets.  If \code{sample.block.size} is smaller than the number of individuals included in the analysis, then individuals will be analyzed in separate blocks.  This reduces the memory required for the analysis, but genotype data must be read in multiple times for each block (to analyze all pairs), which increases the number of computations required.
+
+	\code{calcISAFBeta} and \code{pcrelateSampBlock} are provided as separate functions to allow parallelization for large sample sizes. \code{pcrelate} calls both of these functions internally. When calling these functions separately, use \code{samplesGdsOrder} to ensure the \code{sample.include} argument is in the same order as the GDS file. Use \code{correctKin}, \code{correctK2}, and \code{correctK0} after all sample blocks have been completed.
 }
 \value{An object of class '\code{pcrelate}'. A list including:
 	\item{kinBtwn}{A data.frame of estimated pairwise kinship coefficients and IBD sharing probabilities (if \code{ibd.probs} is \code{TRUE}).}
