@@ -28,8 +28,8 @@
     df
 }
 
-.testGenoMatrix <- function(n=100) {
-    set.seed(107); matrix(rbinom(200*n, size = 2, prob = 0.2), nrow = n, ncol = 200)
+.testGenoMatrix <- function(n=100, nsnp=200) {
+    set.seed(107); matrix(rbinom(nsnp*n, size = 2, prob = 0.2), nrow = n, ncol = nsnp)
 }
 
 .testNullmod <- function(n=100, MM=FALSE, binary=FALSE) {
