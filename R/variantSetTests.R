@@ -68,7 +68,7 @@ testVariantSet <- function( nullmod, G, weights,
 
 
 ## new function that runs both SKAT and fastSKAT
-.testVariantSetSKAT <- function(nullmod, G, weights, neig, ntrace){
+.testVariantSetSKAT <- function(nullmod, G, weights, neig = 200, ntrace = 500, verbose = FALSE){
     # multiply G by weights 
     if(is(G, "Matrix")){
         G <- G %*% Diagonal(x = weights)        
@@ -85,13 +85,13 @@ testVariantSet <- function( nullmod, G, weights,
     G <- calcGtilde(nullmod, G) # P^{1/2}GW
 
     # compute the p-value
-    out <- .calcPvalVCTest(Q = Q, G = G, neig = neig, ntrace = ntrace)
+    out <- .calcPvalVCTest(Q = Q, G = G, neig = neig, ntrace = ntrace, verbose = verbose)
 
     return(list(Q = Q, pval = out$pval, err = out$err, pval.method = out$pval.method))
 }
 
 ## function for SMMAT and fastSMMAT
-.testVariantSetSMMAT <- function(nullmod, G, weights, neig, ntrace) {
+.testVariantSetSMMAT <- function(nullmod, G, weights, neig = 200, ntrace = 500, verbose = FALSE) {
     # multiply G by weights 
     if(is(G, "Matrix")){
         G <- G %*% Diagonal(x = weights)        
@@ -131,7 +131,7 @@ testVariantSet <- function( nullmod, G, weights,
     # V <- V - tcrossprod(GG1)/V.sum  # O(m^2)
 
     # compute the p-value for the "adjusted SKAT" part
-    out <- .calcPvalVCTest(Q = Q, G = G, neig = neig, ntrace = ntrace)
+    out <- .calcPvalVCTest(Q = Q, G = G, neig = neig, ntrace = ntrace, verbose = verbose)
     theta.pval <- out$pval
     err <- out$err
 
@@ -145,12 +145,12 @@ testVariantSet <- function( nullmod, G, weights,
 }
 
 
-.calcPvalVCTest <- function(Q, G, neig, ntrace){
+.calcPvalVCTest <- function(Q, G, neig, ntrace, verbose){
     if(!requireNamespace("survey")) stop("package 'survey' must be installed to calculate p-values for SKAT")
 
     ncolG <- ncol(G) # number of snps
     nrowG <- nrow(G) # number of samples
-    message('nsamp = ', nrowG, '; nsnp = ', ncolG)
+    if (verbose) message('nsamp = ', nrowG, '; nsnp = ', ncolG)
 
     if(min(ncolG, nrowG) < 6000 + 20*neig){
         if(ncolG <= nrowG){
@@ -163,7 +163,7 @@ testVariantSet <- function( nullmod, G, weights,
         }
 
         if(min(ncolG, nrowG) < 2*neig){
-            message('method = regular')
+            if (verbose) message('method = regular')
             # use "regular" method
             if(ncolG == 1){
                 pval <- pchisq(as.numeric(Q/V), df=1, lower.tail=FALSE)
