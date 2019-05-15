@@ -146,8 +146,6 @@ testVariantSet <- function( nullmod, G, weights,
 
 
 .calcPvalVCTest <- function(Q, G, neig, ntrace, verbose){
-    if(!requireNamespace("survey")) stop("package 'survey' must be installed to calculate p-values for SKAT")
-
     ncolG <- ncol(G) # number of snps
     nrowG <- nrow(G) # number of samples
     if (verbose) message('nsamp = ', nrowG, '; nsnp = ', ncolG)
@@ -173,10 +171,10 @@ testVariantSet <- function( nullmod, G, weights,
                 lambda <- eigen(V, only.values = TRUE, symmetric=TRUE)$values
                 # lambda <- lambda[lambda > 0] 
                 pv <- tryCatch({
-                            list(pval = survey::pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, lower.tail = FALSE, method = "integration"), 
+                            list(pval = pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, lower.tail = FALSE, method = "integration"), 
                                  err = 0, method = "integration")
                         }, warning = function(w){
-                            list(pval = survey::pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, lower.tail = FALSE, method = "saddlepoint"),
+                            list(pval = pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, lower.tail = FALSE, method = "saddlepoint"),
                                  err = 0, method = "saddlepoint")
                         }, error = function(e){ 
                             list(pval = NA_real_, err = 1, method = NA_character_)
@@ -189,7 +187,7 @@ testVariantSet <- function( nullmod, G, weights,
         }else{
             # use "fast H" method
             message('method = fast_H')
-            pval <- tryCatch(   bigQF:::pchisqsum_ssvd(x = Q, M = as.matrix(V), n = neig, p = 10, q = 1, method = "saddlepoint"), 
+            pval <- tryCatch(   pchisqsum_ssvd(x = Q, M = as.matrix(V), n = neig, p = 10, q = 1, method = "saddlepoint"), 
                                 error = function(e){ NA_real_ } )
             err <- ifelse(is.na(pval), 1, 0)
             pval.method <- "ssvd_saddlepoint"
@@ -200,7 +198,7 @@ testVariantSet <- function( nullmod, G, weights,
         message('method = fast_G')
         pval <- NA_real_; pval.try = 0
         while(is.na(pval) & pval.try < 10){
-            pval <- tryCatch(   bigQF:::pchisqsum_rsvd(x = Q, M = as.matrix(G), n = neig, p = 10, q = 3, tr2.sample.size = ntrace, method = "saddlepoint"), 
+            pval <- tryCatch(   pchisqsum_rsvd(x = Q, M = as.matrix(G), n = neig, p = 10, q = 3, tr2.sample.size = ntrace, method = "saddlepoint"), 
                                 warning = function(w){ NA_real_ }   )
             pval.try <- pval.try + 1
         }
@@ -296,10 +294,10 @@ testVariantSet <- function( nullmod, G, weights,
             # lambda <- lambda[lambda > 0]
             lambdas[[i]] <- lambda
             pv <- tryCatch({
-                        list(pval = survey::pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, lower.tail = FALSE, method = "integration"), 
+                        list(pval = pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, lower.tail = FALSE, method = "integration"), 
                              err = 0, method = "integration")
                     }, warning = function(w){
-                        list(pval = survey::pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, lower.tail = FALSE, method = "saddlepoint"),
+                        list(pval = pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, lower.tail = FALSE, method = "saddlepoint"),
                              err = 0, method = "saddlepoint")
                     }, error = function(e){ 
                         list(pval = NA_real_, err = 1, method = NA_character_)
