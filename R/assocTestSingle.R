@@ -5,6 +5,7 @@ setGeneric("assocTestSingle", function(gdsobj, ...) standardGeneric("assocTestSi
 setMethod("assocTestSingle",
           "SeqVarIterator",
           function(gdsobj, null.model, test=c("Score", "Wald"), GxE=NULL, sparse=TRUE, imputed=FALSE, verbose=TRUE) {
+            ##add a flag here
               test <- match.arg(test)
 
               # don't use sparse matrices for imputed dosages
