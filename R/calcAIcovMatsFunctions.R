@@ -63,7 +63,7 @@
             trPi <- trPi.part1 - trPi.part2
             
             score[i] <- as.numeric(-0.5*(trPi - crossprod(PY[group.idx[[i]]])))
-            AI[i,i] <- as.numeric(0.5*crossprod(PY[group.idx[[i]]], PIPY[group.idx[[i]]])
+            AI[i,i] <- as.numeric(0.5*crossprod(PY[group.idx[[i]]], PIPY[group.idx[[i]]]))
             
             if ((i + 1) <= g) {
                 for (j in (i + 1):g) {
