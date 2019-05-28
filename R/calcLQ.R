@@ -1,12 +1,14 @@
 .calcLikelihoodQuantities <- function(Y, X, Sigma.inv, cholSigma.diag){
 
-    if (is(Sigma.inv, "Matrix")) X <- Matrix(X)    
+    if (is(Sigma.inv, "Matrix")) X <- Matrix(X)
     n <- length(Y)
     k <- ncol(X)
     
     ### Calulate the weighted least squares estimate
     Sigma.inv_X <- crossprod(Sigma.inv, X)
     Xt_Sigma.inv_X <- crossprod(X, Sigma.inv_X)
+    # fix issue with not recognizing the matrix as symmetric
+    Xt_Sigma.inv_X <- (Xt_Sigma.inv_X + t(Xt_Sigma.inv_X))/2
     chol.Xt_Sigma.inv_X <- chol(Xt_Sigma.inv_X)
     Xt_Sigma.inv_X.inv <- chol2inv(chol.Xt_Sigma.inv_X)
     beta <- crossprod(Xt_Sigma.inv_X.inv, crossprod(Sigma.inv_X, Y))
