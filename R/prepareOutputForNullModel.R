@@ -92,7 +92,7 @@
                 resid.marginal = resid.marginal, resid.conditional = resid.conditional, 
                 logLik = logLik, logLikR  = logLikR, AIC = AIC, workingY = workingY, 
                 outcome = y, model.matrix = X, group.idx = group.idx, cholSigmaInv = cholSigmaInv, 
-                converged = converged, zeroFLAG = zeroFLAG, RSS = RSS)
+                converged = converged, zeroFLAG = zeroFLAG, niter = vc.mod$niter, RSS = RSS)
     class(out) <- "GENESIS.nullModel"
     return(out)
 }
@@ -145,9 +145,8 @@
         varCompCov <- solve(vc.mod$AI)
     }
     
-    sq <- .computeSigmaQuantities(varComp = varComp, covMatList = covMatList, group.idx = group.idx, vmu = vmu, gmuinv = gmuinv)
-    # Cholesky Decomposition
-    cholSigmaInv <- t(chol(sq$Sigma.inv))
+    # Cholesky Decomposition of Sigma.inv
+    cholSigmaInv <- t(chol(vc.mod$Sigma.inv))
     dimnames(cholSigmaInv) <- list(colnames(covMatList[[1]]), colnames(covMatList[[1]]))
     
 
@@ -181,6 +180,7 @@
     
     converged <- vc.mod$converged
     zeroFLAG <- vc.mod$zeroFLAG
+    niter <- vc.mod$niter
 
     out <- list(family = family, hetResid = hetResid, varComp = varComp, 
                 varCompCov = varCompCov, fixef = fixef, betaCov = betaCov, 
@@ -188,7 +188,7 @@
                 resid.conditional = resid.conditional, logLik = logLik, 
                 logLikR = logLikR, AIC = AIC, workingY = workingY, outcome = y,
                 model.matrix = X, group.idx = group.idx, cholSigmaInv = cholSigmaInv, 
-                converged = converged, zeroFLAG = zeroFLAG, RSS = RSS)
+                converged = converged, zeroFLAG = zeroFLAG, niter = niter, RSS = RSS)
     class(out) <- "GENESIS.nullMixedModel"
     return(out)
 }

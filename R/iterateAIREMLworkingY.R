@@ -14,7 +14,7 @@
 }
 
 
-.iterateAIREMLworkingY <- function(glm.mod, X, family, start = NULL, covMatList, AIREML.tol = 1e-6,
+.iterateAIREMLworkingY <- function(glm.mod, X, family, start = NULL, covMatList, AIREML.tol = 1e-4,
                                    drop.zeros = TRUE, max.iter = 100, EM.iter = 0, verbose = TRUE){
     y <- glm.mod$y
     eta <- glm.mod$linear.predictors
@@ -24,37 +24,38 @@
     
     repeat({
         Yreps <- Yreps + 1
-        if(verbose) message("Computing Variance Component Estimates...")
-        if(verbose) message(paste(paste("Sigma^2_",c(names(covMatList)),sep="", collapse="     "), "log-lik", "RSS", sep="     "))
-        
+
         # estimate variance components
-        vc.mod <- .runAIREMLother(Y=working.y$Y, X=X, start=newstart, covMatList=covMatList, 
-                                  AIREML.tol=AIREML.tol, drop.zeros=drop.zeros, max.iter=max.iter, EM.iter=EM.iter,
-                                  verbose=verbose, vmu=working.y$vmu, gmuinv=working.y$gmuinv)
+        vc.mod <- .runAIREMLother(Y = working.y$Y, X = X, start = newstart, covMatList = covMatList, 
+                                  vmu = working.y$vmu, gmuinv = working.y$gmuinv, AIREML.tol = AIREML.tol, drop.zeros = drop.zeros, 
+                                  max.iter = max.iter, EM.iter = EM.iter, verbose = verbose)
         
         if (vc.mod$allZero == TRUE) {
             message("All variance components estimated as zero, using glm...")
             break()
         }
-        # update parameters
-        if(verbose) message("Updating WorkingY Vector...")
-        working.y <- .calcWorkingYnonGaussian(y, vc.mod$eta, family)
         
-        # current variance component estimate
-        newstart <- vc.mod$varComp
-        newstart[vc.mod$zeroFLAG] <- AIREML.tol
-        
-        # test for convergence
-        stat <- sqrt(sum((vc.mod$eta - eta)^2))
-        if(verbose) message(paste("Checking for Convergence...", stat, sep = "\t"))
-        eta <- vc.mod$eta
-        if(stat < AIREML.tol){ break() }
-        
-        if(Yreps == max.iter){
-            vc.mod$converged <- FALSE
-            warning("Maximum number of iterations for workingY reached without convergence!")
-            break()
-        }
+        ### check for convergence
+        if(sqrt(sum((vc.mod$eta - eta)^2)) < AIREML.tol){
+            converged <- TRUE
+            (break)()
+        }else{
+            # check if exceeded the number of iterations
+            if(Yreps == max.iter){
+                vc.mod$converged <- FALSE
+                warning("Maximum number of iterations for workingY reached without convergence!")
+                (break)()
+            }else{
+                # update starting values to current variance component estimates
+                newstart <- vc.mod$varComp
+                newstart[vc.mod$zeroFLAG] <- AIREML.tol
+                # update workingY
+                if(verbose) message("Updating WorkingY Vector...")
+                working.y <- .calcWorkingYnonGaussian(y, vc.mod$eta, family)
+                # update eta
+                eta <- vc.mod$eta
+            }
+        }     
     })
     
     return(list(vc.mod = vc.mod, working.y = working.y))

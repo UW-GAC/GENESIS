@@ -7,20 +7,16 @@
 ## y - outcome vector
 ## X - data.frame or model.matrix
 .fitNullModel <- function(y, X, covMatList = NULL, group.idx = NULL, family = "gaussian", start = NULL,
-                          AIREML.tol = 1e-6, max.iter = 100, EM.iter = 0,
+                          AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0,
                           drop.zeros = TRUE, verbose = TRUE){
     
+    ### checks
     if(!is.null(covMatList)){
         if (!is.list(covMatList)){
             covMatList <- list(A = covMatList)
         }
+        # if any Matrix objects; coerce all to Matrix objects (coerced ones are not sparse)
         covMatList <- .checkMatrixType(covMatList)
-        ## # coerce to Matrix objects. should get "dspMatrix" (packed symmetric matrix)
-        ## covMatList <- lapply(covMatList, function(x) {
-        ##     if (!is(x, "Matrix")) x <- Matrix(x)
-        ##     if (is(x, "symmetricMatrix") & !is(x, "sparseMatrix")) x <- pack(x)
-        ##     return(x)
-        ## })
     }
 
     if (is.null(colnames(X))){
@@ -40,9 +36,11 @@
         stop("family must be one of gaussian, binomial, or poisson")
     }
 
+    ### Gaussian family
     if (family$family == "gaussian"){
         if (is.null(covMatList) & is.null(group.idx)) {
-            mod <- lm(y ~ -1 + X)  ## prepare output based on that. 
+            # linear regression
+            mod <- lm(y ~ -1 + X)
             out <- .nullModOutReg(y, X, mod, family)
         }
         if (is.null(covMatList) & !is.null(group.idx)){
@@ -61,7 +59,10 @@
                                  group.idx = group.idx, drop.zeros = drop.zeros)
         }
     } 
-    if (family$family != "gaussian"){ # separate condition instead of "else" for readability. 
+
+    ### Non-Gaussian family
+    if (family$family != "gaussian"){
+        # initial fit with glm
         mod <- glm(y ~ X, family = family)
         
         if (!is.null(covMatList)){ ## iterate between computing workingY and estimating VCs. 
@@ -78,8 +79,8 @@
                 out <- .nullModOutReg(y, X, mod, family)
                 out$zeroFLAG <- TRUE
             } else{
-                out <- .nullModOutMM(y = y, workingY = working.y$Y, X = X, 
-                                     vc.mod = vc.mod, family = family, covMatList = covMatList, 
+                out <- .nullModOutMM(y = y, workingY = working.y$Y, X = X, vc.mod = vc.mod, 
+                                     family = family, covMatList = covMatList, 
                                      vmu = working.y$vmu, gmuinv = working.y$gmuinv, drop.zeros = drop.zeros)
             }	
         } else{

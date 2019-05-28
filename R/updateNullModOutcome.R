@@ -7,7 +7,7 @@ updateNullModOutcome <- function(nullmod,
                                 covMatList = NULL, 
                                 rankNorm.option = c("by.group", "all"), 
                                 rescale = c("none", "model", "residSD"), 
-                                AIREML.tol = 1e-6, max.iter = 100, EM.iter = 0,
+                                AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0,
                                 verbose = TRUE){
 
     rankNorm.option <- match.arg(rankNorm.option)
