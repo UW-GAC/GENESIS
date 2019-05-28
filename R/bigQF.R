@@ -1,34 +1,32 @@
-pchisqsum<- function (x, df, a, remainder="warn", ...)
-{
-    if(!requireNamespace("survey")) stop("package 'survey' must be installed to calculate p-values for SKAT")
-    if(!requireNamespace("CompQuadForm")) stop("package 'CompQuadForm' must be installed to calculate p-values for SKAT")
+# pchisqsum<- function (x, df, a, remainder="warn", ...)
+# {
+#     if(!requireNamespace("survey")) stop("package 'survey' must be installed to calculate p-values for SKAT")
+#     if(!requireNamespace("CompQuadForm")) stop("package 'CompQuadForm' must be installed to calculate p-values for SKAT")
     
-    ## can happen with randomised trace estimator if most remaining singular values are very small.
-    ##
-    if (any(bad.df <- (df<1))){
-      if (remainder=="warn")
-            warning("Negative/fractional df removed")
-      else if (remainder=="error")
-	    stop("Negative/fractional df")
+#     ## can happen with randomised trace estimator if most remaining singular values are very small.
+#     ##
+#     if (any(bad.df <- (df<1))){
+#       if (remainder=="warn")
+#             warning("Negative/fractional df removed")
+#       else if (remainder=="error")
+# 	    stop("Negative/fractional df")
 
-      if(remainder=="missing"){
-            warning("NaN produced from negative/fractional df")
-            return(NaN*x)
-	}
+#       if(remainder=="missing"){
+#             warning("NaN produced from negative/fractional df")
+#             return(NaN*x)
+# 	}
 
-      df[bad.df]<-1
-      a[bad.df]<-0
-    }
-    df<-round(df)
-    ##
+#       df[bad.df]<-1
+#       a[bad.df]<-0
+#     }
+#     df<-round(df)
+#     ##
 
-    survey::pchisqsum(x, df, a, ...)
-}
+#     survey::pchisqsum(x, df, a, ...)
+# }
 
 
-pchisqsum_rsvd <-
-function(x,M,n=100,p=10,q=2, tr2.sample.size=100, method=c("saddlepoint","integration"),remainder="warn"){
-	method<-match.arg(method)
+pchisqsum_rsvd <- function(x,M,n=100,p=10,q=2, tr2.sample.size=100){
 	Q<-srfht2(M,n+p,q=q)
 	B<-M%*%Q
 	ee<-svd(B,nu=0,nv=0)$d[1:n]^2
@@ -44,12 +42,10 @@ function(x,M,n=100,p=10,q=2, tr2.sample.size=100, method=c("saddlepoint","integr
 	tr2.small<-tr2-sum(ee^2)
 	scale<-tr2.small/tr.small
 	nu<-(tr.small^2)/tr2.small
-    pchisqsum(x, c(rep(1,n), nu), c(ee, scale), method=method,lower.tail=FALSE,remainder=remainder)
+    .pchisqsum(x, c(rep(1,n), nu), c(ee, scale))
 }
 
-pchisqsum_ssvd <-
-function(x,M,n=100,p=10,q=0, method=c("saddlepoint","integration"),remainder="warn"){
-	method<-match.arg(method)
+pchisqsum_ssvd <- function(x,M,n=100,p=10,q=0){
 	Q<-srfht(M,n+p,q=q)
 	B<-t(Q)%*%M%*%Q
 	ee<-eigen(B,symmetric=TRUE,only.values=TRUE)$values[1:n]
@@ -59,7 +55,7 @@ function(x,M,n=100,p=10,q=0, method=c("saddlepoint","integration"),remainder="wa
 	tr2.small<-tr2-sum(ee^2)
 	scale<-tr2.small/tr.small
 	nu<-(tr.small^2)/tr2.small
-    pchisqsum(x, c(rep(1,n),ceiling(nu)), c(ee, scale), method=method,lower.tail=FALSE,remainder=remainder)
+    .pchisqsum(x, c(rep(1,n),ceiling(nu)), c(ee, scale))
 }
 
 srfht <-
