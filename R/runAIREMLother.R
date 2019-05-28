@@ -5,7 +5,8 @@
     m <- length(covMatList)
     n <- length(Y)
     if(is.null(start)){
-        sigma2.k <- rep(sqrt(AIREML.tol), m)
+        sigma2.k <- rep((1/m)*drop(var(Y)), m)
+        # sigma2.k <- rep(sqrt(AIREML.tol), m)
     }else{
         sigma2.k <- as.vector(start)
     }
