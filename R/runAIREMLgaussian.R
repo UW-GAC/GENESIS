@@ -12,6 +12,7 @@
     }else{
         sigma2.k <- as.vector(start)
     }
+    sigma2.kplus1 <- rep(NA, length(sigma2.k))
     zeroFLAG <- rep(FALSE, length(sigma2.k))
 
     if(verbose) message("Computing Variance Component Estimates...")
@@ -83,7 +84,6 @@
             
         }else{
             # EM step
-            sigma2.kplus1 <- rep(NA,(m+g))
             for(i in 1:m){
                 # PAPY <- sq$Sigma.inv %*% crossprod(covMatList[[i]],lq$PY) - tcrossprod(tcrossprod(lq$Sigma.inv_X, lq$Xt_Sigma.inv_X.inv), t(crossprod(covMatList[[i]],lq$PY)) %*% lq$Sigma.inv_X)
                 trPA.part1 <- sum( sq$Sigma.inv * covMatList[[i]] )
