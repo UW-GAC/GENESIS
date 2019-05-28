@@ -5,8 +5,8 @@
     m <- length(covMatList)
     n <- length(Y)
     if(is.null(start)){
-        sigma2.k <- rep((1/m)*drop(var(Y)), m)
-        # sigma2.k <- rep(sqrt(AIREML.tol), m)
+        # sigma2.k <- rep((1/m)*drop(var(Y)), m)
+        sigma2.k <- rep(sqrt(AIREML.tol), m)
     }else{
         sigma2.k <- as.vector(start)
     }
@@ -90,7 +90,7 @@
 
         ### check for convergence
         # val <- sqrt(sum((sigma2.kplus1 - sigma2.k)^2))
-        if(max(abs(sigma2.kplus1 - sigma2.k)) < AIREML.tol){
+        if((reps > EM.iter) & (max(abs(sigma2.kplus1 - sigma2.k)) < AIREML.tol)){
             converged <- TRUE
             (break)()
         }else{
