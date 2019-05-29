@@ -7,8 +7,7 @@ updateNullModOutcome <- function(nullmod,
                                 covMatList = NULL, 
                                 rankNorm.option = c("by.group", "all"), 
                                 rescale = c("none", "model", "residSD"), 
-                                AIREML.tol = 1e-6, 
-                                max.iter = 100, 
+                                AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0,
                                 verbose = TRUE){
 
     rankNorm.option <- match.arg(rankNorm.option)
@@ -79,8 +78,8 @@ updateNullModOutcome <- function(nullmod,
     
     new.nullmod <- .fitNullModel(y = resid, X = nullmod$model.matrix, covMatList = covMatList,
                                  group.idx = group.idx, family = "gaussian", start = nullmod$varComp, 
-                                 AIREML.tol = AIREML.tol, max.iter = max.iter, drop.zeros = TRUE, 
-                                 verbose = verbose)
+                                 AIREML.tol = AIREML.tol, max.iter = max.iter, EM.iter = EM.iter, 
+                                 drop.zeros = TRUE, verbose = verbose)
 
     ## add any extra slots
     extra <- setdiff(names(nullmod), names(new.nullmod))
