@@ -328,17 +328,9 @@ testVariantSet <- function( nullmod, G, weights,
             lambda <- eigen(distMat, only.values = TRUE, symmetric=TRUE)$values
             # lambda <- lambda[lambda > 0]
             lambdas[[i]] <- lambda
-            pv <- tryCatch({
-                        list(pval = pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, lower.tail = FALSE, method = "integration"), 
-                             err = 0, method = "integration")
-                    }, warning = function(w){
-                        list(pval = pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, lower.tail = FALSE, method = "saddlepoint"),
-                             err = 0, method = "saddlepoint")
-                    }, error = function(e){ 
-                        list(pval = NA_real_, err = 1, method = NA_character_)
-                    })
+            pv <- .pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda)
             pval <- pv$pval
-            err <- pv$err
+            err <- ifelse(is.na(pval), 1, 0)
         }
 
         # update results
