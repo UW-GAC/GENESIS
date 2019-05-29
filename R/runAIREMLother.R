@@ -82,12 +82,6 @@
             }
         }
 
-        ### check which parameters have converged to "0"
-        zeroFLAG <- sigma2.kplus1 < AIREML.tol
-        sigma2.kplus1[zeroFLAG] <- 0
-        # check if all are 0
-        if (sum(zeroFLAG) == m)  return(list(allZero = TRUE))
-
         ### check for convergence
         # val <- sqrt(sum((sigma2.kplus1 - sigma2.k)^2))
         if((reps > EM.iter) & (max(abs(sigma2.kplus1 - sigma2.k)) < AIREML.tol)){
@@ -100,6 +94,11 @@
                 warning("Maximum number of iterations reached without convergence!")
                 (break)()
             }else{
+                # check which parameters have converged to "0"
+                zeroFLAG <- sigma2.kplus1 < AIREML.tol
+                sigma2.kplus1[zeroFLAG] <- 0
+                # check if all are 0
+                if (sum(zeroFLAG) == m)  return(list(allZero = TRUE))
                 # update estimates
                 sigma2.k <- sigma2.kplus1
             }
