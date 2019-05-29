@@ -26,7 +26,8 @@
 \usage{
 \S4method{fitNullModel}{data.frame}(x, outcome, covars = NULL, cov.mat = NULL,
             group.var = NULL, family = "gaussian", start = NULL, 
-            AIREML.tol = 1e-6, max.iter = 100, drop.zeros = TRUE, verbose = TRUE)
+            AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0, drop.zeros = TRUE,
+            verbose = TRUE)
 \S4method{fitNullModel}{AnnotatedDataFrame}(x, outcome, covars = NULL, cov.mat = NULL,
             group.var = NULL, sample.id = NULL, ...)
 \S4method{fitNullModel}{SeqVarData}(x, ...)
@@ -35,7 +36,7 @@
 
 nullModelInvNorm(null.model, cov.mat = NULL, norm.option = c("by.group", "all"),
                  rescale = c("none", "model", "residSD"),
-                 AIREML.tol = 1e-6, max.iter = 100, verbose = TRUE)
+                 AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0, verbose = TRUE)
 }
 
 \arguments{
