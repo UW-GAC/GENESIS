@@ -30,7 +30,7 @@
 
     # construct Sigma
     Sigma <- Vre
-    diag(Sigma) <- diag(Sigma) + diagV   
+    diag(Sigma) <- diag(Sigma) + diagV
     # cholesky decomposition
     cholSigma <- chol(Sigma)
     # inverse
