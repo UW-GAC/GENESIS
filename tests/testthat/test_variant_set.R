@@ -174,7 +174,7 @@ test_that("fastSKAT matches SKAT(regular)", {
         reg <- .regular(Q, V, ncol(G))
         fastH <- .fastH(Q, V, neig=200)
         expect_equal(reg$pval, fastH$pval, tolerance=0.01)
-        fastG <- .fastG(Q, V, neig=200, ntrace=500)
+        fastG <- .fastG(Q, G, neig=200, ntrace=500)
         expect_equal(reg$pval, fastG$pval, tolerance=0.01)
 })
 

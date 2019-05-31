@@ -188,7 +188,7 @@ testVariantSet <- function( nullmod, G, weights,
     return(pv)
 }
 
-.fastG <- function(Q, V, neig, ntrace) {
+.fastG <- function(Q, G, neig, ntrace) {
     pv <- list(pval = NA_real_, method = NA_character_)
     pval.try = 0
     while(is.na(pv$pval) & pval.try < 10){
@@ -239,10 +239,10 @@ testVariantSet <- function( nullmod, G, weights,
     }else{
         # use "fast G" method
         if (verbose) message("using method fast_G")
-        pv <- .fastG(Q, V, neig, ntrace)
+        pv <- .fastG(Q, G, neig, ntrace)
     }
 
-    return(pv)
+    return(list(pval = pv$pval, pval.method = pv$method, err = pv$err))
 }
 
 .pchisqsum <- function(x, df, a){
