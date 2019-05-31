@@ -1,5 +1,10 @@
 setGeneric("assocTestAggregate", function(gdsobj, ...) standardGeneric("assocTestAggregate"))
 
+.match.arg <- function(test) {
+    if (length(test) > 1) test <- NULL
+    match.arg(test, choices=c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKATO"))
+}
+
 setMethod("assocTestAggregate",
           "SeqVarIterator",
           function(gdsobj, null.model, AF.max=1,
@@ -12,7 +17,7 @@ setMethod("assocTestAggregate",
                    sparse=TRUE, imputed=FALSE, verbose=TRUE) {
 
               # check argument values
-              test <- match.arg(test)
+              test <- .match.arg(test)
               burden.test <- match.arg(burden.test)
               # pval.method <- match.arg(pval.method)
 
@@ -143,7 +148,7 @@ setMethod("assocTestAggregate",
                    verbose=TRUE) {
 
               # check argument values
-              test <- match.arg(test)
+              test <- .match.arg(test)
               burden.test <- match.arg(burden.test)
               # pval.method <- match.arg(pval.method)
 
