@@ -1,6 +1,4 @@
-
-
-.calcLikelihoodQuantitiesPCG <- function(Y, X, Sigma, Sigma.inv_X, PPY=FALSE){
+.calcLikelihoodQuantitiesPCG <- function(Y, X, Sigma, Sigma.inv_X){
 
     # if (is(Sigma.inv, "Matrix")) X <- Matrix(X)
     # X <- matrix(X)
@@ -41,14 +39,9 @@
 ###    PY <- Sigma.inv %*% Y - tcrossprod(tcrossprod(Sigma.inv_X, Xt_Sigma.inv_X.inv), t(Y) %*% Sigma.inv_X)	  
     # PY <- crossprod(Sigma.inv, Y) - crossprod(tcrossprod(Xt_Sigma.inv_X.inv, Sigma.inv_X), crossprod(Sigma.inv_X, Y))
     PY <- .LeftMP(Y,X, Sigma, Sigma.inv_X)
-    #### calculate PPY
-    if (PPY) {
-###        PPY = crossprod(Sigma.inv - tcrossprod(tcrossprod(Sigma.inv_X, Xt_Sigma.inv_X.inv), Sigma.inv_X),PY)
-        # PPY <- crossprod(Sigma.inv, PY) - crossprod(tcrossprod(Xt_Sigma.inv_X.inv, Sigma.inv_X), crossprod(Sigma.inv_X, PY))
-        PPY <- .LeftMP(PY,X, Sigma, Sigma.inv_X)
-      } else {
-        PPY <- NULL
-    }
-    return(list(PY = PY, PPY= PPY, RSS = RSS, logLik = logLik, logLikR = logLikR, Sigma.inv_R  = Sigma.inv_R , Sigma.inv_X = Sigma.inv_X, Xt_Sigma.inv_X.inv = Xt_Sigma.inv_X.inv, beta = as.numeric(beta), fits = fits, residM = residM))
+    
+    return(list(PY = PY, RSS = RSS, logLik = logLik, logLikR = logLikR, 
+                Sigma.inv_X = Sigma.inv_X, Xt_Sigma.inv_X.inv = Xt_Sigma.inv_X.inv, 
+                beta = as.numeric(beta), fits = fits, residM = residM))
     
 }

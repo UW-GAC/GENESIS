@@ -52,11 +52,11 @@
         if (!is.null(covMatList)){
             if (is.null(group.idx)) group.idx <- list(resid.var = 1:length(y))
             if(usePCG){
-              vc.mod <- .runAIREMLgaussianPCG(y, X, start = start, covMatList = covMatList, 
-                                              group.idx = group.idx, AIREML.tol = AIREML.tol, drop.zeros = drop.zeros,
-                                              max.iter = max.iter, EM.iter = EM.iter, verbose = verbose)
+                vc.mod <- .runAIREMLgaussianPCG(y, X, start = start, covMatList = covMatList, 
+                                                group.idx = group.idx, AIREML.tol = AIREML.tol, drop.zeros = drop.zeros,
+                                                max.iter = max.iter, EM.iter = EM.iter, verbose = verbose)
             }else{
-              vc.mod <- .runAIREMLgaussian(y, X, start = start, covMatList = covMatList,
+                vc.mod <- .runAIREMLgaussian(y, X, start = start, covMatList = covMatList,
                                             group.idx = group.idx, AIREML.tol = AIREML.tol, drop.zeros = drop.zeros,
                                             max.iter = max.iter, EM.iter = EM.iter, verbose = verbose)
             }
