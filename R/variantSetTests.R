@@ -6,7 +6,7 @@
 
 
 testVariantSet <- function( nullmod, G, weights, 
-                            test = c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO"),
+                            test = c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKATO"),
                             burden.test = c("Score", "Wald"), 
                             neig = 200, ntrace = 500, 
                             rho = seq(from = 0, to = 1, by = 0.1)){
@@ -32,9 +32,9 @@ testVariantSet <- function( nullmod, G, weights,
     if (test == "SMMAT") {
         out <- .testVariantSetSMMAT(nullmod, G, weights, neig = Inf, ntrace = Inf)
     }
-    # if(test == "fastSMMAT"){
-    #     out <- .testVariantSetSMMAT(nullmod, G, weights, neig, ntrace)
-    # }
+    if(test == "fastSMMAT"){
+        out <- .testVariantSetSMMAT(nullmod, G, weights, neig, ntrace)
+    }
     if(test == "SKATO"){
         out <- .testVariantSetSKATO(nullmod, G, weights, rho)
     }
@@ -145,6 +145,69 @@ testVariantSet <- function( nullmod, G, weights,
 }
 
 
+.regular <- function(Q, V, ncolG) {
+    if(ncolG == 1){
+        pv <- list(pval = pchisq(as.numeric(Q/V), df=1, lower.tail=FALSE), method = "integration")
+        
+    }else{
+        lambda <- eigen(V, only.values = TRUE, symmetric=TRUE)$values
+        # lambda <- lambda[lambda > 0] 
+        pv <- .pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda)
+        # pv <- tryCatch({
+        #             list(pval = .pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, method = "integration"),
+        #                  method = "integration")
+        #         }, warning = function(w){
+        #             list(pval = pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, method = "saddlepoint"),
+        #                  method = "saddlepoint")
+        #         }, error = function(e){ 
+        #             list(pval = NA_real_, 
+        #                  method = NA_character_)
+        #         })
+    }
+    pv$err <- ifelse(is.na(pv$pval), 1, 0)
+    return(pv)
+}
+
+.fastH <- function(Q, V, neig) {
+    pv <- list(pval = NA_real_, method = NA_character_)
+    pval.try = 0
+    while(is.na(pv$pval) & pval.try < 10){
+        pv <- tryCatch( pchisqsum_ssvd(x = Q, M = as.matrix(V), n = neig, p = 10, q = 1),
+                       error = function(e){ list(pval = NA_real_, method = "error") } )
+        pval.try <- pval.try + 1
+    }
+    pv$method <- paste0('ssvd_', pv$method)
+    if(is.na(pv$pval)){
+        err <- 1
+    }else if(pval.try > 1){
+        err <- 2
+    }else{
+        err <- 0
+    }
+    pv[["err"]] <- err
+    return(pv)
+}
+
+.fastG <- function(Q, V, neig, ntrace) {
+    pv <- list(pval = NA_real_, method = NA_character_)
+    pval.try = 0
+    while(is.na(pv$pval) & pval.try < 10){
+        pv <- tryCatch( pchisqsum_rsvd(x = Q, M = as.matrix(G), n = neig, p = 10, q = 3, tr2.sample.size = ntrace), 
+                       error = function(e){ list(pval = NA_real_, method = "error") }   )
+        pval.try <- pval.try + 1
+    }
+    pv$method <- paste0('rsvd_', pv$method)
+    if(is.na(pv$pval)){
+        err <- 1
+    }else if(pval.try > 1){
+        err <- 2
+    }else{
+        err <- 0
+    }
+    pv[["err"]] <- err
+    return(pv)
+}
+
 .calcPvalVCTest <- function(Q, G, neig, ntrace, verbose){
     if(!requireNamespace("survey")) stop("package 'survey' must be installed to calculate p-values for SKAT or SMMAT")
     if(!requireNamespace("CompQuadForm")) stop("package 'CompQuadForm' must be installed to calculate p-values for SKAT or SMMAT")
@@ -160,70 +223,26 @@ testVariantSet <- function( nullmod, G, weights,
             V <- tcrossprod(G) # same eigenspace but smaller matrix
         }
         if(mean(abs(V)) < sqrt(.Machine$double.eps)){
-            return(list(pval = NA_real_, err = 1, pval.method = NA_character_))
+            return(list(pval = NA_real_, pval.method = NA_character_, err = 1))
         }
 
         if(min(ncolG, nrowG) < 2*neig){
             # use "regular" method
-            if(ncolG == 1){
-                pv <- list(pval = pchisq(as.numeric(Q/V), df=1, lower.tail=FALSE), method = "integration")
-                
-            }else{
-                lambda <- eigen(V, only.values = TRUE, symmetric=TRUE)$values
-                # lambda <- lambda[lambda > 0] 
-                pv <- .pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda)
-                # pv <- tryCatch({
-                #             list(pval = .pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, method = "integration"),
-                #                  method = "integration")
-                #         }, warning = function(w){
-                #             list(pval = pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, method = "saddlepoint"),
-                #                  method = "saddlepoint")
-                #         }, error = function(e){ 
-                #             list(pval = NA_real_, 
-                #                  method = NA_character_)
-                #         })
-            }
-            err <- ifelse(is.na(pv$pval), 1, 0)
+            pv <- .regular(Q, V, ncolG)
 
         }else{
             # use "fast H" method
-            pv <- list(pval = NA_real_, method = NA_character_)
-            pval.try = 0
-            while(is.na(pv$pval) & pval.try < 10){
-                pv <- tryCatch( pchisqsum_ssvd(x = Q, M = as.matrix(V), n = neig, p = 10, q = 1),
-                                error = function(e){ list(pval = NA_real_, method = "error") } )
-                pval.try <- pval.try + 1
-            }
-            pv$method <- paste0('ssvd_', pv$method)
-            if(is.na(pval)){
-                err <- 1
-            }else if(pval.try > 1){
-                err <- 2
-            }else{
-                err <- 0
-            }
+            if (verbose) message("using method fast_H")
+            pv <- .fastH(Q, V, neig)
         }
 
     }else{
         # use "fast G" method
-        pv <- list(pval = NA_real_, method = NA_character_)
-        pval.try = 0
-        while(is.na(pv$pval) & pval.try < 10){
-            pv <- tryCatch( pchisqsum_rsvd(x = Q, M = as.matrix(G), n = neig, p = 10, q = 3, tr2.sample.size = ntrace), 
-                            error = function(e){ list(pval = NA_real_, method = "error") }   )
-            pval.try <- pval.try + 1
-        }
-        pv$method <- paste0('rsvd_', pv$method)
-        if(is.na(pval)){
-            err <- 1
-        }else if(pval.try > 1){
-            err <- 2
-        }else{
-            err <- 0
-        }
+        if (verbose) message("using method fast_G")
+        pv <- .fastG(Q, V, neig, ntrace)
     }
 
-    return(list(pval = pv$pval, pval.method = pv$method, err = err))
+    return(pv)
 }
 
 .pchisqsum <- function(x, df, a){
