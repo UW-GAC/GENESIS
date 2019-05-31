@@ -120,7 +120,7 @@ setMethod("assocTestAggregate",
                                               neig = neig, ntrace = ntrace,
                                               rho=rho)
                                               # pval.method=pval.method)
-                      res[[i]] <- cbind(res[[i]], assoc)
+                      res[[i]] <- cbind(res[[i]], assoc, stringsAsFactors=FALSE)
                   }
 
                   if (verbose & n.iter > 1 & i %% set.messages == 0) {
@@ -230,7 +230,7 @@ setMethod("assocTestAggregate",
                                               neig = neig, ntrace = ntrace,
                                               rho=rho)
                                               # pval.method=pval.method)
-                      res[[i]] <- cbind(res[[i]], assoc)
+                      res[[i]] <- cbind(res[[i]], assoc, stringsAsFactors=FALSE)
                   }
 
                   if (verbose & n.iter > 1 & i %% set.messages == 0) {
