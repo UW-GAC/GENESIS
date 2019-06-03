@@ -1,5 +1,10 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.15.3}{
+    \itemize{
+      \item Add option "fastSKAT" to assocTestAggregate. Some other arguments and names of output columns for SKAT tests have also changed. This update includes code from the bigQF package (https://github.com/tslumley/bigQF). With the addition of C code, GENESIS now requires compliation.
+    }
+}
 \section{Version 2.13.7}{
     \itemize{
         \item Remove all monomorphic variants (including all heterozygotes) from association test results.
