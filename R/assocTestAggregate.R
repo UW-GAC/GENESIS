@@ -1,18 +1,25 @@
 setGeneric("assocTestAggregate", function(gdsobj, ...) standardGeneric("assocTestAggregate"))
 
+.match.arg <- function(test) {
+    if (length(test) > 1) test <- NULL
+    match.arg(test, choices=c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKATO"))
+}
+
 setMethod("assocTestAggregate",
           "SeqVarIterator",
           function(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
-                   test=c("Burden", "SKAT", "SMMAT"),
-                   burden.test=c("Score", "Wald"), rho=0,
-                   pval.method=c("davies", "kuonen", "liu"),
+                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO"),
+                   burden.test=c("Score", "Wald"),
+                   # pval.method=c("davies", "kuonen", "liu"),
+                   neig = 200, ntrace = 500,
+                   rho = seq(from = 0, to = 1, by = 0.1),
                    sparse=TRUE, imputed=FALSE, verbose=TRUE) {
 
               # check argument values
-              test <- match.arg(test)
+              test <- .match.arg(test)
               burden.test <- match.arg(burden.test)
-              pval.method <- match.arg(pval.method)
+              # pval.method <- match.arg(pval.method)
 
               # don't use sparse matrices for imputed dosages
               if (imputed) sparse <- FALSE
@@ -108,10 +115,12 @@ setMethod("assocTestAggregate",
                       }
 
                       # do the test
-                      assoc <- testVariantSet(null.model, G=geno, weights=weight, test=test, 
-                                              burden.test=burden.test, rho=rho, 
-                                              pval.method=pval.method)
-                      res[[i]] <- cbind(res[[i]], assoc)
+                      assoc <- testVariantSet(null.model, G=geno, weights=weight, 
+                                              test=test, burden.test=burden.test, 
+                                              neig = neig, ntrace = ntrace,
+                                              rho=rho)
+                                              # pval.method=pval.method)
+                      res[[i]] <- cbind(res[[i]], assoc, stringsAsFactors=FALSE)
                   }
 
                   if (verbose & n.iter > 1 & i %% set.messages == 0) {
@@ -131,15 +140,17 @@ setMethod("assocTestAggregate",
           "GenotypeIterator",
           function(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
-                   test=c("Burden", "SKAT", "SMMAT"),
-                   burden.test=c("Score", "Wald"), rho=0,
-                   pval.method=c("davies", "kuonen", "liu"),
+                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO"),
+                   burden.test=c("Score", "Wald"),
+                   # pval.method=c("davies", "kuonen", "liu"),
+                   neig = 200, ntrace = 500,
+                   rho = seq(from = 0, to = 1, by = 0.1),
                    verbose=TRUE) {
 
               # check argument values
-              test <- match.arg(test)
+              test <- .match.arg(test)
               burden.test <- match.arg(burden.test)
-              pval.method <- match.arg(pval.method)
+              # pval.method <- match.arg(pval.method)
 
               # filter samples to match null model
               sample.index <- .sampleIndexNullModel(gdsobj, null.model)
@@ -214,10 +225,12 @@ setMethod("assocTestAggregate",
                       }
 
                       # do the test
-                      assoc <- testVariantSet(null.model, G=geno, weights=weight, test=test, 
-                                              burden.test=burden.test, rho=rho,
-                                              pval.method=pval.method)
-                      res[[i]] <- cbind(res[[i]], assoc)
+                      assoc <- testVariantSet(null.model, G=geno, weights=weight, 
+                                              test=test, burden.test=burden.test, 
+                                              neig = neig, ntrace = ntrace,
+                                              rho=rho)
+                                              # pval.method=pval.method)
+                      res[[i]] <- cbind(res[[i]], assoc, stringsAsFactors=FALSE)
                   }
 
                   if (verbose & n.iter > 1 & i %% set.messages == 0) {

@@ -1,3 +1,5 @@
+useDynLib("GENESIS")
+
 import(grDevices)
 import(graphics)
 import(methods)

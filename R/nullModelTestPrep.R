@@ -44,8 +44,24 @@ calcGtilde <- function(nullmod, G){
     }
 
     # calculate Gtilde
-    CG - tcrossprod(nullmod$CXCXI, crossprod(CG, nullmod$CX))
-    # base::qr.resid(nullmod$qr, CG) # QR seems to be slower unexpectedly
+    nrowG <- as.numeric(nrow(CG))
+    ncolG <- as.numeric(ncol(CG))
+    if(length(C) == 1 || nrowG*ncolG <= 2^31){
+        Gtilde <- CG - tcrossprod(nullmod$CXCXI, crossprod(CG, nullmod$CX))
+        # base::qr.resid(nullmod$qr, CG) # QR seems to be slower unexpectedly
+
+    }else{
+        # too large when G sparse; break into multiple blocks
+        nblock <- ceiling(nrowG*ncolG/2^31)
+        blocks <- unname(split(1:ncolG, cut(1:ncolG, nblock)))
+        Gtilde <- list()
+        for(i in 1:length(blocks)){
+            Gtilde[[i]] <- as.matrix(CG[,blocks[[i]]] - tcrossprod(nullmod$CXCXI, crossprod(CG[,blocks[[i]]], nullmod$CX)))
+        }
+        Gtilde <- do.call(cbind, Gtilde)
+    }
+    
+    return(Gtilde)
 }
 
 ##  adjust genotypes for correlation structure and fixed effects
