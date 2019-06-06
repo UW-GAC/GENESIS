@@ -24,7 +24,10 @@
         
         ### compute sigma quantities
         sq <- .computeSigma(varComp = sigma2.k, covMatList = covMatList, group.idx = group.idx)
-        Sigma.inv_X <- .pcgM(sq$Sigma, X)
+        Sigma <- sq$Sigma
+        Sigma.inv_X <- .pcgM(Sigma, X)
+
+        
         PY <- .LeftMP(Y, X, Sigma, Sigma.inv_X)
         
         # lq <- .calcLikelihoodQuantitiesPCG(Y, X, Sigma, Sigma.inv_X, PPY=(g==1))
@@ -116,7 +119,7 @@
         }
 
         ### check for convergence
-        if((reps > EM.iter) & (max(abs(sigma2.k - sigma2.kplus1)/(abs(sigma2.k) + abs(sigma2.k) + 0.02)) < 0.02)){
+        if((reps > EM.iter) & (max(abs(sigma2.k - sigma2.kplus1)/(abs(sigma2.k) + abs(sigma2.kplus1) + 0.02)) < 0.02)){
             converged <- TRUE
             (break)()
         }else{
@@ -137,9 +140,6 @@
 
     ### some of the things normally in calcLQ ###
 
-    # linear predictor
-    eta <- as.numeric(lq$fits + crossprod(sq$Vre, PY)) # X\beta + Zb
-
     # get beta estimates
     Xt_Sigma.inv_X <- crossprod(X, Sigma.inv_X)
     # fix issue with not recognizing the matrix as symmetric
@@ -150,6 +150,9 @@
 
     ## calculate the mean of the outcomes
     fits <- tcrossprod(X, t(beta))
+    
+    # linear predictor
+    eta <- as.numeric(fits + crossprod(sq$Vre, PY)) # X\beta + Zb
     
     # obtain marginal residuals
     residM <- as.vector(Y - fits)
@@ -166,8 +169,6 @@
     return(list(varComp = sigma2.k, AI = AI, converged = converged, zeroFLAG = zeroFLAG, niter = reps, 
                 Sigma.inv = Sigma.inv, beta = beta, residM = residM, fits = fits, eta = eta, 
                 logLikR = NULL, logLik = NULL, RSS = RSS))
-
-                ### do we need Sigma.inv here? ### for .nullModOutMM?    
 }
 
 
