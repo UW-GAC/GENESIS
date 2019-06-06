@@ -31,7 +31,7 @@ setMethod("fitNullModel",
                             group.idx=desmat$group.idx, family=family,
                             start=start, AIREML.tol=AIREML.tol,
                             max.iter=max.iter, EM.iter=EM.iter,
-                            drop.zeros=drop.zeros, usePCG = usePCG, 
+                            drop.zeros=drop.zeros, usePCG = usePCG,
                             verbose=verbose)
           })
 

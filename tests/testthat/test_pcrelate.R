@@ -38,7 +38,7 @@ test_that("pcrelate2 - >2 sample blocks", {
 test_that("pcrelate2 - sample include", {
     svd <- .testData()
     mypcs <- .testPCs(svd)
-    samp.incl <- sample(seqGetData(svd, "sample.id"), 50)
+    set.seed(90); samp.incl <- sample(seqGetData(svd, "sample.id"), 50)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
     myrel2 <- pcrelate(iterator, pcs = mypcs, sample.include=samp.incl, verbose=FALSE)
     expect_true(setequal(myrel2$kinSelf$ID, samp.incl))
@@ -80,7 +80,7 @@ test_that("pcrelate2 - GenotypeData - sample blocks", {
 test_that("pcrelate2 - GenotypeData - sample include", {
     gd <- .testGenoData()
     mypcs <- .testGenoPCs(gd)
-    samp.incl <- sample(GWASTools::getScanID(gd), 50)
+    set.seed(91); samp.incl <- sample(GWASTools::getScanID(gd), 50)
     iterator <- GWASTools::GenotypeBlockIterator(gd)
     myrel2 <- pcrelate(iterator, pcs = mypcs, sample.include=samp.incl, verbose=FALSE)
     expect_true(setequal(myrel2$kinSelf$ID, as.character(samp.incl)))

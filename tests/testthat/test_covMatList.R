@@ -70,9 +70,10 @@ test_that("colnames only", {
 
 test_that("multiple matrices", {
     dat <- .testNullInputs()
-    dat2 <- .testNullInputs()
     mat1 <- dat$cor.mat
-    mat2 <- dat2$cor.mat
+    n <- length(dat$y)
+    set.seed(1); sqrt.cor.mat <- matrix(rnorm(n*n, sd = 0.05),n,n, dimnames=list(1:n, 1:n))
+    mat2 <- crossprod(sqrt.cor.mat)
     covMatList <- list(mat1, mat2)
     expect_true(all(sapply(.checkMatrixType(covMatList), is.matrix)))
     nullmod <- .fitNullModel(dat$y, dat$X, covMatList, verbose=FALSE)

@@ -24,8 +24,10 @@
         
         ### compute sigma quantities
         sq <- .computeSigma(varComp = sigma2.k, covMatList = covMatList, group.idx = group.idx)
-        Sigma.inv_X <- .pcgM(sq$Sigma, X)
         Sigma <- sq$Sigma
+        Sigma.inv_X <- .pcgM(Sigma, X)
+
+        
         PY <- .LeftMP(Y, X, Sigma, Sigma.inv_X)
         
         # lq <- .calcLikelihoodQuantitiesPCG(Y, X, Sigma, Sigma.inv_X, PPY=(g==1))
@@ -167,8 +169,6 @@
     return(list(varComp = sigma2.k, AI = AI, converged = converged, zeroFLAG = zeroFLAG, niter = reps, 
                 Sigma.inv = Sigma.inv, beta = beta, residM = residM, fits = fits, eta = eta, 
                 logLikR = NULL, logLik = NULL, RSS = RSS))
-
-                ### do we need Sigma.inv here? ### for .nullModOutMM?    
 }
 
 

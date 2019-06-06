@@ -13,10 +13,22 @@ test_that("assocTestSingle", {
     seqClose(svd)
 })
 
+test_that("assocTestSingle - binary", {
+    svd <- .testData()
+    iterator <- SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="status", covars=c("sex", "age"), verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+    seqResetFilter(svd, verbose=FALSE)
+    freq <- alleleFrequency(svd)
+    keep <- freq > 0 & freq < 1
+    expect_equal(unique(assoc$variant.id), seqGetData(svd, "variant.id")[keep])
+    seqClose(svd)
+})
+
 test_that("assocTestSingle - sample selection", {
     svd <- .testData()
     grm <- .testGRM(svd)
-    samp <- sampleData(svd)$sample.id[sample(1:nrow(sampleData(svd)), 50)]
+    set.seed(50); samp <- sampleData(svd)$sample.id[sample(1:nrow(sampleData(svd)), 50)]
     iterator <- SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
     nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), cov.mat=grm, sample.id=samp, verbose=FALSE)
     expect_equal(nrow(nullmod$model.matrix), 50)
@@ -27,7 +39,7 @@ test_that("assocTestSingle - sample selection", {
 
 test_that("assocTestSingle - reorder samples", {
     svd <- .testData()
-    samp <- sample(sampleData(svd)$sample.id, 50)
+    set.seed(51); samp <- sample(sampleData(svd)$sample.id, 50)
     grm <- .testGRM(svd)
     iterator <- SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
     nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), cov.mat=grm[samp,samp], verbose=FALSE)
@@ -43,8 +55,8 @@ test_that("assocTestSingle - reorder samples", {
     resetIterator(iterator, verbose=FALSE)
     assoc2 <- assocTestSingle(iterator, nullmod2, verbose=FALSE)
     # this test may not be reliable - see test_nullModel.R
-    #expect_equal(assoc, assoc2, tolerance=1e-3)
-    expect_equal(assoc[,1:6], assoc2[,1:6])
+    expect_equal(assoc, assoc2)
+    #expect_equal(assoc[,1:6], assoc2[,1:6])
     
     seqClose(svd)
 })
@@ -54,7 +66,7 @@ test_that("assocTestSingle - reorder samples", {
 test_that("reorder genotypes", {
     svd <- .testData()
     grm <- .testGRM(svd)
-    samp <- sample(sampleData(svd)$sample.id, 50)
+    set.seed(52); samp <- sample(sampleData(svd)$sample.id, 50)
     nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=grm[samp,samp], verbose=FALSE)
     sample.index <- .setFilterNullModel(svd, nullmod, verbose=FALSE)
     geno <- expandedAltDosage(svd, use.names=TRUE, sparse=TRUE)[sample.index,,drop=FALSE]
@@ -93,7 +105,7 @@ test_that("assocTestSingle matches regression", {
 test_that("assocTestSingle - GxE", {
     svd <- .testData()
     tmp <- sampleData(svd)
-    tmp$env <- sample(letters[1:3], nrow(tmp), replace=TRUE)
+    set.seed(54); tmp$env <- sample(letters[1:3], nrow(tmp), replace=TRUE)
     sampleData(svd) <- tmp
     iterator <- SeqVarBlockIterator(svd, variantBlock=2000, verbose=FALSE)
     nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age", "env"), verbose=FALSE)

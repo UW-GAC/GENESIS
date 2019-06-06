@@ -1,17 +1,19 @@
 .testNullInputs <- function(n=100, binary=FALSE) {
-    X <- cbind(1, rnorm(n), rbinom(n, size = 1, prob = 0.5))
+    set.seed(100); x1 <- rnorm(n)
+    set.seed(101); x2 <- rbinom(n, size = 1, prob = 0.5)
+    X <- cbind(x0=1, x1, x2)
 
-    sqrt.cor.mat <- matrix(rnorm(n*n, sd = 0.05),n,n, dimnames=list(1:n, 1:n))
+    set.seed(102); sqrt.cor.mat <- matrix(rnorm(n*n, sd = 0.05),n,n, dimnames=list(1:n, 1:n))
     cor.mat <- crossprod(sqrt.cor.mat)
 
     if (binary) {
-	random.iid <- rnorm(n)
+	set.seed(104); random.iid <- rnorm(n)
 	random <- crossprod(sqrt.cor.mat*0.05, random.iid)
 	expit <- function(x){exp(x)/(1+exp(x))} 
 	p <- expit(X %*% c(-1, 0.5, 1) + random) 
-	y <- rbinom(n, size = 1, prob = p)
+	set.seed(105); y <- rbinom(n, size = 1, prob = p)
     } else {
-        y <- X %*% c(1, 0.5, 1) + rnorm(n, sd = c(rep(4, n/2), rep(2, n/2)))
+        set.seed(106); y <- X %*% c(1, 0.5, 1) + rnorm(n, sd = c(rep(4, n/2), rep(2, n/2)))
     }
     
     group.idx <- list(G1 = c(1:(n/2)), G2 = c((n/2 + 1):n))
@@ -27,7 +29,7 @@
 }
 
 .testGenoMatrix <- function(n=100) {
-    matrix(rbinom(200*n, size = 2, prob = 0.2), nrow = n, ncol = 200)
+    set.seed(107); matrix(rbinom(200*n, size = 2, prob = 0.2), nrow = n, ncol = 200)
 }
 
 .testNullmod <- function(n=100, MM=FALSE, binary=FALSE) {

@@ -7,11 +7,11 @@ test_that("robust", {
         kin0 <- read.table(kin0file, header=TRUE, as.is=TRUE)
         samp <- unique(c(kin$ID1, kin$ID2, kin0$ID1, kin0$ID2))
 
-	KINGmat <- kingToMatrix(c(kinfile, kin0file), verbose=FALSE)
+	KINGmat <- kingToMatrix(c(kinfile, kin0file), estimator="Kinship", verbose=FALSE)
         expect_true(setequal(rownames(KINGmat), samp))
 
-        samp.include <- sample(samp, 100)
-	KINGmat <- kingToMatrix(c(kinfile, kin0file), sample.include=samp.include, verbose=FALSE)
+        set.seed(5); samp.include <- sample(samp, 100)
+	KINGmat <- kingToMatrix(c(kinfile, kin0file), estimator="Kinship", sample.include=samp.include, verbose=FALSE)
         expect_true(setequal(rownames(KINGmat), samp.include))
 })
 
@@ -28,10 +28,10 @@ test_that("threshold", {
 	kinfile <- system.file("extdata", "MXL_ASW.kin", package="GENESIS")
 	kin0file <- system.file("extdata", "MXL_ASW.kin0", package="GENESIS")
         kin <- read.table(kinfile, header=TRUE, as.is=TRUE)
-	KINGmat <- kingToMatrix(c(kinfile, kin0file), verbose=FALSE)
+	KINGmat <- kingToMatrix(c(kinfile, kin0file), estimator="Kinship", verbose=FALSE)
         rels <- sum(KINGmat > 0)
         
-	KINGmat <- kingToMatrix(c(kinfile, kin0file), thresh=0.02, verbose=FALSE)
+	KINGmat <- kingToMatrix(c(kinfile, kin0file), estimator="Kinship", thresh=0.02, verbose=FALSE)
         rels2 <- sum(KINGmat > 0)
         expect_true(rels2 < rels)
 })
@@ -42,4 +42,13 @@ test_that("snprelate", {
     KINGmat <- kingToMatrix(ibd, verbose=FALSE)
     expect_true(setequal(rownames(KINGmat), ibd$sample.id))
     seqClose(gds)
+})
+
+test_that("wrong column requested", {
+    kinfile <- system.file("extdata", "MXL_ASW.kin", package="GENESIS")
+    kin0file <- system.file("extdata", "MXL_ASW.kin0", package="GENESIS")
+    expect_error(kingToMatrix(c(kinfile, kin0file), verbose=FALSE), "Column PropIBD requested")
+
+    kinfile <- system.file("extdata", "HapMap.seg", package="GENESIS")
+    expect_error(kingToMatrix(c(kinfile, kin0file), estimator="Kinship", verbose=FALSE), "Column Kinship requested")
 })
