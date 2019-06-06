@@ -64,6 +64,18 @@ pcairPartition <- function(kinobj, divobj,
     rellist <- .apply(kinobj, MARGIN = 2, 
                       FUN = function(x){ kin.id[x > kin.thresh] },
                       selection = list(kin.read, kin.read))
+    if (is.matrix(rellist)) {
+        # everyone has the same number of relatives
+        if (nrow(rellist) == length(kin.id)) {
+            # everyone is related to everyone else
+            stop("All samples related at threshold ", kin.thresh, "; please select a higher kinship threshold to identify an unrelated set")
+        }
+        dimnames(rellist) <- NULL
+        rellist <- lapply(seq_len(ncol(rellist)), function(i) rellist[,i])
+    } else if (!is.list(rellist)) {
+        if(verbose) message("No relatives found using threshold ", kin.thresh)
+        return(list(rels = NULL, unrels = kin.id))
+    }
     names(rellist) <- kin.id
     # remove self from rellist
     for(i in 1:length(rellist)){
@@ -101,18 +113,22 @@ pcairPartition <- function(kinobj, divobj,
     divlist <- .apply(divobj, MARGIN = 2, 
                       FUN = function(x){ div.id[x < div.thresh] }, 
                       selection = list(div.read, div.read.col))
-    names(divlist) <- div.id.col
+    if (length(divlist) > 0) {
+        names(divlist) <- div.id.col
 
-    # create a vector matching ids of rellist and divlist
-    idx <- match(names(divlist), names(rellist))
-    # not divergent if actually related
-    for(i in 1:length(divlist)){
-        j <- idx[i]
-        divlist[[i]] <- divlist[[i]][!(divlist[[i]] %in% rellist[[j]])]
+        # create a vector matching ids of rellist and divlist
+        idx <- match(names(divlist), names(rellist))
+        # not divergent if actually related
+        for(i in 1:length(divlist)){
+            j <- idx[i]
+            divlist[[i]] <- divlist[[i]][!(divlist[[i]] %in% rellist[[j]])]
+        }
+
+        # compute number of divergent pairs for each sample
+        ndiv <- sapply(divlist, length)
+    } else {
+        ndiv <- setNames(rep(0, length(div.id.col)), div.id.col)
     }
-
-    # compute number of divergent pairs for each sample
-    ndiv <- sapply(divlist, length)
 
     # clean up
     rm(divlist); rm(div.id.all); rm(div.read); rm(div.read.col); rm(div.id); rm(div.id.col)

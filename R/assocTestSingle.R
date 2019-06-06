@@ -4,9 +4,7 @@ setGeneric("assocTestSingle", function(gdsobj, ...) standardGeneric("assocTestSi
 ## do we want to make imputing to the mean optional?
 setMethod("assocTestSingle",
           "SeqVarIterator",
-          function(gdsobj, null.model, test=c("Score", "Wald"), GxE=NULL, sparse=TRUE, imputed=FALSE, verbose=TRUE,
-                   useGWG = FALSE) {
-            ##add a flag here
+          function(gdsobj, null.model, test=c("Score", "Wald"), GxE=NULL, sparse=TRUE, imputed=FALSE, verbose=TRUE) {
               test <- match.arg(test)
 
               # don't use sparse matrices for imputed dosages
@@ -55,7 +53,7 @@ setMethod("assocTestSingle",
 
                   # do the test
                   if (!is.null(GxE)) GxE <- .modelMatrixColumns(null.model, GxE)
-                  assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test, useGWG = FALSE)
+                  assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test)
 
                   res[[i]] <- cbind(var.info, n.obs, freq, assoc)
                   

@@ -9,9 +9,11 @@ setMethod("fitNullModel",
                    group.var = NULL,
                    family = "gaussian",
                    start = NULL,
-                   AIREML.tol = 1e-6,
+                   AIREML.tol = 1e-4,
                    max.iter = 100,
+                   EM.iter = 0,
                    drop.zeros = TRUE,
+                   usePCG = FALSE,
                    verbose = TRUE) {
               
               desmat <- createDesignMatrix(x, outcome, covars, group.var)
@@ -28,7 +30,8 @@ setMethod("fitNullModel",
               .fitNullModel(y=desmat$y, X=desmat$X, covMatList=cov.mat,
                             group.idx=desmat$group.idx, family=family,
                             start=start, AIREML.tol=AIREML.tol,
-                            max.iter=max.iter, drop.zeros=drop.zeros,
+                            max.iter=max.iter, EM.iter=EM.iter,
+                            drop.zeros=drop.zeros, usePCG = usePCG, 
                             verbose=verbose)
           })
 
@@ -94,10 +97,13 @@ setMethod("fitNullModel",
 nullModelInvNorm <- function(null.model, cov.mat = NULL,
                              norm.option = c("by.group", "all"),
                              rescale = c("none", "model", "residSD"),
-                             AIREML.tol = 1e-6, max.iter = 100, verbose = TRUE) {
+                             AIREML.tol = 1e-4, 
+                             max.iter = 100, EM.iter = 0,
+                             verbose = TRUE) {
 
     updateNullModOutcome(null.model, covMatList=cov.mat, rankNorm.option=norm.option,
-                         rescale=rescale, AIREML.tol=AIREML.tol, max.iter=max.iter,
+                         rescale=rescale, AIREML.tol=AIREML.tol, 
+                         max.iter=max.iter, EM.iter=EM.iter,
                          verbose=verbose)
 }
 
