@@ -64,8 +64,7 @@
         ### score <-  -0.5*(sum(diag(P)) - crossprod(PY)) 
         ### AI <- 0.5*crossprod(PY,crossprod(P,PY))
         PPY <- .LeftMP(PY, X, Sigma, Sigma.inv_X)
-        I <- diag(n)
-        trP <-  .LeftMPtrEst(I, X, Sigma, Sigma.inv_X, Method = Method)
+        trP <-  .LeftMPtrEst( diag(n), X, Sigma, Sigma.inv_X, Method = Method)
         #.theoryvar(I,X, Sigma, Sigma.inv_X)
         #.testtrest(I, X, Sigma, Sigma.inv_X,Method = Method)
         #I_IPYY <- crossprod(I,diag(n) - PY %*% t(Y))
@@ -92,7 +91,7 @@
             PIPY <- .LeftMP(IPY, X, Sigma, Sigma.inv_X)
             #I_IPYY <- crossprod(I,diag(n) - PY %*% t(Y))
             #score[i] <- -0.5*(.LeftMPtrEst(I_IPYY, X, Sigma, Sigma.inv_X,Method = Method)) #tr(PI) - YPIPY
-            trPI <- .LeftMPtrEst(I, X, Sigma, Sigma.inv_X,Method = Method)
+            trPI <- .LeftMPtrEst(diag(I), X, Sigma, Sigma.inv_X,Method = Method)
             #.testtrest(I, X, Sigma, Sigma.inv_X,Method = Method)
             #.theoryvar(I,X, Sigma, Sigma.inv_X)
             score[i] <- -0.5*(trPI - crossprod(PY[group.idx[[i]]])) #tr(PI) - YPIPY
