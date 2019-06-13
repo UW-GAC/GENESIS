@@ -7,7 +7,8 @@
 
 
 # E an environmental variable for optional GxE interaction analysis. 
-testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), GxE.return.cov = FALSE){
+testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), GxE.return.cov = FALSE,
+                              useGWG = FALSE){
     test <- match.arg(test)
 
     G <- .genoAsMatrix(nullmod, G)
@@ -33,7 +34,13 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), G
     }
     
     if (test == "Score"){
+      if(useGWG == TRUE){
+        r <- nullmod$r
+        Gtilde <- calcGtildeWithW(nullmod, G, r = r)
+      }
+      else{
         Gtilde <- calcGtilde(nullmod, G)
+      }
         res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)
     }
     
