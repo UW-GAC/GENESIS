@@ -8,7 +8,7 @@
 ## X - data.frame or model.matrix
 .fitNullModel <- function(y, X, covMatList = NULL, group.idx = NULL, family = "gaussian", start = NULL,
                           AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0,
-                          drop.zeros = TRUE, verbose = TRUE){
+                          drop.zeros = TRUE, usePCG = FALSE, verbose = TRUE){
     
     ### checks
     if(!is.null(covMatList)){
@@ -51,9 +51,15 @@
         }
         if (!is.null(covMatList)){
             if (is.null(group.idx)) group.idx <- list(resid.var = 1:length(y))
-            vc.mod <- .runAIREMLgaussian(y, X, start = start, covMatList = covMatList, 
-                                         group.idx = group.idx, AIREML.tol = AIREML.tol, drop.zeros = drop.zeros,  
-                                         max.iter = max.iter, EM.iter = EM.iter, verbose = verbose)
+            if(usePCG){
+                vc.mod <- .runAIREMLgaussianPCG(y, X, start = start, covMatList = covMatList, 
+                                                group.idx = group.idx, AIREML.tol = AIREML.tol, drop.zeros = drop.zeros,
+                                                max.iter = max.iter, EM.iter = EM.iter, verbose = verbose)
+            }else{
+                vc.mod <- .runAIREMLgaussian(y, X, start = start, covMatList = covMatList,
+                                            group.idx = group.idx, AIREML.tol = AIREML.tol, drop.zeros = drop.zeros,
+                                            max.iter = max.iter, EM.iter = EM.iter, verbose = verbose)
+            }
             out <- .nullModOutMM(y = y, workingY = y, X = X, vc.mod = vc.mod, 
                                  family = family, covMatList = covMatList, 
                                  group.idx = group.idx, drop.zeros = drop.zeros)

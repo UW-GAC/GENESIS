@@ -13,6 +13,7 @@ setMethod("fitNullModel",
                    max.iter = 100,
                    EM.iter = 0,
                    drop.zeros = TRUE,
+                   usePCG = FALSE,
                    verbose = TRUE) {
               
               desmat <- createDesignMatrix(x, outcome, covars, group.var)
@@ -30,7 +31,8 @@ setMethod("fitNullModel",
                             group.idx=desmat$group.idx, family=family,
                             start=start, AIREML.tol=AIREML.tol,
                             max.iter=max.iter, EM.iter=EM.iter,
-                            drop.zeros=drop.zeros, verbose=verbose)
+                            drop.zeros=drop.zeros, usePCG = usePCG,
+                            verbose=verbose)
           })
 
 setMethod("fitNullModel",
