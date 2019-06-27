@@ -23,7 +23,7 @@
         reps <- reps+1
         
         ### compute sigma quantities
-        sq <- .computeSigma(varComp = sigma2.k, covMatList = covMatList, group.idx = group.idx)
+        sq <- .computeSigmaQuantities(varComp = sigma2.k, covMatList = covMatList, group.idx = group.idx, usePCG = TRUE)
         Sigma <- sq$Sigma
         Sigma.inv_X <- .pcgM(Sigma, X)
 

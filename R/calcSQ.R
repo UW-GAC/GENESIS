@@ -1,4 +1,5 @@
-.computeSigmaQuantities <- function(varComp, covMatList, group.idx = NULL, vmu = NULL, gmuinv = NULL){
+.computeSigmaQuantities <- function(varComp, covMatList, group.idx = NULL, 
+                                    vmu = NULL, gmuinv = NULL, usePCG = FALSE){
     m <- length(covMatList)
     n <- nrow(covMatList[[1]])
 
@@ -31,11 +32,15 @@
     # construct Sigma
     Sigma <- Vre
     diag(Sigma) <- diag(Sigma) + diagV
-    # cholesky decomposition
-    cholSigma <- chol(Sigma)
-    # inverse
-    Sigma.inv <- chol2inv(cholSigma)
 
-    return(list(Sigma.inv = Sigma.inv, Vre = Vre, diagV = diagV, cholSigma.diag = diag(cholSigma)))
+    if(usePCG){
+        return(list(Sigma = Sigma, Vre = Vre, W = 1/diagV))
+    }else{
+        # cholesky decomposition
+        cholSigma <- chol(Sigma)
+        # inverse
+        Sigma.inv <- chol2inv(cholSigma)
 
+        return(list(Sigma.inv = Sigma.inv, cholSigma.diag = diag(cholSigma), Vre = Vre, W = 1/diagV))
+    }
 }

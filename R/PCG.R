@@ -207,53 +207,59 @@
   return(PY)
 }
 
-.computeSigma <- function(varComp, covMatList, group.idx = NULL, vmu = NULL, gmuinv = NULL){
-  m <- length(covMatList)
-  n <- nrow(covMatList[[1]])
+### Matt - combined this function with .computeSigmaQuantities 6/27/2019
+### less repetitive code
+# .computeSigma <- function(varComp, covMatList, group.idx = NULL, vmu = NULL, gmuinv = NULL){
+#   m <- length(covMatList)
+#   n <- nrow(covMatList[[1]])
   
-  ###    Sigma <- Vre <- Reduce("+", mapply("*", covMatList, varComp[1:m], SIMPLIFY=FALSE))
-  Vre <- Reduce("+", mapply("*", covMatList, varComp[1:m], SIMPLIFY=FALSE))
-  ##tau psi
-  #m=1 for only kinship
-  ##\sum_i \sigma_i^2M_i
+#   ###    Sigma <- Vre <- Reduce("+", mapply("*", covMatList, varComp[1:m], SIMPLIFY=FALSE))
+#   Vre <- Reduce("+", mapply("*", covMatList, varComp[1:m], SIMPLIFY=FALSE))
+#   ##tau psi
+#   #m=1 for only kinship
+#   ##\sum_i \sigma_i^2M_i
   
-  if (is.null(vmu)){ ## this means the family is "gaussian"
-    if (is.null(group.idx)){
-      #Sigma <- Diagonal(x=rep(varComp[m+1],n)) + Vre
-      diagV <- rep(varComp[m+1],n)
-      ## don't allow
-    } else{
-      g <- length(group.idx)
-      ###        diagV <- rep(0,nrow(covMatList[[1]]))
-      ###        for(i in 1:g){
-      ###            diagV[group.idx[[i]]] <- varComp[m+i]
-      ###        }
-      ###        diag(Sigma) <- diag(Sigma) + diagV
+#   if (is.null(vmu)){ ## this means the family is "gaussian"
+#     if (is.null(group.idx)){
+#       #Sigma <- Diagonal(x=rep(varComp[m+1],n)) + Vre
+#       diagV <- rep(varComp[m+1],n)
+#       ## don't allow
+#     } else{
+#       g <- length(group.idx)
+#       diagV <- rep(NA, n)
+#       for(i in 1:g){
+#         diagV[group.idx[[i]]] <- varComp[m+i]
+#       }
+#       ###        diagV <- rep(0,nrow(covMatList[[1]]))
+#       ###        for(i in 1:g){
+#       ###            diagV[group.idx[[i]]] <- varComp[m+i]
+#       ###        }
+#       ###        diag(Sigma) <- diag(Sigma) + diagV
       
-      mylevels <- rep(NA, n)
-      for(i in 1:g){
-        mylevels[group.idx[[i]]] <- i # setting up vector of indicators; who is in which group
-      }
-      #Sigma <- Diagonal(x=(varComp[m+1:g])[mylevels] ) + Vre
-      diagV <- (varComp[m+1:g])[mylevels]
-      ##allow residual variance to be diff.
-      ##W^{-1}
-    }
+#       # mylevels <- rep(NA, n)
+#       # for(i in 1:g){
+#       #   mylevels[group.idx[[i]]] <- i # setting up vector of indicators; who is in which group
+#       # }
+#       #Sigma <- Diagonal(x=(varComp[m+1:g])[mylevels] ) + Vre
+#       # diagV <- (varComp[m+1:g])[mylevels]
+#       ##allow residual variance to be diff.
+#       ##W^{-1}
+#     }
     
-    ### if non-gaussian family:
-  } else {
-    ###        Sigma <- Sigma + diag(as.vector(vmu)/as.vector(gmuinv)^2)
-    #Sigma <- Diagonal(x=as.vector(vmu)/as.vector(gmuinv)^2) + Vre
-    diagV <- as.vector(vmu)/as.vector(gmuinv)^2
-  }
+#     ### if non-gaussian family:
+#   } else {
+#     ###        Sigma <- Sigma + diag(as.vector(vmu)/as.vector(gmuinv)^2)
+#     #Sigma <- Diagonal(x=as.vector(vmu)/as.vector(gmuinv)^2) + Vre
+#     diagV <- as.vector(vmu)/as.vector(gmuinv)^2
+#   }
   
-  # add diagonal elements
-  Sigma <- Vre
-  diag(Sigma) <- diag(Sigma) + diagV
+#   # add diagonal elements
+#   Sigma <- Vre
+#   diag(Sigma) <- diag(Sigma) + diagV
 
-  return(list(Sigma = Sigma,Vre = Vre))
+#   return(list(Sigma = Sigma,Vre = Vre))
   
-}
+# }
 
 .calREML <- function(Y, X, Sigma, Sigma.inv_X, PY){
   n <- length(Y)
