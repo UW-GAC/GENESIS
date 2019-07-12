@@ -35,3 +35,50 @@ test_that("filterMonomorphic - imputed", {
     expect_equivalent(c(rep(FALSE, 6), rep(TRUE, 2), FALSE),
                       .filterMonomorphic(geno, count, freq, imputed=TRUE))
 })
+
+test_that("alleleFreq - autosomes", {
+    svd <- .testData()
+    freq <- alleleFrequency(svd)
+    geno <- refDosage(svd)
+    expect_equal(.alleleFreq(svd, geno), freq)
+})
+
+test_that("MAC - autosomes", {
+    svd <- .testData()
+    mac <- minorAlleleCount(svd)
+    geno <- refDosage(svd)
+    expect_equal(.minorAlleleCount(svd, geno), mac)
+})
+
+.test1KG <- function() {
+    gdsfmt::showfile.gds(closeall=TRUE, verbose=FALSE)
+    vcffile <- system.file("extdata", "1KG", "1KG_phase3_subset_chrX.vcf.gz", package="GENESIS")
+    gdsfile <- tempfile()
+    seqVCF2GDS(vcffile, gdsfile, verbose=FALSE)
+    gds <- seqOpen(gdsfile)
+    data(sample_annotation_1KG)
+    SeqVarData(gds, sampleData=AnnotatedDataFrame(sample_annotation_1KG))
+}
+
+.cleanupGds <- function(gds) {
+    fn <- seqSummary(gds, check="none", verbose=FALSE)$filename
+    unlink(fn)
+}
+
+test_that("alleleFreq - Xchr", {
+    svd <- .test1KG()
+    freq <- alleleFrequency(svd)
+    geno <- refDosage(svd)
+    expect_equal(.alleleFreq(svd, geno), freq)
+    .cleanupGds(svd)
+})
+
+test_that("MAC - Xchr", {
+    svd <- .test1KG()
+    mac <- minorAlleleCount(svd)
+    geno <- refDosage(svd)
+    expect_equal(.minorAlleleCount(svd, geno), mac)
+    .cleanupGds(svd)
+})
+
+

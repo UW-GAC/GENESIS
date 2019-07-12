@@ -104,6 +104,59 @@ setMethod("variantFilter",
     freq
 }
 
+
+.minorAlleleCount <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL) {
+
+    # check sex
+    sex <- validateSex(gdsobj)
+    if (!is.null(sample.index)) sex <- sex[sample.index]
+    if (is.null(sex)) {
+        count <- colSums(geno, na.m=TRUE)
+        nsamp <- colSums(!is.na(geno, na.rm=TRUE))
+        return(round(pmin(count, 2*nsamp - count)))
+    }
+
+    # check chromosome
+    chr <- chromWithPAR(gdsobj)
+    if (!is.null(variant.index)) chr <- chr[variant.index]
+    X <- chr %in% "X"
+    Y <- chr %in% "Y"
+    auto <- !X & !Y
+
+    # allele count vector
+    count <- rep(NA, ncol(geno))
+    possible <- rep(NA, ncol(geno))
+
+    # autosomes
+    if (any(auto)) {
+        count[auto] <- colSums(geno[, auto, drop=FALSE], na.rm=TRUE)
+        possible[auto] <- 2 * colSums(!is.na(geno[, auto, drop=FALSE]))
+    }
+
+    # X chrom
+    if (any(X)) {
+        female <- sex %in% "F"
+        male <- sex %in% "M"
+        F.count <- colSums(geno[female, X, drop=FALSE], na.rm=TRUE)
+        F.nsamp <- colSums(!is.na(geno[female, X, drop=FALSE]))
+        M.count <- 0.5*colSums(geno[male, X, drop=FALSE], na.rm=TRUE)
+        M.nsamp <- colSums(!is.na(geno[male, X, drop=FALSE]))
+        count[X] <- (F.count + M.count)
+        possible[X] <- (2*F.nsamp + M.nsamp)
+    }
+
+    # Y chrom
+    if (any(Y)) {
+        male <- sex %in% "M"
+        # should this be 0.5*colSums?
+        count[Y] <- colSums(geno[male, Y, drop=FALSE], na.rm=TRUE)
+        possible[Y] <- colSums(!is.na(geno[male, Y, drop=FALSE]))
+    }
+
+    round(pmin(count, possible - count))
+}
+
+
 .meanImpute <- function(geno, freq) {
     miss.idx <- which(is.na(geno))
     miss.var.idx <- ceiling(miss.idx/nrow(geno))
