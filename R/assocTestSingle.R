@@ -4,7 +4,7 @@ setGeneric("assocTestSingle", function(gdsobj, ...) standardGeneric("assocTestSi
 ## do we want to make imputing to the mean optional?
 setMethod("assocTestSingle",
           "SeqVarIterator",
-          function(gdsobj, null.model, test=c("Score", "Wald"), GxE=NULL, sparse=TRUE, imputed=FALSE, verbose=TRUE) {
+          function(gdsobj, null.model, test=c("Score", "Wald"), GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), verbose=TRUE) {
               test <- match.arg(test)
 
               # don't use sparse matrices for imputed dosages
@@ -16,6 +16,9 @@ setMethod("assocTestSingle",
               # filter samples to match null model
               sample.index <- .setFilterNullModel(gdsobj, null.model, verbose=verbose)
 
+              # check ploidy
+              if (SeqVarTools:::.ploidy(gdsobj) == 1) male.diploid <- FALSE
+              
               # results
               res <- list()
               n.iter <- length(variantFilter(gdsobj))
@@ -35,7 +38,8 @@ setMethod("assocTestSingle",
                   n.obs <- colSums(!is.na(geno))
                   
                   # allele frequency
-                  freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index)
+                  freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index,
+                                      male.diploid=male.diploid, genome.build=genome.build)
                   
                   # filter monomorphic variants
                   keep <- .filterMonomorphic(geno, count=n.obs, freq=freq, imputed=imputed)
@@ -71,7 +75,7 @@ setMethod("assocTestSingle",
 
 setMethod("assocTestSingle",
           "GenotypeIterator",
-          function(gdsobj, null.model, test=c("Score", "Wald"), GxE=NULL, verbose=TRUE) {
+          function(gdsobj, null.model, test=c("Score", "Wald"), GxE=NULL, male.diploid=TRUE, verbose=TRUE) {
               test <- match.arg(test)
 
               # filter samples to match null model
@@ -93,7 +97,8 @@ setMethod("assocTestSingle",
                   n.obs <- colSums(!is.na(geno))
                   
                   # allele frequency
-                  freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index)
+                  freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index,
+                                      male.diploid=male.diploid)
                   
                   # filter monomorphic variants
                   keep <- .filterMonomorphic(geno, count=n.obs, freq=freq)

@@ -1,7 +1,7 @@
 # GenotypeData methods for SeqVarTools generics
 setMethod("chromWithPAR",
           "GenotypeData",
-          function(gdsobj) {
+          function(gdsobj, ...) {
               getChromosome(gdsobj, char=TRUE)
           })
 
@@ -60,7 +60,7 @@ setMethod("variantFilter",
 
 # index is in case we had to subset geno so it no longer matches the variant filter
 # (in the case of allele matching)
-.alleleFreq <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL) {
+.alleleFreq <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL, male.diploid=TRUE, genome.build=c("hg19", "hg38")) {
 
     # check sex
     sex <- validateSex(gdsobj)
@@ -70,7 +70,7 @@ setMethod("variantFilter",
     }
 
     # check chromosome
-    chr <- chromWithPAR(gdsobj)
+    chr <- chromWithPAR(gdsobj, genome.build=genome.build)
     if (!is.null(variant.index)) chr <- chr[variant.index]
     X <- chr %in% "X"
     Y <- chr %in% "Y"
@@ -90,7 +90,10 @@ setMethod("variantFilter",
         male <- sex %in% "M"
         F.count <- colSums(geno[female, X, drop=FALSE], na.rm=TRUE)
         F.nsamp <- colSums(!is.na(geno[female, X, drop=FALSE]))
-        M.count <- 0.5*colSums(geno[male, X, drop=FALSE], na.rm=TRUE)
+        M.count <- colSums(geno[male, X, drop=FALSE], na.rm=TRUE)
+        if (male.diploid) {
+            M.count <- 0.5*M.count
+        }
         M.nsamp <- colSums(!is.na(geno[male, X, drop=FALSE]))
         freq[X] <- (F.count + M.count)/(2*F.nsamp + M.nsamp)
     }
@@ -98,26 +101,29 @@ setMethod("variantFilter",
     # Y chrom
     if (any(Y)) {
         male <- sex %in% "M"
-        freq[Y] <- 0.5*colMeans(geno[male, Y, drop=FALSE], na.rm=TRUE)
+        freq[Y] <- colMeans(geno[male, Y, drop=FALSE], na.rm=TRUE)
+        if (male.diploid) {
+            freq[Y] <- 0.5*freq[Y]
+        }
     }
 
     freq
 }
 
 
-.minorAlleleCount <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL) {
+.minorAlleleCount <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL, male.diploid=TRUE, genome.build=c("hg19", "hg38")) {
 
     # check sex
     sex <- validateSex(gdsobj)
     if (!is.null(sample.index)) sex <- sex[sample.index]
     if (is.null(sex)) {
         count <- colSums(geno, na.m=TRUE)
-        nsamp <- colSums(!is.na(geno, na.rm=TRUE))
+        nsamp <- colSums(!is.na(geno))
         return(round(pmin(count, 2*nsamp - count)))
     }
 
     # check chromosome
-    chr <- chromWithPAR(gdsobj)
+    chr <- chromWithPAR(gdsobj, genome.build=genome.build)
     if (!is.null(variant.index)) chr <- chr[variant.index]
     X <- chr %in% "X"
     Y <- chr %in% "Y"
@@ -139,7 +145,10 @@ setMethod("variantFilter",
         male <- sex %in% "M"
         F.count <- colSums(geno[female, X, drop=FALSE], na.rm=TRUE)
         F.nsamp <- colSums(!is.na(geno[female, X, drop=FALSE]))
-        M.count <- 0.5*colSums(geno[male, X, drop=FALSE], na.rm=TRUE)
+        M.count <- colSums(geno[male, X, drop=FALSE], na.rm=TRUE)
+        if (male.diploid) {
+            M.count <- 0.5*M.count
+        }
         M.nsamp <- colSums(!is.na(geno[male, X, drop=FALSE]))
         count[X] <- (F.count + M.count)
         possible[X] <- (2*F.nsamp + M.nsamp)
@@ -148,8 +157,10 @@ setMethod("variantFilter",
     # Y chrom
     if (any(Y)) {
         male <- sex %in% "M"
-        # should this be 0.5*colSums?
         count[Y] <- colSums(geno[male, Y, drop=FALSE], na.rm=TRUE)
+        if (male.diploid) {
+            count[Y] <- 0.5*count[Y]
+        }
         possible[Y] <- colSums(!is.na(geno[male, Y, drop=FALSE]))
     }
 

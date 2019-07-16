@@ -14,14 +14,16 @@
                    burden.test=c("Score", "Wald"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
-                   sparse=TRUE, imputed=FALSE, verbose=TRUE)
+                   sparse=TRUE, imputed=FALSE,
+                   male.diploid=TRUE, genome.build=c("hg19", "hg38"),
+                   verbose=TRUE)
 \S4method{assocTestAggregate}{GenotypeIterator}(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
                    test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO"),
                    burden.test=c("Score", "Wald"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
-                   verbose=TRUE)
+                   male.diploid=TRUE, verbose=TRUE)
 }
 
 \arguments{
@@ -39,6 +41,8 @@
     %\item{pval.method}{A character string specifying which method to use to calculate SKAT p-values. \code{"davies"} (the default) uses numerical integration; \code{"kuonen"} uses a saddlepoint method; and \code{"liu"} uses a moment matching approximation. If the davies method generates an error, kuonen is tried, and then liu as a last resort.}
     \item{sparse}{Logical indicator of whether to read genotypes as sparse Matrix objects; the default is \code{TRUE}. Set this to \code{FALSE} if the alternate allele dosage of the genotypes in the test are not expected to be mostly 0.}
     \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles.}
+  \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid.}
+  \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is \code{TRUE}.}
 }
 

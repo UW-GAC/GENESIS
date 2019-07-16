@@ -6,12 +6,15 @@
 Run admixture analyses
 }
 \usage{
-admixMap(admixDataList, null.model, verbose=TRUE)
+admixMap(admixDataList, null.model, male.diploid=TRUE,
+         genome.build=c("hg19", "hg38"), verbose=TRUE)
 }
 
 \arguments{
   \item{admixDataList}{named list of \code{\link{GenotypeIterator}} or \code{\link{SeqVarIterator}} objects for each ancestry}
     \item{null.model}{A null model object returned by \code{\link{fitNullModel}}.}
+  \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid.}
+  \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is TRUE.}
 }
 

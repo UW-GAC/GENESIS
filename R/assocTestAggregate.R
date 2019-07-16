@@ -14,7 +14,9 @@ setMethod("assocTestAggregate",
                    # pval.method=c("davies", "kuonen", "liu"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
-                   sparse=TRUE, imputed=FALSE, verbose=TRUE) {
+                   sparse=TRUE, imputed=FALSE,
+                   male.diploid=TRUE, genome.build=c("hg19", "hg38"),
+                   verbose=TRUE) {
 
               # check argument values
               test <- .match.arg(test)
@@ -33,6 +35,9 @@ setMethod("assocTestAggregate",
               # do we need to match on alleles?
               match.alleles <- any(c("ref", "alt") %in% names(mcols(currentRanges(gdsobj))))
 
+              # check ploidy
+              if (SeqVarTools:::.ploidy(gdsobj) == 1) male.diploid <- FALSE
+              
               # results
               res <- list()
               res.var <- list()
@@ -61,7 +66,8 @@ setMethod("assocTestAggregate",
                   n.obs <- colSums(!is.na(geno))
                   
                   # allele frequency
-                  freq <- .alleleFreq(gdsobj, geno, variant.index=index, sample.index=sample.index)
+                  freq <- .alleleFreq(gdsobj, geno, variant.index=index, sample.index=sample.index,
+                                      male.diploid=male.diploid, genome.build=genome.build)
                   
                   # filter monomorphic variants
                   keep <- .filterMonomorphic(geno, count=n.obs, freq=freq, imputed=imputed)
@@ -145,7 +151,7 @@ setMethod("assocTestAggregate",
                    # pval.method=c("davies", "kuonen", "liu"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
-                   verbose=TRUE) {
+                   male.diploid=TRUE, verbose=TRUE) {
 
               # check argument values
               test <- .match.arg(test)
@@ -172,7 +178,8 @@ setMethod("assocTestAggregate",
                   n.obs <- colSums(!is.na(geno))
                   
                   # allele frequency
-                  freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index)
+                  freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index,
+                                      male.diploid=male.diploid)
                   
                   # filter monomorphic variants
                   keep <- .filterMonomorphic(geno, count=n.obs, freq=freq)
