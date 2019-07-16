@@ -52,11 +52,11 @@
     ranges of variants or selection of individual variants (ranges with
     width 1). See \code{\link{SeqVarIterator}} for more details.
   
-    Monomorphic variants (including variants where every sample is a heterozygote) are always omitted from the aggregate unit prior to testing.
-  
     The effect size estimate is for each copy of the alternate allele.
     For multiallelic variants, each alternate allele is tested separately.
 
+    Monomorphic variants (including variants where every sample is a heterozygote) are always omitted from the aggregate unit prior to testing.
+  
     Somewhat similarly to SKAT-O, the variant Set Mixed Model Association Test (SMMAT, Chen et al., 2019) combines the burden test p-value with an adjusted SKAT (which is asymptotically independent of the burden test) p-value using a chi-square distribution with 4df from Fisher's method.
 
     SKAT and SMMAT will attempt to use Davies' method (i.e. integration) to calculate p-values; if an error occurs in integration or the reported p-values are too small that they are unreliable (i.e. near machine epsilon), then the saddlepoint approximation will instead be used to calculate the p-values.
@@ -117,8 +117,10 @@
     \item{variant.id}{The variant ID}
     \item{chr}{The chromosome value}
     \item{pos}{The base pair position}
+    \item{allele.index}{The index of the alternate allele. For biallelic variants, this will always be 1.}
     \item{n.obs}{The number of samples with non-missing genotypes}
     \item{freq}{The estimated alternate allele frequency}
+    \item{MAC}{The minor allele count. For multiallelic variants, "minor" is determined by comparing the count of the alternate allele specified by \code{allele.index} with the sum of all other alleles.}
     \item{weight}{The weight assigned to the variant in the analysis.}
 }
 

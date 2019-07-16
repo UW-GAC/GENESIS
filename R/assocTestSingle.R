@@ -42,17 +42,17 @@ setMethod("assocTestSingle",
                                       male.diploid=male.diploid, genome.build=genome.build)
                   
                   # filter monomorphic variants
-                  keep <- .filterMonomorphic(geno, count=n.obs, freq=freq, imputed=imputed)
+                  keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq, imputed=imputed)
                   if (!all(keep)) {
                       var.info <- var.info[keep,,drop=FALSE]
                       geno <- geno[,keep,drop=FALSE]
                       n.obs <- n.obs[keep]
-                      freq <- freq[keep]
+                      freq <- freq[keep,,drop=FALSE]
                   }
 
                   # mean impute missing values
                   if (any(n.obs < nrow(geno))) {
-                      geno <- .meanImpute(geno, freq)
+                      geno <- .meanImpute(geno, freq$freq)
                   }
 
                   # do the test
@@ -101,17 +101,17 @@ setMethod("assocTestSingle",
                                       male.diploid=male.diploid)
                   
                   # filter monomorphic variants
-                  keep <- .filterMonomorphic(geno, count=n.obs, freq=freq)
+                  keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq)
                   if (!all(keep)) {
                       var.info <- var.info[keep,,drop=FALSE]
                       geno <- geno[,keep,drop=FALSE]
                       n.obs <- n.obs[keep]
-                      freq <- freq[keep]
+                      freq <- freq[keep,,drop=FALSE]
                   }
 
                   # mean impute missing values
                   if (any(n.obs < nrow(geno))) {
-                      geno <- .meanImpute(geno, freq)
+                      geno <- .meanImpute(geno, freq$freq)
                   }
 
                   # do the test

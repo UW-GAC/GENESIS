@@ -41,7 +41,7 @@ test_that("alleleFreq - autosomes", {
     svd <- .testData()
     freq <- alleleFrequency(svd)
     geno <- refDosage(svd)
-    expect_equal(.alleleFreq(svd, geno), freq)
+    expect_equal(.alleleFreq(svd, geno)$freq, freq)
     seqClose(svd)
 })
 
@@ -49,7 +49,19 @@ test_that("MAC - autosomes", {
     svd <- .testData()
     mac <- minorAlleleCount(svd)
     geno <- refDosage(svd)
-    expect_equal(.minorAlleleCount(svd, geno), mac)
+    expect_equal(.alleleFreq(svd, geno)$MAC, mac)
+    seqClose(svd)
+})
+
+test_that("alleleFreq - nosex", {
+    svd <- .testData()
+    sampleData(svd)$sex <- NULL
+    freq <- alleleFrequency(svd)
+    mac <- minorAlleleCount(svd)
+    geno <- refDosage(svd)
+    chk <- .alleleFreq(svd, geno)
+    expect_equivalent(chk$freq, freq)
+    expect_equivalent(chk$MAC, mac)
     seqClose(svd)
 })
 
@@ -91,7 +103,7 @@ test_that("alleleFreq - sex chrs", {
     svd <- .testGdsXY()
     freq <- alleleFrequency(svd)
     geno <- refDosage(svd)
-    expect_equal(.alleleFreq(svd, geno), freq)
+    expect_equal(.alleleFreq(svd, geno)$freq, freq)
     .cleanupGds(svd)
 })
 
@@ -99,7 +111,7 @@ test_that("MAC - sex chrs", {
     svd <- .testGdsXY()
     mac <- minorAlleleCount(svd)
     geno <- refDosage(svd)
-    expect_equal(.minorAlleleCount(svd, geno), round(mac))
+    expect_equal(.alleleFreq(svd, geno)$MAC, round(mac))
     .cleanupGds(svd)
 })
 
@@ -113,10 +125,11 @@ test_that("MAC - sex chrs", {
     
     freq <- alleleFrequency(svd)
     geno <- refDosage(svd)
-    expect_equal(.alleleFreq(svd, geno, male.diploid=FALSE), freq)
+    chk <- .alleleFreq(svd, geno, male.diploid=FALSE)
+    expect_equal(chk$freq, freq)
     
     mac <- minorAlleleCount(svd)
-    expect_equal(.minorAlleleCount(svd, geno, male.diploid=FALSE), round(mac))
+    expect_equal(chk$MAC, round(mac))
     seqClose(gds)
 }
 

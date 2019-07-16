@@ -75,7 +75,7 @@ admixMap <- function(admixDataList,
         freq <- matrix(NA, nrow=n.var, ncol=v)
         for(i in 1:v){
             freq[,i] <- .alleleFreq(admixDataList[[i]], local[,,i], sample.index=sample.index,
-                                    male.diploid=male.diploid, genome.build=genome.build)
+                                    male.diploid=male.diploid, genome.build=genome.build)$freq
         }
         col <- if (v > 1) paste(names(admixDataList),".freq", sep="") else "freq"
         res[,col] <- freq

@@ -70,21 +70,21 @@ setMethod("assocTestAggregate",
                                       male.diploid=male.diploid, genome.build=genome.build)
                   
                   # filter monomorphic variants
-                  keep <- .filterMonomorphic(geno, count=n.obs, freq=freq, imputed=imputed)
+                  keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq, imputed=imputed)
 
                   # exclude variants with freq > max
-                  keep <-  keep & freq <= AF.max
+                  keep <-  keep & freq$freq <= AF.max
                   if (!all(keep)) {
                       var.info <- var.info[keep,,drop=FALSE]
                       geno <- geno[,keep,drop=FALSE]
                       n.obs <- n.obs[keep]
-                      freq <- freq[keep]
+                      freq <- freq[keep,,drop=FALSE]
                   }
 
                   # weights
                   if (is.null(weight.user)) {
                       # Beta weights
-                      weight <- .weightFromFreq(freq, weight.beta)
+                      weight <- .weightFromFreq(freq$freq, weight.beta)
                   } else {
                       # user supplied weights
                       weight <- currentVariants(gdsobj)[[weight.user]][expandedVariantIndex(gdsobj)]
@@ -97,7 +97,7 @@ setMethod("assocTestAggregate",
                           var.info <- var.info[keep,,drop=FALSE]
                           geno <- geno[,keep,drop=FALSE]
                           n.obs <- n.obs[keep]
-                          freq <- freq[keep]
+                          freq <- freq[keep,,drop=FALSE]
                           weight <- weight[keep]
                       }
                   }
@@ -117,7 +117,7 @@ setMethod("assocTestAggregate",
                   if (n.site > 0) {
                       # mean impute missing values
                       if (any(n.obs < nrow(geno))) {
-                          geno <- .meanImpute(geno, freq)
+                          geno <- .meanImpute(geno, freq$freq)
                       }
 
                       # do the test
@@ -182,21 +182,21 @@ setMethod("assocTestAggregate",
                                       male.diploid=male.diploid)
                   
                   # filter monomorphic variants
-                  keep <- .filterMonomorphic(geno, count=n.obs, freq=freq)
+                  keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq)
 
                   # exclude variants with freq > max
-                  keep <-  keep & freq <= AF.max
+                  keep <-  keep & freq$freq <= AF.max
                   if (!all(keep)) {
                       var.info <- var.info[keep,,drop=FALSE]
                       geno <- geno[,keep,drop=FALSE]
                       n.obs <- n.obs[keep]
-                      freq <- freq[keep]
+                      freq <- freq[keep,,drop=FALSE]
                   }
 
                   # weights
                   if (is.null(weight.user)) {
                       # Beta weights
-                      weight <- .weightFromFreq(freq, weight.beta)
+                      weight <- .weightFromFreq(freq$freq, weight.beta)
                   } else {
                       # user supplied weights
                       weight <- getSnpVariable(gdsobj, weight.user)
@@ -208,7 +208,7 @@ setMethod("assocTestAggregate",
                           var.info <- var.info[keep,,drop=FALSE]
                           geno <- geno[,keep,drop=FALSE]
                           n.obs <- n.obs[keep]
-                          freq <- freq[keep]
+                          freq <- freq[keep,,drop=FALSE]
                           weight <- weight[keep]
                       }
                   }
@@ -228,7 +228,7 @@ setMethod("assocTestAggregate",
                   if (n.site > 0) {
                       # mean impute missing values
                       if (any(n.obs < nrow(geno))) {
-                          geno <- .meanImpute(geno, freq)
+                          geno <- .meanImpute(geno, freq$freq)
                       }
 
                       # do the test
