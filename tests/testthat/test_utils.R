@@ -1,4 +1,5 @@
 context("test utils")
+library(SeqVarTools)
 
 test_that("filterMonomorphic - discrete", {
     nsamp <- 100
@@ -35,3 +36,101 @@ test_that("filterMonomorphic - imputed", {
     expect_equivalent(c(rep(FALSE, 6), rep(TRUE, 2), FALSE),
                       .filterMonomorphic(geno, count, freq, imputed=TRUE))
 })
+
+test_that("alleleFreq - autosomes", {
+    svd <- .testData()
+    freq <- alleleFrequency(svd)
+    geno <- refDosage(svd)
+    expect_equal(.alleleFreq(svd, geno)$freq, freq)
+    seqClose(svd)
+})
+
+test_that("MAC - autosomes", {
+    svd <- .testData()
+    mac <- minorAlleleCount(svd)
+    geno <- refDosage(svd)
+    expect_equal(.alleleFreq(svd, geno)$MAC, mac)
+    seqClose(svd)
+})
+
+test_that("alleleFreq - nosex", {
+    svd <- .testData()
+    sampleData(svd)$sex <- NULL
+    freq <- alleleFrequency(svd)
+    mac <- minorAlleleCount(svd)
+    geno <- refDosage(svd)
+    chk <- .alleleFreq(svd, geno)
+    expect_equivalent(chk$freq, freq)
+    expect_equivalent(chk$MAC, mac)
+    seqClose(svd)
+})
+
+.testGdsXY <- function() {
+    # make up file with sex chroms
+    gds.fn <- tempfile()
+    invisible(file.copy(seqExampleFileName("gds"), gds.fn))
+    gds <- openfn.gds(gds.fn, readonly=FALSE)
+    node <- index.gdsn(gds, "chromosome")
+    compression.gdsn(node, "")
+    chr <- read.gdsn(node)
+    chr[chr == 1] <- "X"
+    chr[chr == 2] <- "Y"
+    write.gdsn(node, chr)
+    closefn.gds(gds)
+    seqOptimize(gds.fn, target="chromosome", verbose=FALSE)
+    gds <- seqOpen(gds.fn)
+    sample.id <- seqGetData(gds, "sample.id")
+    set.seed(55); sex <- sample(c("M","F"), replace=TRUE, length(sample.id))
+    df <- data.frame(sample.id, sex, stringsAsFactors=FALSE)
+    SeqVarData(gds, sampleData=Biobase::AnnotatedDataFrame(df))
+}
+
+.cleanupGds <- function(gds) {
+    fn <- seqSummary(gds, check="none", verbose=FALSE)$filename
+    seqClose(gds)
+    unlink(fn)
+}
+
+## .test1KG_X <- function() {
+##     gdsfmt::showfile.gds(closeall=TRUE, verbose=FALSE)
+##     gdsfile <- system.file("extdata", "1KG_chrX.gds", package="SeqVarTools")
+##     gds <- seqOpen(gdsfile)
+##     data(sample_annotation_1KG)
+##     SeqVarData(gds, sampleData=AnnotatedDataFrame(sample_annotation_1KG))
+## }
+
+test_that("alleleFreq - sex chrs", {
+    svd <- .testGdsXY()
+    freq <- alleleFrequency(svd)
+    geno <- refDosage(svd)
+    expect_equal(.alleleFreq(svd, geno)$freq, freq)
+    .cleanupGds(svd)
+})
+
+test_that("MAC - sex chrs", {
+    svd <- .testGdsXY()
+    mac <- minorAlleleCount(svd)
+    geno <- refDosage(svd)
+    expect_equal(.alleleFreq(svd, geno)$MAC, round(mac))
+    .cleanupGds(svd)
+})
+
+.test1KG_Y <- function() {
+    gdsfmt::showfile.gds(closeall=TRUE, verbose=FALSE)
+    gdsfile <- system.file("extdata", "1KG_chrY.gds", package="SeqVarTools")
+    gds <- seqOpen(gdsfile)
+    sample.id <- seqGetData(gds, "sample.id")
+    df <- data.frame(sample.id, sex="M", stringsAsFactors=FALSE)
+    svd <- SeqVarData(gds, sampleData=AnnotatedDataFrame(df))
+    
+    freq <- alleleFrequency(svd)
+    geno <- refDosage(svd)
+    chk <- .alleleFreq(svd, geno, male.diploid=FALSE)
+    expect_equal(chk$freq, freq)
+    
+    mac <- minorAlleleCount(svd)
+    expect_equal(chk$MAC, round(mac))
+    seqClose(gds)
+}
+
+

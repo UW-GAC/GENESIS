@@ -14,14 +14,16 @@
                    burden.test=c("Score", "Wald"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
-                   sparse=TRUE, imputed=FALSE, verbose=TRUE)
+                   sparse=TRUE, imputed=FALSE,
+                   male.diploid=TRUE, genome.build=c("hg19", "hg38"),
+                   verbose=TRUE)
 \S4method{assocTestAggregate}{GenotypeIterator}(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
                    test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO"),
                    burden.test=c("Score", "Wald"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
-                   verbose=TRUE)
+                   male.diploid=TRUE, verbose=TRUE)
 }
 
 \arguments{
@@ -39,6 +41,8 @@
     %\item{pval.method}{A character string specifying which method to use to calculate SKAT p-values. \code{"davies"} (the default) uses numerical integration; \code{"kuonen"} uses a saddlepoint method; and \code{"liu"} uses a moment matching approximation. If the davies method generates an error, kuonen is tried, and then liu as a last resort.}
     \item{sparse}{Logical indicator of whether to read genotypes as sparse Matrix objects; the default is \code{TRUE}. Set this to \code{FALSE} if the alternate allele dosage of the genotypes in the test are not expected to be mostly 0.}
     \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles.}
+  \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid.}
+  \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is \code{TRUE}.}
 }
 
@@ -48,11 +52,11 @@
     ranges of variants or selection of individual variants (ranges with
     width 1). See \code{\link{SeqVarIterator}} for more details.
   
-    Monomorphic variants (including variants where every sample is a heterozygote) are always omitted from the aggregate unit prior to testing.
-  
     The effect size estimate is for each copy of the alternate allele.
     For multiallelic variants, each alternate allele is tested separately.
 
+    Monomorphic variants (including variants where every sample is a heterozygote) are always omitted from the aggregate unit prior to testing.
+  
     Somewhat similarly to SKAT-O, the variant Set Mixed Model Association Test (SMMAT, Chen et al., 2019) combines the burden test p-value with an adjusted SKAT (which is asymptotically independent of the burden test) p-value using a chi-square distribution with 4df from Fisher's method.
 
     SKAT and SMMAT will attempt to use Davies' method (i.e. integration) to calculate p-values; if an error occurs in integration or the reported p-values are too small that they are unreliable (i.e. near machine epsilon), then the saddlepoint approximation will instead be used to calculate the p-values.
@@ -113,8 +117,10 @@
     \item{variant.id}{The variant ID}
     \item{chr}{The chromosome value}
     \item{pos}{The base pair position}
+    \item{allele.index}{The index of the alternate allele. For biallelic variants, this will always be 1.}
     \item{n.obs}{The number of samples with non-missing genotypes}
     \item{freq}{The estimated alternate allele frequency}
+    \item{MAC}{The minor allele count. For multiallelic variants, "minor" is determined by comparing the count of the alternate allele specified by \code{allele.index} with the sum of all other alleles.}
     \item{weight}{The weight assigned to the variant in the analysis.}
 }
 

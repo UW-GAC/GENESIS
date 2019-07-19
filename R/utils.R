@@ -1,7 +1,7 @@
 # GenotypeData methods for SeqVarTools generics
 setMethod("chromWithPAR",
           "GenotypeData",
-          function(gdsobj) {
+          function(gdsobj, ...) {
               getChromosome(gdsobj, char=TRUE)
           })
 
@@ -60,28 +60,37 @@ setMethod("variantFilter",
 
 # index is in case we had to subset geno so it no longer matches the variant filter
 # (in the case of allele matching)
-.alleleFreq <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL) {
+.alleleFreq <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL, male.diploid=TRUE, genome.build=c("hg19", "hg38")) {
 
     # check sex
     sex <- validateSex(gdsobj)
     if (!is.null(sample.index)) sex <- sex[sample.index]
     if (is.null(sex)) {
-        return(0.5*colMeans(geno, na.rm=TRUE))
+        #freq <- 0.5*colMeans(geno, na.rm=TRUE)
+        count <- colSums(geno, na.rm=TRUE)
+        nsamp <- colSums(!is.na(geno))
+        freq <- count/(2*nsamp)
+        mac <- round(pmin(count, 2*nsamp - count))
+        return(list(freq=freq, MAC=mac))
     }
 
     # check chromosome
-    chr <- chromWithPAR(gdsobj)
+    chr <- chromWithPAR(gdsobj, genome.build=genome.build)
     if (!is.null(variant.index)) chr <- chr[variant.index]
     X <- chr %in% "X"
     Y <- chr %in% "Y"
     auto <- !X & !Y
 
-    # allele frequency vector
-    freq <- rep(NA, ncol(geno))
+    # allele count vectors
+    #freq <- rep(NA, ncol(geno))
+    count <- rep(NA, ncol(geno))
+    possible <- rep(NA, ncol(geno))
 
     # autosomes
     if (any(auto)) {
-        freq[auto] <- 0.5*colMeans(geno[, auto, drop=FALSE], na.rm=TRUE)
+        #freq[auto] <- 0.5*colMeans(geno[, auto, drop=FALSE], na.rm=TRUE)
+        count[auto] <- colSums(geno[, auto, drop=FALSE], na.rm=TRUE)
+        possible[auto] <- 2 * colSums(!is.na(geno[, auto, drop=FALSE]))
     }
 
     # X chrom
@@ -90,19 +99,33 @@ setMethod("variantFilter",
         male <- sex %in% "M"
         F.count <- colSums(geno[female, X, drop=FALSE], na.rm=TRUE)
         F.nsamp <- colSums(!is.na(geno[female, X, drop=FALSE]))
-        M.count <- 0.5*colSums(geno[male, X, drop=FALSE], na.rm=TRUE)
+        M.count <- colSums(geno[male, X, drop=FALSE], na.rm=TRUE)
+        if (male.diploid) {
+            M.count <- 0.5*M.count
+        }
         M.nsamp <- colSums(!is.na(geno[male, X, drop=FALSE]))
-        freq[X] <- (F.count + M.count)/(2*F.nsamp + M.nsamp)
+        #freq[X] <- (F.count + M.count)/(2*F.nsamp + M.nsamp)
+        count[X] <- (F.count + M.count)
+        possible[X] <- (2*F.nsamp + M.nsamp)
     }
 
     # Y chrom
     if (any(Y)) {
         male <- sex %in% "M"
-        freq[Y] <- 0.5*colMeans(geno[male, Y, drop=FALSE], na.rm=TRUE)
+        #freq[Y] <- colMeans(geno[male, Y, drop=FALSE], na.rm=TRUE)
+        count[Y] <- colSums(geno[male, Y, drop=FALSE], na.rm=TRUE)
+        if (male.diploid) {
+            #freq[Y] <- 0.5*freq[Y]
+            count[Y] <- 0.5*count[Y]
+        }
+        possible[Y] <- colSums(!is.na(geno[male, Y, drop=FALSE]))
     }
 
-    freq
+    freq <- count / possible
+    mac <- round(pmin(count, possible - count))
+    data.frame(freq=freq, MAC=mac)
 }
+
 
 .meanImpute <- function(geno, freq) {
     miss.idx <- which(is.na(geno))

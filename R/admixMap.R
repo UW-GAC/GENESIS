@@ -1,5 +1,6 @@
 admixMap <- function(admixDataList,
                      null.model,
+                     male.diploid=TRUE, genome.build=c("hg19", "hg38"),
                      verbose = TRUE){
 
     # if admixDataList is one file, convert to a list
@@ -73,7 +74,8 @@ admixMap <- function(admixDataList,
         # matrix:  rows are SNPs, columns are ancestries
         freq <- matrix(NA, nrow=n.var, ncol=v)
         for(i in 1:v){
-            freq[,i] <- .alleleFreq(admixDataList[[i]], local[,,i], sample.index=sample.index)
+            freq[,i] <- .alleleFreq(admixDataList[[i]], local[,,i], sample.index=sample.index,
+                                    male.diploid=male.diploid, genome.build=genome.build)$freq
         }
         col <- if (v > 1) paste(names(admixDataList),".freq", sep="") else "freq"
         res[,col] <- freq

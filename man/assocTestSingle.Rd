@@ -11,9 +11,10 @@
 
 \usage{
 \S4method{assocTestSingle}{SeqVarIterator}(gdsobj, null.model, test=c("Score", "Wald"),
-                GxE=NULL, sparse=TRUE, imputed=FALSE, verbose=TRUE)
+                GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE,
+                genome.build=c("hg19", "hg38"), verbose=TRUE)
 \S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model, test=c("Score", "Wald"),
-                GxE=NULL, verbose=TRUE)
+                GxE=NULL, male.diploid=TRUE, verbose=TRUE)
 }
 
 \arguments{
@@ -25,10 +26,14 @@
     %\item{ivar.return.betaCov}{Logical indicator of whether the estimated covariance matrix of the effect size estimates (betas) for the genotype and genotype interaction terms should be returned; the default is FALSE.}
     \item{sparse}{Logical indicator of whether to read genotypes as sparse Matrix objects; the default is \code{TRUE}. Set this to \code{FALSE} if the alternate allele dosage of the genotypes in the test are not expected to be mostly 0.}
     \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles.}
+  \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid.}
+  \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is \code{TRUE}.}
 }
 
 \details{
+    The effect size estimate is for each copy of the alternate allele.
+    For multiallelic variants, each alternate allele is tested separately.
     %When \code{impute.geno} is TRUE, sporadic missing genotype values are mean imputed using the minor allele frequency (MAF) calculated on all other samples at that SNP. When \code{impute.geno} is FALSE, samples with missing values for all of the SNP genotypes in the current SNP block are removed from the analysis for the block; this may significantly slow down computation time because many pre-computed matrices need to be re-computed each time the sample set changes.  Also note: when \code{impute.geno} is FALSE, sporadic missingness for a sample inside of a SNP block will lead to an error.
 
     Sporadic missing genotype values are mean imputed using the minor allele frequency (MAF) calculated on all other samples at that variant.
@@ -47,6 +52,7 @@
     \item{allele.index}{The index of the alternate allele. For biallelic variants, this will always be 1.}
     \item{n.obs}{The number of samples with non-missing genotypes}
     \item{freq}{The estimated alternate allele frequency}
+    \item{MAC}{The minor allele count. For multiallelic variants, "minor" is determined by comparing the count of the alternate allele specified by \code{allele.index} with the sum of all other alleles.}
     If \code{test} is \code{"Score"}:
     \item{Score}{The value of the score function}
     \item{Score.SE}{The estimated standard error of the Score}
@@ -68,9 +74,6 @@
     \item{Joint.pval}{The Wald p-value for the joint test of the genotype term and all of the genotype interaction terms; i.e. the test of any genotype effect}
     
     %When \code{GxE} is not \code{NULL}, if \code{ivar.return.betaCov} is \code{TRUE}, then the output is a list with two elements.  The first, "results", is the data.frame described above.  The second, "betaCov", is a list with length equal to the number of rows of "results", where each element of the list is the covariance matrix of the effect size estimates (betas) for the genotype and genotype interaction terms.
-
-    The effect size estimate is for each copy of the alternate allele.
-    For multiallelic variants, each alternate allele is tested separately.
 }
 
 \author{Matthew P. Conomos, Stephanie M. Gogarten, Tamar Sofer, Ken Rice, Chaoyu Yu}
