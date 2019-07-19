@@ -15,7 +15,8 @@ setMethod("assocTestSingle",
               
               # filter samples to match null model
               sample.index <- .setFilterNullModel(gdsobj, null.model, verbose=verbose)
-
+              if (!is.null(GxE)) GxE <- .modelMatrixColumns(null.model, GxE)
+              
               # check ploidy
               if (SeqVarTools:::.ploidy(gdsobj) == 1) male.diploid <- FALSE
               
@@ -56,7 +57,6 @@ setMethod("assocTestSingle",
                   }
 
                   # do the test
-                  if (!is.null(GxE)) GxE <- .modelMatrixColumns(null.model, GxE)
                   assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test)
 
                   res[[i]] <- cbind(var.info, n.obs, freq, assoc)
@@ -80,6 +80,8 @@ setMethod("assocTestSingle",
 
               # filter samples to match null model
               sample.index <- .sampleIndexNullModel(gdsobj, null.model)
+              
+              if (!is.null(GxE)) GxE <- .modelMatrixColumns(null.model, GxE)
               
               # results
               res <- list()
@@ -115,7 +117,6 @@ setMethod("assocTestSingle",
                   }
 
                   # do the test
-                  if (!is.null(GxE)) GxE <- .modelMatrixColumns(null.model, GxE)
                   assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test)
 
                   res[[i]] <- cbind(var.info, n.obs, freq, assoc)

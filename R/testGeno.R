@@ -139,7 +139,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), G
         
         GPY <- crossprod(Gtilde, nullmod$Ytilde)
         betas <- crossprod(GPGinv, GPY)
-        res[g, grep("Est", colnames(res))] <- as.vector(betas)
+        res[g, grep("^Est\\.G", colnames(res))] <- as.vector(betas)
         
         RSS <- as.numeric((sY2 - crossprod(GPY, betas))/(n - k - v))
         Vbetas <- GPGinv * RSS
@@ -148,7 +148,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), G
             res.Vbetas[[g]] <- Vbetas
         }
         
-        res[g, grep("SE", colnames(res))] <- sqrt(diag(Vbetas))
+        res[g, grep("^SE\\.G", colnames(res))] <- sqrt(diag(Vbetas))
         
         res[g, "GxE.Stat"] <- tryCatch(sqrt(as.vector(crossprod(betas[-1],
                                                  crossprod(chol2inv(chol(Vbetas[-1, -1])),
@@ -191,13 +191,13 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), G
     
     GPY <- crossprod(Gtilde, Ytilde)
     betas <- crossprod(GPGinv, GPY) ## effect estimates of the various alleles
-    res[1, grep("Est", colnames(res))] <- betas
+    res[1, grep("^Est\\.G", colnames(res))] <- betas
     
     sY2 <- sum(Ytilde^2)
     RSS <- as.numeric((sY2 - crossprod(GPY, betas))/(n - k - v))
     Vbetas <- GPGinv * RSS
     
-    res[1, grep(colnames(res), "SE")] <- sqrt(diag(Vbetas))
+    res[1, grep("^SE\\.G", colnames(res))] <- sqrt(diag(Vbetas))
     
     res[1, "Joint.Stat"] <- tryCatch(crossprod(betas,
                                                crossprod(GPG, betas))/RSS, 
