@@ -651,6 +651,35 @@ correctK0 <- function(kinBtwn){
 }
 
 
+setGeneric("meltMatrix", function(x, ...) standardGeneric("meltMatrix"))
+
+setMethod("meltMatrix",
+          "matrix",
+          function(x, drop.lower = FALSE, drop.diag = FALSE){
+            ID1 <- ID2 <- NULL
+            if(drop.lower){
+                x[lower.tri(x, diag = drop.diag)] <- NA
+            }
+            x <- as.data.table(reshape2::melt(x, varnames = c('ID1', 'ID2'), na.rm = TRUE, as.is = TRUE))
+            x <- x[,`:=`(ID1 = as.character(ID1), ID2 = as.character(ID2))]
+            setkeyv(x, c('ID1', 'ID2'))
+          })
+
+setMethod("meltMatrix",
+          "Matrix",
+          function(x, drop.lower = FALSE, drop.diag = FALSE){
+            if(drop.lower){
+                x[lower.tri(x, diag = drop.diag)] <- NA
+            }
+
+            # this modeled after reshape2:::melt.matrix
+            labels <- as.data.table(expand.grid(dimnames(x), KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE))
+            setnames(labels, c('Var1', 'Var2'), c('ID1', 'ID2'))
+
+            missing <- is.na(as.vector(x))
+            x <- cbind(labels[!missing,], data.table(value = x[!missing])) 
+            setkeyv(x, c('ID1', 'ID2'))
+          })
 
 
 
