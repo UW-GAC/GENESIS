@@ -2,14 +2,14 @@ setGeneric("makeSparseMatrix", function(x, ...) standardGeneric("makeSparseMatri
 
 setMethod("makeSparseMatrix",
           "matrix",
-          function(x, thresh = NULL, sample.include = NULL, verbose = TRUE){
-            .makeSparseMatrix_matrix(x = x, thresh = thresh, sample.include = sample.include, verbose = verbose)
+          function(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE){
+            .makeSparseMatrix_matrix(x = x, thresh = thresh, sample.include = sample.include, diag.value = diag.value, verbose = verbose)
           })
 
 setMethod("makeSparseMatrix",
           "Matrix",
-          function(x, thresh = NULL, sample.include = NULL, verbose = TRUE){
-          	.makeSparseMatrix_matrix(x = x, thresh = thresh, sample.include = sample.include, verbose = verbose)
+          function(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE){
+          	.makeSparseMatrix_matrix(x = x, thresh = thresh, sample.include = sample.include, diag.value = diag.value, verbose = verbose)
           })
 
 setMethod("makeSparseMatrix",
@@ -25,7 +25,7 @@ setMethod("makeSparseMatrix",
           })
 
 
-.makeSparseMatrix_matrix <- function(x, thresh = NULL, sample.include = NULL, verbose = TRUE){
+.makeSparseMatrix_matrix <- function(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE){
 
     # keep R CMD check from warning about undefined global variables
     ID1 <- ID2 <- NULL
@@ -50,6 +50,11 @@ setMethod("makeSparseMatrix",
         # get list of all samples in the data
         sample.include <- sort(unique(c(rownames(x), colnames(x))))
         if(verbose) message("Using ", length(sample.include), " samples provided")
+    }
+
+    # check for diag values
+    if(is.null(diag.value)){
+        if(any(is.na(diag(x))) stop('When `diag.value` is NULL, diagonal values must be provided for all samples')
     }
 
     # get the table of all related pairs
@@ -77,7 +82,12 @@ setMethod("makeSparseMatrix",
             
             # extract the matrix for all pairs in the cluster
             submat <- x[rownames(x) %in% ids, colnames(x) %in% ids]
-            
+
+            # fix the diagonal
+            if(!is.null(diag.value)){
+                diag(submat) <- diag.value
+            }
+
             # store in the list
             blocks[[i]] <- submat
             block.id[[i]] <- rownames(submat)
@@ -91,10 +101,15 @@ setMethod("makeSparseMatrix",
     if(verbose) message(length(unrel.id), " samples with no relatives included")
 
     if(length(unrel.id) > 0) {
-        # data for the diagonal
-        ddat <- diag(x)[rownames(x) %in% unrel.id]
-        blocks[[clu$no + 1]] <- Diagonal(n = length(ddat), x = ddat)
-        block.id[[clu$no + 1]] <- names(ddat)
+        if(is.null(diag.value)){
+            # data for the diagonal
+            ddat <- diag(x)[rownames(x) %in% unrel.id]
+            blocks[[clu$no + 1]] <- Diagonal(n = length(ddat), x = ddat)
+            block.id[[clu$no + 1]] <- names(ddat)
+        }else{
+            blocks[[clu$no + 1]] <- Diagonal(n = length(unrel.id), x = diag.value)
+            block.id[[clu$no + 1]] <- unrel.id
+        }
     }
 
     # create block diagonal matrix
