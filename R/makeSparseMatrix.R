@@ -54,7 +54,7 @@ setMethod("makeSparseMatrix",
 
     # check for diag values
     if(is.null(diag.value)){
-        if(any(is.na(diag(x))) stop('When `diag.value` is NULL, diagonal values must be provided for all samples')
+        if(any(is.na(diag(x)))) stop('When `diag.value` is NULL, diagonal values must be provided for all samples')
     }
 
     # get the table of all related pairs
