@@ -36,6 +36,18 @@ setMethod("makeSparseMatrix",
         stop("thresh must be specified when x is a matrix object")
     }
 
+    # check for names
+    if(is.null(colnames(x))) {
+        if(is.null(rownames(x))) {
+            stop("dimnames must be provided for matrix x to track sample order in the output matrix.")
+        } else {
+            colnames(x) <- rownames(x)
+        }
+    }
+    if(is.null(rownames(x))) {
+        rownames(x) <- colnames(x)
+    }
+    
     # check that matrix is square
     if(!all(rownames(x) == colnames(x))){
         stop("x must be square when it is a matrix object")
@@ -45,10 +57,10 @@ setMethod("makeSparseMatrix",
     if(!is.null(sample.include)){
         # subset to samples in sample.include
         if(verbose) message('Using ', length(sample.include), ' samples in sample.include')
-        x <- x[rownames(x) %in% sample.include & colnames(x) %in% sample.include]
+        x <- x[rownames(x) %in% sample.include, colnames(x) %in% sample.include]
     }else{
         # get list of all samples in the data
-        sample.include <- sort(unique(c(rownames(x), colnames(x))))
+        sample.include <- sort(rownames(x))
         if(verbose) message("Using ", length(sample.include), " samples provided")
     }
 
