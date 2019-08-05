@@ -80,7 +80,7 @@ test_that("alleleFreq - nosex", {
     seqOptimize(gds.fn, target="chromosome", verbose=FALSE)
     gds <- seqOpen(gds.fn)
     sample.id <- seqGetData(gds, "sample.id")
-    set.seed(55); sex <- sample(c("M","F"), replace=TRUE, length(sample.id))
+    set.seed(56); sex <- sample(c("M","F"), replace=TRUE, length(sample.id))
     df <- data.frame(sample.id, sex, stringsAsFactors=FALSE)
     SeqVarData(gds, sampleData=Biobase::AnnotatedDataFrame(df))
 }
