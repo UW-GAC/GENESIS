@@ -45,6 +45,10 @@ The GENESIS package provides methodology for estimating,
 * [Reference manual](http://www.bioconductor.org/packages/devel/bioc/manuals/GENESIS/man/GENESIS.pdf)
 * [News](http://bioconductor.org/packages/devel/bioc/news/GENESIS/NEWS)
 
+## Citation
+
+Gogarten, S.M., Sofer, T., Chen, H., Yu, C., Brody, J.A., Thornton, T.A., Rice, K.M., and Conomos, M.P. (2019). Genetic association testing using the GENESIS R/Bioconductor package. *Bioinformatics*. [doi:10.1093/bioinformatics/btz567](http://doi.org/10.1093/bioinformatics/btz567).
+
 ## Installation
 
 ```R
