@@ -2,13 +2,13 @@ setGeneric("makeSparseMatrix", function(x, ...) standardGeneric("makeSparseMatri
 
 setMethod("makeSparseMatrix",
           "matrix",
-          function(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE){
+          function(x, thresh = 2^(-11/2), sample.include = NULL, diag.value = NULL, verbose = TRUE){
             .makeSparseMatrix_matrix(x = x, thresh = thresh, sample.include = sample.include, diag.value = diag.value, verbose = verbose)
           })
 
 setMethod("makeSparseMatrix",
           "Matrix",
-          function(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE){
+          function(x, thresh = 2^(-11/2), sample.include = NULL, diag.value = NULL, verbose = TRUE){
           	.makeSparseMatrix_matrix(x = x, thresh = thresh, sample.include = sample.include, diag.value = diag.value, verbose = verbose)
           })
 
@@ -25,7 +25,7 @@ setMethod("makeSparseMatrix",
           })
 
 
-.makeSparseMatrix_matrix <- function(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE){
+.makeSparseMatrix_matrix <- function(x, thresh = 2^(-11/2), sample.include = NULL, diag.value = NULL, verbose = TRUE){
 
     # keep R CMD check from warning about undefined global variables
     ID1 <- ID2 <- NULL
@@ -299,7 +299,7 @@ setMethod("kingToMatrix",
 setOldClass("snpgdsIBDClass")
 setMethod("kingToMatrix",
           "snpgdsIBDClass",
-          function(king, sample.include = NULL, thresh = NULL, verbose = TRUE) {
+          function(king, sample.include = NULL, thresh = 2^(-11/2), verbose = TRUE) {
               ID <- king$sample.id
               king <- king$kinship
               dimnames(king) <- list(ID, ID)

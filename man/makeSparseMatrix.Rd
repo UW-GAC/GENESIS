@@ -12,9 +12,9 @@
                  verbose = TRUE)
 \S4method{makeSparseMatrix}{data.frame}(x, thresh = NULL, sample.include = NULL, diag.value = NULL, 
                  verbose = TRUE)
-\S4method{makeSparseMatrix}{matrix}(x, thresh = NULL, sample.include = NULL, diag.value = NULL, 
+\S4method{makeSparseMatrix}{matrix}(x, thresh = 2^(-11/2), sample.include = NULL, diag.value = NULL, 
                  verbose = TRUE)
-\S4method{makeSparseMatrix}{Matrix}(x, thresh = NULL, sample.include = NULL, diag.value = NULL, 
+\S4method{makeSparseMatrix}{Matrix}(x, thresh = 2^(-11/2), sample.include = NULL, diag.value = NULL, 
                  verbose = TRUE)
 }
 \arguments{
