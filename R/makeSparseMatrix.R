@@ -2,35 +2,147 @@ setGeneric("makeSparseMatrix", function(x, ...) standardGeneric("makeSparseMatri
 
 setMethod("makeSparseMatrix",
           "matrix",
-          function(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE){
-          	# melt to a data.table
-          	x <- meltMatrix(x = x, drop.lower = TRUE, drop.diag = !is.null(diag.value))
-          	.makeSparseMatrix(x = x, thresh = thresh, sample.include = sample.include, diag.value = diag.value, verbose = verbose)
+          function(x, thresh = 2^(-11/2), sample.include = NULL, diag.value = NULL, verbose = TRUE){
+            .makeSparseMatrix_matrix(x = x, thresh = thresh, sample.include = sample.include, diag.value = diag.value, verbose = verbose)
           })
 
 setMethod("makeSparseMatrix",
           "Matrix",
-          function(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE){
-          	# melt to a data.table
-          	x <- meltMatrix(x = x, drop.lower = TRUE, drop.diag = !is.null(diag.value))
-          	.makeSparseMatrix(x = x, thresh = thresh, sample.include = sample.include, diag.value = diag.value, verbose = verbose)
+          function(x, thresh = 2^(-11/2), sample.include = NULL, diag.value = NULL, verbose = TRUE){
+          	.makeSparseMatrix_matrix(x = x, thresh = thresh, sample.include = sample.include, diag.value = diag.value, verbose = verbose)
           })
 
 setMethod("makeSparseMatrix",
           "data.frame",
           function(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE){
-          	.makeSparseMatrix(x = as.data.table(x), thresh = thresh, sample.include = sample.include, diag.value = diag.value, verbose = verbose)
+          	.makeSparseMatrix_df(x = as.data.table(x), thresh = thresh, sample.include = sample.include, diag.value = diag.value, verbose = verbose)
           })
 
 setMethod("makeSparseMatrix",
           "data.table",
           function(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE){
-            .makeSparseMatrix(x = x, thresh = thresh, sample.include = sample.include, diag.value = diag.value, verbose = verbose)
+            .makeSparseMatrix_df(x = x, thresh = thresh, sample.include = sample.include, diag.value = diag.value, verbose = verbose)
           })
 
 
+.makeSparseMatrix_matrix <- function(x, thresh = 2^(-11/2), sample.include = NULL, diag.value = NULL, verbose = TRUE){
 
-.makeSparseMatrix <- function(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE){
+    # keep R CMD check from warning about undefined global variables
+    ID1 <- ID2 <- NULL
+    `.` <- function(...) NULL
+
+    # check that thresh is not NULL
+    if(is.null(thresh)){
+        stop("thresh must be specified when x is a matrix object")
+    }
+
+    # check for names
+    if(is.null(colnames(x))) {
+        if(is.null(rownames(x))) {
+            stop("dimnames must be provided for matrix x to track sample order in the output matrix.")
+        } else {
+            colnames(x) <- rownames(x)
+        }
+    }
+    if(is.null(rownames(x))) {
+        rownames(x) <- colnames(x)
+    }
+    
+    # check that matrix is square
+    if(!all(rownames(x) == colnames(x))){
+        stop("x must be square when it is a matrix object")
+    }
+
+    # check sample.include
+    if(!is.null(sample.include)){
+        # subset to samples in sample.include
+        if(verbose) message('Using ', length(sample.include), ' samples in sample.include')
+        x <- x[rownames(x) %in% sample.include, colnames(x) %in% sample.include]
+    }else{
+        # get list of all samples in the data
+        sample.include <- sort(rownames(x))
+        if(verbose) message("Using ", length(sample.include), " samples provided")
+    }
+
+    # check for diag values
+    if(is.null(diag.value)){
+        if(any(is.na(diag(x)))) stop('When `diag.value` is NULL, diagonal values must be provided for all samples')
+    }
+
+    # get the table of all related pairs
+    rel <- apply(x, MARGIN = 1, FUN = function(v){ names(v)[v > thresh & !is.na(v)] })
+    rel <- lapply(seq_along(rel), function(i) { data.table('ID1' = names(rel)[[i]], 'ID2' = rel[[i]]) })
+    rel <- do.call(rbind, rel)
+    rel <- rel[,`:=`(ID1 = as.character(ID1), ID2 = as.character(ID2))]
+    setkeyv(rel, c('ID1', 'ID2'))
+
+    # create graph of relatives
+    if(verbose) message("Identifying clusters of relatives...")
+    g <- igraph::graph_from_data_frame(rel[ID1 != ID2])
+    # extract cluster membership
+    clu <- igraph::components(g)
+    mem <- clu$membership
+    
+    blocks <- list()
+    block.id <- list()
+    if(clu$no > 0){
+        if(verbose) message("    ", length(mem), " relatives in ", clu$no, " clusters; largest cluster = ", max(clu$csize))
+        if(verbose) message("Creating block matrices for clusters...")
+        for(i in 1:clu$no){
+            # samples in the cluster
+            ids <- names(mem[mem == i])
+            
+            # extract the matrix for all pairs in the cluster
+            submat <- x[rownames(x) %in% ids, colnames(x) %in% ids]
+
+            # fix the diagonal
+            if(!is.null(diag.value)){
+                diag(submat) <- diag.value
+            }
+
+            # store in the list
+            blocks[[i]] <- submat
+            block.id[[i]] <- rownames(submat)
+        }
+    }else{
+        if(verbose) message("    No clusters identified")
+    }
+        
+    # add in identity matrix of unrelated samples
+    unrel.id <- setdiff(sample.include, names(mem))
+    if(verbose) message(length(unrel.id), " samples with no relatives included")
+
+    if(length(unrel.id) > 0) {
+        if(is.null(diag.value)){
+            # data for the diagonal
+            ddat <- diag(x)[rownames(x) %in% unrel.id]
+            blocks[[clu$no + 1]] <- Diagonal(n = length(ddat), x = ddat)
+            block.id[[clu$no + 1]] <- names(ddat)
+        }else{
+            blocks[[clu$no + 1]] <- Diagonal(n = length(unrel.id), x = diag.value)
+            block.id[[clu$no + 1]] <- unrel.id
+        }
+    }
+
+    # create block diagonal matrix
+    if(length(blocks) > 1){
+        if(verbose) message("Putting all samples together into one block diagonal matrix")
+        mat_sparse <- bdiag(blocks)
+    }else{
+        mat_sparse <- Matrix(blocks[[1]])
+    } 
+    
+    # ids of samples
+    mat.id <- unlist(block.id)
+    rownames(mat_sparse) <- mat.id
+    colnames(mat_sparse) <- mat.id
+
+    # set the matrix to symmetric to save memory
+    mat_sparse <- as(mat_sparse, "symmetricMatrix")
+    return(mat_sparse)
+}
+
+.makeSparseMatrix_df <- function(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE){
 
     # keep R CMD check from warning about undefined global variables
     ID1 <- ID2 <- value <- NULL
@@ -134,37 +246,6 @@ setMethod("makeSparseMatrix",
 
 
 
-setGeneric("meltMatrix", function(x, ...) standardGeneric("meltMatrix"))
-
-setMethod("meltMatrix",
-          "matrix",
-          function(x, drop.lower = FALSE, drop.diag = FALSE){
-            ID1 <- ID2 <- NULL
-            if(drop.lower){
-                x[lower.tri(x, diag = drop.diag)] <- NA
-            }
-            x <- as.data.table(reshape2::melt(x, varnames = c('ID1', 'ID2'), na.rm = TRUE, as.is = TRUE))
-            x <- x[,`:=`(ID1 = as.character(ID1), ID2 = as.character(ID2))]
-            setkeyv(x, c('ID1', 'ID2'))
-          })
-
-setMethod("meltMatrix",
-          "Matrix",
-          function(x, drop.lower = FALSE, drop.diag = FALSE){
-            if(drop.lower){
-                x[lower.tri(x, diag = drop.diag)] <- NA
-            }
-
-            # this modeled after reshape2:::melt.matrix
-            labels <- as.data.table(expand.grid(dimnames(x), KEEP.OUT.ATTRS = FALSE, stringsAsFactors = FALSE))
-            setnames(labels, c('Var1', 'Var2'), c('ID1', 'ID2'))
-
-            missing <- is.na(as.vector(x))
-            x <- cbind(labels[!missing,], data.table(value = x[!missing])) 
-            setkeyv(x, c('ID1', 'ID2'))
-          })
-
-
 
 setGeneric("pcrelateToMatrix", function(pcrelobj, ...) standardGeneric("pcrelateToMatrix"))
 
@@ -218,7 +299,7 @@ setMethod("kingToMatrix",
 setOldClass("snpgdsIBDClass")
 setMethod("kingToMatrix",
           "snpgdsIBDClass",
-          function(king, sample.include = NULL, thresh = NULL, verbose = TRUE) {
+          function(king, sample.include = NULL, thresh = 2^(-11/2), verbose = TRUE) {
               ID <- king$sample.id
               king <- king$kinship
               dimnames(king) <- list(ID, ID)
