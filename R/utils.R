@@ -71,7 +71,7 @@ setMethod("variantFilter",
         nsamp <- colSums(!is.na(geno))
         freq <- count/(2*nsamp)
         mac <- round(pmin(count, 2*nsamp - count))
-        return(list(freq=freq, MAC=mac))
+        return(data.frame(freq=freq, MAC=mac))
     }
 
     # check chromosome
