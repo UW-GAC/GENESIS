@@ -85,7 +85,7 @@ setMethod(".countNonMissing",
                 colSums(!is.na(x))
               }
             }else{
-              GENESIS:::.apply(geno, 
+              .apply(geno, 
                     MARGIN = MARGIN, 
                     FUN = function(x){ sum(!is.na(x)) },
                     selection = list(1:nr, 1:nc))
