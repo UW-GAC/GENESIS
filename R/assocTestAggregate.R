@@ -63,7 +63,8 @@ setMethod("assocTestAggregate",
                   }
 
                   # number of non-missing samples
-                  n.obs <- colSums(!is.na(geno))
+                  # n.obs <- colSums(!is.na(geno))
+                  n.obs <- .countNonMissing(geno, MARGIN = 2)
                   
                   # allele frequency
                   freq <- .alleleFreq(gdsobj, geno, variant.index=index, sample.index=sample.index,
@@ -175,7 +176,8 @@ setMethod("assocTestAggregate",
                                                transpose=TRUE, use.names=FALSE, drop=FALSE)
                   
                   # number of non-missing samples
-                  n.obs <- colSums(!is.na(geno))
+                  # n.obs <- colSums(!is.na(geno))
+                  n.obs <- .countNonMissing(geno, MARGIN = 2)
                   
                   # allele frequency
                   freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index,

@@ -68,7 +68,8 @@ setMethod("variantFilter",
     if (is.null(sex)) {
         #freq <- 0.5*colMeans(geno, na.rm=TRUE)
         count <- colSums(geno, na.rm=TRUE)
-        nsamp <- colSums(!is.na(geno))
+        # nsamp <- colSums(!is.na(geno))
+        nsamp <- .countNonMissing(geno, MARGIN = 2)
         freq <- count/(2*nsamp)
         mac <- round(pmin(count, 2*nsamp - count))
         return(data.frame(freq=freq, MAC=mac))
@@ -90,7 +91,8 @@ setMethod("variantFilter",
     if (any(auto)) {
         #freq[auto] <- 0.5*colMeans(geno[, auto, drop=FALSE], na.rm=TRUE)
         count[auto] <- colSums(geno[, auto, drop=FALSE], na.rm=TRUE)
-        possible[auto] <- 2 * colSums(!is.na(geno[, auto, drop=FALSE]))
+        # possible[auto] <- 2 * colSums(!is.na(geno[, auto, drop=FALSE]))
+        possible[auto] <- 2 * .countNonMissing(geno[, auto, drop=FALSE], MARGIN = 2)
     }
 
     # X chrom
@@ -98,12 +100,14 @@ setMethod("variantFilter",
         female <- sex %in% "F"
         male <- sex %in% "M"
         F.count <- colSums(geno[female, X, drop=FALSE], na.rm=TRUE)
-        F.nsamp <- colSums(!is.na(geno[female, X, drop=FALSE]))
+        # F.nsamp <- colSums(!is.na(geno[female, X, drop=FALSE]))
+        F.nsamp <- .countNonMissing(geno[female, X, drop=FALSE], MARGIN = 2)
         M.count <- colSums(geno[male, X, drop=FALSE], na.rm=TRUE)
         if (male.diploid) {
             M.count <- 0.5*M.count
         }
-        M.nsamp <- colSums(!is.na(geno[male, X, drop=FALSE]))
+        # M.nsamp <- colSums(!is.na(geno[male, X, drop=FALSE]))
+        M.nsamp <- .countNonMissing(geno[male, X, drop=FALSE], MARGIN = 2)
         #freq[X] <- (F.count + M.count)/(2*F.nsamp + M.nsamp)
         count[X] <- (F.count + M.count)
         possible[X] <- (2*F.nsamp + M.nsamp)
@@ -118,7 +122,8 @@ setMethod("variantFilter",
             #freq[Y] <- 0.5*freq[Y]
             count[Y] <- 0.5*count[Y]
         }
-        possible[Y] <- colSums(!is.na(geno[male, Y, drop=FALSE]))
+        # possible[Y] <- colSums(!is.na(geno[male, Y, drop=FALSE]))
+        possible[Y] <- .countNonMissing(geno[male, Y, drop=FALSE], MARGIN = 2)
     }
 
     freq <- count / possible
