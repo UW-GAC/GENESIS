@@ -60,6 +60,38 @@ setMethod(".apply",
           })
 
 
+setGeneric(".countNonMissing", function(x, MARGIN) standardGeneric(".countNonMissing"))
+
+setMethod(".countNonMissing",
+          "matrix",
+          function(x, MARGIN){
+            if(MARGIN == 1){
+              rowSums(!is.na(x))
+            }else if(MARGIN == 2){
+              colSums(!is.na(x))
+            }
+          })
+
+setMethod(".countNonMissing",
+          "Matrix",
+          function(x, MARGIN){
+            nr <- as.numeric(nrow(x))
+            nc <- as.numeric(ncol(x))
+
+            if(nr*nc < 2^31){
+              if(MARGIN == 1){
+                rowSums(!is.na(x))
+              }else if(MARGIN == 2){
+                colSums(!is.na(x))
+              }
+            }else{
+              .apply(geno, 
+                    MARGIN = MARGIN, 
+                    FUN = function(x){ sum(!is.na(x)) },
+                    selection = list(1:nr, 1:nc))
+            }
+            })
+
 
 setGeneric(".readSampleId", function(x) standardGeneric(".readSampleId"))
 setMethod(".readSampleId",
