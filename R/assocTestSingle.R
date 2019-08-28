@@ -4,7 +4,9 @@ setGeneric("assocTestSingle", function(gdsobj, ...) standardGeneric("assocTestSi
 ## do we want to make imputing to the mean optional?
 setMethod("assocTestSingle",
           "SeqVarIterator",
-          function(gdsobj, null.model, test=c("Score", "Wald"), GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), verbose=TRUE) {
+          function(gdsobj, null.model,  test=c("Score", "Wald",  "SAIGE", "BinomiRare", "CMP"), 
+                   GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), 
+                   max.alt.freq=NULL, calc_score=FALSE, verbose=TRUE) {
               test <- match.arg(test)
 
               # don't use sparse matrices for imputed dosages
@@ -42,8 +44,12 @@ setMethod("assocTestSingle",
                   freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index,
                                       male.diploid=male.diploid, genome.build=genome.build)
                   
-                  # filter monomorphic variants
-                  keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq, imputed=imputed)
+                  # filter monomorphic variants (and max alternate frequency variants)
+                  keep <- .filterMonomorphic(geno, count=n.obs, freq=freq, imputed=imputed)
+                  if (!is.null(max.alt.freq)){
+                    keep <- keep & (freq <= max.alt.freq)
+                  }
+                  
                   if (!all(keep)) {
                       var.info <- var.info[keep,,drop=FALSE]
                       geno <- geno[,keep,drop=FALSE]
@@ -57,10 +63,13 @@ setMethod("assocTestSingle",
                   }
 
                   # do the test
+                  if (ncol(geno)==0){
+                    res[[i]] <- NULL
+                  } else {
                   assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test)
 
                   res[[i]] <- cbind(var.info, n.obs, freq, assoc)
-                  
+                  }
                   if (verbose & n.iter > 1 & i %% set.messages == 0) {
                       message(paste("Iteration", i , "of", n.iter, "completed"))
                   }
@@ -75,7 +84,10 @@ setMethod("assocTestSingle",
 
 setMethod("assocTestSingle",
           "GenotypeIterator",
-          function(gdsobj, null.model, test=c("Score", "Wald"), GxE=NULL, male.diploid=TRUE, verbose=TRUE) {
+          
+          
+          function(gdsobj, null.model,  test=c("Score", "Wald",  "SAIGE", "BinomiRare", "CMP"), 
+                   GxE=NULL,male.diploid=TRUE, max.alt.freq=NULL, calc_score=FALSE, verbose=TRUE) {
               test <- match.arg(test)
 
               # filter samples to match null model
@@ -102,8 +114,14 @@ setMethod("assocTestSingle",
                   freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index,
                                       male.diploid=male.diploid)
                   
-                  # filter monomorphic variants
-                  keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq)
+                  # filter monomorphic variants (and max alternate frequency variants)
+                  
+                  if (!is.null(max.alt.freq)){
+                    keep <- (freq <= max.alt.freq & freq != 0)
+                  } else {
+                    keep <- .filterMonomorphic(geno, count=n.obs, freq=freq)
+                  }
+
                   if (!all(keep)) {
                       var.info <- var.info[keep,,drop=FALSE]
                       geno <- geno[,keep,drop=FALSE]
@@ -117,10 +135,13 @@ setMethod("assocTestSingle",
                   }
 
                   # do the test
+                  if (ncol(geno)==0){
+                    res[[i]] <- NULL
+                  } else {
                   assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test)
 
                   res[[i]] <- cbind(var.info, n.obs, freq, assoc)
-                  
+                  }
                   if (verbose & n.iter > 1 & i %% set.messages == 0) {
                       message(paste("Iteration", i , "of", n.iter, "completed"))
                   }
