@@ -42,7 +42,7 @@ nullModelSplit <- function(nullmod, id_list, keep_all=TRUE){
     nullmod_subset <- nullmod
     idx <- nullmod$sample.id %in% ids
     for (v in c('sample.id',  'outcome', 'workingY', 'resid.conditional', 'fitted.values', "workingY")) {
-      nullmod_subset[[v]] <- nullmod[[v]][idx] ###need to replace with indices
+      nullmod_subset[[v]] <- nullmod[[v]][idx]
     }
     split_nullmod[[split_index]] <- nullmod_subset
   }
@@ -55,7 +55,8 @@ setGeneric("assocTestSingle_split", function(gdsobj, ...) standardGeneric("assoc
 setMethod("assocTestSingle_split",
           "SeqVarIterator",
   function(gdsobj, null.model, id_list, test=c("BinomiRare", "CMP"), 
-          sparse=TRUE, imputed=FALSE, verbose=TRUE, max.alt.freq=NULL, keep_all=TRUE
+          sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"),
+          max.alt.freq=NULL, keep_all=TRUE, verbose=TRUE
                                   ) {
   message('running split version of assocTestSingle')
   test <- match.arg(test)
@@ -68,6 +69,9 @@ setMethod("assocTestSingle_split",
   
   # filter samples to match null model
   sample.index <- .setFilterNullModel(gdsobj, null.model, verbose=verbose) ##this subsets iterator sample.id to only those in null model
+  
+  
+  if (SeqVarTools:::.ploidy(gdsobj) == 1) male.diploid <- FALSE
   
   n.iter <- length(variantFilter(gdsobj))
   set.messages <- ceiling(n.iter / 100) # max messages = 100
@@ -110,18 +114,15 @@ setMethod("assocTestSingle_split",
       #     sample.index.grp <- which(is.element(rownames(current_geno), cur_group_ids)) ## is this a correct way to index these?? current_geo doesn't have rownames
       
       # allele frequency
-      freq <- .alleleFreq(gdsobj, current_geno, sample.index=cur_group_index)
+      freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index,
+                          male.diploid=male.diploid, genome.build=genome.build)
       
       # take note of number of non-missing samples
       n.obs <- colSums(!is.na(current_geno))
       # filter monomorphic variants
+      keep <- .filterMonomorphic(current_geno, count=n.obs, freq=freq, imputed=imputed)
       if (!is.null(max.alt.freq)){
-        isref <- freq==0
-        ishet <- colSums(current_geno == 1, na.rm=TRUE) == n.obs
-        gt_max <- freq > max.alt.freq
-        keep <- !(isref | ishet | gt_max)
-      } else {
-        keep <- .filterMonomorphic(current_geno, count=n.obs, freq=freq, imputed=imputed)
+        keep <- keep & (freq <= max.alt.freq)
       }
       
       if (!all(keep)) {
@@ -183,7 +184,9 @@ setMethod("assocTestAggregate_split",
           function(gdsobj, null.model, id_list, AF.max=1,
           #         weight.beta=c(1,1), ##all weights are set to 1
                    burden.test=c("BinomiRare", "CMP"), keep_all=TRUE,
-                   sparse=TRUE, imputed=FALSE, verbose=TRUE) {
+                   sparse=TRUE, imputed=FALSE, 
+                  male.diploid=TRUE, genome.build=c("hg19", "hg38"),
+                  verbose=TRUE) {
             burden.test <- match.arg(burden.test)
             # don't use sparse matrices for imputed dosages
             if (imputed) sparse <- FALSE
@@ -232,7 +235,6 @@ setMethod("assocTestAggregate_split",
               }
               
               if (match.alleles) {
-                message('match.alleles was true')
                 index <-  .matchAlleles(gdsobj, var.info)
                 var.info <- var.info[index,,drop=FALSE]
                 geno <- geno[,index,drop=FALSE]
@@ -249,7 +251,8 @@ setMethod("assocTestAggregate_split",
                 
                 n.obs <- colSums(!is.na(current_geno))
                 ###uncertain if this calculates correctly. initial code: freq <- .alleleFreq(gdsobj, geno, variant.index=index, sample.index=sample.index)
-                freq <- .alleleFreq(gdsobj, current_geno, variant.index=index, sample.index=cur_group_index)
+                freq <- .alleleFreq(gdsobj, current_geno, variant.index=index, sample.index=cur_group_index,
+                  male.diploid=male.diploid, genome.build=genome.build)
                 # number of non-missing samples
                 
                 # filter monomorphic variants
