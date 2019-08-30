@@ -85,7 +85,7 @@ setMethod(".countNonMissing",
                 colSums(!is.na(x))
               }
             }else{
-              .apply(geno, 
+              .apply(x, 
                     MARGIN = MARGIN, 
                     FUN = function(x){ sum(!is.na(x)) },
                     selection = list(1:nr, 1:nc))
