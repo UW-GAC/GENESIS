@@ -90,6 +90,9 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
   res <- data.frame(n.carrier = rep(NA, ncol(G)), n.D.carrier = NA, expected.n.D.carrier = NA, pval = NA, mid.pval = NA)
   
   for (i in 1:ncol(G)){
+    if (sd(G[,i])==0){
+      next
+    }
     carrier.inds <- which(G[,i] > 0)
     phat <- probs[carrier.inds]
     ncar <- length(phat)
@@ -148,6 +151,9 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
   res <- data.frame(n.carrier = rep(NA, ncol(G)), n.D.carrier = NA, expected.n.D.carrier = NA, pval = NA)
   
   for (i in 1:ncol(G)){
+    if (sd(G[,i])==0){
+      next
+    }
     carrier.inds <- which(G[,i] > 0)
     res$n.carrier[i] <- length(carrier.inds)
     cur.prob.vec <- probs[carrier.inds]

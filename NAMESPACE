@@ -11,6 +11,10 @@ import(gdsfmt)
 import(Matrix)
 import(data.table)
 import(foreach)
+import(survey)
+import(COMPoissonReg)
+import(poibin)
+import(SPAtest)
 
 importFrom(GWASTools,
            GdsGenotypeReader,
@@ -51,7 +55,7 @@ importFrom(GenomicRanges, GRanges)
 importFrom(IRanges, IRanges, findOverlaps)
 importFrom(S4Vectors, mcols, queryHits, subjectHits)
 
-importFrom(dplyr, bind_rows, inner_join)
+importFrom(dplyr, bind_rows, inner_join, filter, summarise, arrange, group_by, "%>%")
 
 # deprecated/defunct
 export(admixMapMM,
@@ -65,6 +69,8 @@ export(admixMapMM,
 
 exportMethods(assocTestSingle,
               assocTestAggregate,
+              assocTestSingle_split,
+              assocTestAggregate_split,
               fitNullModel,
               kingToMatrix,
               makeSparseMatrix,
@@ -77,11 +83,17 @@ export(admixMap,
        correctKin,
        correctK0,
        correctK2,
+       find_incomplete_hits,
+       gen_id_list,
        kin2gds,
        mat2gds,
+       match_signif_hits,
        nullModelInvNorm,
        pcairPartition,
        pcrelateSampBlock,
+       recreate_iterator,
+       run_split_subset,
+       save_split_results,
        samplesGdsOrder,
        varCompCI)
 

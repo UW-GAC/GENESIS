@@ -7,7 +7,7 @@
 
 testVariantSet <- function( nullmod, G, weights, 
                             test = c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKATO"),
-                            burden.test = c("Score", "Wald"), 
+                            burden.test = c("Score", "Wald", "BinomiRare", "CMP"), 
                             neig = 200, ntrace = 500, 
                             rho = seq(from = 0, to = 1, by = 0.1)){
                            # pval.method = c("davies", "kuonen", "liu"),
@@ -62,6 +62,26 @@ testVariantSet <- function( nullmod, G, weights,
     if (burden.test == "Wald"){
         out <- .testGenoSingleVarWald(Gtilde, Ytilde = nullmod$Ytilde,
                                       n = length(nullmod$Ytilde), k = ncol(nullmod$model.matrix))
+    }
+      ####adding BR ####
+    if (burden.test == "BinomiRare"){
+      if (nullmod$family$mixedmodel) { ## if this is a mixed model, used conditional probabilities ##changed "nullmod.all$resid.conditional" to "nullmod$resid.conditional"
+        phat <- expit(nullmod$workingY - nullmod$resid.conditional)
+      } else {
+        phat <- nullmod$fitted.values
+      }
+      out <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G=matrix(burden)) ###error because G=burden does not have ncol (is a vector)
+    }
+    #####adding CMP####
+    if (burden.test == "CMP"){
+      if (nullmod$family$mixedmodel) {
+
+      phat <- expit(nullmod$workingY - nullmod$resid.conditional)    
+      out <- .testGenoSingleVarCMP(nullmod$outcome, probs=phat, G=matrix(burden))
+      } else{ ## not a mixed model
+        phat <- nullmod$fitted.values
+        out <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G=matrix(burden))  
+      }
     }
     return(out)
 }

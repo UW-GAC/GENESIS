@@ -200,6 +200,8 @@ setMethod("assocTestAggregate_split",
             # do we need to match on alleles?
             match.alleles <- any(c("ref", "alt") %in% names(S4Vectors:::mcols(currentRanges(gdsobj)))) ##S4Vectors:::mcols
             
+            # check ploidy
+            if (SeqVarTools:::.ploidy(gdsobj) == 1) male.diploid <- FALSE
             
             ###split null model by group###
             null.model_list <- nullModelSplit(null.model, id_list, keep_all=keep_all)
