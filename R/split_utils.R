@@ -66,7 +66,7 @@ recreate_iterator <- function(gds, annot, incomplete_variants, block.size=1024){
 
 
 run_split_subset <- function(gdsobj, null.model, id_list, test=c("BinomiRare", "CMP"), remove_groups=NULL,
-                   sparse=TRUE, imputed=FALSE, max.alt.freq=NULL, keep_all=TRUE, male.diploid=TRUE,  genome.build=c("hg19", "hg38"), verbose=TRUE) {
+                   sparse=TRUE, imputed=FALSE, keep_all=TRUE, male.diploid=TRUE,  genome.build=c("hg19", "hg38"), verbose=TRUE) {
             message('running split version of assocTestSingle')
             test <- match.arg(test)
             if (!is.null(remove_groups)){
@@ -129,12 +129,12 @@ run_split_subset <- function(gdsobj, null.model, id_list, test=c("BinomiRare", "
                 n.obs <- colSums(!is.na(current_geno))
 
                 if (any(n.obs < nrow(current_geno))) {
-                  current_geno <- .meanImpute(current_geno, freq)
+                  current_geno <- .meanImpute(current_geno, freq$freq)
                 }
 
                   # do the test
                   assoc <- testGenoSingleVar(current_nullmod, G=current_geno, test=test, calc_score=FALSE)
-                  assoc[freq %in% c(0,1),] <- NA
+                  assoc[freq$freq %in% c(0,1),] <- NA
                   all_res[[grp.ind]][[i]]<- cbind(var.info, n.obs, freq, assoc)
               }
               

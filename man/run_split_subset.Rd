@@ -10,7 +10,7 @@
 
 \usage{
 run_split_subset(gdsobj, null.model, id_list, test=c("BinomiRare", "CMP"), remove_groups=NULL,
-                   sparse=TRUE, imputed=FALSE, max.alt.freq=NULL, keep_all=TRUE, 
+                   sparse=TRUE, imputed=FALSE, keep_all=TRUE, 
                    male.diploid=TRUE,  genome.build=c("hg19", "hg38"), verbose=TRUE) 
 }
 
@@ -22,7 +22,6 @@ run_split_subset(gdsobj, null.model, id_list, test=c("BinomiRare", "CMP"), remov
     \item{remove_groups}{Vector of groups to remove from id_list}
     \item{sparse}{Logical indicator of whether to read genotypes as sparse Matrix objects; the default is \code{TRUE}. Set this to \code{FALSE} if the alternate allele dosage of the genotypes in the test are not expected to be mostly 0.}
     \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles.}
-    \item{max.alt.freq}{Maximum alternate allele frequency threshold for testing variants. A minimum of 0.5 is recommended when running \code{BinomiRare} or \code{CMP} tests. Default is \code{NULL}.}
     \item{keep_all}{Logical indicator of whether the overall sample should be tested as well, in addition to each group; default is \code{TRUE}.}
     \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid.}
     \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes.}

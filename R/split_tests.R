@@ -120,23 +120,23 @@ setMethod("assocTestSingle_split",
       # take note of number of non-missing samples
       n.obs <- colSums(!is.na(current_geno))
       # filter monomorphic variants
-      keep <- .filterMonomorphic(current_geno, count=n.obs, freq=freq, imputed=imputed)
+      keep <- .filterMonomorphic(current_geno, count=n.obs, freq=freq$freq, imputed=imputed)
       if (!is.null(max.alt.freq)){
-        keep <- keep & (freq <= max.alt.freq)
+        keep <- keep & (freq$freq <= max.alt.freq)
       }
       
       if (!all(keep)) {
         current.var.info <- var.info[keep,,drop=FALSE] 
         current_geno <- current_geno[,keep,drop=FALSE]
         n.obs <- n.obs[keep]
-        freq <- freq[keep]
+        freq <- freq[keep,,drop=FALSE]
       } else {
         current.var.info <- var.info
       }
       
       # mean impute missing values
       if (any(n.obs < nrow(current_geno))) {
-        current_geno <- .meanImpute(current_geno, freq)
+        current_geno <- .meanImpute(current_geno, freq$freq)
       }
       
       if (ncol(current_geno)==0){
@@ -258,22 +258,22 @@ setMethod("assocTestAggregate_split",
                 # number of non-missing samples
                 
                 # filter monomorphic variants
-                keep <- .filterMonomorphic(current_geno, count=n.obs, freq=freq, imputed=imputed)
+                keep <- .filterMonomorphic(current_geno, count=n.obs, freq=freq$freq, imputed=imputed)
                 
                 
                 # exclude variants with freq > max
-                keep <-  keep & freq <= AF.max
+                keep <-  keep & freq$freq <= AF.max
                 if (!all(keep)) {
                   current.var.info <- var.info[keep,,drop=FALSE]
                   current_geno <- current_geno[,keep,drop=FALSE]
                   n.obs <- n.obs[keep]
-                  freq <- freq[keep]
+                  freq <- freq[keep,,drop=FALSE]
                 } else {
                   current.var.info <- var.info
                 }
                 
                 # weight
-                weight <- seq(from=1, to=1, length.out=length(freq))
+                weight <- seq(from=1, to=1, length.out=length(freq$freq))
                 
                 # number of variant sites
                 n.site <- length(unique(current.var.info$variant.id))
@@ -290,7 +290,7 @@ setMethod("assocTestAggregate_split",
                 if (n.site > 0) {
                   # mean impute missing values
                   if (any(n.obs < nrow(current_geno))) {
-                    current_geno <- .meanImpute(current_geno, freq)
+                    current_geno <- .meanImpute(current_geno, freq$freq)
                   }
                   
                   # do the test
