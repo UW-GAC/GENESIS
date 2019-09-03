@@ -115,7 +115,7 @@ setMethod("assocTestSingle",
                                       male.diploid=male.diploid)
                   
                   # filter monomorphic variants (and max alternate frequency variants)
-                  keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq, imputed=imputed)
+                  keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq)
                   if (!is.null(max.alt.freq)){
                     keep <- keep & (freq$freq <= max.alt.freq)
                   }

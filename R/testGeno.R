@@ -87,7 +87,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
 
 .testGenoSingleVarCMP <- function(D, probs, G, score_pval=NULL){
   #  if (!requireNamespace("COMPoissonReg")) stop("package 'COMPoissonReg' must be installed for the CBR test") ##already in pkg NAMESPACE
-  res <- data.frame(n.carrier = rep(NA, ncol(G)), n.D.carrier = NA, expected.n.D.carrier = NA, pval = NA, mid.pval = NA)
+  res <- data.frame(n.carrier = rep(NA, ncol(G)), n.D.carrier = NA, expected.n.D.carrier = NA, pval = NA) #, mid.pval = NA)
   
   for (i in 1:ncol(G)){
     if (sd(G[,i])==0){
@@ -104,7 +104,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
     res$expected.n.D.carrier[i] <- sum(cur.prob.vec)
     if (!is.null(score_pval) && score_pval[i] > 0.05){
       res$pval[i] <- score_pval[i]
-      res$mid.pval[i] <- score_pval[i]
+      #     res$mid.pval[i] <- score_pval[i]
     } else {
       if (ncar == 1) {
         res$pval[i] <- ifelse(sum.d == 1, phat, 1-phat) 
@@ -115,10 +115,10 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
       var.analytic <- sum(phat*(1-phat))
       nuhat <- mu1.analytic/var.analytic 
       lamhat <- mu1.analytic^nuhat
-      pvals <- .calc_cmp_pval(ncar, sum.d, lamhat, nuhat, midp.type = "both")	
+      pval <- .calc_cmp_pval(ncar, sum.d, lamhat, nuhat)	
       
-      res$pval[i] <- pvals["pval"]	 
-      res$mid.pval[i] <- pvals["mid.pval"]
+      res$pval[i] <- pval #s["pval"]	 
+      #    res$mid.pval[i] <- pvals["mid.pval"]
     }
     
     #  }
@@ -129,16 +129,15 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
 
 ### compute p-value for CMP test based on estimated lambda, nu, number of carriers, and nubmber of diseased carriers.
 ### returns both midp and not midp while we learn when each is better. 
-.calc_cmp_pval <- function(ncar, sum.d, lamhat, nuhat, max = 5000, midp.type = "both"){
-#  if (!requireNamespace("COMPoissonReg")) stop("package 'COMPoissonReg' must be installed for the CMP test")
-  prob.cur <- dcmp(sum.d + 1, lamhat, nuhat, max=max) 
+.calc_cmp_pval <- function(ncar, sum.d, lamhat, nuhat){ #, midp.type = "both"){
+  if (!requireNamespace("COMPoissonReg")) stop("package 'COMPoissonReg' must be installed for the CMP test")
+  prob.cur <- dcmp(sum.d + 1, lamhat, nuhat, max=5000) 
   d.cmp <- dcmp(0:ncar, lamhat, nuhat, max=max)
   pval <- prob.cur + sum(d.cmp[d.cmp < prob.cur])
-  mid.pval <- pval-prob.cur/2
-  
-  pvals <- c(pval, mid.pval)
-  names(pvals) <- c("pval", "mid.pval")
-  return(pvals)
+  # mid.pval <- pval-prob.cur/2
+  #  pvals <- c(pval, mid.pval)
+  #  names(pvals) <- c("pval", "mid.pval")
+  return(pval)
 }
 
 

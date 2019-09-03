@@ -11,7 +11,7 @@
 \S4method{assocTestAggregate}{SeqVarIterator}(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
                    test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO"),
-                   burden.test=c("Score", "Wald"),
+                   burden.test=c("Score", "Wald", "BinomiRare","CMP"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
                    sparse=TRUE, imputed=FALSE,
@@ -20,7 +20,7 @@
 \S4method{assocTestAggregate}{GenotypeIterator}(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
                    test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO"),
-                   burden.test=c("Score", "Wald"),
+                   burden.test=c("Score", "Wald", "BinomiRare","CMP"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
                    male.diploid=TRUE, verbose=TRUE)

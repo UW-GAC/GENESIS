@@ -10,7 +10,8 @@
 
 \usage{
 \S4method{assocTestSingle_split}{SeqVarIterator}(gdsobj, null.model, id_list, test=c('BinomiRare', "CMP"),
-                sparse=TRUE, imputed=FALSE, verbose=TRUE, max.alt.freq=NULL, keep_all=TRUE)
+                sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), 
+                max.alt.freq=NULL, keep_all=TRUE, verbose=TRUE)
 }
 
 \arguments{

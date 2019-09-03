@@ -109,7 +109,7 @@ id_list <- gen_id_list(pedigree, id_var="sample.id", group_var="sex")
 seqData <- SeqVarData(gds, sampleData=AnnotatedDataFrame(pedigree))
 
 # fit the null model
-nullmod <- fitNullModel(iterator, outcome="outcome", covars="sex", family="binomial")
+nullmod <- fitNullModel(seqData, outcome="outcome", covars="sex", family="binomial")
 
 # Range Iterator
 gr <- GRanges(seqnames=rep(1,3), ranges=IRanges(start=c(1e6, 2e6, 3e6), width=1e6))
