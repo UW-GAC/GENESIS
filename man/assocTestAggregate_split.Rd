@@ -114,12 +114,12 @@ nullmod <- fitNullModel(seqData, outcome="outcome", covars="sex", family="binomi
 # Range Iterator
 gr <- GRanges(seqnames=rep(1,3), ranges=IRanges(start=c(1e6, 2e6, 3e6), width=1e6))
 iterator <- SeqVarRangeIterator(seqData, variantRanges=gr)
-assoc <- assocTestAggregate_split(iterator, nullmod, id_list=id_list, test="BinomiRare", AF.max=0.01)
+assoc <- assocTestAggregate_split(iterator, nullmod, id_list=id_list, burden.test="BinomiRare", AF.max=0.01)
 
 # Window Iterator
 seqSetFilterChrom(seqData, include="22")
 iterator <- SeqVarWindowIterator(seqData)
-assoc <- assocTestAggregate_split(iterator, nullmod, id_list=id_list, test="BinomiRare", AF.max=0.01)
+assoc <- assocTestAggregate_split(iterator, nullmod, id_list=id_list, burden.test="BinomiRare", AF.max=0.01)
 
 # save results for each group separately
 save_split_results(assoc, output_prefix='test')

@@ -56,6 +56,7 @@ importFrom(IRanges, IRanges, findOverlaps)
 importFrom(S4Vectors, mcols, queryHits, subjectHits)
 
 importFrom(dplyr, bind_rows, inner_join, filter, summarise, arrange, group_by, "%>%")
+importFrom(rlang, sym)
 
 # deprecated/defunct
 export(admixMapMM,

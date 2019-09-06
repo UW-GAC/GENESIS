@@ -1,16 +1,7 @@
 
-#' Title Generate ID list for use in split tests
-#'
-#' @param data dataframe containing IDs matching genetic data sample IDs, and variable to divide groups by
-#' @param id_var name of variable containing IDs
-#' @param group_var name of variable to divide groups by
-#'
-#' @return a named list of individuals separated by group
-#' @export
-#'
-#' @examples
 gen_id_list <- function(data, id_var, group_var){
-  if (!inherits(data, "data.frame")) stop("Input data is not a dataframe.") 
+  if (!inherits(data, "data.frame")) stop("Input data is not a dataframe.")
+  data <- na.exclude(data[ , c(id_var, group_var)])
   groups <- unique(as.character(data[[group_var]]))
   id_list <- vector(mode="list", length=length(groups))
   names(id_list) <- groups
@@ -114,7 +105,7 @@ setMethod("assocTestSingle_split",
       #     sample.index.grp <- which(is.element(rownames(current_geno), cur_group_ids)) ## is this a correct way to index these?? current_geo doesn't have rownames
       
       # allele frequency
-      freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index,
+      freq <- .alleleFreq(gdsobj, current_geno, sample.index=sample.index,
                           male.diploid=male.diploid, genome.build=genome.build)
       
       # take note of number of non-missing samples
@@ -165,17 +156,16 @@ setMethod("assocTestSingle_split",
 )
 
 save_split_results <- function(res_list, output_prefix=NULL){
+  for (name in names(res_list)){
+    current_dat <- res_list[[name]]
     if (!is.null(output_prefix)){
-      for (name in names(res_list)){
         output_path <- paste0(output_prefix, '_', name, '.RData')
-        save(res_list[[name]], file=output_path)
-      }
-  } else {
+      } else {
       output_path <- paste0(name, '_results.RData')
-      save(res_list[[name]], file=output_path)
+    }
+  save(current_dat, file=output_path)
   }
 }
-
 
 setGeneric("assocTestAggregate_split", function(gdsobj, ...) standardGeneric("assocTestAggregate_split"))
 

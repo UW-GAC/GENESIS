@@ -1,16 +1,32 @@
 ###current functions are only writen for assocTestSingle_split results##
+.detect_varnames <- function(dat, varname){
+  if (class(dat)=="list"){
+    any(unlist(lapply(dat, function(x){varname %in% names(x)}))==TRUE)
+  } else if (inherits(dat, "data.frame")){
+    any((varname %in% names(dat))==TRUE)
+  }
+}
 
-match_signif_hits <- function(res_list, threshold, return_df=FALSE){
+match_signif_hits <- function(res_list, threshold, return_df=FALSE, variant.id_var=NULL){
   matched_results <- vector(mode="list", length=length(res_list))
   names(matched_results) <- names(res_list)
   subset_signif <- lapply(res_list, function(x) filter(x, pval < threshold))
+  
+  if (is.null(variant.id_var)){
+    if (!.detect_varnames(res_list, c("variant.id", "variantID"))) stop("specify variant.id_var")
+    if (.detect_varnames(res_list, "variant.id")) {
+      variant.id_var <- "variant.id"
+    } else if (.detect_varnames(res_list, "variantID")){
+      variant.id_var <- "variantID"
+    }
+  }
   for (group in names(subset_signif)){
     if (nrow(subset_signif[[group]]) > 0){
       current_list <- res_list
       current_list[[group]] <- NULL
       subset_signif[[group]]$ref_group=group
       subset_signif[[group]]$signif_group=group
-      matched_list <- lapply(current_list, function(x) filter(x, variantID %in% subset_signif[[group]]$variantID))
+      matched_list <- lapply(current_list, function(x) filter(x, !!sym(variant.id_var) %in% subset_signif[[group]][[variant.id_var]]))
       for (g in names(matched_list)){
         if (nrow(matched_list[[g]]) > 0) {
           matched_list[[g]]$ref_group <- g
@@ -18,7 +34,7 @@ match_signif_hits <- function(res_list, threshold, return_df=FALSE){
         }
       } 
       matched_list <- bind_rows(matched_list)
-      matched_results[[group]] <- bind_rows(subset_signif[[group]], matched_list) %>% arrange(variantID)
+      matched_results[[group]] <- bind_rows(subset_signif[[group]], matched_list) %>% arrange(!!sym(variant.id_var))
       
     } else {
       matched_results[[group]] <- NULL
@@ -30,24 +46,32 @@ match_signif_hits <- function(res_list, threshold, return_df=FALSE){
 }
 
 
-filter_incomplete <- function(dat, total_groups){
-  dat <- dat %>% filter(ref_group!="all") %>% group_by(variantID) %>% 
+filter_incomplete <- function(dat, total_groups, variant.id_var=NULL){
+  if (is.null(variant.id_var)){
+    if (!.detect_varnames(dat, c("variant.id", "variantID"))) stop("specify variant.id_var")
+    if (.detect_varnames(dat, "variant.id")) {
+      variant.id_var <- "variant.id"
+    } else if (.detect_varnames(dat, "variantID")){
+      variant.id_var <- "variantID"
+    }
+  }
+  dat <- dat %>% filter(ref_group!="all") %>% group_by(!!sym(variant.id_var)) %>% 
     summarise(n=n()) %>% filter(n < total_groups) #, groups=glue::glue_collapse(unique(ref_group), sep=','), total_carriers=sum(n.carrier))
-  dat$variantID 
+  dat[[variant.id_var]]
 }
 
 
-find_incomplete_hits <- function(matched_results, n_groups=NULL){
+find_incomplete_hits <- function(matched_results, n_groups=NULL, variant.id_var=NULL){
   if (class(matched_results)=="list"){
     if (is.null(n_groups)) n_groups <- length(matched_results)
-    incomplete_results <- lapply(matched_results, filter_incomplete, total_groups=n_groups)
+    incomplete_results <- lapply(matched_results, filter_incomplete, total_groups=n_groups, variant.id_var=variant.id_var)
     incomplete_variants <- c()
     for (i in seq_along(incomplete_results)){
       incomplete_variants <- union(incomplete_variants, incomplete_results[[i]])
     }
   } else if (inherits(matched_results, "data.frame")){
     n_groups <- length(unique(matched_results$ref_group[matched_results$ref_group!="all"]))
-    incomplete_results <- filter_incomplete(matched_results, total_groups=n_groups)
+    incomplete_results <- filter_incomplete(matched_results, total_groups=n_groups, variant.id_var=variant.id_var)
     incomplete_variants <- unique(incomplete_results)
   }
   incomplete_variants

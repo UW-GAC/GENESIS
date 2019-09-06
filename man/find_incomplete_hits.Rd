@@ -6,11 +6,12 @@
 Returns vector of variant IDs that are not found across all groups. Meant to be used on list or dataframe of matched results returned by \code{match_signif_hits}, and used for the \code{incomplete_variants} argument in \code{recreate_iterator}.
 }
 \usage{
-find_incomplete_hits(matched_results, n_groups=NULL)
+find_incomplete_hits(matched_results, n_groups=NULL, variant.id_var=NULL)
 }
 \arguments{
     \item{matched_results}{Either a dataframe with a minimum of \code{ref_group} and \code{variantID} columns, or a list containing these dataframes, ideally returned from \code{match_signif_hits}.}
     \item{n_groups}{The minimum number of group results in which variants should be found. Default is \code{NULL}.}
+    \item{variant.id_var}{Variable name for variantID in results list if it is not \code{variantID} or \code{variant.id}.}
 }
 \author{Jiwon Lee}
 

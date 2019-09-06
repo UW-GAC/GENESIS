@@ -6,12 +6,13 @@
 Returns either a list of dataframes or a single dataframe that integrates results of significant variants across groups.
 }
 \usage{
-match_signif_hits(res_list, threshold, return_df=FALSE)
+match_signif_hits(res_list, threshold, return_df=FALSE, variant.id_var=NULL)
 }
 \arguments{
     \item{res_list}{List of results returned by \code{assocTestSingle_split}.}
     \item{threshold}{Minimum p-value threshold for filtering variants}
     \item{return_df}{If \code{TRUE}, returns a single \code{data.frame} object that combines results across groups. Default is \code{FALSE} and returns a list of \code{data.frame} objects.}
+    \item{variant.id_var}{Variable name for variantID in results list if it is not \code{variantID} or \code{variant.id}.}
 }
 
 \author{Jiwon Lee}

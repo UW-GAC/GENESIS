@@ -54,7 +54,9 @@ testVariantSet <- function( nullmod, G, weights,
     }
     
     # adjust burden for covariates and random effects
+  if (burden.test %in% c('Score', 'Wald')){
     Gtilde <- calcGtilde(nullmod, burden)
+  }
     
     if (burden.test == "Score") {
         out <- .testGenoSingleVarScore(Gtilde, G = burden, resid = nullmod$resid) 

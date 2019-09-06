@@ -131,8 +131,8 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
 ### returns both midp and not midp while we learn when each is better. 
 .calc_cmp_pval <- function(ncar, sum.d, lamhat, nuhat){ #, midp.type = "both"){
   if (!requireNamespace("COMPoissonReg")) stop("package 'COMPoissonReg' must be installed for the CMP test")
-  prob.cur <- dcmp(sum.d + 1, lamhat, nuhat, max=5000) 
-  d.cmp <- dcmp(0:ncar, lamhat, nuhat, max=max)
+  prob.cur <- dcmp(sum.d + 1, lamhat, nuhat) 
+  d.cmp <- dcmp(0:ncar, lamhat, nuhat)
   pval <- prob.cur + sum(d.cmp[d.cmp < prob.cur])
   # mid.pval <- pval-prob.cur/2
   #  pvals <- c(pval, mid.pval)
@@ -315,6 +315,12 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
     return(list(res = res, allelesCovMat = Vbetas))
 }
 
+
+##include expit function (not included in base R)
+expit <- function(x){
+  y = exp(x)/(1+exp(x))
+  y
+}
 
 
 

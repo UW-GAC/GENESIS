@@ -12,6 +12,7 @@ recreate_iterator(gds, annot, incomplete_variants, block.size=1024)
     \item{gds}{gds file connection called by \code{seqOpen}}
     \item{annot}{Annotated data frame}
     \item{incomplete_variants}{Vector of variant IDs that should be included in the iterator}
+    \item{block.size}{Number of variants to include in each iteration}
 }
 \author{Jiwon Lee}
 
