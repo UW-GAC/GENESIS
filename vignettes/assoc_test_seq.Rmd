@@ -3,12 +3,11 @@ title: "Analyzing Sequence Data using the GENESIS Package"
 author: "Stephanie M. Gogarten"
 date: "`r Sys.Date()`"
 output: 
-    rmarkdown::html_vignette:
-        toc: true
-        #number_sections: true
+    BiocStyle::html_document
 vignette: >
   %\VignetteIndexEntry{Analyzing Sequence Data using the GENESIS Package}
   %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 ```{r setup, include=FALSE}
@@ -17,15 +16,17 @@ knitr::opts_chunk$set(echo = TRUE, message = FALSE, fig.height = 6, fig.width = 
 
 # Overview
 
-This vignette provides a description of how to use the GENESIS package to analyze sequence data. We demonstrate the use of mixed models for genetic association testing, as PC-AiR PCs can be used as fixed effect covariates to adjust for population stratification, and a kinship matrix (or genetic relationship matrix) estimated from PC-Relate can be used to account for phenotype correlation due to genetic similarity among samples. To illustrate the methods, we use a small subset of data from 1000 Genomes Phase 3.
+This vignette provides a description of how to use the `r Biocpkg("GENESIS")` package to analyze sequence data. We demonstrate the use of mixed models for genetic association testing, as PC-AiR PCs can be used as fixed effect covariates to adjust for population stratification, and a kinship matrix (or genetic relationship matrix) estimated from PC-Relate can be used to account for phenotype correlation due to genetic similarity among samples. To illustrate the methods, we use a small subset of data from 1000 Genomes Phase 3.
 
 # Convert VCF to GDS
 
-The first step is to convert a VCF file into the GDS file format used by GENESIS. We use the SeqArray package, which defines the extended GDS format used to capture all data in a VCF file. If the VCF files are split by chromosome, they can be combined into a single GDS file.
+The first step is to convert a VCF file into the GDS file format used by `r Biocpkg("GENESIS")`. We use the `r Biocpkg("SeqArray")` package, which defines the extended GDS format used to capture all data in a VCF file. If the VCF files are split by chromosome, they can be combined into a single GDS file.
 
 ```{r vcf2gds}
 library(SeqArray)
-vcffile <- system.file("extdata", "1KG", paste0("1KG_phase3_subset_chr", 1:22, ".vcf.gz"), package="GENESIS")
+vcffile <- system.file("extdata", "1KG", 
+                       paste0("1KG_phase3_subset_chr", 1:22, ".vcf.gz"), 
+                       package="GENESIS")
 gdsfile <- tempfile()
 seqVCF2GDS(vcffile, gdsfile, verbose=FALSE)
 gds <- seqOpen(gdsfile)
@@ -34,7 +35,7 @@ gds
 
 ## Create a SeqVarData object
 
-Next, we combine the GDS file with information about the samples, which we store in an `AnnotatedDataFrame` (defined in the Biobase package). An `AnnotatedDataFrame` combines a `data.frame` with metadata describing each column. A `SeqVarData` object (defined in the SeqVarTools package), contains both an open GDS file and an `AnnotatedDataFrame` describing the samples. The `sample.id` column in the `AnnotatedDataFrame` must match the `sample.id` node in the GDS file.
+Next, we combine the GDS file with information about the samples, which we store in an `AnnotatedDataFrame` (defined in the `r Biocpkg("Biobase")` package). An `AnnotatedDataFrame` combines a `data.frame` with metadata describing each column. A `SeqVarData` object (defined in the `r Biocpkg("SeqVarTools")` package), contains both an open GDS file and an `AnnotatedDataFrame` describing the samples. The `sample.id` column in the `AnnotatedDataFrame` must match the `sample.id` node in the GDS file.
 
 ```{r seqvardata}
 library(GENESIS)
@@ -43,11 +44,14 @@ library(SeqVarTools)
 
 data(sample_annotation_1KG)
 annot <- sample_annotation_1KG
+head(annot)
 
 # simulate some phenotype data
 annot$outcome <- rnorm(nrow(annot))
-metadata <- data.frame(labelDescription=c("sample id", "1000 genomes population", 
-                                          "sex", "simulated phenotype"),
+metadata <- data.frame(labelDescription=c("sample id", 
+                                          "1000 genomes population", 
+                                          "sex", 
+                                          "simulated phenotype"),
                        row.names=names(annot))
 annot <- AnnotatedDataFrame(annot, metadata)
 
@@ -78,17 +82,18 @@ pruned <- unlist(snpset, use.names=FALSE)
 
 king <- snpgdsIBDKING(gds, snp.id=pruned, verbose=FALSE)
 kingMat <- king$kinship
-colnames(kingMat) <- rownames(kingMat) <- king$sample.id
+dimnames(kingMat) <- list(king$sample.id, king$sample.id)
 ```
 
 ## PC-AiR
 
-The next step is PC-AiR, in which we select a set of unrelated samples that is maximally informative about all ancestries in the sample, use this unrelated set for Principal Component Analysis (PCA), then project the relatives onto the PCs.  We use a kinship threshold of degree 3 (unrelated is less than first cousins). In this example, we use the KING estimates for both kinship (`kinMat`) and ancestry divergence (`divMat`). KING kinship estimates are negative for samples with different ancestry.
+The next step is PC-AiR, in which we select a set of unrelated samples that is maximally informative about all ancestries in the sample, use this unrelated set for Principal Component Analysis (PCA), then project the relatives onto the PCs.  We use a kinship threshold of degree 3 (unrelated is less than first cousins). In this example, we use the KING estimates for both kinship (`kinobj`) and ancestry divergence (`divobj`). KING kinship estimates are negative for samples with different ancestry.
 
 ```{r pcair}
-pcs <- pcair(seqData, kinMat=kingMat, kin.thresh=2^(-9/2),
-                      divMat=kingMat, div.thresh=-2^(-9/2),
-             snp.include=pruned, snp.block.size=22000)
+pcs <- pcair(seqData, 
+             kinobj=kingMat, kin.thresh=2^(-9/2),
+             divobj=kingMat, div.thresh=-2^(-9/2),
+             snp.include=pruned)
 ```
 
 We need to determine which PCs are ancestry informative. To do this we need population information for the 1000 Genomes samples. We make a parallel coordinates plot, color-coding by 1000 Genomes population.
@@ -105,13 +110,14 @@ pc.df$sample.id <- row.names(pcs$vectors)
 pc.df <- left_join(pc.df, pData(annot), by="sample.id")
 
 pop.cols <- setNames(brewer.pal(12, "Paired"),
-                 c("ACB", "ASW", "CEU", "GBR", "CHB", "JPT", "CLM", "MXL", "LWK", "YRI", "GIH", "PUR"))
+    c("ACB", "ASW", "CEU", "GBR", "CHB", "JPT", 
+      "CLM", "MXL", "LWK", "YRI", "GIH", "PUR"))
 
 ggplot(pc.df, aes(PC1, PC2, color=Population)) + geom_point() +
     scale_color_manual(values=pop.cols)
 ```
 
-```{r parcoord, fig.height=4, fig.width=10, out.width="100%"}
+```{r parcoord, fig.wide=TRUE, fig.height=4, fig.width=10}
 ggparcoord(pc.df, columns=1:10, groupColumn="Population", scale="uniminmax") +
     scale_color_manual(values=pop.cols) +
     xlab("PC") + ylab("")
@@ -119,15 +125,17 @@ ggparcoord(pc.df, columns=1:10, groupColumn="Population", scale="uniminmax") +
 
 ## PC-Relate
 
-The first 2 PCs separate populations, so we use them to compute kinship estimates adjusting for ancestry.
+The first 2 PCs separate populations, so we use them to compute kinship estimates adjusting for ancestry. The `pcrelate` method requires creating a `SeqVarBlockIterator` object, which should iterate over the pruned SNPs only.
 
 ```{r pcrelate}
-pcrel <- pcrelate(seqData, pcMat=pcs$vectors[,1:2], training.set=pcs$unrels,
-                  snp.include=pruned, snp.block.size=22000)
+seqSetFilter(seqData, variant.id=pruned)
+iterator <- SeqVarBlockIterator(seqData, variantBlock=20000, verbose=FALSE)
+pcrel <- pcrelate(iterator, pcs=pcs$vectors[,1:2], training.set=pcs$unrels)
+seqResetFilter(seqData, verbose=FALSE)
 ```
 
 ```{r pcrelate_plot}
-kinship <- pcrelateReadKinship(pcrel)
+kinship <- pcrel$kinBtwn
 
 ggplot(kinship, aes(k0, kin)) +
     geom_hline(yintercept=2^(-seq(3,9,2)/2), linetype="dashed", color="grey") +
@@ -136,7 +144,7 @@ ggplot(kinship, aes(k0, kin)) +
     theme_bw()
 ```
 
-To improve our estimates for PCs and kinship, we could run another iteration of PC-AiR and PC-Relate, this time using the PC-Relate kinship estimates as the `kinMat` argument to `pcair`.  The KING matrix is still used for ancestry divergence. We could then use those new PCs to calculate revised kinship estimates.
+To improve our estimates for PCs and kinship, we could run another iteration of PC-AiR and PC-Relate, this time using the PC-Relate kinship estimates as the `kinobj` argument to `pcair`.  The KING matrix is still used for ancestry divergence. We could then use those new PCs to calculate revised kinship estimates.
 
 
 # Association tests
@@ -153,7 +161,7 @@ annot <- AnnotatedDataFrame(pc.df)
 sampleData(seqData) <- annot
 
 # covariance matrix from pcrelate output
-grm <- pcrelateMakeGRM(pcrel, scaleKin=2)
+grm <- pcrelateToMatrix(pcrel, scaleKin=2)
 
 # fit the null model
 nullmod <- fitNullModel(seqData, outcome="outcome", 
@@ -164,7 +172,7 @@ nullmod <- fitNullModel(seqData, outcome="outcome",
 
 ## Single variant tests
 
-To run a test using the null model, we first create an iterator object specifying how we want variants to be selected. (See the documentation for the `SeqVarIterator` class in SeqVarTools for more details.) For single-variant tests (GWAS), it is common to use a block iterator that reads variants in blocks (default is 10,000 variants per block).
+To run a test using the null model, we first create an iterator object specifying how we want variants to be selected. (See the documentation for the `SeqVarIterator` class in `r Biocpkg("SeqVarTools")` for more details.) For single-variant tests (GWAS), it is common to use a block iterator that reads variants in blocks (default is 10,000 variants per block).
 
 For example purposes, we restrict our analysis to chromosome 1. The `seqSetFilter` function can be used to restrict the set of variants tested in other ways (e.g., variants that pass a quality filter).
 
@@ -233,7 +241,8 @@ genes <- renameSeqlevels(genes, sub("chr", "", seqlevels(genes)))
 iterator <- SeqVarRangeIterator(seqData, variantRanges=genes, verbose=FALSE)
 
 # do a burden test on the rare variants in each gene
-assoc <- assocTestAggregate(iterator, nullmod, AF.max=0.05, test="Burden", verbose=FALSE)
+assoc <- assocTestAggregate(iterator, nullmod, AF.max=0.05, test="Burden",
+                            verbose=FALSE)
 ```
 
 The output of an aggregate test is a list with two elements: 1) a data.frame with the test results for each aggregate unit, and 2) a list of data.frames containing the variants in each aggregate unit.
@@ -243,7 +252,7 @@ head(assoc$results)
 head(assoc$variantInfo)
 ```
 
-```{r close}
+```{r close, echo=FALSE}
 seqClose(gds)
 unlink(gdsfile)
 ```

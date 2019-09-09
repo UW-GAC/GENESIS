@@ -1,0 +1,8 @@
+bibentry(
+bibtype = "Article",
+title = "{G}enetic association testing using the {G}{E}{N}{E}{S}{I}{S} {R}/{B}ioconductor package",
+author = as.person("Stephanie M. Gogarten, Tamar Sofer, Han Chen, Chaoyu Yu, Jennifer A. Brody, Timothy A. Thornton, Kenneth M. Rice, Matthew P. Conomos"),
+year = "2019",
+journal = "Bioinformatics",
+doi = "10.1093/bioinformatics/btz567"
+)

@@ -9,8 +9,9 @@ setMethod("fitNullModel",
                    group.var = NULL,
                    family = "gaussian",
                    start = NULL,
-                   AIREML.tol = 1e-6,
+                   AIREML.tol = 1e-4,
                    max.iter = 100,
+                   EM.iter = 0,
                    drop.zeros = TRUE,
                    verbose = TRUE) {
               
@@ -28,8 +29,8 @@ setMethod("fitNullModel",
               .fitNullModel(y=desmat$y, X=desmat$X, covMatList=cov.mat,
                             group.idx=desmat$group.idx, family=family,
                             start=start, AIREML.tol=AIREML.tol,
-                            max.iter=max.iter, drop.zeros=drop.zeros,
-                            verbose=verbose)
+                            max.iter=max.iter, EM.iter=EM.iter,
+                            drop.zeros=drop.zeros, verbose=verbose)
           })
 
 setMethod("fitNullModel",
@@ -94,10 +95,13 @@ setMethod("fitNullModel",
 nullModelInvNorm <- function(null.model, cov.mat = NULL,
                              norm.option = c("by.group", "all"),
                              rescale = c("none", "model", "residSD"),
-                             AIREML.tol = 1e-6, max.iter = 100, verbose = TRUE) {
+                             AIREML.tol = 1e-4, 
+                             max.iter = 100, EM.iter = 0,
+                             verbose = TRUE) {
 
     updateNullModOutcome(null.model, covMatList=cov.mat, rankNorm.option=norm.option,
-                         rescale=rescale, AIREML.tol=AIREML.tol, max.iter=max.iter,
+                         rescale=rescale, AIREML.tol=AIREML.tol, 
+                         max.iter=max.iter, EM.iter=EM.iter,
                          verbose=verbose)
 }
 
@@ -122,8 +126,8 @@ nullModelInvNorm <- function(null.model, cov.mat = NULL,
     } else {
         rows <- lapply(cov.mat, rownames)
         cols <- lapply(cov.mat, colnames)
-        if (!do.call(identical, rows)) stop("dimnames of cov.mat should be identical")
-        if (!do.call(identical, cols)) stop("dimnames of cov.mat should be identical")
+        if (!.listIdentical(rows)) stop("dimnames of cov.mat should be identical")
+        if (!.listIdentical(cols)) stop("dimnames of cov.mat should be identical")
         if (!is.null(rows[[1]])) {
             return(rows[[1]])
         } else {
@@ -136,13 +140,17 @@ nullModelInvNorm <- function(null.model, cov.mat = NULL,
 ## need to subset cov.mat in case of missing data
 ## don't re-order in case we have a block diagonal matrix
 .covMatSubset <- function(cov.mat, index) {
-    if (identical(index, 1:nrow(cov.mat))) {
-        return(cov.mat)
+    .subset <- function(x, index) {
+        if (identical(index, 1:nrow(x))) {
+            return(x)
+        } else {
+            return(x[index,index])
+        }
     }
     if (!is.list(cov.mat)) {
-        return(cov.mat[index,index])
+        .subset(cov.mat, index)
     } else {
-        cov.mat <- return(lapply(cov.mat, function(m) m[index,index]))
+        cov.mat <- return(lapply(cov.mat, .subset, index))
     }
 }
 

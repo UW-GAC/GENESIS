@@ -1,84 +1,143 @@
 context("pcrelate tests")
-library(GWASTools)
+library(SeqVarTools)
 
-test_that("pcrelate", {
-
-    # file path to GDS file
-    gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
-    # read in GDS data
-    HapMap_geno <- GdsGenotypeReader(filename = gdsfile)
-    # create a GenotypeData class object
-    HapMap_genoData <- GenotypeData(HapMap_geno)
-    # load saved matrix of KING-robust estimates
-    data("HapMap_ASW_MXL_KINGmat")
-    # PC-AiR
-    mypcs <- pcair(genoData = HapMap_genoData, kinMat = HapMap_ASW_MXL_KINGmat, divMat = HapMap_ASW_MXL_KINGmat)
-
-    myrel <- pcrelate(genoData = HapMap_genoData, pcMat = mypcs$vectors[,1:2])
-
-    close(HapMap_genoData)	
+test_that("pcrelate2 - variant blocks", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel <- pcrelate(iterator, pcs = mypcs, verbose=FALSE)
+    seqResetFilter(svd, verbose=FALSE)
+    iterator <- SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, verbose=FALSE)
+    expect_equal(myrel, myrel2)
+    seqClose(svd)
 })
 
-test_that("pcrelate_writegds", {
-
-    # file path to GDS file
-    gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
-    # read in GDS data
-    HapMap_geno <- GdsGenotypeReader(filename = gdsfile)
-    # create a GenotypeData class object
-    HapMap_genoData <- GenotypeData(HapMap_geno)
-    # load saved matrix of KING-robust estimates
-    data("HapMap_ASW_MXL_KINGmat")
-    # PC-AiR
-    mypcs <- pcair(genoData = HapMap_genoData, kinMat = HapMap_ASW_MXL_KINGmat, divMat = HapMap_ASW_MXL_KINGmat)
-
-    gds.prefix <- tempfile()
-    myrel <- pcrelate(genoData = HapMap_genoData, pcMat = mypcs$vectors[,1:2], write.to.gds=TRUE, gds.prefix=gds.prefix)
-    gds <- GdsGenotypeReader(paste0(gds.prefix, "_freq.gds"))
-    close(gds)
-    unlink(paste0(gds.prefix, "_freq.gds"))
-    
-    close(HapMap_genoData)
-    
+test_that("pcrelate2 - 2 sample blocks", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel <- pcrelate(iterator, pcs = mypcs, verbose=FALSE)
+    resetIterator(iterator, verbose=FALSE)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, sample.block.size=50, verbose=FALSE)
+    expect_equal(myrel, myrel2)
+    seqClose(svd)
 })
 
-test_that("pcrelate_makegrm", {
-    requireNamespace("gdsfmt")
+test_that("pcrelate2 - >2 sample blocks", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel <- pcrelate(iterator, pcs = mypcs, verbose=FALSE)
+    resetIterator(iterator, verbose=FALSE)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, sample.block.size=20, verbose=FALSE)
+    expect_equal(myrel, myrel2)
+    seqClose(svd)
+})
 
-    # file path to GDS file
-    gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
-    # read in GDS data
-    HapMap_geno <- GdsGenotypeReader(filename = gdsfile)
-    # create a GenotypeData class object
-    HapMap_genoData <- GenotypeData(HapMap_geno)
-    # load saved matrix of KING-robust estimates
-    data("HapMap_ASW_MXL_KINGmat")
-    # PC-AiR
-    mypcs <- pcair(genoData = HapMap_genoData, kinMat = HapMap_ASW_MXL_KINGmat, divMat = HapMap_ASW_MXL_KINGmat)
+test_that("pcrelate2 - sample include", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    set.seed(90); samp.incl <- sample(seqGetData(svd, "sample.id"), 50)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, sample.include=samp.incl, verbose=FALSE)
+    expect_true(setequal(myrel2$kinSelf$ID, samp.incl))
+    seqClose(svd)
+})
 
-    # make sure use of scan.include returns correct values
-    # check with RData
-    myrel <- pcrelate(genoData = HapMap_genoData, pcMat = mypcs$vectors[,1:2])
-    grm <- pcrelateMakeGRM(myrel)
-    scan.include <- sample(colnames(grm), floor(ncol(grm)/2))
-    grm.sub <- pcrelateMakeGRM(myrel, scan.include=scan.include)
-    ind <- colnames(grm) %in% scan.include
-    expect_equal(grm[ind,ind], grm.sub)
+test_that("pcrelate2 - sample filter", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    seqSetFilter(svd, sample.sel=1:20, verbose=FALSE)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, verbose=FALSE)
+    expect_true(setequal(myrel2$kinSelf$ID, seqGetData(iterator, "sample.id")))
+    seqClose(svd)
+})
 
-    # check with gds
-    gds.prefix <- tempfile()
-    myrel <- pcrelate(genoData = HapMap_genoData, pcMat = mypcs$vectors[,1:2], write.to.gds=TRUE, gds.prefix=gds.prefix)
-    gds <- openfn.gds(paste0(gds.prefix, "_pcrelate.gds"))
+test_that("pcrelate2 - GenotypeData - variant blocks", {
+    gd <- .testGenoData()
+    mypcs <- .testGenoPCs(gd)
+    iterator <- GWASTools::GenotypeBlockIterator(gd)
+    myrel <- pcrelate(iterator, pcs = mypcs, verbose=FALSE)
+    iterator <- GWASTools::GenotypeBlockIterator(gd, snpBlock=1000)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, verbose=FALSE)
+    expect_equal(myrel, myrel2)
+    GWASTools::close(gd)
+})
 
-    grm <- pcrelateMakeGRM(gds)
-    scan.include <- sample(colnames(grm), floor(ncol(grm)/2))
-    grm.sub <- pcrelateMakeGRM(gds, scan.include=scan.include)
-    ind <- colnames(grm) %in% scan.include
-    expect_equal(grm[ind,ind], grm.sub)
-    
-    closefn.gds(gds)
-    unlink(paste0(gds.prefix, "_pcrelate.gds"))
-    
-    close(HapMap_genoData)
-    
+test_that("pcrelate2 - GenotypeData - sample blocks", {
+    gd <- .testGenoData()
+    mypcs <- .testGenoPCs(gd)
+    iterator <- GWASTools::GenotypeBlockIterator(gd)
+    myrel <- pcrelate(iterator, pcs = mypcs, verbose=FALSE)
+    iterator <- GWASTools::GenotypeBlockIterator(gd)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, sample.block.size=50, verbose=FALSE)
+    expect_equal(myrel, myrel2)
+    GWASTools::close(gd)
+})
+
+test_that("pcrelate2 - GenotypeData - sample include", {
+    gd <- .testGenoData()
+    mypcs <- .testGenoPCs(gd)
+    set.seed(91); samp.incl <- sample(GWASTools::getScanID(gd), 50)
+    iterator <- GWASTools::GenotypeBlockIterator(gd)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, sample.include=samp.incl, verbose=FALSE)
+    expect_true(setequal(myrel2$kinSelf$ID, as.character(samp.incl)))
+    GWASTools::close(gd)
+})
+
+test_that("pcrelate2 - small sample correction", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel <- pcrelate(iterator, pcs = mypcs, verbose=FALSE)
+    resetIterator(iterator, verbose=FALSE)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, small.samp.correct = TRUE, verbose=FALSE)
+    expect_equal(myrel$kinBtwn[,1:2], myrel2$kinBtwn[,1:2])
+    seqClose(svd)
+})
+
+test_that("pcrelate2 - scale=variant", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel <- pcrelate(iterator, pcs = mypcs, verbose=FALSE)
+    resetIterator(iterator, verbose=FALSE)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, scale="variant", verbose=FALSE)
+    expect_equal(myrel$kinBtwn[,1:2], myrel2$kinBtwn[,1:2])
+    seqClose(svd)
+})
+
+test_that("pcrelate2 - scale=none", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel <- pcrelate(iterator, pcs = mypcs, verbose=FALSE)
+    resetIterator(iterator, verbose=FALSE)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, scale="none", ibd.probs=FALSE, verbose=FALSE)
+    expect_equal(myrel$kinBtwn[,1:2], myrel2$kinBtwn[,1:2])
+    seqClose(svd)
+})
+
+test_that("pcrelate2 - method=truncate", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel.f <- pcrelate(iterator, pcs = mypcs, maf.bound.method="filter", verbose=FALSE)
+    myrel.t <- pcrelate(iterator, pcs = mypcs, maf.bound.method="truncate", verbose=FALSE)
+    expect_true(all(myrel.t$nsnp > myrel.f$nsnp))
+    expect_equal(myrel.t$kin, myrel.f$kin, tolerance=0.01)
+    seqClose(svd)
+})
+
+test_that("pcrelate2 - make GRM", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    myrel2 <- pcrelate(iterator, pcs = mypcs, verbose=FALSE)
+    grm2 <- pcrelateToMatrix(myrel2, scaleKin=1, verbose=FALSE)
+    expect_equivalent(myrel2$kinBtwn$kin[1:10], grm2[2:11,1])
+    seqClose(svd)
 })

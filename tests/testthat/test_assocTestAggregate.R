@@ -49,7 +49,7 @@ test_that("list", {
 test_that("user weights", {
     svd <- .testData()
     variant.id <- seqGetData(svd, "variant.id")
-    weights <- sample(1:10, length(variant.id), replace=TRUE)
+    set.seed(7); weights <- sample(1:10, length(variant.id), replace=TRUE)
     variantData(svd) <- AnnotatedDataFrame(data.frame(variant.id, weights))
     seqSetFilterChrom(svd, include=22, verbose=FALSE)
     iterator <- SeqVarWindowIterator(svd, windowSize=5e5, windowShift=2.5e5, verbose=FALSE)
@@ -184,12 +184,45 @@ test_that("missing sample.id in null model", {
     svd <- .testData()
     seqSetFilterChrom(svd, include=1, verbose=FALSE)
     n <- 10
-    seqSetFilter(svd, sample.sel=1:n)
+    seqSetFilter(svd, sample.sel=1:n, verbose=FALSE)
     iterator <- SeqVarWindowIterator(svd, windowSize=5e5, windowShift=2.5e5, verbose=FALSE)
     nullmod <- fitNullModel(pData(sampleData(svd)), outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
     expect_false("sample.id" %in% names(nullmod))
     expect_equal(length(nullmod$outcome), n)
     assoc <- assocTestAggregate(iterator, nullmod, verbose=FALSE)
     expect_equal(max(assoc$results$n.sample.alt), n)
+    seqClose(svd)
+})
+
+
+test_that("user weights with missing values", {
+    svd <- .testData()
+    variant.id <- seqGetData(svd, "variant.id")
+    weights <- sample(c(0, 1, NA), length(variant.id), replace=TRUE)
+    variantData(svd) <- AnnotatedDataFrame(data.frame(variant.id, weights))
+    seqSetFilterChrom(svd, include=22, verbose=FALSE)
+    iterator <- SeqVarWindowIterator(svd, windowSize=5e5, windowShift=2.5e5, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+    assoc <- assocTestAggregate(iterator, nullmod, weight.user="weights", verbose=FALSE)
+    tmp <- do.call(rbind, assoc$variantInfo)[,c("variant.id", "weight")]
+    expect_true(all(tmp$weight == 1))
+    expect_equal(assoc$results$n.site, sapply(assoc$variantInfo, nrow))
+    seqClose(svd)
+})
+
+
+test_that("user weights in variantData with list iterator", {
+    svd <- .testData()
+    variant.id <- seqGetData(svd, "variant.id")
+    weights <- rep(0.5, length(variant.id))
+    variantData(svd) <- AnnotatedDataFrame(data.frame(variant.id, weights))
+    gr <- GRangesList(
+        GRanges(seqnames=rep(1,2), ranges=IRanges(start=c(1e6, 3e6), width=1e6)),
+        GRanges(seqnames=rep(1,2), ranges=IRanges(start=c(3e6, 34e6), width=1e6)))
+    iterator <- SeqVarListIterator(svd, variantRanges=gr, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+    assoc <- assocTestAggregate(iterator, nullmod, weight.user="weights", verbose=FALSE)
+    expect_equal(assoc$variantInfo[[1]]$weight, rep(0.5, 7))
+    expect_equal(assoc$variantInfo[[2]]$weight, rep(0.5, 8))
     seqClose(svd)
 })

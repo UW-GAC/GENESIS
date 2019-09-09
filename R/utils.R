@@ -1,7 +1,7 @@
 # GenotypeData methods for SeqVarTools generics
 setMethod("chromWithPAR",
           "GenotypeData",
-          function(gdsobj) {
+          function(gdsobj, ...) {
               getChromosome(gdsobj, char=TRUE)
           })
 
@@ -20,30 +20,79 @@ setMethod("validateSex",
               sex
           })
 
+setMethod("variantInfo",
+          "GenotypeData",
+          function(gdsobj, alleles=FALSE) {
+              data.frame(variant.id=getSnpID(gdsobj),
+                         chr=getChromosome(gdsobj, char=TRUE),
+                         pos=getPosition(gdsobj),
+                         stringsAsFactors=FALSE)
+          })
+
+setMethod("variantFilter",
+          "GenotypeIterator",
+          function(x) {
+              snpFilter(x)
+          })
+
+
+# check for all genotypes identical (including all hets)
+# allow a tolerance in case we have imputed dosage values rather than integer
+# return an index for subsetting rather than modifying geno
+# (so we can subset variant info also)
+# we have to compute count and freq anyway, so pass as arguments
+.filterMonomorphic <- function(geno, count, freq, imputed=FALSE) {
+    #count <- colSums(!is.na(geno))
+    if (!imputed) {
+        #freq <- 0.5*colMeans(geno, na.rm=TRUE)
+        isref <- freq == 0
+        isalt <- freq == 1
+        ishet <- colSums(geno == 1, na.rm=TRUE) == count
+    } else {
+        tol <- .Machine$double.eps ^ 0.5
+        isref <- colSums(abs(geno) < tol, na.rm=TRUE) == count
+        isalt <- colSums(abs(geno - 1) < tol, na.rm=TRUE) == count
+        ishet <- colSums(abs(geno - 2) < tol, na.rm=TRUE) == count
+    }
+    !(isref | isalt | ishet)
+}
+
+
 # index is in case we had to subset geno so it no longer matches the variant filter
 # (in the case of allele matching)
-.alleleFreq <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL) {
+.alleleFreq <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL, male.diploid=TRUE, genome.build=c("hg19", "hg38")) {
 
     # check sex
     sex <- validateSex(gdsobj)
     if (!is.null(sample.index)) sex <- sex[sample.index]
     if (is.null(sex)) {
-        return(0.5*colMeans(geno, na.rm=TRUE))
+        #freq <- 0.5*colMeans(geno, na.rm=TRUE)
+        count <- colSums(geno, na.rm=TRUE)
+        # nsamp <- colSums(!is.na(geno))
+        nsamp <- .countNonMissing(geno, MARGIN = 2)
+        freq <- count/(2*nsamp)
+        mac <- round(pmin(count, 2*nsamp - count))
+        return(data.frame(freq=freq, MAC=mac))
     }
 
     # check chromosome
-    chr <- chromWithPAR(gdsobj)
+    chr <- chromWithPAR(gdsobj, genome.build=genome.build)
     if (!is.null(variant.index)) chr <- chr[variant.index]
     X <- chr %in% "X"
     Y <- chr %in% "Y"
     auto <- !X & !Y
 
-    # allele frequency vector
-    freq <- rep(NA, ncol(geno))
+    # allele count vectors
+    #freq <- rep(NA, ncol(geno))
+    count <- rep(NA, ncol(geno))
+    possible <- rep(NA, ncol(geno))
 
     # autosomes
     if (any(auto)) {
-        freq[auto] <- 0.5*colMeans(geno[, auto, drop=FALSE], na.rm=TRUE)
+        #freq[auto] <- 0.5*colMeans(geno[, auto, drop=FALSE], na.rm=TRUE)
+        count[auto] <- colSums(geno[, auto, drop=FALSE], na.rm=TRUE)
+        # possible[auto] <- 2 * colSums(!is.na(geno[, auto, drop=FALSE]))
+        possible[auto] <- 2 * .countNonMissing(geno[, auto, drop=FALSE], MARGIN = 2)
     }
 
     # X chrom
@@ -51,20 +100,37 @@ setMethod("validateSex",
         female <- sex %in% "F"
         male <- sex %in% "M"
         F.count <- colSums(geno[female, X, drop=FALSE], na.rm=TRUE)
-        F.nsamp <- colSums(!is.na(geno[female, X, drop=FALSE]))
-        M.count <- 0.5*colSums(geno[male, X, drop=FALSE], na.rm=TRUE)
-        M.nsamp <- colSums(!is.na(geno[male, X, drop=FALSE]))
-        freq[X] <- (F.count + M.count)/(2*F.nsamp + M.nsamp)
+        # F.nsamp <- colSums(!is.na(geno[female, X, drop=FALSE]))
+        F.nsamp <- .countNonMissing(geno[female, X, drop=FALSE], MARGIN = 2)
+        M.count <- colSums(geno[male, X, drop=FALSE], na.rm=TRUE)
+        if (male.diploid) {
+            M.count <- 0.5*M.count
+        }
+        # M.nsamp <- colSums(!is.na(geno[male, X, drop=FALSE]))
+        M.nsamp <- .countNonMissing(geno[male, X, drop=FALSE], MARGIN = 2)
+        #freq[X] <- (F.count + M.count)/(2*F.nsamp + M.nsamp)
+        count[X] <- (F.count + M.count)
+        possible[X] <- (2*F.nsamp + M.nsamp)
     }
 
     # Y chrom
     if (any(Y)) {
         male <- sex %in% "M"
-        freq[Y] <- 0.5*colMeans(geno[male, Y, drop=FALSE], na.rm=TRUE)
+        #freq[Y] <- colMeans(geno[male, Y, drop=FALSE], na.rm=TRUE)
+        count[Y] <- colSums(geno[male, Y, drop=FALSE], na.rm=TRUE)
+        if (male.diploid) {
+            #freq[Y] <- 0.5*freq[Y]
+            count[Y] <- 0.5*count[Y]
+        }
+        # possible[Y] <- colSums(!is.na(geno[male, Y, drop=FALSE]))
+        possible[Y] <- .countNonMissing(geno[male, Y, drop=FALSE], MARGIN = 2)
     }
 
-    freq
+    freq <- count / possible
+    mac <- round(pmin(count, possible - count))
+    data.frame(freq=freq, MAC=mac)
 }
+
 
 .meanImpute <- function(geno, freq) {
     miss.idx <- which(is.na(geno))
@@ -83,10 +149,22 @@ setMethod("validateSex",
 .setFilterNullModel <- function(gdsobj, null.model, verbose=TRUE) {
     if (!is.null(null.model$sample.id)) {
         seqSetFilter(gdsobj, sample.id=null.model$sample.id, verbose=verbose)
-        match(null.model$sample.id, seqGetData(gdsobj, "sample.id"))
+        sample.index <- match(null.model$sample.id, seqGetData(gdsobj, "sample.id"))
     } else {
-        seq_along(seqGetData(gdsobj, "sample.id"))
+        sample.index <- seq_along(seqGetData(gdsobj, "sample.id"))
     }
+    sample.index
+}
+
+# return sample.index to match GenotypeData object to a null model
+.sampleIndexNullModel <- function(gdsobj, null.model) {
+    if (!is.null(null.model$sample.id)) {
+        sample.index <- match(null.model$sample.id, getScanID(gdsobj))
+    } else {
+        sample.index <- match(rownames(null.model$model.matrix),
+                              sampleNames(getScanAnnotation(gdsobj)))
+    }
+    sample.index
 }
 
 .modelMatrixColumns <- function(null.model, col.name) {
@@ -148,3 +226,18 @@ setMethod(".annotateAssoc",
           function(gdsobj, x) {
               x
           })
+
+setMethod(".annotateAssoc",
+          "GenotypeIterator",
+          function(gdsobj, x) {
+              filt.names <- names(snpFilter(gdsobj))
+              if (!is.null(filt.names)) {
+                  rownames(x$results) <- filt.names
+                  names(x$variantInfo) <- filt.names
+              }
+              x
+          })
+
+.listIdentical <- function(x) {
+    all(sapply(x[-1], FUN = identical, x[[1]]))
+}

@@ -32,23 +32,19 @@
 	The generic function \code{\link{plot}}.
 }
 \examples{
-library(GWASTools)
-
 # file path to GDS file
 gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
 # read in GDS data
-HapMap_geno <- GdsGenotypeReader(filename = gdsfile)
-# create a GenotypeData class object
-HapMap_genoData <- GenotypeData(HapMap_geno)
+HapMap_geno <- gdsfmt::openfn.gds(gdsfile)
 # load saved matrix of KING-robust estimates
 data("HapMap_ASW_MXL_KINGmat")
 # run PC-AiR
-mypcair <- pcair(genoData = HapMap_genoData, kinMat = HapMap_ASW_MXL_KINGmat, 
-                divMat = HapMap_ASW_MXL_KINGmat)
+mypcair <- pcair(HapMap_geno, kinobj = HapMap_ASW_MXL_KINGmat, 
+                 divobj = HapMap_ASW_MXL_KINGmat)
 # plot top 2 PCs
 plot(mypcair)
 # plot PCs 3 and 4
 plot(mypcair, vx = 3, vy = 4)
-close(HapMap_genoData)
+gdsfmt::closefn.gds(HapMap_geno)
 }
 

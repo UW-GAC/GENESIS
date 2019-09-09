@@ -26,7 +26,8 @@
 \usage{
 \S4method{fitNullModel}{data.frame}(x, outcome, covars = NULL, cov.mat = NULL,
             group.var = NULL, family = "gaussian", start = NULL, 
-            AIREML.tol = 1e-6, max.iter = 100, drop.zeros = TRUE, verbose = TRUE)
+            AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0, drop.zeros = TRUE,
+            verbose = TRUE)
 \S4method{fitNullModel}{AnnotatedDataFrame}(x, outcome, covars = NULL, cov.mat = NULL,
             group.var = NULL, sample.id = NULL, ...)
 \S4method{fitNullModel}{SeqVarData}(x, ...)
@@ -35,7 +36,7 @@
 
 nullModelInvNorm(null.model, cov.mat = NULL, norm.option = c("by.group", "all"),
                  rescale = c("none", "model", "residSD"),
-                 AIREML.tol = 1e-6, max.iter = 100, verbose = TRUE)
+                 AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0, verbose = TRUE)
 }
 
 \arguments{
@@ -44,21 +45,24 @@ nullModelInvNorm(null.model, cov.mat = NULL, norm.option = c("by.group", "all"),
   \item{covars}{A vector of character strings specifying the names of the fixed effect covariates in \code{x}; an intercept term is automatically included. If \code{NULL} (default) the only fixed effect covariate is the intercept term.}
   \item{cov.mat}{A matrix or list of matrices specifying the covariance structures of the random effects terms. Objects from the \pkg{\link{Matrix}} package are supported. See 'Details' for more information.}
   \item{group.var}{This variable can only be used when \code{family = "gaussian"}. A character string specifying the name of a categorical variable in \code{x} that is used to fit heterogeneous residual error variances. If \code{NULL} (default), then a standard LMM with constant residual variance for all samples is fit. See 'Details' for more information.}
-  \item{sample.id}{A vector of IDs for samples to include in the analysis.  If \code{NULL}, all samples in \code{x} are included.}
+  \item{sample.id}{A vector of IDs for samples to include in the analysis.  If \code{NULL}, all samples in \code{x} are included. This argument is ignored if \code{x} is a data.frame; see 'Details'.}
   \item{family}{A description of the error distribution to be used in the model. The default \code{"gaussian"} fits a linear model; see \code{\link{family}} for further options, and see 'Details' for more information.}
   \item{start}{A vector of starting values for the variance component estimation procedure. The function will pick reasonable starting values when left \code{NULL} (default). See 'Details' for more information.}
   \item{AIREML.tol}{The convergence threshold for the Average Information REML (AIREML) procedure used to estimate the variance components of the random effects. See 'Details' for more information.}
-  \item{max.iter}{The maximum number of iterations allowed in the AIREML procedure.}
+  \item{max.iter}{The maximum number of iterations allowed to reach convergence.}
+  \item{EM.iter}{The number of EM iterations to run prior to AIREML; default is 0.}
   \item{drop.zeros}{Logical indicator of whether variance component terms that converge to 0 should be removed from the model; the default is TRUE. See 'Details' for more information.}
   \item{verbose}{Logical indicator of whether updates from the function
     should be printed to the console; the default is TRUE.}
   \item{...}{Arguments to pass to other methods.}
   \item{null.model}{The output of \code{fitNullModel}.}
   \item{norm.option}{Whether the normalization should be done separately within each value of \code{group.var} (\code{"by.group"}) or with all samples together (\code{"all"}).}
-  \item{rescale}{Controls whether to rescale the variance for each group after inverse-normal transform, restoring it to the original variance before the transform. \code{"none"} for no rescaling of the residuals; \code{"model"} for model-based rescaling, and \code{"residSD"} to rescale to the standard deviation of the marginal residuals.}
+  \item{rescale}{Controls whether to rescale the variance after inverse-normal transform, restoring it to the original variance before the transform. \code{"none"} for no rescaling of the residuals; \code{"model"} for model-based rescaling, and \code{"residSD"} to rescale to the standard deviation of the marginal residuals. See 'Details' for more information.}
 }
 
 \details{
+    If \code{x} is a data.frame, the rownames of \code{x} must match the row and column names of \code{cov.mat} (if \code{cov.mat} is specified). If \code{x} is an \code{\link{AnnotatedDataFrame}} or other object containing an \code{\link{AnnotatedDataFrame}}, \code{x} will be re-ordered (if necessary) so that \code{sample.id} or \code{scanID} is in the same order as the row and column names of \code{cov.mat}.
+
     \code{cov.mat} is used to specify the covariance structures of the random effects terms in the model.  For example, to include a polygenic random effect, one matrix in \code{cov.mat} could be a kinship matrix or a genetic relationship matrix (GRM).  As another example, to include household membership as a random effect, one matrix in \code{cov.mat} should be a 0/1 matrix with a 1 in the \code{[i,j]} and \code{[j,i]} entries if individuals \code{i} and \code{j} are in the same household and 0 otherwise; the diagonals of such a matrix should all be 1.
     
     When \code{family} is not gaussian, the penalized quasi-likelihood (PQL) approximation to the generalized linear mixed model (GLMM) is fit following the procedure of GMMAT (Chen et al.).
@@ -67,7 +71,9 @@ nullModelInvNorm(null.model, cov.mat = NULL, norm.option = c("by.group", "all"),
     
     Let \code{m} be the number of matrices in \code{cov.mat} and let \code{g} be the number of categories in the variable specified by \code{group.var}. The length of the \code{start} vector must be \code{(m + 1)} when \code{family} is gaussian and \code{group.var} is \code{NULL}; \code{(m + g)} when \code{family} is gaussian and \code{group.var} is specified; or m when \code{family} is not gaussian.
     
-    A Newton-Raphson iterative procedure with Average Information REML (AIREML) is used to estimate the variance components of the random effects. When the Euclidean distance between the new and previous variance component estimates is less than \code{AIREML.tol}, the algorithm declares convergence of the estimates. Sometimes a variance component may approach the boundary of the parameter space at 0; step-halving is used to prevent any component from becomming negative. However, when a variance component gets near the 0 boundary, the algorithm can sometimes get "stuck", preventing the other variance components from converging; if \code{drop.zeros} is TRUE, then variance components that converge to a value less than \code{AIREML.tol} will be dropped from the model and the estimation procedure will continue with the remaining variance components.
+    A Newton-Raphson iterative procedure with Average Information REML (AIREML) is used to estimate the variance components of the random effects. When the absolute change between all of the new and previous variance component estimates is less than \code{var(outcome)*AIREML.tol}, the algorithm declares convergence of the estimates. Sometimes a variance component may approach the boundary of the parameter space at 0; step-halving is used to prevent any component from becomming negative. However, when a variance component gets near the 0 boundary, the algorithm can sometimes get "stuck", preventing the other variance components from converging; if \code{drop.zeros} is TRUE, then variance components that converge to a value less than \code{AIREML.tol} will be dropped from the model and the estimation procedure will continue with the remaining variance components.
+
+    After inverse-normal transformation, the variance rescaling is done with the same grouping; i.e. if \code{norm.option == "by.group"}, rescaling is done within each group, and if \code{norm.option == "all"}, rescaling is done with all samples.
 }
   
 \value{An object of class '\code{GENESIS.nullModel}' or '\code{GENESIS.nullMixedModel}'. A list including:
@@ -116,7 +122,6 @@ nullModelInvNorm(null.model, cov.mat = NULL, norm.option = c("by.group", "all"),
   
 \examples{
 library(GWASTools)
-library(GENESIS)
 
 # file path to GDS file
 gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
@@ -128,11 +133,12 @@ HapMap_genoData <- GenotypeData(HapMap_geno)
 data("HapMap_ASW_MXL_KINGmat")
 
 # run PC-AiR
-mypcair <- pcair(genoData = HapMap_genoData, kinMat = HapMap_ASW_MXL_KINGmat, 
-                divMat = HapMap_ASW_MXL_KINGmat)
-                
+mypcair <- pcair(HapMap_genoData, kinobj = HapMap_ASW_MXL_KINGmat, 
+                divobj = HapMap_ASW_MXL_KINGmat)
+
 # run PC-Relate
-mypcrel <- pcrelate(genoData = HapMap_genoData, pcMat = mypcair$vectors[,1],
+HapMap_genoData <- GenotypeBlockIterator(HapMap_genoData, snpBlock=20000)
+mypcrel <- pcrelate(HapMap_genoData, pcs = mypcair$vectors[,1,drop=FALSE],
     			training.set = mypcair$unrels)
 close(HapMap_genoData)
 
@@ -140,11 +146,11 @@ close(HapMap_genoData)
 set.seed(4)
 pheno <- 0.2*mypcair$vectors[,1] + rnorm(mypcair$nsamp, mean = 0, sd = 1)
 
-annot <- data.frame(sample.id = mypcrel$sample.id, 
+annot <- data.frame(sample.id = mypcair$sample.id, 
                     pc1 = mypcair$vectors[,1], pheno = pheno)
 
-# make cov.mat
-cov.mat <- pcrelateMakeGRM(mypcrel)
+# make covariance matrix
+cov.mat <- pcrelateToMatrix(mypcrel, verbose=FALSE)[annot$sample.id, annot$sample.id]
 
 # fit the null mixed model
 nullmod <- fitNullModel(annot, outcome = "pheno", covars = "pc1", cov.mat = cov.mat)

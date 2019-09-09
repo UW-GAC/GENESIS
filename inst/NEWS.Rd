@@ -1,5 +1,49 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.15.3}{
+    \itemize{
+      \item Add option "fastSKAT" to assocTestAggregate. Some other arguments and names of output columns for SKAT tests have also changed. This update includes code from the bigQF package (https://github.com/tslumley/bigQF). With the addition of C code, GENESIS now requires compliation.
+    }
+}
+\section{Version 2.13.7}{
+    \itemize{
+        \item Remove all monomorphic variants (including all heterozygotes) from association test results.
+    }
+}
+\section{Version 2.13.3}{
+    \itemize{
+        \item Restore option to run pcair without kinship matrix.
+    }
+}
+\section{Version 2.13.2}{
+    \itemize{
+        \item Add option to use imputed dosage in association tests.
+    }
+}
+\section{Version 2.12.0}{
+    \itemize{
+      \item pcair and pcrelate have been completely rewritten for better consistency with other methods. Some argument names have changed; see the documentation. The output of pcrelate is now a list of data.frames instead of a list of matrices.
+      \item pcrelateReadKinship and pcrelateReadInbreed are deprecated, as these tables are now returned by pcrelate.
+      \item pcrelateMakeGRM is deprecated; use pcrelateToMatrix with new pcrelate output format.
+      \item king2mat is deprecated; use kingToMatrix instead.
+      \item fitNullMM, fitNullReg, assocTestMM, and admixMapMM are deprecated. assocTestSeq and assocTestSeqWindow are defunct. Use fitNullModel, assocTestSingle, assocTestAggregate, and admixMap instead.
+    }
+}
+\section{Version 2.11.15}{
+    \itemize{
+        \item Refactor pcrelate.
+    }
+}
+\section{Version 2.11.14}{
+    \itemize{
+        \item Added assocTestAggregate method for GenotypeData objects.
+    }
+}
+\section{Version 2.11.11}{
+    \itemize{
+        \item Refactor pcair.
+    }
+}
 \section{Version 2.11.8}{
     \itemize{
         \item Added admixMap function to replace admixMapMM.

@@ -1,15 +1,17 @@
 
-### preparing output arguments for regression models that are not mixed. To match mixed models, 
-## we call "sigma" varComp (because it can be viewed as a type of variance component)
+### preparing output arguments for regression models that are not mixed.
 .nullModOutReg <- function(y, X, mod, family, group.idx = NULL){
     family$mixedmodel <- FALSE
     
     if (family$family == "gaussian"){
         varComp <- summary(mod)$sigma^2
         cholSigmaInv <- sqrt(1/varComp)
+        workingY <- drop(y)
     }  else{
-        varComp <- family$variance(mod$fitted)
-        cholSigmaInv <- Diagonal(x=sqrt(1/varComp))
+        varComp <- NULL
+        vmu <- family$variance(mod$fitted)
+        cholSigmaInv <- Diagonal(x=sqrt(vmu))
+        workingY <- .calcWorkingYnonGaussian(y, eta = mod$linear.predictors, family)$Y
     }
     
     varCompCov <- NULL
@@ -20,10 +22,9 @@
     betaCov <- vcov(mod, complete=FALSE)
     dimnames(betaCov) <- list(varNames, varNames)
     fitted.values <- mod$fitted.values
-    resid.marginal <-  residuals(mod, type = "response")
+    resid.marginal <-  residuals(mod, type = "working")
     logLik <- as.numeric(logLik(mod))
     AIC <- AIC(mod)
-    workingY <- drop(y)   
     converged <- ifelse(family$family == "gaussian", TRUE, mod$converged)
     zeroFLAG <- NULL
     RSS <- ifelse(family$family == "gaussian", sum(resid.marginal^2)/varComp/(nrow(X) - ncol(X)), 1)
@@ -56,11 +57,14 @@
     
     hetResid <- TRUE
     varNames <- colnames(X) 
-    cholSigmaInv <- Diagonal(x=sqrt(diag(vc.mod$Sigma.inv)))
+    ## cholSigmaInv <- Diagonal(x=sqrt(diag(vc.mod$Sigma.inv)))
+    cholSigmaInv.diag <- sqrt(diag(vc.mod$Sigma.inv))
+    cholSigmaInv <- Diagonal(x=cholSigmaInv.diag)
     
     RSS <- vc.mod$RSS
    
-    betaCov <- as.matrix(RSS * chol2inv(chol(crossprod(crossprod(cholSigmaInv, X)))))
+    ## betaCov <- as.matrix(RSS * chol2inv(chol(crossprod(crossprod(cholSigmaInv, X)))))
+    betaCov <- as.matrix(RSS * chol2inv(chol(crossprod(cholSigmaInv.diag*X))))
     dimnames(betaCov) <- list(varNames, varNames)
     
     SE <- sqrt(diag(betaCov))
@@ -88,7 +92,7 @@
                 resid.marginal = resid.marginal, resid.conditional = resid.conditional, 
                 logLik = logLik, logLikR  = logLikR, AIC = AIC, workingY = workingY, 
                 outcome = y, model.matrix = X, group.idx = group.idx, cholSigmaInv = cholSigmaInv, 
-                converged = converged, zeroFLAG = zeroFLAG, RSS = RSS)
+                converged = converged, zeroFLAG = zeroFLAG, niter = vc.mod$niter, RSS = RSS)
     class(out) <- "GENESIS.nullModel"
     return(out)
 }
@@ -141,17 +145,20 @@
         varCompCov <- solve(vc.mod$AI)
     }
     
-    sq <- .computeSigmaQuantities(varComp = varComp, covMatList = covMatList, group.idx = group.idx, vmu = vmu, gmuinv = gmuinv)
-    # Cholesky Decomposition
-    cholSigmaInv <- t(chol(sq$Sigma.inv))
+    # Cholesky Decomposition of Sigma.inv
+    cholSigmaInv <- t(chol(vc.mod$Sigma.inv))
     dimnames(cholSigmaInv) <- list(colnames(covMatList[[1]]), colnames(covMatList[[1]]))
     
 
     varNames <- colnames(X) 
     
     RSS <- ifelse(family$family == "gaussian", vc.mod$RSS, 1)
-    
-    betaCov <- as.matrix(RSS * chol2inv(chol(crossprod(crossprod(cholSigmaInv, X)))))
+
+    X.tmp <- if (is(cholSigmaInv, "Matrix")) Matrix(X) else X
+    betaCov <- as.matrix(RSS * chol2inv(chol(crossprod(crossprod(cholSigmaInv, X.tmp)))))
+    rm(X.tmp)
+    #betaCov <- as.matrix(RSS * chol2inv(chol(crossprod(crossprod(cholSigmaInv, X)))))
+
     dimnames(betaCov) <- list(varNames, varNames)
     
     SE <- sqrt(diag(betaCov))
@@ -173,6 +180,7 @@
     
     converged <- vc.mod$converged
     zeroFLAG <- vc.mod$zeroFLAG
+    niter <- vc.mod$niter
 
     out <- list(family = family, hetResid = hetResid, varComp = varComp, 
                 varCompCov = varCompCov, fixef = fixef, betaCov = betaCov, 
@@ -180,7 +188,7 @@
                 resid.conditional = resid.conditional, logLik = logLik, 
                 logLikR = logLikR, AIC = AIC, workingY = workingY, outcome = y,
                 model.matrix = X, group.idx = group.idx, cholSigmaInv = cholSigmaInv, 
-                converged = converged, zeroFLAG = zeroFLAG, RSS = RSS)
+                converged = converged, zeroFLAG = zeroFLAG, niter = niter, RSS = RSS)
     class(out) <- "GENESIS.nullMixedModel"
     return(out)
 }

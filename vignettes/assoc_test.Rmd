@@ -3,28 +3,31 @@ title: "Genetic Association Testing using the GENESIS Package"
 author: "Matthew P. Conomos"
 date: "`r Sys.Date()`"
 output: 
-    rmarkdown::html_vignette:
-        toc: true
-        #number_sections: true
+    BiocStyle::html_document
 vignette: >
   %\VignetteIndexEntry{Genetic Association Testing using the GENESIS Package}
   %\VignetteEngine{knitr::rmarkdown}
-  \usepackage[utf8]{inputenc}
+  %\VignetteEncoding{UTF-8}
 ---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
+```
 
 # Overview
 
-This vignette provides a description of how to use the GENESIS package to run genetic association tests on array (SNP) data. GENESIS uses mixed models for genetic association testing, as PC-AiR PCs can be used as fixed effect covariates to adjust for population stratification, and a kinship matrix (or genetic relationship matrix) estimated from PC-Relate can be used to account for phenotype correlation due to genetic similarity among samples.
+This vignette provides a description of how to use the `r Biocpkg("GENESIS")` package to run genetic association tests on array (SNP) data. `r Biocpkg("GENESIS")` uses mixed models for genetic association testing, as PC-AiR PCs can be used as fixed effect covariates to adjust for population stratification, and a kinship matrix (or genetic relationship matrix) estimated from PC-Relate can be used to account for phenotype correlation due to genetic similarity among samples.
 
 # Data
 
 ## Preparing Scan Annotation Data
 
-The `fitNullModel` function in the `GENESIS` package reads sample data from either a standard `data.frame` class object or a `ScanAnnotationDataFrame` class object as created by the `GWASTools` package.  This object must contain all of the outcome and covariate data for all samples to be included in the mixed model analysis.  Additionally, this object must include a variable called "scanID" which contains a unique identifier for each sample in the analysis. While a standard `data.frame` can be used, we recommend using a `ScanAnnotationDataFrame` object, as it can be paired with the genotype data (see below) to ensure matching of sample phenotype and genotype data. Through the use of `GWASTools`, a `ScanAnnotationDataFrame` class object can easily be created from a `data.frame` class object. Example R code for creating a `ScanAnnotationDataFrame` object is presented below.  Much more detail can be found in the `GWASTools` package reference manual.
+The `fitNullModel` function in the `r Biocpkg("GENESIS")` package reads sample data from either a standard `data.frame` class object or a `ScanAnnotationDataFrame` class object as created by the `r Biocpkg("GWASTools")` package.  This object must contain all of the outcome and covariate data for all samples to be included in the mixed model analysis.  Additionally, this object must include a variable called "scanID" which contains a unique identifier for each sample in the analysis. While a standard `data.frame` can be used, we recommend using a `ScanAnnotationDataFrame` object, as it can be paired with the genotype data (see below) to ensure matching of sample phenotype and genotype data. Through the use of `r Biocpkg("GWASTools")`, a `ScanAnnotationDataFrame` class object can easily be created from a `data.frame` class object. Example R code for creating a `ScanAnnotationDataFrame` object is presented below.  Much more detail can be found in the `r Biocpkg("GWASTools")` package reference manual.
 
-```{r, echo=FALSE, message=FALSE}
+```{r, echo=FALSE, results='hide'}
 library(GENESIS)
 library(GWASTools)
+
 # file path to GDS file
 gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
 # read in GDS data
@@ -35,24 +38,29 @@ HapMap_genoData <- GenotypeData(HapMap_geno)
 data("HapMap_ASW_MXL_KINGmat")
 
 # run PC-AiR
-mypcair <- pcair(genoData = HapMap_genoData, kinMat = HapMap_ASW_MXL_KINGmat, 
-                divMat = HapMap_ASW_MXL_KINGmat)
-                
+mypcair <- pcair(HapMap_genoData, 
+                 kinobj = HapMap_ASW_MXL_KINGmat, 
+                 divobj = HapMap_ASW_MXL_KINGmat,
+                 verbose = FALSE)
+mypcs <- mypcair$vectors[,1,drop=FALSE]
+
+# create a GenotypeBlockIterator object
+HapMap_genoData <- GenotypeBlockIterator(HapMap_genoData) 
 # run PC-Relate
-mypcrel <- pcrelate(genoData = HapMap_genoData, pcMat = mypcair$vectors[,1],
-            	training.set = mypcair$unrels)
+mypcrel <- pcrelate(HapMap_genoData, pcs = mypcs,
+                    training.set = mypcair$unrels,
+                    verbose = FALSE)
 
 # generate a phenotype
 set.seed(4)
-pheno <- 0.2*mypcair$vectors[,1] + rnorm(mypcair$nsamp, mean = 0, sd = 1)
+pheno <- 0.2*mypcs + rnorm(mypcair$nsamp, mean = 0, sd = 1)
 ```
 ```{r}
 # mypcair contains PCs from a previous PC-AiR analysis
-# mypcrel contains Kinship Estimates from a previous PC-Relate analysis
 # pheno is a vector of Phenotype values
 
 # make a data.frame
-mydat <- data.frame(scanID = mypcrel$sample.id, pc1 = mypcair$vectors[,1], 
+mydat <- data.frame(scanID = mypcair$sample.id, pc1 = mypcair$vectors[,1], 
                     pheno = pheno)
 head(mydat)
 
@@ -63,19 +71,20 @@ scanAnnot
 
 ## Reading in Genotype Data
 
-The `assocTestSingle` function in the `GENESIS` package reads genotype data from a `GenotypeData` class object as created by the `GWASTools` package.  Through the use of `GWASTools`, a `GenotypeData` class object can easily be created from:
+The `assocTestSingle` function in the `r Biocpkg("GENESIS")` package reads genotype data from a `GenotypeData` class object as created by the `r Biocpkg("GWASTools")` package.  Through the use of `r Biocpkg("GWASTools")`, a `GenotypeData` class object can easily be created from:
 
 * an R matrix of SNP genotype data
 * a GDS file
 * PLINK files
 
-Example R code for creating a `GenotypeData` object is presented below.  Much more detail can be found in the `GWASTools` package reference manual.
+Example R code for creating a `GenotypeData` object is presented below.  Much more detail can be found in the `r Biocpkg("GWASTools")` package reference manual.
 
 ### R Matrix
 
 ```{r, eval=FALSE}
-geno <- MatrixGenotypeReader(genotype = genotype, snpID = snpID, chromosome = chromosome, 
-                             position = position, scanID = scanID)
+geno <- MatrixGenotypeReader(genotype = genotype, snpID = snpID, 
+                             chromosome = chromosome, position = position, 
+                             scanID = scanID)
 genoData <- GenotypeData(geno)
 ```
 * `genotype` is a matrix of genotype values coded as 0 / 1 / 2, where rows index SNPs and columns index samples
@@ -94,10 +103,12 @@ genoData <- GenotypeData(geno)
 
 ### PLINK files
 
-The `SNPRelate` package provides the `snpgdsBED2GDS` function to convert binary PLINK files into a GDS file.
+The `r Biocpkg("SNPRelate")` package provides the `snpgdsBED2GDS` function to convert binary PLINK files into a GDS file.
 
 ```{r, eval=FALSE}
-snpgdsBED2GDS(bed.fn = "genotype.bed", bim.fn = "genotype.bim", fam.fn = "genotype.fam", 
+snpgdsBED2GDS(bed.fn = "genotype.bed", 
+              bim.fn = "genotype.bim", 
+              fam.fn = "genotype.fam", 
               out.gdsfn = "genotype.gds")
 ```
 * `bed.fn` is the file path to the PLINK .bed file
@@ -109,7 +120,7 @@ Once the PLINK files have been converted to a GDS file, then a `GenotypeData` ob
 
 ## HapMap Data
 
-To demonstrate association testing with the `GENESIS` package, we analyze SNP data from the Mexican Americans in Los Angeles, California (MXL) and African American individuals in the southwestern USA (ASW) population samples of HapMap 3.  Mexican Americans and African Americans have a diverse ancestral background, and familial relatives are present in these data. Genotype data at a subset of 20K autosomal SNPs for 173 individuals are provided as a GDS file. 
+To demonstrate association testing with the `r Biocpkg("GENESIS")` package, we analyze SNP data from the Mexican Americans in Los Angeles, California (MXL) and African American individuals in the southwestern USA (ASW) population samples of HapMap 3.  Mexican Americans and African Americans have a diverse ancestral background, and familial relatives are present in these data. Genotype data at a subset of 20K autosomal SNPs for 173 individuals are provided as a GDS file. 
 
 ```{r, eval=FALSE}
 # read in GDS data
@@ -124,21 +135,22 @@ HapMap_genoData
 
 ## Reading in the GRM from PC-Relate
 
-A mixed model for genetic association testing typically includes a genetic relationship matrix (GRM) to account for genetic similarity among sample individuals. If we are using kinship coefficient estimates from PC-Relate to construct this GRM, then the function `pcrelateMakeGRM` should be used to provide the matrix in the appropriate format for `fitNullModel`.
+A mixed model for genetic association testing typically includes a genetic relationship matrix (GRM) to account for genetic similarity among sample individuals. If we are using kinship coefficient estimates from PC-Relate to construct this GRM, then the function `pcrelateToMatrix` should be used to provide the matrix in the appropriate format for `fitNullModel`.
 
 ```{r}
-myGRM <- pcrelateMakeGRM(mypcrel)
+# mypcrel contains Kinship Estimates from a previous PC-Relate analysis
+myGRM <- pcrelateToMatrix(mypcrel)
 myGRM[1:5,1:5]
 ```
 Note that both the row and column names of this matrix are the same scanIDs as used in the scan annotation data.
 
 # Mixed Model Association Testing
 
-There are two steps to performing genetic association testing with GENESIS. First, the null model (i.e. the model with no SNP genotype term) is fit using the `fitNullModel` function.  Second, the output of the null model fit is used in conjunction with the genotype data to quickly run SNP-phenotype association tests using the `assocTestSingle` function. There is a computational advantage to splitting these two steps into two function calls; the null model only needs to be fit once, and SNP association tests can be paralelized by chromosome or some other partitioning to speed up analyses (details below).
+There are two steps to performing genetic association testing with `r Biocpkg("GENESIS")`. First, the null model (i.e. the model with no SNP genotype term) is fit using the `fitNullModel` function.  Second, the output of the null model fit is used in conjunction with the genotype data to quickly run SNP-phenotype association tests using the `assocTestSingle` function. There is a computational advantage to splitting these two steps into two function calls; the null model only needs to be fit once, and SNP association tests can be paralelized by chromosome or some other partitioning to speed up analyses (details below).
 
 ## Fit the Null Model
 
-The first step for association testing with `GENESIS` is to fit the mixed model under the null hypothesis that each SNP has no effect. This null model contains all of the covariates, including ancestry representative PCs, as well as any random effects, such as a polygenic effect due to genetic relatedness, but it does not include any SNP genotype terms as fixed effects.
+The first step for association testing with `r Biocpkg("GENESIS")` is to fit the mixed model under the null hypothesis that each SNP has no effect. This null model contains all of the covariates, including ancestry representative PCs, as well as any random effects, such as a polygenic effect due to genetic relatedness, but it does not include any SNP genotype terms as fixed effects.
 
 Using the `fitNullModel` function, random effects in the null model are specified via their covariance structures. This allows for the inclusion of a polygenic random effect using a kinship matrix or genetic relationship matrix (GRM).
 
@@ -147,8 +159,8 @@ Using the `fitNullModel` function, random effects in the null model are specifie
 A linear mixed model (LMM) should be fit when analyzing a quantitative phenotype. The example R code below fits a basic null mixed model.
 ```{r}
 # fit the null mixed model
-nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1", cov.mat = myGRM, 
-                     family = gaussian)
+nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1", 
+                        cov.mat = myGRM, family = gaussian)
 ```
 * the first argument is the class `ScanAnnotationDataFrame` or `data.frame` object containing the sample data
 * `outcome` specifies the name of the outcome variable in `scanAnnot`
@@ -161,15 +173,17 @@ The Average Information REML (AIREML) procedure is used to estimate the variance
 #### Multiple Fixed Effect Covariates
 The model can be fit with multiple fixed effect covariates by setting `covars` equal to vector of covariate names. For example, if we wanted to include the variables "pc1", "pc2", "sex", and "age" all as covariates in the model:
 ```{r, eval=FALSE}
-nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = c("pc1","pc2","sex","age"), 
-                     cov.mat = myGRM, family = gaussian)
+nullmod <- fitNullModel(scanAnnot, outcome = "pheno", 
+                        covars = c("pc1","pc2","sex","age"), 
+                        cov.mat = myGRM, family = gaussian)
 ```
 
 #### Multiple Random Effects
 The model also can be fit with multiple random effects. This is done by setting `cov.mat` equal to a list of matrices. For example, if we wanted to include a polygenic random effect with covariance structure given by the matrix "myGRM" and a household random effect with covariance structure specified by the matrix "H":
 ```{r, eval=FALSE}
-nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1"
-                     cov.mat = list("GRM" = myGRM, "House" = H), family = gaussian)
+nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1",
+                        cov.mat = list("GRM" = myGRM, "House" = H), 
+                        family = gaussian)
 ```
 The names of the matrices in `cov.mat` determine the names of the variance component parameters. Therefore, in this example, the output printed to the R console will include `Sigma^2_GRM` for the random effect specified by "myGRM", `Sigma^2_House` for the random effect specified by "H", and `Sigma^2_E` for the residual variance component.  
 
@@ -177,26 +191,27 @@ Note: the row and column names of each matrix used to specify the covariance str
 
 #### Heterogeneous Residual Variances
 
-LMMs are typically fit under an assumption of constant (homogeneous) residual variance for all observations. However, for some outcomes, there may be evidence that different groups of observations have different residual variances, in which case the assumption of homoscedasticity is violated. `group.var` can be used in order to fit separate (heterogeneous) residual variance components by some grouping variable. For example, if we have a categorical variable "race" in our `scanAnnot`, then we can estimate a different residual variance component for each unique value of "race" by using the following code:
+LMMs are typically fit under an assumption of constant (homogeneous) residual variance for all observations. However, for some outcomes, there may be evidence that different groups of observations have different residual variances, in which case the assumption of homoscedasticity is violated. `group.var` can be used in order to fit separate (heterogeneous) residual variance components by some grouping variable. For example, if we have a categorical variable "study" in our `scanAnnot`, then we can estimate a different residual variance component for each unique value of "study" by using the following code:
 ```{r, eval=FALSE}
-nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1", cov.mat = myGRM, 
-                     family = gaussian, group.var = "race")
+nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1", 
+                        cov.mat = myGRM, family = gaussian, 
+                        group.var = "study")
 ```
-In this example, the residual variance component `Sigma^2_E` is replaced with group specific residual variance components `Sigma^2_race1`, `Sigma^2_race2`, ..., where "race1", "race2", ... are the unique values of the "race" variable.
+In this example, the residual variance component `Sigma^2_E` is replaced with group specific residual variance components `Sigma^2_study1`, `Sigma^2_study2`, ..., where "study1", "study2", ... are the unique values of the "study" variable.
 
 ### Binary Phentoypes
 
-Ideally, a generalized linear mixed model (GLMM) would be fit for a binary phenotype; however, fitting a GLMM is much more computationally demanding than fitting an LMM. To provide a compuationally efficient approach to fitting such a model, `fitNullModel` uses the penalized quasi-likelihood (PQL) approximation to the GLMM (Breslow and Clayton). The implementation of this procedure in `GENESIS` is the same as in GMMAT (Chen et al.), and more details can be found in that manuscript.  If our outcome variable, "pheno", were binary, then the same R code could be used to fit the null model, but with `family = binomial`.
+Ideally, a generalized linear mixed model (GLMM) would be fit for a binary phenotype; however, fitting a GLMM is much more computationally demanding than fitting an LMM. To provide a compuationally efficient approach to fitting such a model, `fitNullModel` uses the penalized quasi-likelihood (PQL) approximation to the GLMM (Breslow and Clayton). The implementation of this procedure in `r Biocpkg("GENESIS")` is the same as in GMMAT (Chen et al.), and more details can be found in that manuscript.  If our outcome variable, "pheno", were binary, then the same R code could be used to fit the null model, but with `family = binomial`.
 ```{r, eval=FALSE}
-nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1", cov.mat = myGRM, 
-                     family = binomial)
+nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1", 
+                        cov.mat = myGRM, family = binomial)
 ```
 Multiple fixed effect covariates and multiple random effects can be specified for binary phenotypes in the same way as they are for quantitative phenotypes. `group.var` does not apply here.
 
 
 ## Run SNP-Phenotype Association Tests
 
-The second step for association testing with `GENESIS` is to use the fitted null model to test the SNPs in the `GenotypeData` object for association with the specified outcome variable. This is done with the `assocTestSingle` function. Both (approximate) Wald and score tests are available, but the Wald test can only be performed when `family = gaussian` in the null model. Otherwise, the use of `assocTestSingle` for running association tests with a quantitative or binary phenotype is identical.
+The second step for association testing with `r Biocpkg("GENESIS")` is to use the fitted null model to test the SNPs in the `GenotypeData` object for association with the specified outcome variable. This is done with the `assocTestSingle` function. Both (approximate) Wald and score tests are available, but the Wald test can only be performed when `family = gaussian` in the null model. Otherwise, the use of `assocTestSingle` for running association tests with a quantitative or binary phenotype is identical.
 
 Before we can run an association test on a `GenotypeData` object, we much first decide how many SNPs we want to read at a time. We do this by creating a `GenotypeBlockIterator` object that defines blocks of SNPs. The default setting is to read 10,000 SNPs in each block, but this may be changed with the `snpBlock` argument.
 
@@ -260,7 +275,7 @@ Further details describing all of the output can be found with the command `help
 
 # Heritability Estimation
 
-It is often of interest to estimate the proportion of the total phenotype variability explained by the entire set of genotyped SNPs avaialable; this provides an estimate of the narrow sense heritability of the trait. One method for estimating heritability is to use the variance component estimates from the null mixed model. `GENESIS` includes the `varCompCI` function for computing the proportion of variance explained by each random effect along with 95% confidence intervals.
+It is often of interest to estimate the proportion of the total phenotype variability explained by the entire set of genotyped SNPs avaialable; this provides an estimate of the narrow sense heritability of the trait. One method for estimating heritability is to use the variance component estimates from the null mixed model. `r Biocpkg("GENESIS")` includes the `varCompCI` function for computing the proportion of variance explained by each random effect along with 95% confidence intervals.
 ```{r}
 varCompCI(nullmod, prop = TRUE)
 ```
