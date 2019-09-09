@@ -79,6 +79,54 @@ find_incomplete_hits <- function(matched_results, n_groups=NULL, variant.id_var=
 
 
 
+merge_nullmod_BR <- function(nullmod_list, gds_file){
+  
+  n_null <- length(nullmod_list)
+  
+  
+  outcome_list <- fitted.values_list <- vector(mode = "list", length = n_null)
+  
+  for (i in 1:n_null){
+    nullmod_i <- nullmod_list[[i]]
+    
+    if (nullmod_i$family$mixedmodel) { ## if this is a mixed model, used conditional probabilities
+      phat <- expit(nullmod_i$workingY - nullmod_i$resid.conditional)    
+    } else{ ## not a mixed model
+      phat <- nullmod_i$fitted.values
+    }
+    names(phat) <- rownames(nullmod_i$model.matrix)
+    fitted.values_list[[i]] <- phat
+    
+    outcome <- nullmod_i$outcome
+    names(outcome) <- rownames(nullmod_i$model.matrix)
+    outcome_list[[i]] <- outcome
+    
+  }
+  
+  fitted.values <- do.call(c, fitted.values_list)
+  outcome <- do.call(c, outcome_list)
+  
+  ## re-order according to the order on the gds file: 
+  gds <- seqOpen(gds_file)
+  sample_id <- seqGetData(gds, "sample.id")
+  seqClose(gds)
+  
+  ids_both <- intersect(sample_i, names(outcome))
+  outcome <- outcome[match(ids_both, names(outcome))]
+  fitted.values <- fitted.values[match(ids_both, names(fitted.values))]
+  
+  ##  set up the new (tricked) object. It needs to pass the checks for
+  ## binomiRare: to have family = "binomial", not be a mixed model (for unified pull of)
+  ## probability vector)
+  ## fitted.values would be the probabilities; outcome the vectof of disease statuses. 
+  new_nullmod <- list(family = list(family = "binomial", mixedmodel = FALSE), fitted.values = fitted.values, outcome = outcome, sample.id = ids_both)
+  
+  return(new_nullmod)
+}
+
+
+
+
 ###need to subset and create iterator again
 
 recreate_iterator <- function(gds, annot, incomplete_variants, block.size=1024){
