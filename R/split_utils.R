@@ -1,5 +1,5 @@
-###current functions are only writen for assocTestSingle_split results##
-.detect_varnames <- function(dat, varname){
+###current functions are only writen for assocTestSingleSplit results##
+.detectVarNames <- function(dat, varname){
   if (class(dat)=="list"){
     any(unlist(lapply(dat, function(x){varname %in% names(x)}))==TRUE)
   } else if (inherits(dat, "data.frame")){
@@ -7,121 +7,118 @@
   }
 }
 
-match_signif_hits <- function(res_list, threshold, return_df=FALSE, variant.id_var=NULL){
-  matched_results <- vector(mode="list", length=length(res_list))
-  names(matched_results) <- names(res_list)
-  subset_signif <- lapply(res_list, function(x) filter(x, pval < threshold))
+matchSignifHits <- function(res.list, threshold, return.df=FALSE, variant.id.var=NULL){
+  matched.results <- vector(mode="list", length=length(res.list))
+  names(matched.results) <- names(res.list)
+  subset.signif <- lapply(res.list, function(x) filter(x, pval < threshold))
   
-  if (is.null(variant.id_var)){
-    if (!.detect_varnames(res_list, c("variant.id", "variantID"))) stop("specify variant.id_var")
-    if (.detect_varnames(res_list, "variant.id")) {
-      variant.id_var <- "variant.id"
-    } else if (.detect_varnames(res_list, "variantID")){
-      variant.id_var <- "variantID"
+  if (is.null(variant.id.var)){
+    if (!.detectVarNames(res.list, c("variant.id", "variantID"))) stop("specify variant.id.var")
+    if (.detectVarNames(res.list, "variant.id")) {
+      variant.id.var <- "variant.id"
+    } else if (.detectVarNames(res.list, "variantID")){
+      variant.id.var <- "variantID"
     }
   }
-  for (group in names(subset_signif)){
-    if (nrow(subset_signif[[group]]) > 0){
-      current_list <- res_list
-      current_list[[group]] <- NULL
-      subset_signif[[group]]$ref_group=group
-      subset_signif[[group]]$signif_group=group
-      matched_list <- lapply(current_list, function(x) filter(x, !!sym(variant.id_var) %in% subset_signif[[group]][[variant.id_var]]))
-      for (g in names(matched_list)){
-        if (nrow(matched_list[[g]]) > 0) {
-          matched_list[[g]]$ref_group <- g
-          matched_list[[g]]$signif_group <- group
+  for (group in names(subset.signif)){
+    if (nrow(subset.signif[[group]]) > 0){
+      current.list <- res.list
+      current.list[[group]] <- NULL
+      subset.signif[[group]]$ref.group=group
+      subset.signif[[group]]$signif.group=group
+      matched.list <- lapply(current.list, function(x) filter(x, !!sym(variant.id.var) %in% subset.signif[[group]][[variant.id.var]]))
+      for (g in names(matched.list)){
+        if (nrow(matched.list[[g]]) > 0) {
+          matched.list[[g]]$ref.group <- g
+          matched.list[[g]]$signif.group <- group
         }
       } 
-      matched_list <- bind_rows(matched_list)
-      matched_results[[group]] <- bind_rows(subset_signif[[group]], matched_list) %>% arrange(!!sym(variant.id_var))
+      matched.list <- bind_rows(matched.list)
+      matched.results[[group]] <- bind_rows(subset.signif[[group]], matched.list) %>% arrange(!!sym(variant.id.var))
       
     } else {
-      matched_results[[group]] <- NULL
+      matched.results[[group]] <- NULL
     }
    
   }
-  if (return_df) matched_results <- bind_rows(matched_results)
-  matched_results
+  if (return.df) matched.results <- bind_rows(matched.results)
+  matched.results
 }
 
 
-filter_incomplete <- function(dat, total_groups, variant.id_var=NULL){
-  if (is.null(variant.id_var)){
-    if (!.detect_varnames(dat, c("variant.id", "variantID"))) stop("specify variant.id_var")
-    if (.detect_varnames(dat, "variant.id")) {
-      variant.id_var <- "variant.id"
-    } else if (.detect_varnames(dat, "variantID")){
-      variant.id_var <- "variantID"
+.filterIncomplete <- function(dat, total.groups, variant.id.var=NULL){
+  if (is.null(variant.id.var)){
+    if (!.detectVarNames(dat, c("variant.id", "variantID"))) stop("specify variant.id.var")
+    if (.detectVarNames(dat, "variant.id")) {
+      variant.id.var <- "variant.id"
+    } else if (.detectVarNames(dat, "variantID")){
+      variant.id.var <- "variantID"
     }
   }
-  dat <- dat %>% filter(ref_group!="all") %>% group_by(!!sym(variant.id_var)) %>% 
-    summarise(n=n()) %>% filter(n < total_groups) #, groups=glue::glue_collapse(unique(ref_group), sep=','), total_carriers=sum(n.carrier))
-  dat[[variant.id_var]]
+  dat <- dat %>% filter(ref.group!="all") %>% group_by(!!sym(variant.id.var)) %>% 
+    summarise(n=n()) %>% filter(n < total.groups) #, groups=glue::glue_collapse(unique(ref.group), sep=','), total_carriers=sum(n.carrier))
+  dat[[variant.id.var]]
 }
 
 
-find_incomplete_hits <- function(matched_results, n_groups=NULL, variant.id_var=NULL){
-  if (class(matched_results)=="list"){
-    if (is.null(n_groups)) n_groups <- length(matched_results)
-    incomplete_results <- lapply(matched_results, filter_incomplete, total_groups=n_groups, variant.id_var=variant.id_var)
-    incomplete_variants <- c()
-    for (i in seq_along(incomplete_results)){
-      incomplete_variants <- union(incomplete_variants, incomplete_results[[i]])
+findIncompleteHits <- function(matched.results, n.groups=NULL, variant.id.var=NULL){
+  if (class(matched.results)=="list"){
+    if (is.null(n.groups)) n.groups <- length(matched.results)
+    incomplete.results <- lapply(matched.results, .filterIncomplete, total.groups=n.groups, variant.id.var=variant.id.var)
+    incomplete.variants <- c()
+    for (i in seq_along(incomplete.results)){
+      incomplete.variants <- union(incomplete.variants, incomplete.results[[i]])
     }
-  } else if (inherits(matched_results, "data.frame")){
-    n_groups <- length(unique(matched_results$ref_group[matched_results$ref_group!="all"]))
-    incomplete_results <- filter_incomplete(matched_results, total_groups=n_groups, variant.id_var=variant.id_var)
-    incomplete_variants <- unique(incomplete_results)
+  } else if (inherits(matched.results, "data.frame")){
+    n.groups <- length(unique(matched.results$ref.group[matched.results$ref.group!="all"]))
+    incomplete.results <- .filterIncomplete(matched.results, total.groups=n.groups, variant.id.var=variant.id.var)
+    incomplete.variants <- unique(incomplete.results)
   }
-  incomplete_variants
+  incomplete.variants
 }
 
 
 
-merge_nullmod_BR <- function(nullmod_list, gds_file){
+mergeNullModelBR <- function(nullmod.list, gdsfile){
+  n.null <- length(nullmod.list)
+  outcome.list <- fitted.values.list <- vector(mode = "list", length = n.null)
   
-  n_null <- length(nullmod_list)
-  
-  
-  outcome_list <- fitted.values_list <- vector(mode = "list", length = n_null)
-  
-  for (i in 1:n_null){
-    nullmod_i <- nullmod_list[[i]]
+  for (i in 1:n.null){
+    nullmod.i <- nullmod.list[[i]]
     
-    if (nullmod_i$family$mixedmodel) { ## if this is a mixed model, used conditional probabilities
-      phat <- expit(nullmod_i$workingY - nullmod_i$resid.conditional)    
+    if (nullmod.i$family$mixedmodel) { ## if this is a mixed model, used conditional probabilities
+      phat <- expit(nullmod.i$workingY - nullmod.i$resid.conditional)    
     } else{ ## not a mixed model
-      phat <- nullmod_i$fitted.values
+      phat <- nullmod.i$fitted.values
     }
-    names(phat) <- rownames(nullmod_i$model.matrix)
-    fitted.values_list[[i]] <- phat
+    names(phat) <- rownames(nullmod.i$model.matrix)
+    fitted.values.list[[i]] <- phat
     
-    outcome <- nullmod_i$outcome
-    names(outcome) <- rownames(nullmod_i$model.matrix)
-    outcome_list[[i]] <- outcome
+    outcome <- nullmod.i$outcome
+    names(outcome) <- rownames(nullmod.i$model.matrix)
+    outcome.list[[i]] <- outcome
     
   }
   
-  fitted.values <- do.call(c, fitted.values_list)
-  outcome <- do.call(c, outcome_list)
+  fitted.values <- do.call(c, fitted.values.list)
+  outcome <- do.call(c, outcome.list)
   
   ## re-order according to the order on the gds file: 
-  gds <- seqOpen(gds_file)
-  sample_id <- seqGetData(gds, "sample.id")
+  gds <- seqOpen(gdsfile)
+  sample.id <- seqGetData(gds, "sample.id")
   seqClose(gds)
   
-  ids_both <- intersect(sample_i, names(outcome))
-  outcome <- outcome[match(ids_both, names(outcome))]
-  fitted.values <- fitted.values[match(ids_both, names(fitted.values))]
+  ids.both <- intersect(sample.id, names(outcome))
+  outcome <- outcome[match(ids.both, names(outcome))]
+  fitted.values <- fitted.values[match(ids.both, names(fitted.values))]
   
   ##  set up the new (tricked) object. It needs to pass the checks for
   ## binomiRare: to have family = "binomial", not be a mixed model (for unified pull of)
   ## probability vector)
   ## fitted.values would be the probabilities; outcome the vectof of disease statuses. 
-  new_nullmod <- list(family = list(family = "binomial", mixedmodel = FALSE), fitted.values = fitted.values, outcome = outcome, sample.id = ids_both)
+  new.nullmod <- list(family = list(family = "binomial", mixedmodel = FALSE), fitted.values = fitted.values, outcome = outcome, sample.id = ids.both)
   
-  return(new_nullmod)
+  return(new.nullmod)
 }
 
 
@@ -129,21 +126,21 @@ merge_nullmod_BR <- function(nullmod_list, gds_file){
 
 ###need to subset and create iterator again
 
-recreate_iterator <- function(gds, annot, incomplete_variants, block.size=1024){
+recreateIterator <- function(gds, annot, incomplete.variants, block.size=1024){
   seqResetFilter(gds)
-  seqSetFilter(gds, variant.id = incomplete_variants)
+  seqSetFilter(gds, variant.id = incomplete.variants)
   seqData <- SeqVarData(gds, sampleData=annot)
   SeqVarBlockIterator(seqData, variantBlock=block.size)
 }
 
 
-run_split_subset <- function(gdsobj, null.model, id_list, test=c("BinomiRare", "CMP"), remove_groups=NULL,
-                   sparse=TRUE, imputed=FALSE, keep_all=TRUE, male.diploid=TRUE,  genome.build=c("hg19", "hg38"), verbose=TRUE) {
+runSplitSubset <- function(gdsobj, null.model, id.list, test=c("BinomiRare", "CMP"), remove.groups=NULL,
+                   sparse=TRUE, imputed=FALSE, keep.all=TRUE, male.diploid=TRUE,  genome.build=c("hg19", "hg38"), verbose=TRUE) {
             message('running split version of assocTestSingle')
             test <- match.arg(test)
-            if (!is.null(remove_groups)){
-              for (g in remove_groups){
-                  id_list[[g]] <- NULL
+            if (!is.null(remove.groups)){
+              for (g in remove.groups){
+                  id.list[[g]] <- NULL
                 }
             }
             test <- match.arg(test)
@@ -163,20 +160,20 @@ run_split_subset <- function(gdsobj, null.model, id_list, test=c("BinomiRare", "
             
             
             ###split null model and genotypes by group###
-            null.model_list <- nullModelSplit(null.model, id_list, keep_all=keep_all)
+            null.model.list <- nullModelSplit(null.model, id.list, keep.all=keep.all)
             
             
             # initialize results objects
-            all_res <- rep( list(vector("list", length=n.iter)), length(null.model_list) ) 
-            names(all_res) <- names(null.model_list)
+            all.res <- rep( list(vector("list", length=n.iter)), length(null.model.list) ) 
+            names(all.res) <- names(null.model.list)
             
-            group_index_list <- vector(mode="list", length=length(null.model_list))
+            group.index.list <- vector(mode="list", length=length(null.model.list))
             
             
-            for (i in 1:length(null.model_list)){
-              current_ids <- null.model_list[[i]][["sample.id"]]
-              cur_group_index <-match(current_ids, seqGetData(gdsobj, "sample.id"))
-              group_index_list[[i]] <- cur_group_index
+            for (i in 1:length(null.model.list)){
+              current.ids <- null.model.list[[i]][["sample.id"]]
+              cur.group.index <-match(current.ids, seqGetData(gdsobj, "sample.id"))
+              group.index.list[[i]] <- cur.group.index
             }
             
             i <- 1
@@ -189,25 +186,25 @@ run_split_subset <- function(gdsobj, null.model, id_list, test=c("BinomiRare", "
               }
               var.info <- variantInfo(gdsobj, alleles=FALSE, expanded=TRUE)
               
-              for (grp.ind in 1:length(null.model_list)){
-                cur_group_index <- group_index_list[[grp.ind]]
-                current_nullmod <-null.model_list[[grp.ind]]
-#                message('length of current group ids: ', length(null.model_list[[grp.ind]][["sample.id"]]))
-                current_geno <- geno[cur_group_index,,drop=FALSE]
+              for (grp.ind in 1:length(null.model.list)){
+                cur.group.index <- group.index.list[[grp.ind]]
+                current.nullmod <-null.model.list[[grp.ind]]
+#                message('length of current group ids: ', length(null.model.list[[grp.ind]][["sample.id"]]))
+                current.geno <- geno[cur.group.index,,drop=FALSE]
                 
                 # allele frequency
-                freq <- .alleleFreq(gdsobj, current_geno, sample.index=cur_group_index, male.diploid=male.diploid, genome.build=genome.build)
+                freq <- .alleleFreq(gdsobj, current.geno, sample.index=cur.group.index, male.diploid=male.diploid, genome.build=genome.build)
                 # take note of number of non-missing samples
-                n.obs <- colSums(!is.na(current_geno))
+                n.obs <- colSums(!is.na(current.geno))
 
-                if (any(n.obs < nrow(current_geno))) {
-                  current_geno <- .meanImpute(current_geno, freq$freq)
+                if (any(n.obs < nrow(current.geno))) {
+                  current.geno <- .meanImpute(current.geno, freq$freq)
                 }
 
                   # do the test
-                  assoc <- testGenoSingleVar(current_nullmod, G=current_geno, test=test, calc_score=FALSE)
+                  assoc <- testGenoSingleVar(current.nullmod, G=current.geno, test=test, calc.score=FALSE)
                   assoc[freq$freq %in% c(0,1),] <- NA
-                  all_res[[grp.ind]][[i]]<- cbind(var.info, n.obs, freq, assoc)
+                  all.res[[grp.ind]][[i]]<- cbind(var.info, n.obs, freq, assoc)
               }
               
               if (verbose & n.iter > 1 & i %% set.messages == 0) {
@@ -217,10 +214,10 @@ run_split_subset <- function(gdsobj, null.model, id_list, test=c("BinomiRare", "
               iterate <- iterateFilter(gdsobj, verbose=FALSE)
             }
             
-            for (grp.ind in 1:length(all_res)){
-              all_res[[grp.ind]] <- do.call(rbind, all_res[[grp.ind]])
+            for (grp.ind in 1:length(all.res)){
+              all.res[[grp.ind]] <- do.call(rbind, all.res[[grp.ind]])
             }
-            all_res
+            all.res
 }
 
 

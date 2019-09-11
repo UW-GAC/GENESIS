@@ -6,7 +6,7 @@ setMethod("assocTestSingle",
           "SeqVarIterator",
           function(gdsobj, null.model,  test=c("Score", "Wald",  "SAIGE", "BinomiRare", "CMP"), 
                    GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), 
-                   max.alt.freq=NULL, calc_score=FALSE, verbose=TRUE) {
+                   AF.max=NULL, calc.score=FALSE, verbose=TRUE) {
               test <- match.arg(test)
 
               # don't use sparse matrices for imputed dosages
@@ -46,8 +46,8 @@ setMethod("assocTestSingle",
                   
                   # filter monomorphic variants (and max alternate frequency variants)
                   keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq, imputed=imputed)
-                  if (!is.null(max.alt.freq)){
-                    keep <- keep & (freq$freq <= max.alt.freq)
+                  if (!is.null(AF.max)){
+                    keep <- keep & (freq$freq <= AF.max)
                   }
                   
                   if (!all(keep)) {
@@ -87,7 +87,7 @@ setMethod("assocTestSingle",
           
           
           function(gdsobj, null.model,  test=c("Score", "Wald",  "SAIGE", "BinomiRare", "CMP"), 
-                   GxE=NULL,male.diploid=TRUE, max.alt.freq=NULL, calc_score=FALSE, verbose=TRUE) {
+                   GxE=NULL,male.diploid=TRUE, AF.max=NULL, calc.score=FALSE, verbose=TRUE) {
               test <- match.arg(test)
 
               # filter samples to match null model
@@ -116,8 +116,8 @@ setMethod("assocTestSingle",
                   
                   # filter monomorphic variants (and max alternate frequency variants)
                   keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq)
-                  if (!is.null(max.alt.freq)){
-                    keep <- keep & (freq$freq <= max.alt.freq)
+                  if (!is.null(AF.max)){
+                    keep <- keep & (freq$freq <= AF.max)
                   }
                   
                   if (!all(keep)) {

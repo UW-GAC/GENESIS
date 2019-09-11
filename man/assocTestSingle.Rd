@@ -12,9 +12,9 @@
 \usage{
 \S4method{assocTestSingle}{SeqVarIterator}(gdsobj, null.model,  test=c("Score", "Wald",  "SAIGE", "BinomiRare", "CMP"), 
                    GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), 
-                   max.alt.freq=NULL, calc_score=FALSE, verbose=TRUE)
+                   AF.max=NULL, calc.score=FALSE, verbose=TRUE)
 \S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model,  test=c("Score", "Wald",  "SAIGE", "BinomiRare", "CMP"), 
-                   GxE=NULL,male.diploid=TRUE, max.alt.freq=NULL, calc_score=FALSE, verbose=TRUE)
+                   GxE=NULL,male.diploid=TRUE, AF.max=NULL, calc.score=FALSE, verbose=TRUE)
 }
 
 \arguments{
@@ -29,8 +29,8 @@
     \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles.}
   \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid.}
   \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes.}
-      \item{max.alt.freq}{Maximum alternate allele frequency threshold for testing variants. A minimum of 0.5 is recommended when running \code{BinomiRare} or \code{CMP} tests.}
-    \item{calc_score}{Whether to calculate Score p-values first when running \code{BinomiRare} or \code{CMP} tests. If selected, only Score p-values of <=0.05 are recalculated with the carriers-only method. Default is \code{FALSE}}
+      \item{AF.max}{Maximum alternate allele frequency threshold for testing variants. A minimum of 0.5 is recommended when running \code{BinomiRare} or \code{CMP} tests.}
+    \item{calc.score}{Whether to calculate Score p-values first when running \code{BinomiRare} or \code{CMP} tests. If selected, only Score p-values of <=0.05 are recalculated with the carriers-only method. Default is \code{FALSE}}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is \code{TRUE}.}
     }
 

@@ -8,7 +8,7 @@
 
 # E an environmental variable for optional GxE interaction analysis. 
 testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "SAIGE", "BinomiRare", "CMP"),
-                              GxE.return.cov = FALSE, calc_score=FALSE){
+                              GxE.return.cov = FALSE, calc.score=FALSE){
     test <- match.arg(test)
 
     G <- .genoAsMatrix(nullmod, G)
@@ -56,28 +56,28 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
       } else{ ## not a mixed model
         phat <- nullmod$fitted.values
       }
-      if (calc_score==TRUE){
+      if (calc.score==TRUE){
         Gtilde <- calcGtilde(nullmod, G)
-        score_pval <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)$Score.pval
+        score.pval <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)$Score.pval
       } else{
-        score_pval <- NULL
+        score.pval <- NULL
       }
-      res <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G, score_pval=score_pval) #, score_pval)
+      res <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G, score.pval=score.pval) #, score.pval)
     }
     
     if (test == "CMP"){
-      if (calc_score==TRUE){
+      if (calc.score==TRUE){
         Gtilde <- calcGtilde(nullmod, G)
-        score_pval <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)$Score.pval
+        score.pval <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)$Score.pval
       } else{
-        score_pval <- NULL
+        score.pval <- NULL
       }
       if (nullmod$family$mixedmodel) { ## if this is a mixed model, used conditional probabilities. ##changed "nullmod.all$resid.conditional" to "nullmod$resid.conditional"
         phat <- expit(nullmod$workingY - nullmod$resid.conditional)    
-        res <- .testGenoSingleVarCMP(nullmod$outcome, probs=phat, G, score_pval=score_pval)#, score_pval)  
+        res <- .testGenoSingleVarCMP(nullmod$outcome, probs=phat, G, score.pval=score.pval)#, score.pval)  
       } else{ ## not a mixed model
         phat <- nullmod$fitted.values
-        res <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G,  score_pval=score_pval)#, score_pval)  
+        res <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G,  score.pval=score.pval)#, score.pval)  
       }
     }
 
@@ -85,7 +85,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
 }
 
 
-.testGenoSingleVarCMP <- function(D, probs, G, score_pval=NULL){
+.testGenoSingleVarCMP <- function(D, probs, G, score.pval=NULL){
   #  if (!requireNamespace("COMPoissonReg")) stop("package 'COMPoissonReg' must be installed for the CBR test") ##already in pkg NAMESPACE
   res <- data.frame(n.carrier = rep(NA, ncol(G)), n.D.carrier = NA, expected.n.D.carrier = NA, pval = NA) #, mid.pval = NA)
   
@@ -102,9 +102,9 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
     res$n.D.carrier[i] <- sum.d
     cur.prob.vec <- probs[carrier.inds]
     res$expected.n.D.carrier[i] <- sum(cur.prob.vec)
-    if (!is.null(score_pval) && score_pval[i] > 0.05){
-      res$pval[i] <- score_pval[i]
-      #     res$mid.pval[i] <- score_pval[i]
+    if (!is.null(score.pval) && score.pval[i] > 0.05){
+      res$pval[i] <- score.pval[i]
+      #     res$mid.pval[i] <- score.pval[i]
     } else {
       if (ncar == 1) {
         res$pval[i] <- ifelse(sum.d == 1, phat, 1-phat) 
@@ -145,7 +145,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
 ## this function currently assumes that the alt allele is the minor allele. So either G 
 ## needs to be such that alt allele is minor allele, or the function checks for it, or a vector of 
 ## indicators or of frequencies would be provided. 
-.testGenoSingleVarBR <- function(D, probs, G, score_pval=NULL){ 
+.testGenoSingleVarBR <- function(D, probs, G, score.pval=NULL){ 
   #  if (!requireNamespace("poibin")) stop("package 'poibin' must be installed for the BinomiRare test") ##already in pkg NAMESPACE
   res <- data.frame(n.carrier = rep(NA, ncol(G)), n.D.carrier = NA, expected.n.D.carrier = NA, pval = NA)
   
@@ -158,11 +158,11 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
     cur.prob.vec <- probs[carrier.inds]
     res$expected.n.D.carrier[i] <- sum(cur.prob.vec)
     res$n.D.carrier[i] <- sum(D[carrier.inds])
-    if (!is.null(score_pval)){
-      if (score_pval[i] < 0.05){
+    if (!is.null(score.pval)){
+      if (score.pval[i] < 0.05){
         res$pval[i] <- .poibinMidp(n.carrier = res$n.carrier[i], n.D.carrier = res$n.D.carrier[i], prob.vec = cur.prob.vec)		 
       } else {
-        res$pval[i] <- score_pval[i]
+        res$pval[i] <- score.pval[i]
       }
     } else{
       res$pval[i] <- .poibinMidp(n.carrier = res$n.carrier[i], n.D.carrier = res$n.D.carrier[i], prob.vec = cur.prob.vec)

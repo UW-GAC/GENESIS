@@ -1,53 +1,53 @@
 
-gen_id_list <- function(data, id_var, group_var){
+genIDList <- function(data, id.var, group.var){
   if (!inherits(data, "data.frame")) stop("Input data is not a dataframe.")
-  data <- na.exclude(data[ , c(id_var, group_var)])
-  groups <- unique(as.character(data[[group_var]]))
-  id_list <- vector(mode="list", length=length(groups))
-  names(id_list) <- groups
+  data <- na.exclude(data[ , c(id.var, group.var)])
+  groups <- unique(as.character(data[[group.var]]))
+  id.list <- vector(mode="list", length=length(groups))
+  names(id.list) <- groups
   for (g in groups){
-    id_list[[g]] <- data[[id_var]][data[[group_var]]==g]
+    id.list[[g]] <- data[[id.var]][data[[group.var]]==g]
   }
-  id_list
+  id.list
 }
 
 
 
-nullModelSplit <- function(nullmod, id_list, keep_all=TRUE){
-  id_length <- ifelse(keep_all==TRUE, length(id_list)+1, length(id_list))
-  split_nullmod <- vector(mode="list", length=id_length)
-  list_names <- names(id_list)
-  if (keep_all==TRUE) list_names <- c('all', names(id_list))
-  names(split_nullmod) <- list_names
-  keep_obj <- c('family', 'sample.id',  'outcome', 'workingY', 'resid.conditional', "resid.marginal", 'fitted.values') #"resid.marginal",  not needed?
+nullModelSplit <- function(nullmod, id.list, keep.all=TRUE){
+  id.length <- ifelse(keep.all==TRUE, length(id.list)+1, length(id.list))
+  split.nullmod <- vector(mode="list", length=id.length)
+  list.names <- names(id.list)
+  if (keep.all==TRUE) list.names <- c('all', names(id.list))
+  names(split.nullmod) <- list.names
+  keep.obj <- c('family', 'sample.id',  'outcome', 'workingY', 'resid.conditional', "resid.marginal", 'fitted.values') #"resid.marginal",  not needed?
   for (obj in names(nullmod)){
-    if (!obj %in% keep_obj){
+    if (!obj %in% keep.obj){
       nullmod[[obj]] <- NULL
     }
   }
   
-  if (keep_all) split_nullmod[['all']] <- nullmod
-  for (i in 1:length(id_list)){
-    split_index <- ifelse(keep_all==TRUE, i+1, i)
-    ids <- id_list[[i]]
-    nullmod_subset <- nullmod
+  if (keep.all) split.nullmod[['all']] <- nullmod
+  for (i in 1:length(id.list)){
+    split.index <- ifelse(keep.all==TRUE, i+1, i)
+    ids <- id.list[[i]]
+    nullmod.subset <- nullmod
     idx <- nullmod$sample.id %in% ids
     for (v in c('sample.id',  'outcome', 'workingY', 'resid.conditional', 'fitted.values', "workingY")) {
-      nullmod_subset[[v]] <- nullmod[[v]][idx]
+      nullmod.subset[[v]] <- nullmod[[v]][idx]
     }
-    split_nullmod[[split_index]] <- nullmod_subset
+    split.nullmod[[split.index]] <- nullmod.subset
   }
-  split_nullmod
+  split.nullmod
 }
 
 
-setGeneric("assocTestSingle_split", function(gdsobj, ...) standardGeneric("assocTestSingle_split"))
+setGeneric("assocTestSingleSplit", function(gdsobj, ...) standardGeneric("assocTestSingleSplit"))
 
-setMethod("assocTestSingle_split",
+setMethod("assocTestSingleSplit",
           "SeqVarIterator",
-  function(gdsobj, null.model, id_list, test=c("BinomiRare", "CMP"), 
+  function(gdsobj, null.model, id.list, test=c("BinomiRare", "CMP"), 
           sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"),
-          max.alt.freq=NULL, keep_all=TRUE, verbose=TRUE
+          AF.max=NULL, keep.all=TRUE, verbose=TRUE
                                   ) {
   message('running split version of assocTestSingle')
   test <- match.arg(test)
@@ -69,22 +69,22 @@ setMethod("assocTestSingle_split",
   
   
   ###split null model and genotypes by group###
-  null.model_list <- nullModelSplit(null.model, id_list, keep_all=keep_all)
+  null.model.list <- nullModelSplit(null.model, id.list, keep.all=keep.all)
   
   
   # initialize results objects
-  all_res <- rep( list(vector("list", length=n.iter)), length(null.model_list) ) #vector(mode = "list", length = length(id_list))
-  names(all_res) <- names(null.model_list)
+  all.res <- rep( list(vector("list", length=n.iter)), length(null.model.list) ) #vector(mode = "list", length = length(id.list))
+  names(all.res) <- names(null.model.list)
   
   
-  #  geno_list <- vector(mode="list", length=length(id_list)) ###doing this is incorrect due to iterator behavior
-  group_index_list <- vector(mode="list", length=length(null.model_list))
+  #  geno.list <- vector(mode="list", length=length(id.list)) ###doing this is incorrect due to iterator behavior
+  group.index.list <- vector(mode="list", length=length(null.model.list))
   
   
-  for (i in 1:length(null.model_list)){
-    current_ids <- null.model_list[[i]][["sample.id"]]
-    cur_group_index <-match(current_ids, seqGetData(gdsobj, "sample.id"))
-    group_index_list[[i]] <- cur_group_index
+  for (i in 1:length(null.model.list)){
+    current.ids <- null.model.list[[i]][["sample.id"]]
+    cur.group.index <-match(current.ids, seqGetData(gdsobj, "sample.id"))
+    group.index.list[[i]] <- cur.group.index
   }
   
   i <- 1
@@ -97,28 +97,28 @@ setMethod("assocTestSingle_split",
     }
     var.info <- variantInfo(gdsobj, alleles=FALSE, expanded=TRUE)
     
-    for (grp.ind in 1:length(null.model_list)){
-      cur_group_index <- group_index_list[[grp.ind]]
-      current_nullmod <-null.model_list[[grp.ind]]
-      message('length of current group ids: ', length(null.model_list[[grp.ind]][["sample.id"]]))
-      current_geno <- geno[cur_group_index,,drop=FALSE]
-      #     sample.index.grp <- which(is.element(rownames(current_geno), cur_group_ids)) ## is this a correct way to index these?? current_geo doesn't have rownames
+    for (grp.ind in 1:length(null.model.list)){
+      cur.group.index <- group.index.list[[grp.ind]]
+      current.nullmod <-null.model.list[[grp.ind]]
+      message('length of current group ids: ', length(null.model.list[[grp.ind]][["sample.id"]]))
+      current.geno <- geno[cur.group.index,,drop=FALSE]
+      #     sample.index.grp <- which(is.element(rownames(current.geno), cur.group.ids)) ## is this a correct way to index these?? current.geo doesn't have rownames
       
       # allele frequency
-      freq <- .alleleFreq(gdsobj, current_geno, sample.index=sample.index,
+      freq <- .alleleFreq(gdsobj, current.geno, sample.index=sample.index,
                           male.diploid=male.diploid, genome.build=genome.build)
       
       # take note of number of non-missing samples
-      n.obs <- colSums(!is.na(current_geno))
+      n.obs <- colSums(!is.na(current.geno))
       # filter monomorphic variants
-      keep <- .filterMonomorphic(current_geno, count=n.obs, freq=freq$freq, imputed=imputed)
-      if (!is.null(max.alt.freq)){
-        keep <- keep & (freq$freq <= max.alt.freq)
+      keep <- .filterMonomorphic(current.geno, count=n.obs, freq=freq$freq, imputed=imputed)
+      if (!is.null(AF.max)){
+        keep <- keep & (freq$freq <= AF.max)
       }
       
       if (!all(keep)) {
         current.var.info <- var.info[keep,,drop=FALSE] 
-        current_geno <- current_geno[,keep,drop=FALSE]
+        current.geno <- current.geno[,keep,drop=FALSE]
         n.obs <- n.obs[keep]
         freq <- freq[keep,,drop=FALSE]
       } else {
@@ -126,18 +126,18 @@ setMethod("assocTestSingle_split",
       }
       
       # mean impute missing values
-      if (any(n.obs < nrow(current_geno))) {
-        current_geno <- .meanImpute(current_geno, freq$freq)
+      if (any(n.obs < nrow(current.geno))) {
+        current.geno <- .meanImpute(current.geno, freq$freq)
       }
       
-      if (ncol(current_geno)==0){
-        all_res[[grp.ind]][[i]]<- NULL
+      if (ncol(current.geno)==0){
+        all.res[[grp.ind]][[i]]<- NULL
       } else{
       # do the test
-      assoc <- testGenoSingleVar(current_nullmod, G=current_geno, test=test, calc_score=FALSE)
+      assoc <- testGenoSingleVar(current.nullmod, G=current.geno, test=test, calc.score=FALSE)
       # set monomorphs to NA - do we want to skip testing these to save time? ###not sure why this is needed when monomorphics were already filtered
       assoc[freq %in% c(0,1),] <- NA
-      all_res[[grp.ind]][[i]]<- cbind(current.var.info, n.obs, freq, assoc)
+      all.res[[grp.ind]][[i]]<- cbind(current.var.info, n.obs, freq, assoc)
       }
     }
     
@@ -148,32 +148,32 @@ setMethod("assocTestSingle_split",
     iterate <- iterateFilter(gdsobj, verbose=FALSE)
   }
   
-  for (grp.ind in 1:length(all_res)){
-    all_res[[grp.ind]] <- do.call(rbind, all_res[[grp.ind]])
+  for (grp.ind in 1:length(all.res)){
+    all.res[[grp.ind]] <- do.call(rbind, all.res[[grp.ind]])
   }
-  all_res
+  all.res
 }
 )
 
-save_split_results <- function(res_list, output_prefix=NULL){
-  for (name in names(res_list)){
-    current_dat <- res_list[[name]]
-    if (!is.null(output_prefix)){
-        output_path <- paste0(output_prefix, '_', name, '.RData')
+saveSplitResults <- function(res.list, output.prefix=NULL){
+  for (name in names(res.list)){
+    current.dat <- res.list[[name]]
+    if (!is.null(output.prefix)){
+        output.path <- paste0(output.prefix, '.', name, '.RData')
       } else {
-      output_path <- paste0(name, '_results.RData')
+      output.path <- paste0(name, '.results.RData')
     }
-  save(current_dat, file=output_path)
+  save(current.dat, file=output.path)
   }
 }
 
-setGeneric("assocTestAggregate_split", function(gdsobj, ...) standardGeneric("assocTestAggregate_split"))
+setGeneric("assocTestAggregateSplit", function(gdsobj, ...) standardGeneric("assocTestAggregateSplit"))
 
-setMethod("assocTestAggregate_split",
+setMethod("assocTestAggregateSplit",
           "SeqVarIterator",
-          function(gdsobj, null.model, id_list, AF.max=1,
+          function(gdsobj, null.model, id.list, AF.max=1,
           #         weight.beta=c(1,1), ##all weights are set to 1
-                   burden.test=c("BinomiRare", "CMP"), keep_all=TRUE,
+                   burden.test=c("BinomiRare", "CMP"), keep.all=TRUE,
                    sparse=TRUE, imputed=FALSE, 
                   male.diploid=TRUE, genome.build=c("hg19", "hg38"),
                   verbose=TRUE) {
@@ -194,23 +194,23 @@ setMethod("assocTestAggregate_split",
             if (SeqVarTools:::.ploidy(gdsobj) == 1) male.diploid <- FALSE
             
             ###split null model by group###
-            null.model_list <- nullModelSplit(null.model, id_list, keep_all=keep_all)
+            null.model.list <- nullModelSplit(null.model, id.list, keep.all=keep.all)
             n.iter <- length(variantFilter(gdsobj))
             # initialize results objects
-            all_res <- rep( list(vector("list", length=n.iter)), length(null.model_list) ) #vector(mode = "list", length = length(id_list))
-            names(all_res) <- names(null.model_list)
+            all.res <- rep( list(vector("list", length=n.iter)), length(null.model.list) ) #vector(mode = "list", length = length(id.list))
+            names(all.res) <- names(null.model.list)
             
-            all_res.var <- rep( list(vector("list", length=n.iter)), length(null.model_list) )
-            names(all_res.var) <- names(null.model_list)
+            all.res.var <- rep( list(vector("list", length=n.iter)), length(null.model.list) )
+            names(all.res.var) <- names(null.model.list)
             
-            #  geno_list <- vector(mode="list", length=length(id_list)) ###doing this is incorrect due to iterator behavior
-            group_index_list <- vector(mode="list", length=length(null.model_list))
+            #  geno.list <- vector(mode="list", length=length(id.list)) ###doing this is incorrect due to iterator behavior
+            group.index.list <- vector(mode="list", length=length(null.model.list))
             
             
-            for (i in 1:length(null.model_list)){
-              current_ids <- null.model_list[[i]][["sample.id"]]
-              cur_group_index <-match(current_ids, seqGetData(gdsobj, "sample.id"))
-              group_index_list[[i]] <- cur_group_index
+            for (i in 1:length(null.model.list)){
+              current.ids <- null.model.list[[i]][["sample.id"]]
+              cur.group.index <-match(current.ids, seqGetData(gdsobj, "sample.id"))
+              group.index.list[[i]] <- cur.group.index
             }
           
             i <- 1
@@ -235,27 +235,27 @@ setMethod("assocTestAggregate_split",
               }
               
               ####start null model loop from here####
-              for (grp.ind in 1:length(null.model_list)){
-                cur_group_index <- group_index_list[[grp.ind]]
-                current_nullmod <-null.model_list[[grp.ind]]
-                message('length of current group ids: ', length(null.model_list[[grp.ind]][["sample.id"]]))
-                current_geno <- geno[cur_group_index,,drop=FALSE]
+              for (grp.ind in 1:length(null.model.list)){
+                cur.group.index <- group.index.list[[grp.ind]]
+                current.nullmod <-null.model.list[[grp.ind]]
+                message('length of current group ids: ', length(null.model.list[[grp.ind]][["sample.id"]]))
+                current.geno <- geno[cur.group.index,,drop=FALSE]
                 
-                n.obs <- colSums(!is.na(current_geno))
+                n.obs <- colSums(!is.na(current.geno))
                 ###uncertain if this calculates correctly. initial code: freq <- .alleleFreq(gdsobj, geno, variant.index=index, sample.index=sample.index)
-                freq <- .alleleFreq(gdsobj, current_geno, variant.index=index, sample.index=cur_group_index,
+                freq <- .alleleFreq(gdsobj, current.geno, variant.index=index, sample.index=cur.group.index,
                   male.diploid=male.diploid, genome.build=genome.build)
                 # number of non-missing samples
                 
                 # filter monomorphic variants
-                keep <- .filterMonomorphic(current_geno, count=n.obs, freq=freq$freq, imputed=imputed)
+                keep <- .filterMonomorphic(current.geno, count=n.obs, freq=freq$freq, imputed=imputed)
                 
                 
                 # exclude variants with freq > max
                 keep <-  keep & freq$freq <= AF.max
                 if (!all(keep)) {
                   current.var.info <- var.info[keep,,drop=FALSE]
-                  current_geno <- current_geno[,keep,drop=FALSE]
+                  current.geno <- current.geno[,keep,drop=FALSE]
                   n.obs <- n.obs[keep]
                   freq <- freq[keep,,drop=FALSE]
                 } else {
@@ -269,24 +269,24 @@ setMethod("assocTestAggregate_split",
                 n.site <- length(unique(current.var.info$variant.id))
                 
                 # number of alternate alleles
-                n.alt <- sum(current_geno, na.rm=TRUE)
+                n.alt <- sum(current.geno, na.rm=TRUE)
                 
                 # number of samples with observed alternate alleles > 0
-                n.sample.alt <- sum(rowSums(current_geno, na.rm=TRUE) > 0)
+                n.sample.alt <- sum(rowSums(current.geno, na.rm=TRUE) > 0)
                 
-                all_res[[grp.ind]][[i]] <- data.frame(n.site, n.alt, n.sample.alt)
-                all_res.var[[grp.ind]][[i]] <- cbind(current.var.info , n.obs, freq, weight)
+                all.res[[grp.ind]][[i]] <- data.frame(n.site, n.alt, n.sample.alt)
+                all.res.var[[grp.ind]][[i]] <- cbind(current.var.info , n.obs, freq, weight)
                 
                 if (n.site > 0) {
                   # mean impute missing values
-                  if (any(n.obs < nrow(current_geno))) {
-                    current_geno <- .meanImpute(current_geno, freq$freq)
+                  if (any(n.obs < nrow(current.geno))) {
+                    current.geno <- .meanImpute(current.geno, freq$freq)
                   }
                   
                   # do the test
-                  assoc <- testVariantSet(current_nullmod, G=current_geno, weights=weight, test="Burden", 
+                  assoc <- testVariantSet(current.nullmod, G=current.geno, weights=weight, test="Burden", 
                                           burden.test=burden.test)
-                  all_res[[grp.ind]][[i]] <- cbind(all_res[[grp.ind]][[i]], assoc)
+                  all.res[[grp.ind]][[i]] <- cbind(all.res[[grp.ind]][[i]], assoc)
                 }
               }
               if (verbose & n.iter > 1 & i %% set.messages == 0) {
@@ -296,11 +296,11 @@ setMethod("assocTestAggregate_split",
               iterate <- iterateFilter(gdsobj, verbose=FALSE)
             }
 
-            for (grp.ind in 1:length(all_res)){
-              all_res[[grp.ind]] <- list(results=bind_rows(all_res[[grp.ind]]), variantInfo=all_res.var[[grp.ind]])
-              all_res[[grp.ind]] <- .annotateAssoc(gdsobj, all_res[[grp.ind]])
+            for (grp.ind in 1:length(all.res)){
+              all.res[[grp.ind]] <- list(results=bind.rows(all.res[[grp.ind]]), variantInfo=all.res.var[[grp.ind]])
+              all.res[[grp.ind]] <- .annotateAssoc(gdsobj, all.res[[grp.ind]])
             }
-            all_res
+            all.res
           })
 
 
