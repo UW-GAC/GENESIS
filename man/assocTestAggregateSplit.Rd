@@ -122,7 +122,7 @@ iterator <- SeqVarWindowIterator(seqData)
 assoc <- assocTestAggregateSplit(iterator, nullmod, id.list=id.list, burden.test="BinomiRare", AF.max=0.01)
 
 # save results for each group separately
-saveSplitResults(assoc, output_prefix='test')
+saveSplitResults(assoc, output.prefix='test')
 
 
 seqClose(seqData)

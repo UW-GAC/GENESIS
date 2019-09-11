@@ -127,6 +127,7 @@ mergeNullModelBR <- function(nullmod.list, gdsfile){
 ###need to subset and create iterator again
 
 recreateIterator <- function(gds, annot, incomplete.variants, block.size=1024){
+  if (length(incomplete.variants)==0) stop("There are no variants to filter on. The gds object remains unchanged.")
   seqResetFilter(gds)
   seqSetFilter(gds, variant.id = incomplete.variants)
   seqData <- SeqVarData(gds, sampleData=annot)

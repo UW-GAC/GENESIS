@@ -6,11 +6,11 @@
 Function to save the list of results returned from \code{assocTestSingleSplit} or \code{assocTestAggregateSplit} separately by group, given a prefix.
 }
 \usage{
-saveSplitResults(res.list, output_prefix=NULL)
+saveSplitResults(res.list, output.prefix=NULL)
 }
 \arguments{
     \item{res.list}{List of results returned from \code{assocTestSingleSplit} or \code{assocTestAggregateSplit}}
-    \item{output_prefix}{Prefix for output file names - file name structure will be prefix_groupname.RData format if provided. Otherwise, it will have a groupname_results.RData format.}
+    \item{output.prefix}{Prefix for output file names - file name structure will be prefix_groupname.RData format if provided. Otherwise, it will have a groupname_results.RData format.}
 }
 \author{Jiwon Lee}
 
@@ -45,7 +45,7 @@ nullmod <- fitNullModel(iterator, outcome="outcome", covars="sex", family="binom
 assoc <- assocTestSingleSplit(iterator, nullmod, id.list=id.list, test="BinomiRare", AF.max=0.5)
 
 # save results for each group separately
-saveSplitResults(assoc, output_prefix='test')
+saveSplitResults(assoc, output.prefix='test')
 
 seqClose(iterator)
 }

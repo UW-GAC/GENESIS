@@ -1,6 +1,8 @@
 
 genIDList <- function(data, id.var, group.var){
   if (!inherits(data, "data.frame")) stop("Input data is not a dataframe.")
+  if (!(id.var %in% names(data))) stop("The id.var provided is not a variable in data")
+  if (!(group.var %in% names(data))) stop("The group.var provided is not a variable in data")
   data <- na.exclude(data[ , c(id.var, group.var)])
   groups <- unique(as.character(data[[group.var]]))
   id.list <- vector(mode="list", length=length(groups))
@@ -297,7 +299,7 @@ setMethod("assocTestAggregateSplit",
             }
 
             for (grp.ind in 1:length(all.res)){
-              all.res[[grp.ind]] <- list(results=bind.rows(all.res[[grp.ind]]), variantInfo=all.res.var[[grp.ind]])
+              all.res[[grp.ind]] <- list(results=bind_rows(all.res[[grp.ind]]), variantInfo=all.res.var[[grp.ind]])
               all.res[[grp.ind]] <- .annotateAssoc(gdsobj, all.res[[grp.ind]])
             }
             all.res

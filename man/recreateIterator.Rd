@@ -49,9 +49,9 @@ nullmod <- fitNullModel(iterator, outcome="outcome", covars="sex", family="binom
 assoc <- assocTestSingleSplit(iterator, nullmod, id.list=id.list, test="BinomiRare", AF.max=0.5)
 
 # save results for each group separately
-saveSplitResults(assoc, output_prefix='test')
+saveSplitResults(assoc, output.prefix='test')
 
-hits <- matchSignifHits(assoc, threshold=0.001)
+hits <- matchSignifHits(assoc, threshold=0.1)
 incomplete <- findIncompleteHits(hits)
 
 iterator <- recreateIterator(gds, AnnotatedDataFrame(pedigree), incomplete.variants=incomplete)

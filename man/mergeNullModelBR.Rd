@@ -32,11 +32,11 @@ pedigree$outcome <- rbinom(nrow(pedigree), 1, 0.4)
 # divide pedigree into two groups
 pedigree_one <- pedigree[1:50, ]
 pedigree_one_aligned <- data.frame(sample.id=pedigree$sample.id)
-pedigree_one_aligned <- left_join(pedigree_one_aligned, pedigree_one, by="sample.id")
+pedigree_one_aligned <- dplyr::left_join(pedigree_one_aligned, pedigree_one, by="sample.id")
 
 pedigree_two <- pedigree[51:90, ]
 pedigree_two_aligned <- data.frame(sample.id=pedigree$sample.id)
-pedigree_two_aligned <- left_join(pedigree_two_aligned, pedigree_two, by="sample.id")
+pedigree_two_aligned <- dplyr::left_join(pedigree_two_aligned, pedigree_two, by="sample.id")
 
 # run model for first group
 seqData <- SeqVarData(gds, sampleData=AnnotatedDataFrame(pedigree_one_aligned))
