@@ -55,7 +55,7 @@ matchSignifHits <- function(res.list, threshold, return.df=FALSE, variant.id.var
       variant.id.var <- "variantID"
     }
   }
-  dat <- dat %>% filter(ref.group!="all") %>% group_by(!!sym(variant.id.var)) %>% 
+  dat <- dat %>% filter(ref.group!="all") %>% group_by(!!sym(variant.id.var), signif.group) %>% 
     summarise(n=n()) %>% filter(n < total.groups) #, groups=glue::glue_collapse(unique(ref.group), sep=','), total_carriers=sum(n.carrier))
   dat[[variant.id.var]]
 }
@@ -63,7 +63,7 @@ matchSignifHits <- function(res.list, threshold, return.df=FALSE, variant.id.var
 
 findIncompleteHits <- function(matched.results, n.groups=NULL, variant.id.var=NULL){
   if (class(matched.results)=="list"){
-    if (is.null(n.groups)) n.groups <- length(matched.results)
+    if (is.null(n.groups)) n.groups <- sum(names(matched.results)!='all')
     incomplete.results <- lapply(matched.results, .filterIncomplete, total.groups=n.groups, variant.id.var=variant.id.var)
     incomplete.variants <- c()
     for (i in seq_along(incomplete.results)){
@@ -104,10 +104,15 @@ mergeNullModelBR <- function(nullmod.list, gdsfile){
   outcome <- do.call(c, outcome.list)
   
   ## re-order according to the order on the gds file: 
-  gds <- seqOpen(gdsfile)
+  if (is.character(gdsfile)){
+    gds <- seqOpen(gdsfile)
+  } else {
+    gds <- gdsfile
+  }
   sample.id <- seqGetData(gds, "sample.id")
-  seqClose(gds)
   
+  if (is.character(gdsfile)) seqClose(gds)
+
   ids.both <- intersect(sample.id, names(outcome))
   outcome <- outcome[match(ids.both, names(outcome))]
   fitted.values <- fitted.values[match(ids.both, names(fitted.values))]
@@ -126,12 +131,12 @@ mergeNullModelBR <- function(nullmod.list, gdsfile){
 
 ###need to subset and create iterator again
 
-recreateIterator <- function(gds, annot, incomplete.variants, block.size=1024){
+recreateIterator <- function(gds, annot, incomplete.variants, block.size=1024, verbose=TRUE){
   if (length(incomplete.variants)==0) stop("There are no variants to filter on. The gds object remains unchanged.")
-  seqResetFilter(gds)
-  seqSetFilter(gds, variant.id = incomplete.variants)
+  seqResetFilter(gds, verbose=verbose)
+  seqSetFilter(gds, variant.id = incomplete.variants, verbose=verbose)
   seqData <- SeqVarData(gds, sampleData=annot)
-  SeqVarBlockIterator(seqData, variantBlock=block.size)
+  SeqVarBlockIterator(seqData, variantBlock=block.size, verbose=verbose)
 }
 
 

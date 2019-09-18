@@ -17,7 +17,7 @@ genIDList(data, id.var, group.var)
 
 \seealso{
      \code{\link{assocTestSingleSplit}} for performing carriers-only single association tests across different groups
-  using a single null model
+  using a single null model. 
      \code{\link{assocTestAggregateSplit}} for performing carriers-only aggregate association tests across different groups using a single null model
 }
 

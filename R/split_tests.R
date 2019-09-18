@@ -34,7 +34,7 @@ nullModelSplit <- function(nullmod, id.list, keep.all=TRUE){
     ids <- id.list[[i]]
     nullmod.subset <- nullmod
     idx <- nullmod$sample.id %in% ids
-    for (v in c('sample.id',  'outcome', 'workingY', 'resid.conditional', 'fitted.values', "workingY")) {
+    for (v in c('sample.id',  'outcome', 'workingY', 'resid.conditional', 'fitted.values')) {
       nullmod.subset[[v]] <- nullmod[[v]][idx]
     }
     split.nullmod[[split.index]] <- nullmod.subset
@@ -83,7 +83,7 @@ setMethod("assocTestSingleSplit",
   group.index.list <- vector(mode="list", length=length(null.model.list))
   
   
-  for (i in 1:length(null.model.list)){
+  for (i in seq_along(null.model.list)){
     current.ids <- null.model.list[[i]][["sample.id"]]
     cur.group.index <-match(current.ids, seqGetData(gdsobj, "sample.id"))
     group.index.list[[i]] <- cur.group.index
@@ -99,7 +99,7 @@ setMethod("assocTestSingleSplit",
     }
     var.info <- variantInfo(gdsobj, alleles=FALSE, expanded=TRUE)
     
-    for (grp.ind in 1:length(null.model.list)){
+    for (grp.ind in seq_along(null.model.list)){
       cur.group.index <- group.index.list[[grp.ind]]
       current.nullmod <-null.model.list[[grp.ind]]
       message('length of current group ids: ', length(null.model.list[[grp.ind]][["sample.id"]]))
@@ -209,7 +209,7 @@ setMethod("assocTestAggregateSplit",
             group.index.list <- vector(mode="list", length=length(null.model.list))
             
             
-            for (i in 1:length(null.model.list)){
+            for (i in seq_along(null.model.list)){
               current.ids <- null.model.list[[i]][["sample.id"]]
               cur.group.index <-match(current.ids, seqGetData(gdsobj, "sample.id"))
               group.index.list[[i]] <- cur.group.index
@@ -237,7 +237,7 @@ setMethod("assocTestAggregateSplit",
               }
               
               ####start null model loop from here####
-              for (grp.ind in 1:length(null.model.list)){
+              for (grp.ind in seq_along(null.model.list)){
                 cur.group.index <- group.index.list[[grp.ind]]
                 current.nullmod <-null.model.list[[grp.ind]]
                 message('length of current group ids: ', length(null.model.list[[grp.ind]][["sample.id"]]))

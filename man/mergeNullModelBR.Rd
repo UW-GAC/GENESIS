@@ -10,12 +10,12 @@ mergeNullModelBR(nullmod.list, gdsfile)
 }
 \arguments{
     \item{nullmod.list}{List of null models to combine}
-    \item{gdsfile}{Path to a gds file - this is used to order the sample IDs}
+    \item{gdsfile}{Path to a gds file or an opened gds file - this is used to order the sample IDs}
 }
 \author{Tamar Sofer}
 
 \seealso{
-     \code{\link{fitNullModel}} for fitting null models
+     \code{\link{fitNullModel}} for fitting null models.
 }
 
 \examples{

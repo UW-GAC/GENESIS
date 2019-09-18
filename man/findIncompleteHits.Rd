@@ -16,7 +16,7 @@ findIncompleteHits(matched.results, n.groups=NULL, variant.id.var=NULL)
 \author{Jiwon Lee}
 
 \seealso{
-     \code{\link{recreateIterator}} to subset gds file to variants of interest, then format it into an iterator for running single association tests.
+     \code{\link{recreateIterator}} to subset gds file to variants of interest, then format it into an iterator for running single association tests. 
      \code{\link{runSplitSubset}} for running split carriers only single association tests that return all variants in the iterator, including monomorphic variants.
 }
 

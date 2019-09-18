@@ -57,10 +57,10 @@ runSplitSubset(gdsobj, null.model, id.list, test=c("BinomiRare", "CMP"), remove.
 \author{Jiwon Lee, Tamar Sofer, Matthew P. Conomos, Stephanie M. Gogarten, Ken Rice, Chaoyu Yu}
 
 \seealso{
-     \code{\link{matchSignifHits}} for creating a list or dataframe of significant variants that integrates results across groups.
-    \code{\link{findIncompleteHits}} for creating a vector of variants that were not found in every group after running \code{matchSignifHits}.
-    \code{\link{recreateIterator}} for recreating the iterator object that subsets the gds file to only a subset of variants (called by the variant IDs). Meant to be used in conjunction with \code{findIncompleteHits}.
-     \code{\link{saveSplitResults} for saving results list as separate files by group}
+     \code{\link{matchSignifHits}} for creating a list or dataframe of significant variants that integrates results across groups. 
+    \code{\link{findIncompleteHits}} for creating a vector of variants that were not found in every group after running \code{matchSignifHits}. 
+    \code{\link{recreateIterator}} for recreating the iterator object that subsets the gds file to only a subset of variants (called by the variant IDs). Meant to be used in conjunction with \code{findIncompleteHits}. 
+     \code{\link{saveSplitResults} for saving results list as separate files by group.}
 }
 
 \examples{

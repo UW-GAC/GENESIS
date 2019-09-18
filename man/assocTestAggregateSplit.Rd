@@ -71,10 +71,10 @@
 
 \author{Jiwon Lee, Tamar Sofer, Matthew P. Conomos, Stephanie M. Gogarten, Ken Rice, Chaoyu Yu, Han Chen}
 \seealso{
-     \code{\link{genIDList}} for conveniently creating an id list separated by group needed for \code{assocTestAggregateSplit}
+     \code{\link{genIDList}} for conveniently creating an id list separated by group needed for \code{assocTestAggregateSplit}.
      \code{\link{fitNullModel}} for fitting the null mixed model needed as input to \code{assocTestSingleSplit}.
      \code{\link{SeqVarIterator}} for creating the input object with genotypes.
-     \code{\link{saveSplitResults} for saving results list as separate files by group}
+     \code{\link{saveSplitResults} for saving results list as separate files by group.}
 }
 
 \references{

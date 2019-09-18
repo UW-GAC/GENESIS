@@ -6,18 +6,19 @@
 Subset gds file to variants of interest, then format it into an iterator for running single association tests. This was specifically written for use with \code{runSplitSubset}, but can be used as a convenience function for other single association tests as well.
 }
 \usage{
-recreateIterator(gds, annot, incomplete.variants, block.size=1024)
+recreateIterator(gds, annot, incomplete.variants, block.size=1024, verbose=TRUE)
 }
 \arguments{
     \item{gds}{gds file connection called by \code{seqOpen}}
     \item{annot}{Annotated data frame}
     \item{incomplete.variants}{Vector of variant IDs that should be included in the iterator}
     \item{block.size}{Number of variants to include in each iteration}
+    \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is \code{TRUE}.}
 }
 \author{Jiwon Lee}
 
 \seealso{
-     \code{\link{findIncompleteHits}} for finding variants from split results that are not found across all groups. The returned vector can be directly used for the \code{incomplete.variants} argument.
+     \code{\link{findIncompleteHits}} for finding variants from split results that are not found across all groups. The returned vector can be directly used for the \code{incomplete.variants} argument. 
      \code{\link{runSplitSubset}} for running split carriers only single association tests that return all variants in the iterator, including monomorphic variants.
 }
 

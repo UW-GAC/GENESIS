@@ -51,7 +51,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
     if (test == "BinomiRare"){
       if (nullmod$family$family != "binomial") stop("BinomiRare should be used for disease (binomial) outcomes.")
       
-      if (nullmod$family$mixedmodel) { ## if this is a mixed model, used conditional probabilities ##changed "nullmod.all$resid.conditional" to "nullmod$resid.conditional"
+      if (nullmod$family$mixedmodel) { ## if this is a mixed model, use conditional probabilities $
         phat <- expit(nullmod$workingY - nullmod$resid.conditional)    
       } else{ ## not a mixed model
         phat <- nullmod$fitted.values
@@ -62,7 +62,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
       } else{
         score.pval <- NULL
       }
-      res <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G, score.pval=score.pval) #, score.pval)
+      res <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G, score.pval=score.pval) 
     }
     
     if (test == "CMP"){
@@ -72,12 +72,12 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
       } else{
         score.pval <- NULL
       }
-      if (nullmod$family$mixedmodel) { ## if this is a mixed model, used conditional probabilities. ##changed "nullmod.all$resid.conditional" to "nullmod$resid.conditional"
+      if (nullmod$family$mixedmodel) { ## if this is a mixed model, use conditional probabilities.
         phat <- expit(nullmod$workingY - nullmod$resid.conditional)    
-        res <- .testGenoSingleVarCMP(nullmod$outcome, probs=phat, G, score.pval=score.pval)#, score.pval)  
+        res <- .testGenoSingleVarCMP(nullmod$outcome, probs=phat, G, score.pval=score.pval)  
       } else{ ## not a mixed model
         phat <- nullmod$fitted.values
-        res <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G,  score.pval=score.pval)#, score.pval)  
+        res <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G,  score.pval=score.pval)  
       }
     }
 
@@ -89,7 +89,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
   #  if (!requireNamespace("COMPoissonReg")) stop("package 'COMPoissonReg' must be installed for the CBR test") ##already in pkg NAMESPACE
   res <- data.frame(n.carrier = rep(NA, ncol(G)), n.D.carrier = NA, expected.n.D.carrier = NA, pval = NA) #, mid.pval = NA)
   
-  for (i in 1:ncol(G)){
+  for (i in seq(ncol(G))){
     if (sd(G[,i])==0){
       next
     }
@@ -117,11 +117,9 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
       lamhat <- mu1.analytic^nuhat
       pval <- .calc_cmp_pval(ncar, sum.d, lamhat, nuhat)	
       
-      res$pval[i] <- pval #s["pval"]	 
-      #    res$mid.pval[i] <- pvals["mid.pval"]
+      res$pval[i] <- pval
     }
-    
-    #  }
+
   }
   return(res)
 }
@@ -149,7 +147,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
   #  if (!requireNamespace("poibin")) stop("package 'poibin' must be installed for the BinomiRare test") ##already in pkg NAMESPACE
   res <- data.frame(n.carrier = rep(NA, ncol(G)), n.D.carrier = NA, expected.n.D.carrier = NA, pval = NA)
   
-  for (i in 1:ncol(G)){
+  for (i in seq(ncol(G))){
     if (sd(G[,i])==0){
       next
     }

@@ -18,8 +18,8 @@ matchSignifHits(res.list, threshold, return.df=FALSE, variant.id.var=NULL)
 \author{Jiwon Lee}
 
 \seealso{
-	\code{\link{findIncompleteHits}} for creating a vector of variants that were not found in every group after running \code{matchSignifHits}.
-     \code{\link{recreateIterator}} to subset gds file to variants of interest, then format it into an iterator for running single association tests.
+	\code{\link{findIncompleteHits}} for creating a vector of variants that were not found in every group after running \code{matchSignifHits}. 
+     \code{\link{recreateIterator}} to subset gds file to variants of interest, then format it into an iterator for running single association tests. 
      \code{\link{runSplitSubset}} for running split carriers only single association tests that return all variants in the iterator, including monomorphic variants.
 }
 

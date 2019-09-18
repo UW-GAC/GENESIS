@@ -16,8 +16,8 @@ saveSplitResults(res.list, output.prefix=NULL)
 
 \seealso{
      \code{\link{genIDList}} for performing  carriers-only genotype association tests across different groups
-  using a single null model
-     \code{\link{assocTestAggregateSplit}} for performing carriers-only aggregate association tests across different groups using a single null model
+  using a single null model. 
+     \code{\link{assocTestAggregateSplit}} for performing carriers-only aggregate association tests across different groups using a single null model. 
 }
 
 \examples{
