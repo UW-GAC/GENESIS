@@ -10,17 +10,18 @@
   using the null model fit with \code{\link{fitNullModel}}.}
 
 \usage{
-\S4method{assocTestSingle}{SeqVarIterator}(gdsobj, null.model, test=c("Score", "Wald"),
-                GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE,
-                genome.build=c("hg19", "hg38"), verbose=TRUE)
-\S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model, test=c("Score", "Wald"),
-                GxE=NULL, male.diploid=TRUE, verbose=TRUE)
+\S4method{assocTestSingle}{SeqVarIterator}(gdsobj, null.model,  test=c("Score", "Wald",  "SAIGE", "BinomiRare", "CMP"), 
+                   GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), 
+                   AF.max=NULL, calc.score=FALSE, verbose=TRUE)
+\S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model,  test=c("Score", "Wald",  "SAIGE", "BinomiRare", "CMP"), 
+                   GxE=NULL,male.diploid=TRUE, AF.max=NULL, calc.score=FALSE, verbose=TRUE)
 }
 
 \arguments{
     \item{gdsobj}{An object of class \code{\link{SeqVarIterator}} from the package \pkg{\link{SeqVarTools}}, or an object of class \code{\link{GenotypeIterator}} from the package \pkg{\link{GWASTools}}, containing the genotype data for the variants and samples to be used for the analysis.}
     \item{null.model}{A null model object returned by \code{\link{fitNullModel}}.}
-    \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Score"} (default) or \code{"Wald"}; only \code{"Score"} can be used when the family of the null model fit with \code{\link{fitNullModel}} is not gaussian.}
+    \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Score"} (default), \code{"Wald"}, \code{"SAIGE"}, \code{"BinomiRare"}, or \code{"CMP"}; \code{"Wald"} cannot be used when the family of the null model fit with \code{\link{fitNullModel}} is not gaussian.}
+
     %\item{impute.geno}{A logical indicator of whether sporadic missing genotype values should be mean imputed. The default is TRUE. See 'Details' for further information.}
     \item{GxE}{A vector of character strings specifying the names of the variables for which a genotype interaction term should be included. If \code{NULL} (default) no genotype interactions are included. See 'Details' for further information.}
     %\item{ivar.return.betaCov}{Logical indicator of whether the estimated covariance matrix of the effect size estimates (betas) for the genotype and genotype interaction terms should be returned; the default is FALSE.}
@@ -28,8 +29,11 @@
     \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles.}
   \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid.}
   \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes.}
+      \item{AF.max}{Maximum alternate allele frequency threshold for testing variants. A minimum of 0.5 is recommended when running \code{BinomiRare} or \code{CMP} tests.}
+    \item{calc.score}{Whether to calculate Score p-values first when running \code{BinomiRare} or \code{CMP} tests. If selected, only Score p-values of <=0.05 are recalculated with the carriers-only method. Default is \code{FALSE}}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is \code{TRUE}.}
-}
+    }
+
 
 \details{
     The effect size estimate is for each copy of the alternate allele.
@@ -72,7 +76,15 @@
     \item{GxE.pval}{The Wald p-value for the test of all genotype interaction terms; i.e. the test of any genotype interaction effect}
     \item{Joint.Stat}{The Wald Z test statistic for the joint test of the genotype term and all of the genotype interaction terms}
     \item{Joint.pval}{The Wald p-value for the joint test of the genotype term and all of the genotype interaction terms; i.e. the test of any genotype effect}
-    
+    If \code{test} is \code{"BinomiRare"}:
+    \item{n.carrier}{Number of individuals with at least one copy of the alternate allele}
+    \item{n.D.carrier}{Number of cases with at least one copy of the alternate allele}
+    \item{pval}{BinomiRare p-value}
+    If \code{test} is \code{"CMP"}:
+    \item{n.carrier}{Number of individuals with at least one copy of the alternate allele}
+    \item{n.D.carrier}{Number of cases with at least one copy of the alternate allele}
+    \item{pval}{CMP p-value}
+    \item{mid.pval}{CMP mid-p-value}
     %When \code{GxE} is not \code{NULL}, if \code{ivar.return.betaCov} is \code{TRUE}, then the output is a list with two elements.  The first, "results", is the data.frame described above.  The second, "betaCov", is a list with length equal to the number of rows of "results", where each element of the list is the covariance matrix of the effect size estimates (betas) for the genotype and genotype interaction terms.
 }
 

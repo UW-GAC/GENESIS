@@ -10,7 +10,7 @@ setMethod("assocTestAggregate",
           function(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
                    test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO"),
-                   burden.test=c("Score", "Wald"),
+                   burden.test=c("Score", "Wald", "BinomiRare","CMP"),
                    # pval.method=c("davies", "kuonen", "liu"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
@@ -63,8 +63,7 @@ setMethod("assocTestAggregate",
                   }
 
                   # number of non-missing samples
-                  # n.obs <- colSums(!is.na(geno))
-                  n.obs <- .countNonMissing(geno, MARGIN = 2)
+                  n.obs <- colSums(!is.na(geno))
                   
                   # allele frequency
                   freq <- .alleleFreq(gdsobj, geno, variant.index=index, sample.index=sample.index,
@@ -85,7 +84,12 @@ setMethod("assocTestAggregate",
                   # weights
                   if (is.null(weight.user)) {
                       # Beta weights
+                    if (burden.test %in% c("CMP", "BinomiRare")){
+                      weight <- seq(from=1, to=1, length.out=length(freq$freq))
+                    } else {
                       weight <- .weightFromFreq(freq$freq, weight.beta)
+                    }
+                      
                   } else {
                       # user supplied weights
                       weight <- currentVariants(gdsobj)[[weight.user]][expandedVariantIndex(gdsobj)]
@@ -148,7 +152,7 @@ setMethod("assocTestAggregate",
           function(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
                    test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO"),
-                   burden.test=c("Score", "Wald"),
+                   burden.test=c("Score", "Wald", "BinomiRare","CMP"),
                    # pval.method=c("davies", "kuonen", "liu"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
@@ -176,8 +180,7 @@ setMethod("assocTestAggregate",
                                                transpose=TRUE, use.names=FALSE, drop=FALSE)
                   
                   # number of non-missing samples
-                  # n.obs <- colSums(!is.na(geno))
-                  n.obs <- .countNonMissing(geno, MARGIN = 2)
+                  n.obs <- colSums(!is.na(geno))
                   
                   # allele frequency
                   freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index,
@@ -199,6 +202,11 @@ setMethod("assocTestAggregate",
                   if (is.null(weight.user)) {
                       # Beta weights
                       weight <- .weightFromFreq(freq$freq, weight.beta)
+                      if (burden.test %in% c('BinomiRare', 'CMP')){
+                        weight <- seq(from=1, to=1, length.out=length(weight))
+                      }
+
+                
                   } else {
                       # user supplied weights
                       weight <- getSnpVariable(gdsobj, weight.user)
@@ -214,6 +222,8 @@ setMethod("assocTestAggregate",
                           weight <- weight[keep]
                       }
                   }
+                  
+
                   
                   # number of variant sites
                   n.site <- length(unique(var.info$variant.id))
