@@ -87,6 +87,31 @@ test_that("singleVarTest - logistic - score", {
 })
 
 
+### BR and CMP unit tests -- no equivalent built-in functions available
+test_that("singleVarTest - logistic - BR", {
+  n <- 100
+  dat <- .testNullInputs(n, binary=TRUE)
+  geno <- .testGenoMatrix(n)
+  nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
+  test.br <- testGenoSingleVar(nullmod, G = geno, test = "BinomiRare")
+  expect_true(all(colSums(geno) >=test.br$n.carrier))
+  expect_true(all(test.br$n.carrier >=test.br$n.D.carrier))
+}
+)
+
+test_that("singleVarTest - logistic - CMP", {
+  n <- 100
+  dat <- .testNullInputs(n, binary=TRUE)
+  geno <- .testGenoMatrix(n)
+  nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
+  test.cmp <- testGenoSingleVar(nullmod, G = geno, test = "CMP")
+  expect_true(all(colSums(geno) >=test.cmp$n.carrier))
+  expect_true(all(test.cmp$n.carrier >= test.cmp$n.D.carrier))
+}
+)
+
+
+
 test_that("GxE", {
     n <- 100
     dat <- .testNullInputs(n)

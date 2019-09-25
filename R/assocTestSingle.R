@@ -4,7 +4,9 @@ setGeneric("assocTestSingle", function(gdsobj, ...) standardGeneric("assocTestSi
 ## do we want to make imputing to the mean optional?
 setMethod("assocTestSingle",
           "SeqVarIterator",
-          function(gdsobj, null.model, test=c("Score", "Wald"), GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), verbose=TRUE) {
+          function(gdsobj, null.model,  test=c("Score", "Wald",  "SAIGE", "BinomiRare", "CMP"), 
+                   GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), 
+                   AF.max=NULL, calc.score=FALSE, verbose=TRUE) {
               test <- match.arg(test)
 
               # don't use sparse matrices for imputed dosages
@@ -36,15 +38,18 @@ setMethod("assocTestSingle",
                   }
                   
                   # take note of number of non-missing samples
-                  #n.obs <- colSums(!is.na(geno))
-                  n.obs <- .countNonMissing(geno, MARGIN = 2)
+                  n.obs <- colSums(!is.na(geno))
                   
                   # allele frequency
                   freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index,
                                       male.diploid=male.diploid, genome.build=genome.build)
                   
-                  # filter monomorphic variants
+                  # filter monomorphic variants (and max alternate frequency variants)
                   keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq, imputed=imputed)
+                  if (!is.null(AF.max)){
+                    keep <- keep & (freq$freq <= AF.max)
+                  }
+                  
                   if (!all(keep)) {
                       var.info <- var.info[keep,,drop=FALSE]
                       geno <- geno[,keep,drop=FALSE]
@@ -58,10 +63,13 @@ setMethod("assocTestSingle",
                   }
 
                   # do the test
+                  if (ncol(geno)==0){
+                    res[[i]] <- NULL
+                  } else {
                   assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test)
 
                   res[[i]] <- cbind(var.info, n.obs, freq, assoc)
-                  
+                  }
                   if (verbose & n.iter > 1 & i %% set.messages == 0) {
                       message(paste("Iteration", i , "of", n.iter, "completed"))
                   }
@@ -76,7 +84,8 @@ setMethod("assocTestSingle",
 
 setMethod("assocTestSingle",
           "GenotypeIterator",
-          function(gdsobj, null.model, test=c("Score", "Wald"), GxE=NULL, male.diploid=TRUE, verbose=TRUE) {
+          function(gdsobj, null.model,  test=c("Score", "Wald",  "SAIGE", "BinomiRare", "CMP"), 
+                   GxE=NULL,male.diploid=TRUE, AF.max=NULL, calc.score=FALSE, verbose=TRUE) {
               test <- match.arg(test)
 
               # filter samples to match null model
@@ -97,15 +106,18 @@ setMethod("assocTestSingle",
                                                transpose=TRUE, use.names=FALSE, drop=FALSE)
                   
                   # take note of number of non-missing samples
-                  #n.obs <- colSums(!is.na(geno))
-                  n.obs <- .countNonMissing(geno, MARGIN = 2)
+                  n.obs <- colSums(!is.na(geno))
                   
                   # allele frequency
                   freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index,
                                       male.diploid=male.diploid)
                   
-                  # filter monomorphic variants
+                  # filter monomorphic variants (and max alternate frequency variants)
                   keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq)
+                  if (!is.null(AF.max)){
+                    keep <- keep & (freq$freq <= AF.max)
+                  }
+                  
                   if (!all(keep)) {
                       var.info <- var.info[keep,,drop=FALSE]
                       geno <- geno[,keep,drop=FALSE]
@@ -119,10 +131,13 @@ setMethod("assocTestSingle",
                   }
 
                   # do the test
+                  if (ncol(geno)==0){
+                    res[[i]] <- NULL
+                  } else {
                   assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test)
 
                   res[[i]] <- cbind(var.info, n.obs, freq, assoc)
-                  
+                  }
                   if (verbose & n.iter > 1 & i %% set.messages == 0) {
                       message(paste("Iteration", i , "of", n.iter, "completed"))
                   }
