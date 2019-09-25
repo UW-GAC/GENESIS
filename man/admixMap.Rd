@@ -50,6 +50,7 @@ scanAnnot <- ScanAnnotationDataFrame(data.frame(
 set.seed(4)
 nsamp <- nrow(scanAnnot)
 scanAnnot$pheno <- rnorm(nsamp, mean=0, sd=1)
+set.seed(5)
 scanAnnot$covar <- sample(0:1, nsamp, replace=TRUE)
 
 genoDataList <- lapply(gdsList, GenotypeData, scanAnnot=scanAnnot)

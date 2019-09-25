@@ -94,6 +94,7 @@ gdsfile <- seqExampleFileName("gds")
 gds <- seqOpen(gdsfile)
 
 # simulate some phenotype data
+set.seed(4)
 data(pedigree)
 pedigree <- pedigree[match(seqGetData(gds, "sample.id"), pedigree$sample.id),]
 pedigree$outcome <- rnorm(nrow(pedigree))
@@ -118,6 +119,7 @@ gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
 gds <- GdsGenotypeReader(filename = gdsfile)
 
 # simulate some phenotype data
+set.seed(4)
 pheno <- data.frame(scanID=getScanID(gds),
                     outcome=rnorm(nscan(gds)))
 

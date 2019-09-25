@@ -150,6 +150,7 @@ gdsfile <- seqExampleFileName("gds")
 gds <- seqOpen(gdsfile)
 
 # simulate some phenotype data
+set.seed(4)
 data(pedigree)
 pedigree <- pedigree[match(seqGetData(gds, "sample.id"), pedigree$sample.id),]
 pedigree$outcome <- rnorm(nrow(pedigree))
