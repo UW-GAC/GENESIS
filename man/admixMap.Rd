@@ -26,7 +26,17 @@ This function is used with local ancestry results such as those obtained from RF
 See the example for how one might set up the \code{admixDataList} object. List names will propagate to the output file.
 }
 
-\value{data frame with admixture mapping results}
+\value{A data.frame where each row refers to a different variant with the columns:
+    \item{variant.id}{The variant ID}
+    \item{chr}{The chromosome value}
+    \item{pos}{The base pair position}
+    \item{n.obs}{The number of samples with non-missing genotypes}
+    \item{*.freq}{The estimated frequency of alleles derived from each ancestry at that variant}
+    \item{*.Est}{The effect size estimate for each additional copy of an allele derived from each ancestry, relative to the reference ancestry}
+    \item{*.SE}{The estimated standard error of the effect size estimate for each ancestry}
+    \item{Joint.Stat}{The chi-square Wald test statistic for the joint test of all local ancestry terms}
+    \item{Joint.pval}{The Wald p-value for the joint test of all local ancestry terms}
+}
 
 \author{Matthew P. Conomos, Lisa Brown, Stephanie M. Gogarten, Tamar Sofer, Ken Rice, Chaoyu Yu}
 
