@@ -35,7 +35,6 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
     if (test == "Score"){
         Gtilde <- calcGtilde(nullmod, G)
         res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)
-    }
     
     if (test == "SAIGE"){
         Gtilde <- calcGtilde(nullmod, G)
