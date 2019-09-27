@@ -7,7 +7,7 @@
 
 
 # E an environmental variable for optional GxE interaction analysis. 
-testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "SAIGE"), GxE.return.cov = FALSE){
+testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), SPA = FALSE, GxE.return.cov = FALSE){
     test <- match.arg(test)
 
     G <- .genoAsMatrix(nullmod, G)
@@ -31,19 +31,30 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald", "S
     if (test == "Wald" & !is.null(E)){
         res <- .testGenoSingleVarWaldGxE(nullmod, G, E, GxE.return.cov.mat=GxE.return.cov)
     }
+
+    if(SPA & nullmod$family$family != "binomial"){
+        SPA <- FALSE
+        message("Saddlepoint approximation (SPA) can only be used for binomial family; using score test instead.")
+    }
     
     if (test == "Score"){
         Gtilde <- calcGtilde(nullmod, G)
         res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)
-    
-    if (test == "SAIGE"){
-        Gtilde <- calcGtilde(nullmod, G)
-        res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)
-        saip <- SAIGE_Pvalue(nullmod,res,G)$PVAL.saige
-        SAIGE_P <- res$Score.pval
-        SAIGE_P[!is.na(saip)] <- saip[!is.na(saip)]
-        res$SAIGE.pval <- SAIGE_P
+
+        # saddle point approximation
+        if(SPA){
+            res <- SPA_pval(score.result = res, nullmod = nullmod, G = G, pval.thresh = 0.05)
+        }
     }
+    
+    # if (test == "SAIGE"){
+    #     Gtilde <- calcGtilde(nullmod, G)
+    #     res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)
+    #     saip <- SAIGE_Pvalue(nullmod,res,G)$PVAL.saige
+    #     SAIGE_P <- res$Score.pval
+    #     SAIGE_P[!is.na(saip)] <- saip[!is.na(saip)]
+    #     res$SAIGE.pval <- SAIGE_P
+    # }
     
     if (test == "BinomiRare"){
         if (nullmod$family$mixedmodel) stop("BinomiRare should be used for IID observations.")
