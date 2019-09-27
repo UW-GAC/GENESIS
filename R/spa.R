@@ -29,8 +29,14 @@ SPA_pval <- function(score.result, nullmod, G, pval.thresh = 0.05){
 		for(i in idx){
 			# extract the genotypes
 			g <- G[,i]
-			# "flip" g if the minor allele is the reference allele
-			if(mean(g) > 1){ g <- 2-g }
+			# get the score
+			s <- score.result$Score[i]
+
+			# "flip" g and s if the minor allele is the reference allele
+			if(mean(g) > 1){ 
+				g <- 2-g 
+				s <- -s
+			}
 			# identify which elements in g are hom ref
 			homRefSet <- which(g == 0)
 
@@ -45,7 +51,7 @@ SPA_pval <- function(score.result, nullmod, G, pval.thresh = 0.05){
 
 			# get inputs to SPAtest function
 			g <- sqrt(r)*g
-			qtilde <- as.numeric(score.result$Score[i] + crossprod(g, mu))
+			qtilde <- as.numeric(s + crossprod(g, mu))
 
 			# compute SPA p-value
 			if(length(homRefSet)/length(g) < 0.5){
