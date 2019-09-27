@@ -7,11 +7,12 @@
 
 
 # E an environmental variable for optional GxE interaction analysis. 
-testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), SPA = FALSE, GxE.return.cov = FALSE){
+testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA", "Wald"), GxE.return.cov = FALSE){
     test <- match.arg(test)
 
     G <- .genoAsMatrix(nullmod, G)
 
+    # checks on test 
     if (test == "Wald" & nullmod$family$family != "gaussian"){
     	test <- "Score"
     	message("Cannot use Wald test for non-guassian families, using the score test instead.")
@@ -33,18 +34,22 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), S
     }
 
     if(SPA & nullmod$family$family != "binomial"){
-        SPA <- FALSE
-        message("Saddlepoint approximation (SPA) can only be used for binomial family; using score test instead.")
+        test <- "Score"
+        message("Saddlepoint approximation (SPA) can only be used for binomial family; using Score test instead.")
     }
-    
-    if (test == "Score"){
+
+
+    # run the test
+    if(test == "Score"){
         Gtilde <- calcGtilde(nullmod, G)
         res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)
+    }
 
+    if(test == "Score.SPA"){
+        Gtilde <- calcGtilde(nullmod, G)
+        res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)
         # saddle point approximation
-        if(SPA){
-            res <- SPA_pval(score.result = res, nullmod = nullmod, G = G, pval.thresh = 0.05)
-        }
+        res <- SPA_pval(score.result = res, nullmod = nullmod, G = G, pval.thresh = 0.05)
     }
     
     # if (test == "SAIGE"){

@@ -4,13 +4,13 @@ SPA_pval <- function(score.result, nullmod, G, pval.thresh = 0.05){
 	if (!requireNamespace("SPAtest")) stop("package 'SPAtest' must be installed to calculate SPA p-values")
 	expit <- function(x){exp(x)/(1+exp(x))}
 
-	# add columns to score.results
-	score.result$SPA.pval <- NA_real_
-	score.result$SPA.converged <- NA_real_
-
 	# index for variants with Score.pval < pval.thresh
 	# only bother running SPA on these variants
 	idx <- which(score.result$Score.pval <= pval.thresh)
+
+	# update columns in score.result
+	setnames(score.result, "Score.pval", "SPA.pval")
+	score.result$SPA.converged <- NA
 
 	if(length(idx) > 0 ){
 
@@ -63,8 +63,10 @@ SPA_pval <- function(score.result, nullmod, G, pval.thresh = 0.05){
 	        }
 
 	        # add in results
-	        score.result$SPA.pval[i] <- tmp$p.value
 	        score.result$SPA.converged[i] <- tmp$Is.converge
+	        if(tmp$Is.converge){
+	        	score.result$SPA.pval[i] <- tmp$p.value
+	        }
 		}
 	}
 
