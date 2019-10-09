@@ -184,7 +184,7 @@ setMethod("makeSparseMatrix",
             # samples in the cluster
             ids <- names(mem[mem == i])
             # create a table for all pairs in the cluster
-            allpairs <- as.data.table(expand.grid(ID2 = ids, ID1 = ids))
+            allpairs <- as.data.table(expand.grid(ID2 = ids, ID1 = ids, stringsAsFactors=FALSE))
             
             # merge
             sub <- x[ID1 %in% ids & ID2 %in% ids][allpairs, on = c("ID1", "ID2")]
@@ -309,7 +309,7 @@ setMethod("kingToMatrix",
 .readKing <- function(x, estimator) {
     cols <- intersect(names(fread(x, nrows=0)), c("ID1", "ID2", estimator))
     if (!(estimator %in% cols)) stop("Column ", estimator, " requested but not present in file")
-    fread(x, select=cols)
+    fread(x, select=cols, colClasses=list(character=c("ID1", "ID2")))
 }
 
 .kingToMatrix <- function(file.king, estimator = c("PropIBD", "Kinship"), sample.include = NULL, thresh = NULL, verbose = TRUE){
