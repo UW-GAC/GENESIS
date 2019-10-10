@@ -19,6 +19,15 @@ test_that("design matrix from data.frame", {
     expect_message(createDesignMatrix(dat, outcome="a", covars="d"), "removed from the model")
 })
 
+test_that("design matrix with missing reference level", {
+    set.seed(20); a <- rnorm(10)
+    dat <- data.frame(a=a,
+                      b=c("m", "n", rep("x", 4), rep("y", 4)))
+    dat <- dat[3:10,]
+    nm <- fitNullModel(dat, outcome="a", covars="b", verbose=FALSE)
+    expect_equal(colnames(nm$model.matrix)[2], "by")
+})
+
 test_that("null model", {
     set.seed(22); a <- rnorm(10)
     dat <- data.frame(sample.id=letters[1:10],
