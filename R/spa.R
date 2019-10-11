@@ -10,13 +10,21 @@ SPA_pval <- function(score.result, nullmod, G, pval.thresh = 0.05){
 
 	# update columns in score.result
 	setnames(score.result, "Score.pval", "SPA.pval")
-	score.result$SPA.converged <- NA
+        if (nrow(score.result) > 0) {
+            score.result$SPA.converged <- NA
+        } else {
+            return(cbind(score.result, data.frame(SPA.converged=logical())))
+        }
 
 	if(length(idx) > 0 ){
 
 		# calculate the fitted values  from the null model; 
-		# expit(eta) = expit(X\beta + Zb)
-		mu <- as.vector(expit(nullmod$workingY - nullmod$resid.conditional))
+                # expit(eta) = expit(X\beta + Zb)
+                if (nullmod$family$mixedmodel) {
+                    mu <- as.vector(expit(nullmod$workingY - nullmod$resid.conditional))
+                } else {
+                    mu <- as.vector(expit(nullmod$workingY - nullmod$resid.marginal))
+                }
 
 		# W is the diagonal of a matrix
 		W <- mu*(1-mu)

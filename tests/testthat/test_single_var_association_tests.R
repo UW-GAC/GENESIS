@@ -116,12 +116,25 @@ test_that("GxE", {
     expect_message(test.gxe <- testGenoSingleVar(nullmod, G = geno, E = dat$X[,3,drop=FALSE], test = "Score"))
 })
 
-test_that("singleVarTest - SAIGE", {
+test_that("singleVarTest - SPA", {
     n <- 100
     dat <- .testNullInputs(n, binary=TRUE)
     geno <- .testGenoMatrix(n)
     
     nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
-    test.score <- testGenoSingleVar(nullmod, G = geno, test = "SAIGE")
-    expect_true(max(test.score$Score.pval - test.score$SAIGE.pval) < 0.01)
+    test.score <- testGenoSingleVar(nullmod, G = geno, test = "Score")
+    test.spa <- testGenoSingleVar(nullmod, G = geno, test = "Score.SPA")
+    expect_true(max(test.score$Score.pval - test.spa$SPA.pval) < 0.01)
+})
+
+test_that("SPA_pval works with empty input", {
+    n <- 100
+    dat <- .testNullInputs(n, binary=TRUE)
+    geno <- .testGenoMatrix(n)
+    
+    nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
+    empty <- data.frame(Score=numeric(), Score.SE=numeric(), Score.Stat=numeric(), Score.pval=numeric())
+    empty.G <- matrix(nrow=n, ncol=0)
+    test.spa <- SPA_pval(score.result=empty, nullmod=nullmod, G=empty.G)
+    expect_equal(nrow(test.spa), 0)
 })

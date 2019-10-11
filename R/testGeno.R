@@ -33,7 +33,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
         res <- .testGenoSingleVarWaldGxE(nullmod, G, E, GxE.return.cov.mat=GxE.return.cov)
     }
 
-    if(SPA & nullmod$family$family != "binomial"){
+    if(test == "Score.SPA" & nullmod$family$family != "binomial"){
         test <- "Score"
         message("Saddlepoint approximation (SPA) can only be used for binomial family; using Score test instead.")
     }
