@@ -1,6 +1,6 @@
 ### new SPA function
 
-SPA_pval <- function(score.result, nullmod, G, pval.thresh = 0.05){
+SPA_pval <- function(score.result, nullmod, G, pval.thresh = 1){
 	if (!requireNamespace("SPAtest")) stop("package 'SPAtest' must be installed to calculate SPA p-values")
 	expit <- function(x){exp(x)/(1+exp(x))}
 

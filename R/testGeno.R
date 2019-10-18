@@ -49,7 +49,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
         Gtilde <- calcGtilde(nullmod, G)
         res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)
         # saddle point approximation
-        res <- SPA_pval(score.result = res, nullmod = nullmod, G = G, pval.thresh = 0.05)
+        res <- SPA_pval(score.result = res, nullmod = nullmod, G = G)
     }
     
     # if (test == "SAIGE"){
