@@ -159,8 +159,6 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
         res[g, "Joint.Stat"] <- tryCatch(sqrt(as.vector(crossprod(betas,
                                                    crossprod(GPG, betas))/RSS)), 
                                          error = function(e) { NA })
-
-        #### make each of these t(GPY) %*% GPGinv %*% GPY
     }
     
     res <- as.data.frame(res)
