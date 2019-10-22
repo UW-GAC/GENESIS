@@ -11,10 +11,10 @@
 
 \usage{
 \S4method{assocTestSingle}{SeqVarIterator}(gdsobj, null.model, test=c("Score", "Score.SPA"),
-                GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE,
+                recalc.pval.thresh=1, GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE,
                 genome.build=c("hg19", "hg38"), verbose=TRUE)
 \S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model, test=c("Score", "Score.SPA"),
-                GxE=NULL, male.diploid=TRUE, verbose=TRUE)
+                recalc.pval.thresh=1, GxE=NULL, male.diploid=TRUE, verbose=TRUE)
 }
 
 \arguments{
@@ -22,6 +22,7 @@
     \item{null.model}{A null model object returned by \code{\link{fitNullModel}}.}
     \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Score"} (default) and \code{"Score.SPA"}; \code{"Score.SPA"} can only be used when the family of the null model fit with \code{\link{fitNullModel}} is binomial.}
     %\item{impute.geno}{A logical indicator of whether sporadic missing genotype values should be mean imputed. The default is TRUE. See 'Details' for further information.}
+    \item{recalc.pval.thresh}{If test is not "Score", only recalculate p-values below this threshold.}
     \item{GxE}{A vector of character strings specifying the names of the variables for which a genotype interaction term should be included. If \code{NULL} (default) no genotype interactions are included. See 'Details' for further information.}
     %\item{ivar.return.betaCov}{Logical indicator of whether the estimated covariance matrix of the effect size estimates (betas) for the genotype and genotype interaction terms should be returned; the default is FALSE.}
     \item{sparse}{Logical indicator of whether to read genotypes as sparse Matrix objects; the default is \code{TRUE}. Set this to \code{FALSE} if the alternate allele dosage of the genotypes in the test are not expected to be mostly 0.}

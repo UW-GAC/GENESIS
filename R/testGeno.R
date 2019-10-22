@@ -7,7 +7,8 @@
 
 
 # E an environmental variable for optional GxE interaction analysis. 
-testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA"), GxE.return.cov = FALSE){
+testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA"),
+                              recalc.pval.thresh = 1, GxE.return.cov = FALSE){
     test <- match.arg(test)
 
     G <- .genoAsMatrix(nullmod, G)
@@ -35,7 +36,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
         RSS0 <- as.numeric(crossprod(nullmod$Ytilde))
         res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid, RSS0)
         # saddle point approximation
-        res <- SPA_pval(score.result = res, nullmod = nullmod, G = G, pval.thresh = 1)
+        res <- SPA_pval(score.result = res, nullmod = nullmod, G = G, pval.thresh = recalc.pval.thresh)
     }
     
     if (test == "BinomiRare"){
@@ -88,7 +89,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     res <- data.frame(Score = score, Score.SE = score.SE, Score.Stat = Stat, 
                       Score.pval = pchisq(Stat^2, df = 1, lower.tail = FALSE),
                       Est = score/GPG, Est.SE = 1/score.SE, 
-                      PVE = (Stat^2)/RSS0 # RSS0 = (n-k) when gaussian; not when binary
+                      PVE = (Stat^2)/RSS0) # RSS0 = (n-k) when gaussian; not when binary
     
     return(res)
 }

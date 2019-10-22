@@ -7,20 +7,20 @@
 
 testVariantSet <- function( nullmod, G, weights, 
                             test = c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKATO"),
-                            burden.test = c("Score"), 
+                            # burden.test = c("Score"), 
                             neig = 200, ntrace = 500, 
                             rho = seq(from = 0, to = 1, by = 0.1)){
                            # pval.method = c("davies", "kuonen", "liu"),
                            # return.scores = FALSE, return.scores.cov = FALSE){
 
     test <- match.arg(test)
-    burden.test <- match.arg(burden.test)
+    # burden.test <- match.arg(burden.test)
     # pval.method <- match.arg(pval.method)
 
     G <- .genoAsMatrix(nullmod, G)
 
     if (test == "Burden") {
-        out <- .testVariantSetBurden(nullmod, G, weights, burden.test)
+        out <- .testVariantSetBurden(nullmod, G, weights, burden.test = "Score")
     }
     if (test == "SKAT") {
         out <- .testVariantSetSKAT(nullmod, G, weights, neig = Inf, ntrace = Inf)
