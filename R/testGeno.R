@@ -17,6 +17,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     if (!is.null(E)){
         message("Performing GxE test")
         res <- .testGenoSingleVarWaldGxE(nullmod, G, E, GxE.return.cov.mat=GxE.return.cov)
+        return(res)
     }
  
     if(test == "Score.SPA" & nullmod$family$family != "binomial"){
