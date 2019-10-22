@@ -6,7 +6,7 @@ Title: GENetic EStimation and Inference in Structured samples
 Version: 2.15.6
 Date: 2019-08-28
 Author: Matthew P. Conomos, Stephanie M. Gogarten,
-	Lisa Brown, Han Chen, Thomas Lumley, Ken Rice, Tamar Sofer, Timothy Thornton, Chaoyu Yu, Wei Zhou
+	Lisa Brown, Han Chen, Thomas Lumley, Ken Rice, Tamar Sofer, Timothy Thornton, Chaoyu Yu
 Maintainer: Stephanie M. Gogarten <sdmorris@uw.edu>
 Description: The GENESIS package provides methodology for estimating,
         inferring, and accounting for population and pedigree structure
