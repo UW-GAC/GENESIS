@@ -7,7 +7,7 @@
 
 testVariantSet <- function( nullmod, G, weights, 
                             test = c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKATO"),
-                            burden.test = c("Score", "Wald"), 
+                            burden.test = c("Score"), 
                             neig = 200, ntrace = 500, 
                             rho = seq(from = 0, to = 1, by = 0.1)){
                            # pval.method = c("davies", "kuonen", "liu"),
@@ -55,14 +55,15 @@ testVariantSet <- function( nullmod, G, weights,
     
     # adjust burden for covariates and random effects
     Gtilde <- calcGtilde(nullmod, burden)
+    RSS0 <- as.numeric(crossprod(nullmod$Ytilde))
     
     if (burden.test == "Score") {
-        out <- .testGenoSingleVarScore(Gtilde, G = burden, resid = nullmod$resid) 
+        out <- .testGenoSingleVarScore(Gtilde, G = burden, resid = nullmod$resid, RSS0 = RSS0) 
     }
-    if (burden.test == "Wald"){
-        out <- .testGenoSingleVarWald(Gtilde, Ytilde = nullmod$Ytilde,
-                                      n = length(nullmod$Ytilde), k = ncol(nullmod$model.matrix))
-    }
+    # if (burden.test == "Wald"){
+    #     out <- .testGenoSingleVarWald(Gtilde, Ytilde = nullmod$Ytilde,
+    #                                   n = length(nullmod$Ytilde), k = ncol(nullmod$model.matrix))
+    # }
     return(out)
 }
 

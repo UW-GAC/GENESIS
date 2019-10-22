@@ -4,7 +4,7 @@ setGeneric("assocTestSingle", function(gdsobj, ...) standardGeneric("assocTestSi
 ## do we want to make imputing to the mean optional?
 setMethod("assocTestSingle",
           "SeqVarIterator",
-          function(gdsobj, null.model, test=c("Score", "Score.SPA", "Wald"), GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), verbose=TRUE) {
+          function(gdsobj, null.model, test=c("Score", "Score.SPA"), GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), verbose=TRUE) {
               test <- match.arg(test)
 
               # don't use sparse matrices for imputed dosages
@@ -76,7 +76,7 @@ setMethod("assocTestSingle",
 
 setMethod("assocTestSingle",
           "GenotypeIterator",
-          function(gdsobj, null.model, test=c("Score", "Score.SPA", "Wald"), GxE=NULL, male.diploid=TRUE, verbose=TRUE) {
+          function(gdsobj, null.model, test=c("Score", "Score.SPA"), GxE=NULL, male.diploid=TRUE, verbose=TRUE) {
               test <- match.arg(test)
 
               # filter samples to match null model
