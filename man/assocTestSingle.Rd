@@ -59,9 +59,9 @@
     \item{Score.SE}{The estimated standard error of the Score}
     \item{Score.Stat}{The score Z test statistic}
     \item{Score.pval}{The score p-value}
-    \item{Est.approx}{An approximation of the effect size estimate for each additional copy of the alternate allele}
-    \item{Est.SE.approx}{An approximation of the standard error of the effect size estimate}
-    \item{PVE.approx}{An approximation of the proportion of phenotype variance explained}
+    \item{Est}{An approximation of the effect size estimate for each additional copy of the alternate allele}
+    \item{Est.SE}{An approximation of the standard error of the effect size estimate}
+    \item{PVE}{An approximation of the proportion of phenotype variance explained}
     % If \code{test} is \code{"Wald"} and \code{GxE} is \code{NULL}:
     % \item{Est}{The effect size estimate for each additional copy of the alternate allele}
     % \item{Est.SE}{The estimated standard error of the effect size estimate}    

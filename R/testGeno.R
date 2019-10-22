@@ -87,8 +87,8 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     
     res <- data.frame(Score = score, Score.SE = score.SE, Score.Stat = Stat, 
                       Score.pval = pchisq(Stat^2, df = 1, lower.tail = FALSE),
-                      Est.approx = score/GPG, Est.SE.appox = 1/score.SE, 
-                      PVE.approx = (Stat^2)/RSS0 # RSS0 = (n-k) when gaussian; not when binary
+                      Est = score/GPG, Est.SE = 1/score.SE, 
+                      PVE = (Stat^2)/RSS0 # RSS0 = (n-k) when gaussian; not when binary
     
     return(res)
 }

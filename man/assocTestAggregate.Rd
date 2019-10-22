@@ -84,9 +84,9 @@
     \item{Score.SE}{The estimated standard error of the Score}
     \item{Score.Stat}{The score Z test statistic}
     \item{Score.pval}{The score p-value}
-    \item{Est.approx}{An approximation of the effect size estimate for each additional unit of burden}
-    \item{Est.SE.approx}{An approximation of the standard error of the effect size estimate}
-    \item{PVE.approx}{An approximation of the proportion of phenotype variance explained}
+    \item{Est}{An approximation of the effect size estimate for each additional unit of burden}
+    \item{Est.SE}{An approximation of the standard error of the effect size estimate}
+    \item{PVE}{An approximation of the proportion of phenotype variance explained}
     % If \code{burden.test} is \code{"Wald"}:
     % \item{Est}{The effect size estimate for a one unit increase in the burden value}
     % \item{Est.SE}{The estimated standard error of the effect size estimate}    
