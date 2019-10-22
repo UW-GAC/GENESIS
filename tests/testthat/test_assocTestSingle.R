@@ -123,7 +123,7 @@ test_that("assocTestSingle - GxE", {
     sampleData(svd) <- tmp
     iterator <- SeqVarBlockIterator(svd, variantBlock=1000, verbose=FALSE)
     nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age", "env"), verbose=FALSE)
-    assoc <- assocTestSingle(iterator, nullmod, test="Wald", GxE="env", verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, GxE="env", verbose=FALSE)
     expect_true(all(c("Est.G:envb", "SE.G:envb", "GxE.Stat") %in% names(assoc)))
     seqClose(svd)
 })
