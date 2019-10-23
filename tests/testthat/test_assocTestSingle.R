@@ -16,12 +16,26 @@ test_that("assocTestSingle", {
 test_that("assocTestSingle - binary", {
     svd <- .testData()
     iterator <- SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
-    nullmod <- fitNullModel(iterator, outcome="status", covars=c("sex", "age"), verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="status", covars=c("sex", "age"), family="binomial", verbose=FALSE)
     assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
     seqResetFilter(svd, verbose=FALSE)
     freq <- alleleFrequency(svd)
     keep <- freq > 0 & freq < 1
     expect_equal(unique(assoc$variant.id), seqGetData(svd, "variant.id")[keep])
+    seqClose(svd)
+})
+
+test_that("assocTestSingle - SPA", {
+    svd <- .testData()
+    grm <- .testGRM(svd)
+    iterator <- SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="status", covars=c("sex", "age"), cov.mat=grm, family="binomial", verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, test="Score", verbose=FALSE)
+    resetIterator(iterator, verbose=FALSE)
+    assoc2 <- assocTestSingle(iterator, nullmod, test="Score.SPA", verbose=FALSE)
+    nospa <- is.na(assoc2$SPA.converged)
+    expect_equal(assoc$Score.pval[nospa], assoc2$SPA.pval[nospa])
+    expect_true(max(assoc$Score.pval - assoc2$SPA.pval) < 0.02)
     seqClose(svd)
 })
 
@@ -109,7 +123,7 @@ test_that("assocTestSingle - GxE", {
     sampleData(svd) <- tmp
     iterator <- SeqVarBlockIterator(svd, variantBlock=1000, verbose=FALSE)
     nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age", "env"), verbose=FALSE)
-    assoc <- assocTestSingle(iterator, nullmod, test="Wald", GxE="env", verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, GxE="env", verbose=FALSE)
     expect_true(all(c("Est.G:envb", "SE.G:envb", "GxE.Stat") %in% names(assoc)))
     seqClose(svd)
 })

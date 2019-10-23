@@ -2,39 +2,46 @@
 ## function that gets an n\times p matrix of p genotypes of n individuals, and a null model, and tests the genotypes associations with the outcomes. 
 ## Genetic data are always assumed complete. 
 ## Types of tests: 
-## Single variant: Wald, score, BinomiRare, interaction. 
+## Single variant: Score, Score.SPA, BinomiRare, interaction. 
 ## Variant set: SKAT, burden, SKAT-O. Multiple types of p-values. Default: Davis with Koenen if does not converge. 
 
 
 # E an environmental variable for optional GxE interaction analysis. 
-testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), GxE.return.cov = FALSE){
+testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA"),
+                              recalc.pval.thresh = 1, GxE.return.cov = FALSE){
     test <- match.arg(test)
 
     G <- .genoAsMatrix(nullmod, G)
 
-    if (test == "Wald" & nullmod$family$family != "gaussian"){
-    	test <- "Score"
-    	message("Cannot use Wald test for non-guassian families, using the score test instead.")
-    }
-    
-    if (test == "Wald" & is.null(E)){
-        Gtilde <- calcGtilde(nullmod, G)
-        res <- .testGenoSingleVarWald(Gtilde, nullmod$Ytilde,
-                                      n=length(nullmod$Ytilde), k=ncol(nullmod$model.matrix))
-    }
-    
-    if (test == "Score" & !is.null(E)){
-    	test <- "Wald"
-    	message("Cannot use Score test for GxE, using the Wald test instead.")
-    }
-        
-    if (test == "Wald" & !is.null(E)){
+    # checks on test
+    if (!is.null(E)){
+        message("Performing GxE test")
         res <- .testGenoSingleVarWaldGxE(nullmod, G, E, GxE.return.cov.mat=GxE.return.cov)
+        return(res)
     }
-    
-    if (test == "Score"){
+ 
+    if(test == "Score.SPA" & nullmod$family$family != "binomial"){
+        test <- "Score"
+        message("Saddlepoint approximation (SPA) can only be used for binomial family; using Score test instead.")
+    }
+
+    # run the test
+    if(test == "Score"){
         Gtilde <- calcGtilde(nullmod, G)
-        res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)
+        if(is.null(nullmod$RSS0)){
+            nullmod$RSS0 <- as.numeric(crossprod(nullmod$Ytilde))
+        }
+        res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid, nullmod$RSS0)
+    }
+
+    if(test == "Score.SPA"){
+        Gtilde <- calcGtilde(nullmod, G)
+        if(is.null(nullmod$RSS0)){
+            nullmod$RSS0 <- as.numeric(crossprod(nullmod$Ytilde))
+        }
+        res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid, nullmod$RSS0)
+        # saddle point approximation
+        res <- SPA_pval(score.result = res, nullmod = nullmod, G = G, pval.thresh = recalc.pval.thresh)
     }
     
     if (test == "BinomiRare"){
@@ -78,31 +85,34 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), G
 
 
 
-.testGenoSingleVarScore <- function(Gtilde, G, resid){
+.testGenoSingleVarScore <- function(Gtilde, G, resid, RSS0){
     GPG <- colSums(Gtilde^2) # vector of G^T P G (for each SNP)
+    score.SE <- sqrt(GPG)
     score <- as.vector(crossprod(G, resid)) # G^T P Y
-    Stat <- score/sqrt(GPG)
+    Stat <- score/score.SE
     
-    res <- data.frame(Score = score, Score.SE = sqrt(GPG), Score.Stat = Stat, 
-                      Score.pval = pchisq(Stat^2, df = 1, lower.tail = FALSE) )
+    res <- data.frame(Score = score, Score.SE = score.SE, Score.Stat = Stat, 
+                      Score.pval = pchisq(Stat^2, df = 1, lower.tail = FALSE),
+                      Est = score/GPG, Est.SE = 1/score.SE, 
+                      PVE = (Stat^2)/RSS0) # RSS0 = (n-k) when gaussian; not when binary
     
     return(res)
 }
 
 
 
-.testGenoSingleVarWald <- function(Gtilde, Ytilde, n, k){
-    GPG <- colSums(Gtilde^2) # vector of G^T P G (for each SNP)
-    GPY <- as.vector(crossprod(Gtilde, Ytilde)) # vector of G^T P Y (for each SNP)
-    beta <- GPY/GPG
-    sY2 <- sum(Ytilde^2)
-    RSS <- as.numeric((sY2 - GPY * beta)/(n - k - 1))
-    Vbeta <- RSS/GPG
-    Stat <- beta/sqrt(Vbeta)
-    res <- data.frame(Est = beta, Est.SE = sqrt(Vbeta), Wald.Stat = Stat, 
-                      Wald.pval = pchisq(Stat^2, df = 1, lower.tail = FALSE))
-    return(res)
-}
+# .testGenoSingleVarWald <- function(Gtilde, Ytilde, n, k){
+#     GPG <- colSums(Gtilde^2) # vector of G^T P G (for each SNP)
+#     GPY <- as.vector(crossprod(Gtilde, Ytilde)) # vector of G^T P Y (for each SNP)
+#     beta <- GPY/GPG
+#     sY2 <- sum(Ytilde^2)
+#     RSS <- as.numeric((sY2 - GPY * beta)/(n - k - 1))
+#     Vbeta <- RSS/GPG
+#     Stat <- beta/sqrt(Vbeta)
+#     res <- data.frame(Est = beta, Est.SE = sqrt(Vbeta), Wald.Stat = Stat, 
+#                       Wald.pval = pchisq(Stat^2, df = 1, lower.tail = FALSE))
+#     return(res)
+# }
 
 
 .testGenoSingleVarWaldGxE <- function(nullmod, G, E, GxE.return.cov.mat = FALSE){
@@ -112,7 +122,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), G
     v <- ncol(E) + 1
     n <- length(nullmod$Ytilde)
     k <- ncol(nullmod$model.matrix)
-    sY2 <- sum(nullmod$Ytilde^2)
+    sY2 <- as.numeric(crossprod(nullmod$Ytilde))
     
     if (GxE.return.cov.mat) {
         res.Vbetas <- vector(mode = "list", length = p)
@@ -127,9 +137,6 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Wald"), G
                   dimnames = list(NULL, 
                                   c(paste0("Est.", var.names), paste0("SE.", var.names), "GxE.Stat", "Joint.Stat" ) ))
 
-    # what is this supposed to do?
-    #if (ncol(E) == 1) res[,"cov.G.E"] <- NA
-    
     for (g in 1:p) {
         Gtilde <- calcGtilde(nullmod, G[, g] * intE)
         GPG <- crossprod(Gtilde)
