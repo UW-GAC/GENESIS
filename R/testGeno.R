@@ -28,13 +28,21 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     # run the test
     if(test == "Score"){
         Gtilde <- calcGtilde(nullmod, G)
-        RSS0 <- as.numeric(crossprod(nullmod$Ytilde))
+        if(is.null(nullmod$RSS0)){
+            RSS0 <- as.numeric(crossprod(nullmod$Ytilde))
+        }else{
+            RSS0 <- nullmod$RSS0
+        }
         res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid, RSS0)
     }
 
     if(test == "Score.SPA"){
         Gtilde <- calcGtilde(nullmod, G)
-        RSS0 <- as.numeric(crossprod(nullmod$Ytilde))
+        if(is.null(nullmod$RSS0)){
+            RSS0 <- as.numeric(crossprod(nullmod$Ytilde))
+        }else{
+            RSS0 <- nullmod$RSS0
+        }
         res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid, RSS0)
         # saddle point approximation
         res <- SPA_pval(score.result = res, nullmod = nullmod, G = G, pval.thresh = recalc.pval.thresh)

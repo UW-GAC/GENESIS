@@ -27,7 +27,10 @@ nullModelTestPrep <- function(nullmod){
         # resid <- nullmod$resid.marginal*C^2
     }
 
-    return(list(Ytilde = Ytilde, resid = resid, CX = CX, CXCXI = CXCXI))
+    # compute residual sum of squares under the null model
+    RSS0 <- as.numeric(crossprod(Ytilde))
+
+    return(list(Ytilde = Ytilde, resid = resid, CX = CX, CXCXI = CXCXI, RSS0 = RSS0))
     # return(list(Ytilde = Ytilde, resid = resid, CX = CX, CXCXI = CXCXI, qr = qrmod))
 }
 
