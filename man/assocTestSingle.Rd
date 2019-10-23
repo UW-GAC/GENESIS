@@ -14,7 +14,7 @@
                 recalc.pval.thresh=1, GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE,
                 genome.build=c("hg19", "hg38"), verbose=TRUE)
 \S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model, test=c("Score", "Score.SPA"),
-                recalc.pval.thresh=1, GxE=NULL, male.diploid=TRUE, verbose=TRUE)
+                recalc.pval.thresh=0.05, GxE=NULL, male.diploid=TRUE, verbose=TRUE)
 }
 
 \arguments{
@@ -89,7 +89,7 @@
     Zhou, W., Nielsen, J. B., Fritsche, L. G., Dey, R., Gabrielsen, M. E., Wolford, B. N., ... & Bastarache, L. A. (2018). Efficiently controlling for case-control imbalance and sample relatedness in large-scale genetic association studies. Nature genetics, 50(9), 1335.
 }
 
-\author{Matthew P. Conomos, Stephanie M. Gogarten, Tamar Sofer, Ken Rice, Chaoyu Yu, Wei Zhou}
+\author{Matthew P. Conomos, Stephanie M. Gogarten, Tamar Sofer, Ken Rice, Chaoyu Yu}
 
 \seealso{
      \code{\link{fitNullModel}} for fitting the null mixed model needed as input to \code{assocTestSingle}.

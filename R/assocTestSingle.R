@@ -4,7 +4,7 @@ setGeneric("assocTestSingle", function(gdsobj, ...) standardGeneric("assocTestSi
 ## do we want to make imputing to the mean optional?
 setMethod("assocTestSingle",
           "SeqVarIterator",
-          function(gdsobj, null.model, test=c("Score", "Score.SPA"), recalc.pval.thresh=1, GxE=NULL,
+          function(gdsobj, null.model, test=c("Score", "Score.SPA"), recalc.pval.thresh=0.05, GxE=NULL,
                    sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), verbose=TRUE) {
               test <- match.arg(test)
 
