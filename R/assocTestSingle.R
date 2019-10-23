@@ -78,7 +78,7 @@ setMethod("assocTestSingle",
 
 setMethod("assocTestSingle",
           "GenotypeIterator",
-          function(gdsobj, null.model, test=c("Score", "Score.SPA"), recalc.pval.thresh=1, GxE=NULL,
+          function(gdsobj, null.model, test=c("Score", "Score.SPA"), recalc.pval.thresh=0.05, GxE=NULL,
                    male.diploid=TRUE, verbose=TRUE) {
               test <- match.arg(test)
 

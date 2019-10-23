@@ -11,7 +11,7 @@
 
 \usage{
 \S4method{assocTestSingle}{SeqVarIterator}(gdsobj, null.model, test=c("Score", "Score.SPA"),
-                recalc.pval.thresh=1, GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE,
+                recalc.pval.thresh=0.05, GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE,
                 genome.build=c("hg19", "hg38"), verbose=TRUE)
 \S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model, test=c("Score", "Score.SPA"),
                 recalc.pval.thresh=0.05, GxE=NULL, male.diploid=TRUE, verbose=TRUE)
@@ -33,6 +33,8 @@
 }
 
 \details{
+  All samples included in \code{null model} will be included in the association test, even if a different set of samples is present in the current filter for \code{gdsobj}.
+  
     The effect size estimate is for each copy of the alternate allele. For multiallelic variants, each alternate allele is tested separately.
     %When \code{impute.geno} is TRUE, sporadic missing genotype values are mean imputed using the minor allele frequency (MAF) calculated on all other samples at that SNP. When \code{impute.geno} is FALSE, samples with missing values for all of the SNP genotypes in the current SNP block are removed from the analysis for the block; this may significantly slow down computation time because many pre-computed matrices need to be re-computed each time the sample set changes.  Also note: when \code{impute.geno} is FALSE, sporadic missingness for a sample inside of a SNP block will lead to an error.
 

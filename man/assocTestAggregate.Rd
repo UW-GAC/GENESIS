@@ -51,6 +51,10 @@
     ranges of variants or selection of individual variants (ranges with
     width 1). See \code{\link{SeqVarIterator}} for more details.
   
+  All samples included in \code{null model} will be included in the
+  association test, even if a different set of samples is present in the
+  current filter for \code{gdsobj}.
+  
     The effect size estimate is for each copy of the alternate allele.
     For multiallelic variants, each alternate allele is tested separately.
 
