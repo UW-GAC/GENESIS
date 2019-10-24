@@ -22,6 +22,12 @@ testVariantSet <- function( nullmod, G, weights,
     if (test == "Burden") {
         out <- .testVariantSetBurden(nullmod, G, weights, burden.test = "Score")
     }
+    if (test == "BinomiRare") {
+        out <- .testVariantSetBurden(nullmod, G, weights, burden.test = "BinomiRare")
+    }
+    if (test == "CMP") {
+        out <- .testVariantSetBurden(nullmod, G, weights, burden.test = "CMP")
+    }
     if (test == "SKAT") {
         out <- .testVariantSetSKAT(nullmod, G, weights, neig = Inf, ntrace = Inf)
                                    # return.scores, return.scores.cov)

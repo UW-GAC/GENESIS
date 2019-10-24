@@ -11,10 +11,6 @@ import(gdsfmt)
 import(Matrix)
 import(data.table)
 import(foreach)
-import(survey)
-import(COMPoissonReg)
-import(poibin)
-import(SPAtest)
 
 importFrom(GWASTools,
            GdsGenotypeReader,

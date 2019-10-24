@@ -45,25 +45,15 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
         res <- SPA_pval(score.result = res, nullmod = nullmod, G = G, pval.thresh = recalc.pval.thresh)
     }
     
-    
-    if (test == "SAIGE"){
-      Gtilde <- calcGtilde(nullmod, G)
-      res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)
-      saip <- SAIGE_Pvalue(nullmod,res,G)$PVAL.saige
-      SAIGE_P <- res$Score.pval
-      SAIGE_P[!is.na(saip)] <- saip[!is.na(saip)]
-      res$SAIGE.pval <- SAIGE_P
-    }
-    
     if (test == "BinomiRare"){
-      if (nullmod$family$family != "binomial") stop("BinomiRare should be used for disease (binomial) outcomes.")
+      if (nullmod$family$family != "binomial") stop("BinomiRare can only be used for binomial family.")
       
       if (nullmod$family$mixedmodel) { ## if this is a mixed model, use conditional probabilities $
         phat <- expit(nullmod$workingY - nullmod$resid.conditional)    
       } else{ ## not a mixed model
         phat <- nullmod$fitted.values
       }
-      if (calc.score==TRUE){
+      if (calc.score){
         Gtilde <- calcGtilde(nullmod, G)
         score.pval <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)$Score.pval
       } else{
@@ -73,7 +63,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     }
     
     if (test == "CMP"){
-      if (calc.score==TRUE){
+      if (calc.score){
         Gtilde <- calcGtilde(nullmod, G)
         score.pval <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)$Score.pval
       } else{
@@ -93,7 +83,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
 
 
 .testGenoSingleVarCMP <- function(D, probs, G, score.pval=NULL){
-  #  if (!requireNamespace("COMPoissonReg")) stop("package 'COMPoissonReg' must be installed for the CBR test") ##already in pkg NAMESPACE
+  if (!requireNamespace("COMPoissonReg")) stop("package 'COMPoissonReg' must be installed for the CMP test")
   res <- data.frame(n.carrier = rep(NA, ncol(G)), n.D.carrier = NA, expected.n.D.carrier = NA, pval = NA) #, mid.pval = NA)
   
   for (i in seq(ncol(G))){
@@ -135,9 +125,8 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
 ### compute p-value for CMP test based on estimated lambda, nu, number of carriers, and nubmber of diseased carriers.
 ### returns both midp and not midp while we learn when each is better. 
 .calc_cmp_pval <- function(ncar, sum.d, lamhat, nuhat){ #, midp.type = "both"){
-  if (!requireNamespace("COMPoissonReg")) stop("package 'COMPoissonReg' must be installed for the CMP test")
-  prob.cur <- dcmp(sum.d + 1, lamhat, nuhat) 
-  d.cmp <- dcmp(0:ncar, lamhat, nuhat)
+  prob.cur <- COMPoissonReg::dcmp(sum.d + 1, lamhat, nuhat) 
+  d.cmp <- COMPoissonReg::dcmp(0:ncar, lamhat, nuhat)
   pval <- prob.cur + sum(d.cmp[d.cmp < prob.cur])
   # mid.pval <- pval-prob.cur/2
   #  pvals <- c(pval, mid.pval)
@@ -151,7 +140,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
 ## needs to be such that alt allele is minor allele, or the function checks for it, or a vector of 
 ## indicators or of frequencies would be provided. 
 .testGenoSingleVarBR <- function(D, probs, G, score.pval=NULL){ 
-  #  if (!requireNamespace("poibin")) stop("package 'poibin' must be installed for the BinomiRare test") ##already in pkg NAMESPACE
+  if (!requireNamespace("poibin")) stop("package 'poibin' must be installed for the BinomiRare test")
   res <- data.frame(n.carrier = rep(NA, ncol(G)), n.D.carrier = NA, expected.n.D.carrier = NA, pval = NA)
   
   for (i in seq(ncol(G))){
@@ -172,7 +161,6 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     } else{
       res$pval[i] <- .poibinMidp(n.carrier = res$n.carrier[i], n.D.carrier = res$n.D.carrier[i], prob.vec = cur.prob.vec)
     }
-    #  }
   }
   return(res)
 }
