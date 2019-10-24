@@ -149,3 +149,13 @@ test_that("all same number of relatives", {
     expect_equal(mypart$rels, as.character(seq(1,9,2)))
     expect_equal(mypart$unrels, as.character(seq(2,10,2)))
 })
+
+
+test_that("apply a function with empty results on large matrix", {
+    x <- Matrix(matrix(1, nrow=1000, ncol=2000, dimnames=list(1:1000,1:2000)))
+    MARGIN <- 1
+    FUN <- function(x){which(x < -1)}
+    selection <- list(1:1000, 1:2000)
+    tmp <- .apply(x, MARGIN, FUN, selection, maxelem=5e5)
+    expect_equal(length(tmp), 0)
+})

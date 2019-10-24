@@ -49,7 +49,10 @@ setMethod(".apply",
                   }
                   
                   # unlist the top level
-                  ans <- unlist(ans, recursive = FALSE)  
+                  ans <- unlist(ans, recursive = FALSE)
+                  if (length(ans) == 0){
+                      return(vector(mode(x[1,1]), length=0))
+                  }
                   
                   # simplify further if possible
                   return(simplify2array(ans))

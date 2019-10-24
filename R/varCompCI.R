@@ -1,4 +1,9 @@
 varCompCI <- function(nullMMobj, prop=TRUE){
+    # check for mixed model
+    if(!(nullMMobj$family$mixedmodel)){
+        stop("nullMMobj is not a mixed model; this calculation can not be performed")
+    }
+
     if(prop){
         if(nullMMobj$hetResid){ 
             stop("Estimates of proportional variance are not supported with heterogeneous group residual variances")

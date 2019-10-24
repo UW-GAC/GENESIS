@@ -2,15 +2,15 @@ setGeneric("assocTestAggregate", function(gdsobj, ...) standardGeneric("assocTes
 
 .match.arg <- function(test) {
     if (length(test) > 1) test <- NULL
-    match.arg(test, choices=c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKATO"))
+    match.arg(test, choices=c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKATO", "BinomiRare", "CMP"))
 }
 
 setMethod("assocTestAggregate",
           "SeqVarIterator",
           function(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
-                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO"),
-                   burden.test=c("Score", "Wald", "BinomiRare","CMP"),
+                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO", "BinomiRare", "CMP"),
+                   # burden.test=c("Score"),
                    # pval.method=c("davies", "kuonen", "liu"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
@@ -20,7 +20,7 @@ setMethod("assocTestAggregate",
 
               # check argument values
               test <- .match.arg(test)
-              burden.test <- match.arg(burden.test)
+              # burden.test <- match.arg(burden.test)
               # pval.method <- match.arg(pval.method)
 
               # don't use sparse matrices for imputed dosages
@@ -127,7 +127,7 @@ setMethod("assocTestAggregate",
 
                       # do the test
                       assoc <- testVariantSet(null.model, G=geno, weights=weight, 
-                                              test=test, burden.test=burden.test, 
+                                              test=test, # burden.test=burden.test, 
                                               neig = neig, ntrace = ntrace,
                                               rho=rho)
                                               # pval.method=pval.method)
@@ -151,8 +151,8 @@ setMethod("assocTestAggregate",
           "GenotypeIterator",
           function(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
-                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO"),
-                   burden.test=c("Score", "Wald", "BinomiRare","CMP"),
+                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO", "BinomiRare", "CMP"),
+                   # burden.test=c("Score"),
                    # pval.method=c("davies", "kuonen", "liu"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
@@ -160,7 +160,7 @@ setMethod("assocTestAggregate",
 
               # check argument values
               test <- .match.arg(test)
-              burden.test <- match.arg(burden.test)
+              # burden.test <- match.arg(burden.test)
               # pval.method <- match.arg(pval.method)
 
               # filter samples to match null model
@@ -245,7 +245,7 @@ setMethod("assocTestAggregate",
 
                       # do the test
                       assoc <- testVariantSet(null.model, G=geno, weights=weight, 
-                                              test=test, burden.test=burden.test, 
+                                              test=test, # burden.test=burden.test, 
                                               neig = neig, ntrace = ntrace,
                                               rho=rho)
                                               # pval.method=pval.method)

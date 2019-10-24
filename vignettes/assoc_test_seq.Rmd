@@ -47,6 +47,7 @@ annot <- sample_annotation_1KG
 head(annot)
 
 # simulate some phenotype data
+set.seed(4)
 annot$outcome <- rnorm(nrow(annot))
 metadata <- data.frame(labelDescription=c("sample id", 
                                           "1000 genomes population", 

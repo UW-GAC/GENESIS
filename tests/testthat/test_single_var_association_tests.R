@@ -6,17 +6,16 @@ test_that("singleVarTest - linear, with group", {
     geno <- .testGenoMatrix(n)
     
     nullmod <- .fitNullModel(dat$y, dat$X, group.idx=dat$group.idx, verbose=FALSE)
-    test.wald <- testGenoSingleVar(nullmod, G = geno, test = "Wald")
+    test1 <- testGenoSingleVar(nullmod, G = geno)
     
     # compare to weighted least squares using weighted lm:	
-    res.lm <- test.wald
+    res.lm <- numeric(nrow(test1))
     for (i in 1:ncol(geno)){
         lm.temp <- lm(dat$y ~ -1 + dat$X + geno[,i], weights = c(rep(1/nullmod$varComp[1], n/2), 1/rep(nullmod$varComp[2], n/2)))
-        res.lm[i,] <- summary(lm.temp)$coef[4,]
+        res.lm[i] <- summary(lm.temp)$coef[4,"Estimate"]
     }
     
-    expect_equal(res.lm$Est, test.wald$Est)
-    expect_equal(res.lm$Wald.Stat, test.wald$Wald.Stat)
+    expect_equal(res.lm, test1$Est)
 })
 
 
@@ -27,16 +26,15 @@ test_that("singleVarTest - linear, without group", {
     
     # without group
     nullmod <- .fitNullModel(dat$y, dat$X, verbose=FALSE)
-    test.wald <- testGenoSingleVar(nullmod, G = geno, test = "Wald")
+    test1 <- testGenoSingleVar(nullmod, G = geno)
     
-    res.lm <- test.wald
+    res.lm <- numeric(nrow(test1))
     for (i in 1:ncol(geno)){
         lm.temp <- lm(dat$y ~ -1 + dat$X + geno[,i], )
-        res.lm[i,] <- summary(lm.temp)$coef[4,]
+        res.lm[i] <- summary(lm.temp)$coef[4,"Estimate"]
     }
     
-    expect_equal(res.lm$Est, test.wald$Est)
-    expect_equal(res.lm$Wald.Stat, test.wald$Wald.Stat)
+    expect_equal(res.lm, test1$Est)
 })
 
 
@@ -60,9 +58,8 @@ test_that("singleVarTest - logistic - wald", {
     
     ## check that we get appropriate error when using the wald test instead of score with binomial outcomes:
     nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
-    expect_message(test.score <- testGenoSingleVar(nullmod, G = geno, test = "Wald"), "Cannot use Wald test")
+    test.score <- testGenoSingleVar(nullmod, G = geno)
 
-    expect_equal(colnames(test.score)[1], "Score")
     expect_equal(test.score$Score.pval, test.wald$Wald.pval, tolerance = 0.01)
 })
 
@@ -119,7 +116,7 @@ test_that("GxE", {
     geno <- .testGenoMatrix(n)
     
     nullmod <- .fitNullModel(dat$y, dat$X, verbose=FALSE)
-    test.gxe <- testGenoSingleVar(nullmod, G = geno, E = dat$X[,3,drop=FALSE], test = "Wald", GxE.return.cov = TRUE)
+    test.gxe <- testGenoSingleVar(nullmod, G = geno, E = dat$X[,3,drop=FALSE], GxE.return.cov = TRUE)
     expect_true(all(c("Est.G:c", "SE.G:c") %in% names(test.gxe$res)))
     expect_equal(length(test.gxe$GxEcovMatList), ncol(geno))
 
@@ -139,4 +136,27 @@ test_that("GxE", {
     expect_equal(res.lm$`SE.G:c`, test.gxe$res$`SE.G:c`)
 
     expect_message(test.gxe <- testGenoSingleVar(nullmod, G = geno, E = dat$X[,3,drop=FALSE], test = "Score"))
+})
+
+test_that("singleVarTest - SPA", {
+    n <- 100
+    dat <- .testNullInputs(n, binary=TRUE)
+    geno <- .testGenoMatrix(n)
+    
+    nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
+    test.score <- testGenoSingleVar(nullmod, G = geno, test = "Score")
+    test.spa <- testGenoSingleVar(nullmod, G = geno, test = "Score.SPA")
+    expect_true(max(test.score$Score.pval - test.spa$SPA.pval) < 0.01)
+})
+
+test_that("SPA_pval works with empty input", {
+    n <- 100
+    dat <- .testNullInputs(n, binary=TRUE)
+    geno <- .testGenoMatrix(n)
+    
+    nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
+    empty <- data.frame(Score=numeric(), Score.SE=numeric(), Score.Stat=numeric(), Score.pval=numeric())
+    empty.G <- matrix(nrow=n, ncol=0)
+    test.spa <- SPA_pval(score.result=empty, nullmod=nullmod, G=empty.G)
+    expect_equal(nrow(test.spa), 0)
 })

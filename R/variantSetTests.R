@@ -6,21 +6,21 @@
 
 
 testVariantSet <- function( nullmod, G, weights, 
-                            test = c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKATO"),
-                            burden.test = c("Score", "Wald", "BinomiRare", "CMP"), 
+                            test = c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKATO", "BinomiRare", "CMP"),
+                            # burden.test = c("Score"), 
                             neig = 200, ntrace = 500, 
                             rho = seq(from = 0, to = 1, by = 0.1)){
                            # pval.method = c("davies", "kuonen", "liu"),
                            # return.scores = FALSE, return.scores.cov = FALSE){
 
     test <- match.arg(test)
-    burden.test <- match.arg(burden.test)
+    # burden.test <- match.arg(burden.test)
     # pval.method <- match.arg(pval.method)
 
     G <- .genoAsMatrix(nullmod, G)
 
     if (test == "Burden") {
-        out <- .testVariantSetBurden(nullmod, G, weights, burden.test)
+        out <- .testVariantSetBurden(nullmod, G, weights, burden.test = "Score")
     }
     if (test == "SKAT") {
         out <- .testVariantSetSKAT(nullmod, G, weights, neig = Inf, ntrace = Inf)
@@ -54,17 +54,18 @@ testVariantSet <- function( nullmod, G, weights,
     }
     
     # adjust burden for covariates and random effects
-  if (burden.test %in% c('Score', 'Wald')){
-    Gtilde <- calcGtilde(nullmod, burden)
-  }
-    
     if (burden.test == "Score") {
-        out <- .testGenoSingleVarScore(Gtilde, G = burden, resid = nullmod$resid) 
+        Gtilde <- calcGtilde(nullmod, burden)
+        if(is.null(nullmod$RSS0)){
+            nullmod$RSS0 <- as.numeric(crossprod(nullmod$Ytilde))
+        }
+        out <- .testGenoSingleVarScore(Gtilde, G = burden, resid = nullmod$resid, RSS0 = nullmod$RSS0) 
     }
-    if (burden.test == "Wald"){
-        out <- .testGenoSingleVarWald(Gtilde, Ytilde = nullmod$Ytilde,
-                                      n = length(nullmod$Ytilde), k = ncol(nullmod$model.matrix))
-    }
+    # if (burden.test == "Wald"){
+    #     out <- .testGenoSingleVarWald(Gtilde, Ytilde = nullmod$Ytilde,
+    #                                   n = length(nullmod$Ytilde), k = ncol(nullmod$model.matrix))
+    # }
+    
       ####adding BR ####
     if (burden.test == "BinomiRare"){
       if (nullmod$family$mixedmodel) { ## if this is a mixed model, used conditional probabilities ##changed "nullmod.all$resid.conditional" to "nullmod$resid.conditional"

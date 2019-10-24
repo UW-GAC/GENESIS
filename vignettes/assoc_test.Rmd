@@ -211,7 +211,7 @@ Multiple fixed effect covariates and multiple random effects can be specified fo
 
 ## Run SNP-Phenotype Association Tests
 
-The second step for association testing with `r Biocpkg("GENESIS")` is to use the fitted null model to test the SNPs in the `GenotypeData` object for association with the specified outcome variable. This is done with the `assocTestSingle` function. Both (approximate) Wald and score tests are available, but the Wald test can only be performed when `family = gaussian` in the null model. Otherwise, the use of `assocTestSingle` for running association tests with a quantitative or binary phenotype is identical.
+The second step for association testing with `r Biocpkg("GENESIS")` is to use the fitted null model to test the SNPs in the `GenotypeData` object for association with the specified outcome variable. This is done with the `assocTestSingle` function. The use of `assocTestSingle` for running association tests with a quantitative or binary phenotype is identical.
 
 Before we can run an association test on a `GenotypeData` object, we much first decide how many SNPs we want to read at a time. We do this by creating a `GenotypeBlockIterator` object that defines blocks of SNPs. The default setting is to read 10,000 SNPs in each block, but this may be changed with the `snpBlock` argument.
 
@@ -221,17 +221,16 @@ genoIterator <- GenotypeBlockIterator(HapMap_genoData, snpBlock=5000)
 
 The example R code below runs the association analyses using the null model we fit using `fitNullModel` in the previous section.
 ```{r}
-assoc <- assocTestSingle(genoIterator, null.model = nullmod, test = "Wald")
+assoc <- assocTestSingle(genoIterator, null.model = nullmod)
 ```
 * `genoData` is a `GenotypeData` class object
 * `null.model` is the output from `fitNullModel`
-* `test` specifies whether to use a "Wald" or "Score" test
 
 By default, the function will perform association tests at all SNPs in the `genoData` object. However, for computational reasons it may be practical to parallelize this step, partitioning SNPs by chromosome or some other pre-selected grouping.  If we only want to test a pre-specified set of SNPs, this can be done by passing a vector of snpID values to the `snpInclude` argument when we create the iterator.
 ```{r, eval = FALSE}
 # mysnps is a vector of snpID values for the SNPs we want to test
 genoIterator <- GenotypeBlockIterator(HapMap_genoData, snpInclude=mysnps)
-assoc <- assocTestSingle(genoIterator, null.model = nullmod, test = "Wald")
+assoc <- assocTestSingle(genoIterator, null.model = nullmod)
 ```
 
 
@@ -259,17 +258,14 @@ head(assoc)
 * `pos`: the position
 * `n.obs`: the number of samples analyzed at that SNP
 * `freq`: the frequency of the tested ("A") allele
-* `Est`: the effect size estimate (beta) for that SNP
-* `Est.SE`: the estimated standard error of the effect size estimate
-* `Wald.Stat`: the chi-squared Wald test statistic
-* `Wald.pval`: the p-value based on the Wald test statistic
-
-Note: when `test = "Score"` in `assocTestSingle` (rather than `test = "Wald"`), then `Est`, `SE`, `Wald.Stat`, and `Wald.pval` are replaced by:
-
+* `MAC`: the minor allele count
 * `Score`: the value of the score function
 * `Score.SE`: the estimated standard error of the score 
-* `Score.Stat`: the chi-squared score test statistic
+* `Score.Stat`: the score Z test statistic
 * `Score.pval`: the p-value based on the score test statistic
+* `Est`: an approximation of the effect size estimate (beta) for that SNP
+* `Est.SE`: an approximation of the standard error of the effect size estimate
+* `PVE`: an approximation of the proportion of phenotype variance explained
 
 Further details describing all of the output can be found with the command `help(assocTestSingle)`.
 

@@ -10,8 +10,7 @@
 \usage{
 \S4method{assocTestAggregate}{SeqVarIterator}(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
-                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO"),
-                   burden.test=c("Score", "Wald", "BinomiRare","CMP"),
+                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO", "BinomiRare", "CMP"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
                    sparse=TRUE, imputed=FALSE,
@@ -19,8 +18,7 @@
                    verbose=TRUE)
 \S4method{assocTestAggregate}{GenotypeIterator}(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
-                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO"),
-                   burden.test=c("Score", "Wald", "BinomiRare","CMP"),
+                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO", "BinomiRare", "CMP"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
                    male.diploid=TRUE, verbose=TRUE)
@@ -32,8 +30,8 @@
     \item{AF.max}{A numeric value specifying the upper bound on the alternate allele frequency for variants to be included in the analysis.}
     \item{weight.beta}{A numeric vector of length two specifying the two parameters of the Beta distribution used to determine variant weights; weights are given by \code{dbeta(MAF, a, b)}, where MAF is the minor allele frequency, and a and b are the two parameters specified here. \code{weight.beta = c(1,25)} gives the Wu weights; \code{weight.beta = c(0.5, 0.5)} is proportional to the Madsen-Browning weights; and \code{weight.beta = c(1,1)} gives a weight of 1 to all variants. This input is ignored when \code{weight.user} is not \code{NULL}.}
     \item{weight.user}{A character string specifying the name of a variable to be used as variant weights. This variable can be in either 1) the variantData slot of \code{gdsobj} or 2) the \code{\link{mcols}} of the \code{\link{GRanges}} or \code{\link{GRangesList}} object used to create \code{gdsobj} (when \code{gdsobj} is a \code{link{SeqVarRangeIterator}} or \code{link{SeqVarListIterator}}).  When left \code{NULL} (the default), the weights specified by \code{weight.beta} will be used.}
-    \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Burden"} (default), \code{"SKAT"}, \code{"fastSKAT"}, \code{"SMMAT"}, or \code{"SKATO"}.}
-    \item{burden.test}{A character string specifying the type of Burden test to perform when \code{test = "Burden"}.  The possibilities are \code{"Score"},  \code{"Wald"}, \code{"BinomiRare"}, and \code{"CMP"}. \code{"Score"} can be used for any \code{null.model}. \code{"Wald"} can not be used when the \code{null.model} is from a mixed model with a binary outcome variable.}
+    \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Burden"} (default), \code{"SKAT"}, \code{"fastSKAT"}, \code{"SMMAT"}, \code{"SKATO"}, \code{"BinomiRare"}, or \code{"CMP"}.}
+    % \item{burden.test}{A character string specifying the type of Burden test to perform when \code{test = "Burden"}.  Currently, the only option is \code{"Score"}.}
     %\item{burden.test}{A character string specifying the type of Burden test to perform when \code{test} = "Burden".  The possibilities are "Score", "Wald", and "Firth". "Score" can be used for any \code{null.model}. "Wald" can not be used when the \code{null.model} is from a mixed model with a binary outcome variable. "Firth" can only be used when the \code{null.model} is from a logistic regression with a binary outcome variable.}
     \item{neig}{The number eigenvalues to approximate by using random projections for calculating p-values with fastSKAT; default is 200. See 'Details' for more information.}
     \item{ntrace}{The number of vectors to sample when using random projections to estimate the trace needed for p-value calculation with fastSKAT; default is 500. See 'Details' for more information.}
@@ -51,6 +49,10 @@
     used for \code{gdsobj}. Options include sliding windows, specific
     ranges of variants or selection of individual variants (ranges with
     width 1). See \code{\link{SeqVarIterator}} for more details.
+  
+  All samples included in \code{null model} will be included in the
+  association test, even if a different set of samples is present in the
+  current filter for \code{gdsobj}.
   
     The effect size estimate is for each copy of the alternate allele.
     For multiallelic variants, each alternate allele is tested separately.
@@ -76,32 +78,26 @@
     \item{n.alt}{The number of alternate alleles included in the test.}
     \item{n.sample.alt}{The number of samples with an observed alternate allele at any variant in the aggregate set.}
     If \code{test} is \code{"Burden"}:
-    %% \item{burden.skew}{The skewness of the burden value for all samples.}
-    
-    If \code{burden.test} is "Score":
+    %% \item{burden.skew}{The skewness of the burden value for all samples.}  
+    %If \code{burden.test} is "Score":
     \item{Score}{The value of the score function}
     \item{Score.SE}{The estimated standard error of the Score}
     \item{Score.Stat}{The score Z test statistic}
     \item{Score.pval}{The score p-value}
-    If \code{burden.test} is \code{"Wald"}:
-    \item{Est}{The effect size estimate for a one unit increase in the burden value}
-    \item{Est.SE}{The estimated standard error of the effect size estimate}    
-    \item{Wald.Stat}{The Wald Z test statistic}
-    \item{Wald.pval}{The Wald p-value}
-     If \code{burden.test} is \code{"BinomiRare"}:
-    \item{n.carrier}{Number of individuals with at least one copy of the alternate allele}
-    \item{n.D.carrier}{Number of cases with at least one copy of the alternate allele}
-    \item{pval}{BinomiRare p-value}
-    If \code{burden.test} is \code{"CMP"}:
-    \item{n.carrier}{Number of individuals with at least one copy of the alternate allele}
-    \item{n.D.carrier}{Number of cases with at least one copy of the alternate allele}
-    \item{pval}{CMP p-value}
-    \item{mid.pval}{CMP mid-p-value}
-    %% If \code{burden.test} is "Firth":
+    \item{Est}{An approximation of the effect size estimate for each additional unit of burden}
+    \item{Est.SE}{An approximation of the standard error of the effect size estimate}
+    \item{PVE}{An approximation of the proportion of phenotype variance explained}
+    % If \code{burden.test} is \code{"Wald"}:
+    % \item{Est}{The effect size estimate for a one unit increase in the burden value}
+    % \item{Est.SE}{The estimated standard error of the effect size estimate}    
+    % \item{Wald.Stat}{The Wald Z test statistic}
+    % \item{Wald.pval}{The Wald p-value}
+    % %% If \code{burden.test} is "Firth":
     %% \item{Est}{The effect size estimate for a one unit increase in the burden value}
     %% \item{SE}{The estimated standard error of the effect size estimate}
     %% \item{Firth.stat}{The Firth test statistic}
     %% \item{Firth.pval}{The Firth p-value}
+    
     If \code{test} is \code{"SKAT"} or \code{"fastSKAT"}:
     \item{Q}{The SKAT test statistic.}
     \item{pval}{The SKAT p-value.}
@@ -122,6 +118,16 @@
     \item{opt.rho}{The optimal rho value; i.e. the rho value that gave the minimum p-value.}
     \item{pval_SKATO}{The SKAT-O p-value after adjustment for searching across multiple rho values.}
 
+     If \code{test} is \code{"BinomiRare"}:
+    \item{n.carrier}{Number of individuals with at least one copy of the alternate allele}
+    \item{n.D.carrier}{Number of cases with at least one copy of the alternate allele}
+    \item{pval}{BinomiRare p-value}
+    If \code{burden.test} is \code{"CMP"}:
+    \item{n.carrier}{Number of individuals with at least one copy of the alternate allele}
+    \item{n.D.carrier}{Number of cases with at least one copy of the alternate allele}
+    \item{pval}{CMP p-value}
+    \item{mid.pval}{CMP mid-p-value}
+    
     \item{variantInfo}{A list with as many elements as aggregate tests performed. Each element of the list is a data.frame providing information on the variants used in the aggregate test with results presented in the corresponding row of \code{results}. Each of these data.frames has the following information:}
     \item{variant.id}{The variant ID}
     \item{chr}{The chromosome value}
@@ -159,6 +165,7 @@ gdsfile <- seqExampleFileName("gds")
 gds <- seqOpen(gdsfile)
 
 # simulate some phenotype data
+set.seed(4)
 data(pedigree)
 pedigree <- pedigree[match(seqGetData(gds, "sample.id"), pedigree$sample.id),]
 pedigree$outcome <- rnorm(nrow(pedigree))
