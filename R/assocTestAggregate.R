@@ -84,7 +84,7 @@ setMethod("assocTestAggregate",
                   # weights
                   if (is.null(weight.user)) {
                       # Beta weights
-                    if (burden.test %in% c("CMP", "BinomiRare")){
+                    if (test %in% c("BinomiRare", "CMP")){
                       weight <- seq(from=1, to=1, length.out=length(freq$freq))
                     } else {
                       weight <- .weightFromFreq(freq$freq, weight.beta)
@@ -201,11 +201,11 @@ setMethod("assocTestAggregate",
                   # weights
                   if (is.null(weight.user)) {
                       # Beta weights
+                    if (test %in% c("BinomiRare", "CMP")){
+                      weight <- seq(from=1, to=1, length.out=length(freq$freq))
+                    } else {
                       weight <- .weightFromFreq(freq$freq, weight.beta)
-                      if (burden.test %in% c('BinomiRare', 'CMP')){
-                        weight <- seq(from=1, to=1, length.out=length(weight))
-                      }
-
+                    }
                 
                   } else {
                       # user supplied weights

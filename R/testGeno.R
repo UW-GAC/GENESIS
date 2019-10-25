@@ -10,7 +10,7 @@
 testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA", "BinomiRare", "CMP"),
                               recalc.pval.thresh = 1, GxE.return.cov = FALSE){
     test <- match.arg(test)
-    if (recalc.pval.thresh < 1) calc.score <- TRUE
+    calc.score <- test %in% c("Score", "Score.SPA") | (recalc.pval.thresh < 1)
 
     G <- .genoAsMatrix(nullmod, G)
 
@@ -27,7 +27,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     }
 
     # run the test
-    if(test == "Score"){
+    if(calc.score){
         Gtilde <- calcGtilde(nullmod, G)
         if(is.null(nullmod$RSS0)){
             nullmod$RSS0 <- as.numeric(crossprod(nullmod$Ytilde))
@@ -36,11 +36,6 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     }
 
     if(test == "Score.SPA"){
-        Gtilde <- calcGtilde(nullmod, G)
-        if(is.null(nullmod$RSS0)){
-            nullmod$RSS0 <- as.numeric(crossprod(nullmod$Ytilde))
-        }
-        res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid, nullmod$RSS0)
         # saddle point approximation
         res <- SPA_pval(score.result = res, nullmod = nullmod, G = G, pval.thresh = recalc.pval.thresh)
     }
@@ -53,22 +48,12 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
       } else{ ## not a mixed model
         phat <- nullmod$fitted.values
       }
-      if (calc.score){
-        Gtilde <- calcGtilde(nullmod, G)
-        score.pval <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)$Score.pval
-      } else{
-        score.pval <- NULL
-      }
+      score.pval <- if(calc.score) res$Score.pval else NULL
       res <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G, score.pval=score.pval) 
     }
     
     if (test == "CMP"){
-      if (calc.score){
-        Gtilde <- calcGtilde(nullmod, G)
-        score.pval <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid)$Score.pval
-      } else{
-        score.pval <- NULL
-      }
+      score.pval <- if(calc.score) res$Score.pval else NULL
       if (nullmod$family$mixedmodel) { ## if this is a mixed model, use conditional probabilities.
         phat <- expit(nullmod$workingY - nullmod$resid.conditional)    
         res <- .testGenoSingleVarCMP(nullmod$outcome, probs=phat, G, score.pval=score.pval)  

@@ -208,7 +208,7 @@ runSplitSubset <- function(gdsobj, null.model, id.list, test=c("BinomiRare", "CM
                 }
 
                   # do the test
-                  assoc <- testGenoSingleVar(current.nullmod, G=current.geno, test=test, calc.score=FALSE)
+                  assoc <- testGenoSingleVar(current.nullmod, G=current.geno, test=test)
                   assoc[freq$freq %in% c(0,1),] <- NA
                   all.res[[grp.ind]][[i]]<- cbind(var.info, n.obs, freq, assoc)
               }

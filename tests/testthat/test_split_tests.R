@@ -79,9 +79,9 @@ test_that("assocTestAggregateSplit", {
   id_list[['g2']] <- sample_ids[41:length(sample_ids)]
   split_nullmod = nullModelSplit(nullmod, id_list, keep.all=FALSE)
   
-  assoc <- assocTestAggregate(iterator,split_nullmod[['g2']], test="Burden", burden.test="BinomiRare", verbose=FALSE)
+  assoc <- assocTestAggregate(iterator,split_nullmod[['g2']], test="BinomiRare", verbose=FALSE)
   resetIterator(iterator, verbose=FALSE)
-  split_assoc <- assocTestAggregateSplit(iterator, nullmod, id.list=id_list, burden.test="BinomiRare", keep.all=FALSE, verbose=FALSE)
+  split_assoc <- assocTestAggregateSplit(iterator, nullmod, id.list=id_list, test="BinomiRare", keep.all=FALSE, verbose=FALSE)
   expect_equal(assoc, split_assoc[['g2']])
   seqClose(svd)
 }
@@ -103,9 +103,9 @@ test_that("assocTestAggregateSplit - CMP", {
   id_list[['g2']] <- sample_ids[41:length(sample_ids)]
   split_nullmod = nullModelSplit(nullmod, id_list, keep.all=FALSE)
   
-  assoc <- assocTestAggregate(iterator,split_nullmod[['g2']], test="Burden", burden.test="CMP", verbose=FALSE)
+  assoc <- assocTestAggregate(iterator,split_nullmod[['g2']], test="CMP", verbose=FALSE)
   resetIterator(iterator, verbose=FALSE)
-  split_assoc <- assocTestAggregateSplit(iterator, nullmod, id.list=id_list, burden.test="CMP", keep.all=FALSE, verbose=FALSE)
+  split_assoc <- assocTestAggregateSplit(iterator, nullmod, id.list=id_list, test="CMP", keep.all=FALSE, verbose=FALSE)
   expect_equal(assoc, split_assoc[['g2']])
   seqClose(svd)
   
@@ -125,9 +125,9 @@ test_that("assocTestAggregateSplit - window", {
   id_list[['g2']] <- sample_ids[41:length(sample_ids)]
   split_nullmod = nullModelSplit(nullmod, id_list, keep.all=FALSE)
   
-  assoc <- assocTestAggregate(iterator,split_nullmod[['g2']], test="Burden", burden.test="CMP", verbose=FALSE)
+  assoc <- assocTestAggregate(iterator,split_nullmod[['g2']], test="CMP", verbose=FALSE)
   resetIterator(iterator, verbose=FALSE)
-  split_assoc <- assocTestAggregateSplit(iterator, nullmod, id.list=id_list, burden.test="CMP", keep.all=FALSE, verbose=FALSE)
+  split_assoc <- assocTestAggregateSplit(iterator, nullmod, id.list=id_list, test="CMP", keep.all=FALSE, verbose=FALSE)
   expect_equal(assoc, split_assoc[['g2']])
   seqClose(svd)
 })

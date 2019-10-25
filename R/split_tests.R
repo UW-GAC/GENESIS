@@ -47,10 +47,9 @@ setGeneric("assocTestSingleSplit", function(gdsobj, ...) standardGeneric("assocT
 
 setMethod("assocTestSingleSplit",
           "SeqVarIterator",
-  function(gdsobj, null.model, id.list, test=c("BinomiRare", "CMP"), 
+  function(gdsobj, null.model, id.list, keep.all=TRUE, AF.max=NULL, test=c("BinomiRare", "CMP"), 
           sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"),
-          AF.max=NULL, keep.all=TRUE, verbose=TRUE
-                                  ) {
+          verbose=TRUE) {
   message('running split version of assocTestSingle')
   test <- match.arg(test)
   # don't use sparse matrices for imputed dosages
@@ -136,7 +135,7 @@ setMethod("assocTestSingleSplit",
         all.res[[grp.ind]][[i]]<- NULL
       } else{
       # do the test
-      assoc <- testGenoSingleVar(current.nullmod, G=current.geno, test=test, calc.score=FALSE)
+      assoc <- testGenoSingleVar(current.nullmod, G=current.geno, test=test)
       # set monomorphs to NA - do we want to skip testing these to save time? ###not sure why this is needed when monomorphics were already filtered
       assoc[freq %in% c(0,1),] <- NA
       all.res[[grp.ind]][[i]]<- cbind(current.var.info, n.obs, freq, assoc)
@@ -173,13 +172,13 @@ setGeneric("assocTestAggregateSplit", function(gdsobj, ...) standardGeneric("ass
 
 setMethod("assocTestAggregateSplit",
           "SeqVarIterator",
-          function(gdsobj, null.model, id.list, AF.max=1,
+          function(gdsobj, null.model, id.list, keep.all=TRUE, AF.max=1,
           #         weight.beta=c(1,1), ##all weights are set to 1
-                   burden.test=c("BinomiRare", "CMP"), keep.all=TRUE,
+                   test=c("BinomiRare", "CMP"),
                    sparse=TRUE, imputed=FALSE, 
                   male.diploid=TRUE, genome.build=c("hg19", "hg38"),
                   verbose=TRUE) {
-            burden.test <- match.arg(burden.test)
+            test <- match.arg(test)
             # don't use sparse matrices for imputed dosages
             if (imputed) sparse <- FALSE
             
@@ -286,8 +285,7 @@ setMethod("assocTestAggregateSplit",
                   }
                   
                   # do the test
-                  assoc <- testVariantSet(current.nullmod, G=current.geno, weights=weight, test="Burden", 
-                                          burden.test=burden.test)
+                  assoc <- testVariantSet(current.nullmod, G=current.geno, weights=weight, test=test)
                   all.res[[grp.ind]][[i]] <- cbind(all.res[[grp.ind]][[i]], assoc)
                 }
               }

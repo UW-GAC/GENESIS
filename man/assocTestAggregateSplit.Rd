@@ -7,8 +7,8 @@
 \description{\code{assocTestAggregateSplit} performs carriers-only aggregate association tests across different groups using a single null model fit with \code{\link{fitNullModel}}.}
 
 \usage{
-\S4method{assocTestAggregateSplit}{SeqVarIterator}(gdsobj, null.model, id.list, AF.max=1,
-                   burden.test=c("BinomiRare", "CMP"), keep.all=TRUE,
+\S4method{assocTestAggregateSplit}{SeqVarIterator}(gdsobj, null.model,
+                   id.list, keep.all=TRUE, AF.max=1, test=c("BinomiRare", "CMP"),
                    sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), verbose=TRUE)
 }
 
@@ -16,9 +16,9 @@
     \item{gdsobj}{An object of class \code{\link{SeqVarIterator}} from the package \pkg{\link{SeqVarTools}} containing the genotype data for the variants and samples to be used for the analysis.}
     \item{null.model}{A null model object returned by \code{fitNullModel}.}
     \item{id.list}{List that includes vectors of sample IDs divided by group}
+    \item{keep.all}{Logical indicator of whether the overall sample should be tested as well, in addition to each group; default is \code{TRUE}.}
     \item{AF.max}{A numeric value specifying the upper bound on the alternate allele frequency for variants to be included in the analysis. The default is \code{1} (include all), but it is recommended to set a low threshold.}
-    \item{burden.test}{A character string specifying which type of carriers-onyl test to perform. Options are \code{"BinomiRare"}, and \code{"CMP"}.}
-     \item{keep.all}{Logical indicator of whether the overall sample should be tested as well, in addition to each group; default is \code{TRUE}.}
+    \item{test}{A character string specifying which type of carriers-only test to perform. Options are \code{"BinomiRare"}, and \code{"CMP"}.}
     \item{sparse}{Logical indicator of whether to read genotypes as sparse Matrix objects; the default is \code{TRUE}. Set this to \code{FALSE} if the alternate allele dosage of the genotypes in the test are not expected to be mostly 0.}
     \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles.}
     \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid.}
@@ -47,11 +47,11 @@
     \item{n.alt}{The number of alternate alleles included in the test.}
     \item{n.sample.alt}{The number of samples with an observed alternate allele at any variant in the aggregate set.}
     
-    If \code{burden.test} is \code{"BinomiRare"}:
+    If \code{test} is \code{"BinomiRare"}:
     \item{n.carrier}{Number of individuals with at least one copy of the alternate allele}
     \item{n.D.carrier}{Number of cases with at least one copy of the alternate allele}
     \item{pval}{BinomiRare p-value}
-    If \code{burden.test} is \code{"CMP"}:
+    If \code{test} is \code{"CMP"}:
     \item{n.carrier}{Number of individuals with at least one copy of the alternate allele}
     \item{n.D.carrier}{Number of cases with at least one copy of the alternate allele}
     \item{pval}{CMP p-value}
@@ -114,12 +114,12 @@ nullmod <- fitNullModel(seqData, outcome="outcome", covars="sex", family="binomi
 # Range Iterator
 gr <- GRanges(seqnames=rep(1,3), ranges=IRanges(start=c(1e6, 2e6, 3e6), width=1e6))
 iterator <- SeqVarRangeIterator(seqData, variantRanges=gr)
-assoc <- assocTestAggregateSplit(iterator, nullmod, id.list=id.list, burden.test="BinomiRare", AF.max=0.01)
+assoc <- assocTestAggregateSplit(iterator, nullmod, id.list=id.list, test="BinomiRare", AF.max=0.01)
 
 # Window Iterator
 seqSetFilterChrom(seqData, include="22")
 iterator <- SeqVarWindowIterator(seqData)
-assoc <- assocTestAggregateSplit(iterator, nullmod, id.list=id.list, burden.test="BinomiRare", AF.max=0.01)
+assoc <- assocTestAggregateSplit(iterator, nullmod, id.list=id.list, test="BinomiRare", AF.max=0.01)
 
 # save results for each group separately
 saveSplitResults(assoc, output.prefix='test')

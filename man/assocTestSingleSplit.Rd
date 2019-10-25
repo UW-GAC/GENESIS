@@ -9,22 +9,23 @@
   using a single null model fit with \code{\link{fitNullModel}}.}
 
 \usage{
-\S4method{assocTestSingleSplit}{SeqVarIterator}(gdsobj, null.model, id.list, test=c('BinomiRare', "CMP"),
+\S4method{assocTestSingleSplit}{SeqVarIterator}(gdsobj, null.model, 
+                id.list, keep.all=TRUE, AF.max=NULL, test=c("BinomiRare", "CMP"),
                 sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), 
-                AF.max=NULL, keep.all=TRUE, verbose=TRUE)
+                verbose=TRUE)
 }
 
 \arguments{
     \item{gdsobj}{An object of class \code{\link{SeqVarIterator}} from the package \pkg{\link{SeqVarTools}}, or an object of class \code{\link{GenotypeIterator}} from the package \pkg{\link{GWASTools}}, containing the genotype data for the variants and samples to be used for the analysis.}
     \item{null.model}{A null model object returned by \code{\link{fitNullModel}}.}
     \item{id.list}{List that includes vectors of sample IDs divided by group}
+    \item{keep.all}{Logical indicator of whether the overall sample should be tested as well, in addition to each group; default is \code{TRUE}.}
+    \item{AF.max}{Maximum alternate allele frequency threshold for testing variants. A minimum of 0.5 is recommended when running \code{BinomiRare} or \code{CMP} tests. Default is \code{NULL}.}
     \item{test}{A character string specifying the type of carriers-only test to be performed. Options are \code{"BinomiRare"} and \code{"CMP"}.}
     \item{sparse}{Logical indicator of whether to read genotypes as sparse Matrix objects; the default is \code{TRUE}. Set this to \code{FALSE} if the alternate allele dosage of the genotypes in the test are not expected to be mostly 0.}
     \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles.}
     \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid.}
     \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes.}
-    \item{AF.max}{Maximum alternate allele frequency threshold for testing variants. A minimum of 0.5 is recommended when running \code{BinomiRare} or \code{CMP} tests. Default is \code{NULL}.}
-    \item{keep.all}{Logical indicator of whether the overall sample should be tested as well, in addition to each group; default is \code{TRUE}.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is \code{TRUE}.}
 }
 
