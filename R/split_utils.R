@@ -10,7 +10,7 @@
 matchSignifHits <- function(res.list, threshold, return.df=FALSE, variant.id.var=NULL){
   matched.results <- vector(mode="list", length=length(res.list))
   names(matched.results) <- names(res.list)
-  subset.signif <- lapply(res.list, function(x) filter(x, pval < threshold))
+  subset.signif <- lapply(res.list, function(x) dplyr::filter(x, pval < threshold))
   
   if (is.null(variant.id.var)){
     if (!.detectVarNames(res.list, c("variant.id", "variantID"))) stop("specify variant.id.var")
@@ -26,7 +26,7 @@ matchSignifHits <- function(res.list, threshold, return.df=FALSE, variant.id.var
       current.list[[group]] <- NULL
       subset.signif[[group]]$ref.group=group
       subset.signif[[group]]$signif.group=group
-      matched.list <- lapply(current.list, function(x) filter(x, !!sym(variant.id.var) %in% subset.signif[[group]][[variant.id.var]]))
+      matched.list <- lapply(current.list, function(x) dplyr::filter(x, !!sym(variant.id.var) %in% subset.signif[[group]][[variant.id.var]]))
       for (g in names(matched.list)){
         if (nrow(matched.list[[g]]) > 0) {
           matched.list[[g]]$ref.group <- g
@@ -55,8 +55,8 @@ matchSignifHits <- function(res.list, threshold, return.df=FALSE, variant.id.var
       variant.id.var <- "variantID"
     }
   }
-  dat <- dat %>% filter(ref.group!="all") %>% group_by(!!sym(variant.id.var), signif.group) %>% 
-    summarise(n=n()) %>% filter(n < total.groups) #, groups=glue::glue_collapse(unique(ref.group), sep=','), total_carriers=sum(n.carrier))
+  dat <- dat %>% dplyr::filter(ref.group!="all") %>% group_by(!!sym(variant.id.var), signif.group) %>% 
+    summarise(n=n()) %>% dplyr::filter(n < total.groups) #, groups=glue::glue_collapse(unique(ref.group), sep=','), total_carriers=sum(n.carrier))
   dat[[variant.id.var]]
 }
 
