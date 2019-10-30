@@ -49,17 +49,17 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
         phat <- nullmod$fitted.values
       }
       score.pval <- if(calc.score) res$Score.pval else NULL
-      res <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G, score.pval=score.pval) 
+      res <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G, score.pval=score.pval, pval.thresh=recalc.pval.thresh) 
     }
     
     if (test == "CMP"){
       score.pval <- if(calc.score) res$Score.pval else NULL
       if (nullmod$family$mixedmodel) { ## if this is a mixed model, use conditional probabilities.
         phat <- expit(nullmod$workingY - nullmod$resid.conditional)    
-        res <- .testGenoSingleVarCMP(nullmod$outcome, probs=phat, G, score.pval=score.pval)  
+        res <- .testGenoSingleVarCMP(nullmod$outcome, probs=phat, G, score.pval=score.pval, pval.thresh=recalc.pval.thresh)  
       } else{ ## not a mixed model
         phat <- nullmod$fitted.values
-        res <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G,  score.pval=score.pval)  
+        res <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G,  score.pval=score.pval, pval.thresh=recalc.pval.thresh)  
       }
     }
 
@@ -67,7 +67,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
 }
 
 
-.testGenoSingleVarCMP <- function(D, probs, G, score.pval=NULL){
+.testGenoSingleVarCMP <- function(D, probs, G, score.pval=NULL, pval.thresh = 0.05){
   if (!requireNamespace("COMPoissonReg")) stop("package 'COMPoissonReg' must be installed for the CMP test")
   res <- data.frame(n.carrier = rep(NA, ncol(G)), n.D.carrier = NA, expected.n.D.carrier = NA, pval = NA) #, mid.pval = NA)
   
@@ -84,7 +84,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     res$n.D.carrier[i] <- sum.d
     cur.prob.vec <- probs[carrier.inds]
     res$expected.n.D.carrier[i] <- sum(cur.prob.vec)
-    if (!is.null(score.pval) && score.pval[i] > 0.05){
+    if (!is.null(score.pval) && score.pval[i] > pval.thresh){
       res$pval[i] <- score.pval[i]
       #     res$mid.pval[i] <- score.pval[i]
     } else {
@@ -124,7 +124,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
 ## this function currently assumes that the alt allele is the minor allele. So either G 
 ## needs to be such that alt allele is minor allele, or the function checks for it, or a vector of 
 ## indicators or of frequencies would be provided. 
-.testGenoSingleVarBR <- function(D, probs, G, score.pval=NULL){ 
+.testGenoSingleVarBR <- function(D, probs, G, score.pval=NULL, pval.thresh = 0.05){ 
   if (!requireNamespace("poibin")) stop("package 'poibin' must be installed for the BinomiRare test")
   res <- data.frame(n.carrier = rep(NA, ncol(G)), n.D.carrier = NA, expected.n.D.carrier = NA, pval = NA)
   
@@ -138,7 +138,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     res$expected.n.D.carrier[i] <- sum(cur.prob.vec)
     res$n.D.carrier[i] <- sum(D[carrier.inds])
     if (!is.null(score.pval)){
-      if (score.pval[i] < 0.05){
+      if (score.pval[i] < pval.thresh){
         res$pval[i] <- .poibinMidp(n.carrier = res$n.carrier[i], n.D.carrier = res$n.D.carrier[i], prob.vec = cur.prob.vec)		 
       } else {
         res$pval[i] <- score.pval[i]
