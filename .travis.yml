@@ -8,7 +8,7 @@ env:
   - _R_CHECK_SYSTEM_CLOCK_=0
 
 language: r
-r: bioc-devel
+r: bioc-release
 sudo: false
 cache: packages
 
