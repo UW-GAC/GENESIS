@@ -1,8 +1,15 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.16.0}{
+    \itemize{
+      \item Add option "Score.SPA" to assocTestSingle. This option for binary outcomes uses the saddlepoint approximation to compute p-values and is recommended for unbalanced case/control ratios.
+      \item "Wald" is no longer a test option in assocTestSingle. Instead, the Score test is always run, and "Est" (an estimation of the Wald test beta) is always returned also. The values in the "Est" are identical to what was previously returned by test="Wald".
+      \item Since the only single-variant test option is "Score", "burden.test" is no longer an option in assocTestAggregate. Output returned is now identical to that described above for assocTestSingle.
+    }
+}
 \section{Version 2.15.3}{
     \itemize{
-      \item Add option "fastSKAT" to assocTestAggregate. Some other arguments and names of output columns for SKAT tests have also changed. This update includes code from the bigQF package (https://github.com/tslumley/bigQF). With the addition of C code, GENESIS now requires compliation.
+      \item Add option "fastSKAT" to assocTestAggregate. Some other arguments and names of output columns for SKAT tests have also changed. This update includes code from the bigQF package (https://github.com/tslumley/bigQF). With the addition of C code, GENESIS now requires compilation.
     }
 }
 \section{Version 2.13.7}{
