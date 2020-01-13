@@ -9,6 +9,7 @@
         sigma2.k <- rep(sqrt(AIREML.tol), m)
     }else{
         sigma2.k <- as.vector(start)
+        sigma2.k[sigma2.k < 2*AIREML.tol] <- 2*AIREML.tol # starting values that are too small are slightly increased
     }
     sigma2.kplus1 <- rep(NA, length(sigma2.k))
     zeroFLAG <- rep(FALSE, length(sigma2.k))
