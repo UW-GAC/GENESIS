@@ -213,7 +213,7 @@ setMethod("pcrelate",
     # check training.set
     if(!is.null(training.set) & !all(training.set %in% sample.include)) stop('All samples in training.set must be in sample.include')
     # check pcs
-    if(class(pcs) != 'matrix' | is.null(rownames(pcs))) stop('pcs should be a matrix of PCs with rownames set to sample.ids')
+    if(!is.matrix(pcs) | is.null(rownames(pcs))) stop('pcs should be a matrix of PCs with rownames set to sample.ids')
     if(!all(sample.include %in% rownames(pcs))) stop('All samples in sample.include must be in pcs')
 }
 
