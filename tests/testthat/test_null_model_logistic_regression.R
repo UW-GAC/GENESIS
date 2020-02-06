@@ -12,7 +12,7 @@ test_that("logistic", {
     expect_equivalent(nullmod$fitted.values, fitted(glm.mod))
     expect_false(nullmod$family$mixedmodel)
     expect_equivalent(nullmod$resid.marginal, resid(glm.mod, type = "working"))
-    expect_true(all(nullmod$fixef == summary(glm.mod)$coef))
+    expect_equivalent(as.matrix(nullmod$fixef), summary(glm.mod)$coef)
     expect_true(is.null(nullmod$varComp))
     expect_null(nullmod$varCompCov)
     expect_equivalent(nullmod$betaCov, vcov(glm.mod))
