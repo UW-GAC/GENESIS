@@ -4,7 +4,7 @@
     n <- length(Y)
     k <- ncol(X)
     
-    ### Calulate the weighted least squares estimate
+    ### Calulate the generalized least squares estimate
     Sigma.inv_X <- crossprod(Sigma.inv, X)
     Xt_Sigma.inv_X <- crossprod(X, Sigma.inv_X)
     # fix issue with not recognizing the matrix as symmetric
