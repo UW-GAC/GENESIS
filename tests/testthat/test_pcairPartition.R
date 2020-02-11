@@ -20,7 +20,7 @@ test_that("name errors", {
     newMat <- HapMap_ASW_MXL_KINGmat
     colnames(newMat) <- rownames(newMat) <- NULL
     expect_error(pcairPartition(kinobj = newMat, divobj = newMat, verbose=FALSE),
-                 "colnames must be provided for kinobj and divobj")
+                 "colnames must be provided for kinobj")
 
     expect_warning(pcairPartition(kinobj = HapMap_ASW_MXL_KINGmat, divobj = HapMap_ASW_MXL_KINGmat, unrel.set = 1:100, verbose=FALSE),
                  "some samples in unrel.set are not in kinobj or divobj")
@@ -158,4 +158,14 @@ test_that("apply a function with empty results on large matrix", {
     selection <- list(1:1000, 1:2000)
     tmp <- .apply(x, MARGIN, FUN, selection, maxelem=5e5)
     expect_equal(length(tmp), 0)
+})
+
+
+test_that("no divobj", {
+    x <- matrix(c(0.5,0.25,0.25,0.5), nrow = 2)
+    Mat <- bdiag(list(x,x,x,x,x))
+    dimnames(Mat) <- list(1:10, 1:10)
+    mypart <- pcairPartition(kinobj = Mat, verbose=FALSE)
+    expect_equal(mypart$rels, as.character(seq(1,9,2)))
+    expect_equal(mypart$unrels, as.character(seq(2,10,2)))
 })

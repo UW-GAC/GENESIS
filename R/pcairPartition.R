@@ -1,4 +1,4 @@
-pcairPartition <- function(kinobj, divobj,
+pcairPartition <- function(kinobj, divobj = NULL,
                            kin.thresh = 2^(-11/2),
                            div.thresh = -2^(-11/2),
                            unrel.set = NULL,
@@ -9,40 +9,64 @@ pcairPartition <- function(kinobj, divobj,
 
     # sample.id from kinship matrix
     kin.id.all <- .readSampleId(kinobj)
-    # sample.id from divergence matrix
-    div.id.all <- .readSampleId(divobj)
+    id.all <- kin.id.all
 
     # check for ids provided
-    if(is.null(kin.id.all) | is.null(div.id.all)) {
-        stop('colnames must be provided for kinobj and divobj')
-    }
-
-    # logical indicators of which samples are in both sets
-    kin.read <- kin.id.all %in% div.id.all
-    div.read <- div.id.all %in% kin.id.all
-    if(!(all(kin.read) & all(div.read))){
-        warning('kinobj and divobj contain non-matching samples; only partitioning those present in both objects')
+    if(is.null(kin.id.all)) {
+        stop('colnames must be provided for kinobj')
     }
 
     # filter to samples in sample.include
+    kin.read <- rep(TRUE, length(kin.id.all))
     if(!is.null(sample.include)){
-        if(!all(sample.include %in% kin.id.all) | !all(sample.include %in% div.id.all)){
-            warning('some samples in sample.include are not in kinobj or divobj; they will not be included')
+        if(!all(sample.include %in% kin.id.all)){
+            warning('some samples in sample.include are not in kinobj; they will not be included')
         }
 
         # subset the read indicators to samples in sample.include
-        kin.read <- kin.read & (kin.id.all %in% sample.include)
-        div.read <- div.read & (div.id.all %in% sample.include)
-
-        if(verbose) message('Working with ', sum(kin.read), ' samples')
+        kin.read <- kin.id.all %in% sample.include
     }
+
+    if (!is.null(divobj)) {
+        # sample.id from divergence matrix
+        div.id.all <- .readSampleId(divobj)
+
+        # check for ids provided
+        if(is.null(div.id.all)) {
+            stop('colnames must be provided for divobj')
+        }
+
+        # filter to samples in sample.include
+        div.read <- rep(TRUE, length(div.id.all))
+        if(!is.null(sample.include)){
+            if(!all(sample.include %in% div.id.all)){
+                warning('some samples in sample.include are not in divobj; they will not be included')
+            }
+
+            # subset the read indicators to samples in sample.include
+            div.read <- div.id.all %in% sample.include
+        }
+        
+        # logical indicators of which samples are in both sets
+        kin.match <- kin.id.all %in% div.id.all
+        div.match <- div.id.all %in% kin.id.all
+        if(!(all(kin.match) & all(div.match))){
+            warning('kinobj and divobj contain non-matching samples; only partitioning those present in both objects')
+        }
+        kin.read <- kin.read & kin.match
+        div.read <- div.read & div.match
+        rm(kin.match, div.match)
+        id.both <- union(kin.id.all, div.id.all)
+    }
+    
+    if(verbose) message('Working with ', sum(kin.read), ' samples')
 
     # checks on unrel.set
     if(!is.null(unrel.set)){
-        if(!all(unrel.set %in% kin.id.all) | !all(unrel.set %in% div.id.all)){
+        if(!all(unrel.set %in% id.both)){
             warning('some samples in unrel.set are not in kinobj or divobj; they will not be included')
             # subset unrel.set to only those in kinobj and divobj
-            unrel.set <- unrel.set[(unrel.set %in% kin.id.all) & (unrel.set %in% div.id.all)]
+            unrel.set <- unrel.set[(unrel.set %in% id.both)]
         }
 
         # if using sample.include, only keep unrel.set in sample.include
@@ -103,35 +127,39 @@ pcairPartition <- function(kinobj, divobj,
     kinsum <- unlist(kinsum)
 
 
-    if(verbose) message('Identifying pairs of divergent samples using divergence threshold ', div.thresh)
-    # logical indicator of which samples in divobj need divergence measures
-    div.read.col <- div.id.all %in% kin.id
-    # vector of ids we are reading
-    div.id <- div.id.all[div.read]
-    div.id.col <- div.id.all[div.read.col]
-    # create list of divergent pairs for each sample
-    divlist <- .apply(divobj, MARGIN = 2, 
-                      FUN = function(x){ div.id[x < div.thresh] }, 
-                      selection = list(div.read, div.read.col))
-    if (length(divlist) > 0) {
-        names(divlist) <- div.id.col
+    if (!is.null(divobj)) {
+        if(verbose) message('Identifying pairs of divergent samples using divergence threshold ', div.thresh)
+        # logical indicator of which samples in divobj need divergence measures
+        div.read.col <- div.id.all %in% kin.id
+        # vector of ids we are reading
+        div.id <- div.id.all[div.read]
+        div.id.col <- div.id.all[div.read.col]
+        # create list of divergent pairs for each sample
+        divlist <- .apply(divobj, MARGIN = 2, 
+                          FUN = function(x){ div.id[x < div.thresh] }, 
+                          selection = list(div.read, div.read.col))
+        if (length(divlist) > 0) {
+            names(divlist) <- div.id.col
 
-        # create a vector matching ids of rellist and divlist
-        idx <- match(names(divlist), names(rellist))
-        # not divergent if actually related
-        for(i in 1:length(divlist)){
-            j <- idx[i]
-            divlist[[i]] <- divlist[[i]][!(divlist[[i]] %in% rellist[[j]])]
+            # create a vector matching ids of rellist and divlist
+            idx <- match(names(divlist), names(rellist))
+            # not divergent if actually related
+            for(i in 1:length(divlist)){
+                j <- idx[i]
+                divlist[[i]] <- divlist[[i]][!(divlist[[i]] %in% rellist[[j]])]
+            }
+
+            # compute number of divergent pairs for each sample
+            ndiv <- sapply(divlist, length)
+        } else {
+            ndiv <- setNames(rep(0, length(div.id.col)), div.id.col)
         }
 
-        # compute number of divergent pairs for each sample
-        ndiv <- sapply(divlist, length)
+        # clean up
+        rm(divlist, div.id.all, div.read, div.read.col, div.id, div.id.col)
     } else {
-        ndiv <- setNames(rep(0, length(div.id.col)), div.id.col)
+        ndiv <- setNames(rep(0, length(kin.id)), kin.id)
     }
-
-    # clean up
-    rm(divlist); rm(div.id.all); rm(div.read); rm(div.read.col); rm(div.id); rm(div.id.col)
 
 
     # empty vector to store related set

@@ -62,8 +62,6 @@ test_that("kinobj and divobj NULL", {
     gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
     gds <- openfn.gds(gdsfile)
     data("HapMap_ASW_MXL_KINGmat")
-    expect_error(pcair(gds, kinobj = HapMap_ASW_MXL_KINGmat, divobj = NULL, verbose=FALSE))
-    expect_error(pcair(gds, kinobj = NULL, divobj = HapMap_ASW_MXL_KINGmat, verbose=FALSE))
 
     samp <- rownames(HapMap_ASW_MXL_KINGmat)
     mypcs <- pcair(gds, kinobj = NULL, divobj = NULL, unrel.set=samp[1:100], verbose=FALSE)
@@ -81,6 +79,20 @@ test_that("kinobj and divobj NULL", {
     mypcs <- pcair(gds, verbose=FALSE)
     expect_null(mypcs$rels)
     expect_equal(mypcs$unrels, samp)
+    
+    closefn.gds(gds)
+})
+
+
+test_that("divobj NULL", {
+    showfile.gds(closeall=TRUE)
+    gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
+    gds <- openfn.gds(gdsfile)
+    data("HapMap_ASW_MXL_KINGmat")
+
+    samp <- rownames(HapMap_ASW_MXL_KINGmat)
+    mypcs <- pcair(gds, kinobj=HapMap_ASW_MXL_KINGmat, divobj = NULL, verbose=FALSE)
+    expect_equal(mypcs$nsamp, 173)
     
     closefn.gds(gds)
 })
