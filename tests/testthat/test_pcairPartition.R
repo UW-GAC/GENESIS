@@ -23,6 +23,9 @@ test_that("name errors", {
                  "colnames must be provided for kinobj")
 
     expect_warning(pcairPartition(kinobj = HapMap_ASW_MXL_KINGmat, divobj = HapMap_ASW_MXL_KINGmat, unrel.set = 1:100, verbose=FALSE),
+                   "some samples in unrel.set are not in kinobj or divobj")
+    
+    expect_warning(pcairPartition(kinobj = HapMap_ASW_MXL_KINGmat, divobj = NULL, unrel.set = 1:100, verbose=FALSE),
                  "some samples in unrel.set are not in kinobj or divobj")
 })
 

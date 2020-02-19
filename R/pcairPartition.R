@@ -17,7 +17,6 @@ pcairPartition <- function(kinobj, divobj = NULL,
     }
 
     # filter to samples in sample.include
-    kin.read <- rep(TRUE, length(kin.id.all))
     if(!is.null(sample.include)){
         if(!all(sample.include %in% kin.id.all)){
             warning('some samples in sample.include are not in kinobj; they will not be included')
@@ -25,6 +24,8 @@ pcairPartition <- function(kinobj, divobj = NULL,
 
         # subset the read indicators to samples in sample.include
         kin.read <- kin.id.all %in% sample.include
+    } else{
+        kin.read <- rep(TRUE, length(kin.id.all))
     }
 
     if (!is.null(divobj)) {
@@ -37,7 +38,6 @@ pcairPartition <- function(kinobj, divobj = NULL,
         }
 
         # filter to samples in sample.include
-        div.read <- rep(TRUE, length(div.id.all))
         if(!is.null(sample.include)){
             if(!all(sample.include %in% div.id.all)){
                 warning('some samples in sample.include are not in divobj; they will not be included')
@@ -45,7 +45,9 @@ pcairPartition <- function(kinobj, divobj = NULL,
 
             # subset the read indicators to samples in sample.include
             div.read <- div.id.all %in% sample.include
-        }
+        } else{
+            div.read <- rep(TRUE, length(div.id.all))
+        }   
         
         # logical indicators of which samples are in both sets
         kin.match <- kin.id.all %in% div.id.all
@@ -56,17 +58,17 @@ pcairPartition <- function(kinobj, divobj = NULL,
         kin.read <- kin.read & kin.match
         div.read <- div.read & div.match
         rm(kin.match, div.match)
-        id.both <- union(kin.id.all, div.id.all)
+        id.all <- intersect(kin.id.all, div.id.all)
     }
     
     if(verbose) message('Working with ', sum(kin.read), ' samples')
 
     # checks on unrel.set
     if(!is.null(unrel.set)){
-        if(!all(unrel.set %in% id.both)){
+        if(!all(unrel.set %in% id.all)){
             warning('some samples in unrel.set are not in kinobj or divobj; they will not be included')
             # subset unrel.set to only those in kinobj and divobj
-            unrel.set <- unrel.set[(unrel.set %in% id.both)]
+            unrel.set <- unrel.set[(unrel.set %in% id.all)]
         }
 
         # if using sample.include, only keep unrel.set in sample.include
