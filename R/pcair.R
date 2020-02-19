@@ -70,18 +70,16 @@ setMethod("pcair",
                    verbose = TRUE,
                    ...) {
 
-    if(!is.null(kinobj) & !is.null(divobj)){
+    if(!is.null(kinobj)){
       part <- pcairPartition(kinobj = kinobj, divobj = divobj,
                              kin.thresh = kin.thresh, div.thresh = div.thresh,
                              unrel.set = unrel.set, sample.include = sample.include,
                              verbose = verbose)
 
-    }else if(is.null(kinobj) & is.null(divobj)){
+    }else{
       part <- .pcairPartitionUser(gdsobj = gdsobj, unrel.set = unrel.set, 
                                   sample.include = sample.include, verbose = verbose)
 
-    }else{
-      stop('kinobj and divobj must either both be specified, or both be NULL')
     }
 
     if(verbose){

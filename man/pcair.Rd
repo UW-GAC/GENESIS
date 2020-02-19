@@ -22,7 +22,7 @@
 \arguments{
   \item{gdsobj}{An object providing a connection to a GDS file.}
   \item{kinobj}{A symmetric matrix of pairwise kinship coefficients for every pair of individuals in the sample: upper and lower triangles must both be filled; diagonals should be self-kinship or set to a non-missing constant value. This matrix is used for partitioning the sample into the 'unrelated' and 'related' subsets.  See 'Details' for how this interacts with \code{kin.thresh} and \code{unrel.set}.  IDs for each individual must be set as the column names of the matrix. This matrix may also be provided as a GDS object; see 'Details'.}
-  \item{divobj}{A symmetric matrix of pairwise ancestry divergence measures for every pair of individuals in the sample: upper and lower triangles must both be filled; diagonals should be set to a non-missing constant value. This matrix is used for partitioning the sample into the 'unrelated' and 'related' subsets.  See 'Details' for how this interacts with \code{div.thresh}.  IDs for each individual must be set as the column names of the matrix. This matrix may be identical to \code{kinobj}. This matrix may also be provided as a GDS object; see 'Details'.}
+  \item{divobj}{A symmetric matrix of pairwise ancestry divergence measures for every pair of individuals in the sample: upper and lower triangles must both be filled; diagonals should be set to a non-missing constant value. This matrix is used for partitioning the sample into the 'unrelated' and 'related' subsets.  See 'Details' for how this interacts with \code{div.thresh}.  IDs for each individual must be set as the column names of the matrix. This matrix may be identical to \code{kinobj}. This matrix may be \code{NULL} to ignore ancestry divergence. This matrix may also be provided as a GDS object; see 'Details'.}
   \item{kin.thresh}{Threshold value on \code{kinobj} used for declaring each pair of individuals as related or unrelated.  The default value is 2^(-11/2) ~ 0.022, corresponding to 4th degree relatives.  See 'Details' for how this interacts with \code{kinobj}.}
   \item{div.thresh}{Threshold value on \code{divobj} used for deciding if each pair of individuals is ancestrally divergent.  The default value is -2^(-11/2) ~ -0.022.  See 'Details' for how this interacts with \code{divobj}.}
   \item{unrel.set}{An optional vector of IDs for identifying individuals that are forced into the unrelated subset.  See 'Details' for how this interacts with \code{kinobj}.}
@@ -42,11 +42,13 @@
 
 	If \code{kinobj} is specified, \code{divobj} is specified, and \code{unrel.set} is specified, then all individuals with IDs in \code{unrel.set} are forced in the 'unrelated subset' and the PC-AiR algorithm is used to partition the rest of the sample; this is especially useful for including reference samples of known ancestry in the 'unrelated subset'.
 
-	If \code{kinobj = NULL}, \code{divobj = NULL}, and \code{unrel.set} is specified, then all individuals with IDs in \code{unrel.set} are put in the 'unrelated subset' and the rest of the individuals are put in the 'related subset'.
-
-	If \code{kinobj = NULL}, \code{divobj = NULL}, and \code{unrel.set = NULL}, then the function will perform a "stanadard" PCA analysis.
+	If \code{kinobj} is specified, and \code{divobj = NULL}, then \code{kinobj} is used to define the unrelated set but ancestry divergence is ignored.
 	
-	NOTE: \code{kinobj} and \code{divobj} may be identical, but both must be specified when using the PC-AiR algorithm to parition samples.
+	If \code{kinobj = NULL}, and \code{unrel.set} is specified, then all individuals with IDs in \code{unrel.set} are put in the 'unrelated subset' and the rest of the individuals are put in the 'related subset'.
+
+	If \code{kinobj = NULL}, and \code{unrel.set = NULL}, then the function will perform a "standard" PCA analysis.
+	
+	NOTE: \code{kinobj} and \code{divobj} may be identical.
 }
 \value{An object of class '\code{pcair}'.  A list including:
 	\item{vectors}{A matrix of principal components; each column is a principal component. Sample IDs are provided as rownames. The number of PCs returned can be adjusted by supplying the \code{eigen.cnt} argument, which is passed to \code{\link{snpgdsPCA}}.}
