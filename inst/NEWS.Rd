@@ -1,5 +1,15 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.17.3}{
+    \itemize{
+      \item Allow divergence to be NULL in pcair and pcairPartition.
+    }
+}
+\section{Version 2.17.1}{
+    \itemize{
+      \item Fix a bug in null model when starting variance component is close to 0.
+    }
+}
 \section{Version 2.16.0}{
     \itemize{
       \item Add option "Score.SPA" to assocTestSingle. This option for binary outcomes uses the saddlepoint approximation to compute p-values and is recommended for unbalanced case/control ratios.
