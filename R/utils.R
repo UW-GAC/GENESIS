@@ -168,7 +168,8 @@ setMethod("variantFilter",
 }
 
 .modelMatrixColumns <- function(null.model, col.name) {
-    null.model$model.matrix[,grep(paste0("^", col.name), colnames(null.model$model.matrix)),drop=FALSE]
+    cols <- unlist(lapply(col.name, function(x) grep(paste0("^", x), colnames(null.model$model.matrix))))
+    null.model$model.matrix[,cols,drop=FALSE]
 }
 
 .matchAlleles <- function(gdsobj, var.info) {

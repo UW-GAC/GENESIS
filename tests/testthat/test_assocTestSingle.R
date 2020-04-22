@@ -125,6 +125,11 @@ test_that("assocTestSingle - GxE", {
     nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age", "env"), verbose=FALSE)
     assoc <- assocTestSingle(iterator, nullmod, GxE="env", verbose=FALSE)
     expect_true(all(c("Est.G:envb", "SE.G:envb", "GxE.Stat") %in% names(assoc)))
+
+    # multiple E vars
+    resetIterator(iterator, verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, GxE=c("env", "sex"), verbose=FALSE)
+    expect_true(all(c("Est.G:sexM", "SE.G:sexM", "Est.G:envb", "SE.G:envb", "GxE.Stat") %in% names(assoc)))
     seqClose(svd)
 })
 

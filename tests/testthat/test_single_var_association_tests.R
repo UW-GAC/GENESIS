@@ -109,8 +109,6 @@ test_that("GxE", {
     expect_equal(res.lm$SE.G, test.gxe$res$SE.G)
     expect_equal(res.lm$`Est.G:c`, test.gxe$res$`Est.G:c`)
     expect_equal(res.lm$`SE.G:c`, test.gxe$res$`SE.G:c`)
-
-    expect_message(test.gxe <- testGenoSingleVar(nullmod, G = geno, E = dat$X[,3,drop=FALSE], test = "Score"))
 })
 
 test_that("singleVarTest - SPA", {

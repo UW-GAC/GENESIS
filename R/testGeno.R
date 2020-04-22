@@ -15,7 +15,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
 
     # checks on test
     if (!is.null(E)){
-        message("Performing GxE test")
+        #message("Performing GxE test")
         res <- .testGenoSingleVarWaldGxE(nullmod, G, E, GxE.return.cov.mat=GxE.return.cov)
         return(res)
     }

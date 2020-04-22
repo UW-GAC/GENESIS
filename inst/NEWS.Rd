@@ -1,5 +1,10 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.17.4}{
+    \itemize{
+      \item Fix a bug that prevented use of multiple environment variables in GxE.
+    }
+}
 \section{Version 2.17.3}{
     \itemize{
       \item Allow divergence to be NULL in pcair and pcairPartition.
