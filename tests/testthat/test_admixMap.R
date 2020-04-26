@@ -61,6 +61,9 @@ test_that("admixMap", {
     # check running with only one ancestry
     GWASTools::resetIterator(genoIterators[[1]])
     myassoc3 <- admixMap(genoIterators[[1]], null.model, verbose=FALSE)
+
+    lapply(genoIterators, GWASTools::close)
+    lapply(seqIterators, seqClose)
     
     lapply(tmpfile, unlink)
     lapply(tmpfile2, unlink)

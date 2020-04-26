@@ -1,7 +1,7 @@
 context("pcair tests")
 
 test_that("gds.class", {
-    showfile.gds(closeall=TRUE)
+    showfile.gds(closeall=TRUE, verbose=FALSE)
     gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
     gds <- openfn.gds(gdsfile)
     data("HapMap_ASW_MXL_KINGmat")
@@ -21,18 +21,18 @@ test_that("gds.class", {
 
 
 test_that("SNPGDSFileClass", {
-    showfile.gds(closeall=TRUE)
+    showfile.gds(closeall=TRUE, verbose=FALSE)
     gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
     gds <- SNPRelate::snpgdsOpen(gdsfile)
     data("HapMap_ASW_MXL_KINGmat")
     mypcs <- pcair(gds, kinobj=HapMap_ASW_MXL_KINGmat, divobj=HapMap_ASW_MXL_KINGmat, verbose=FALSE)
     expect_equal(dim(mypcs$vectors), c(173,32))
-    closefn.gds(gds)
+    SNPRelate::snpgdsClose(gds)
 })
 
 
 test_that("GenotypeData", {
-    showfile.gds(closeall=TRUE)
+    showfile.gds(closeall=TRUE, verbose=FALSE)
     gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
     HapMap_geno <- GWASTools::GdsGenotypeReader(gdsfile)
     data("HapMap_ASW_MXL_KINGmat")
@@ -58,7 +58,7 @@ test_that("SeqVarData", {
 
 
 test_that("kinobj and divobj NULL", {
-    showfile.gds(closeall=TRUE)
+    showfile.gds(closeall=TRUE, verbose=FALSE)
     gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
     gds <- openfn.gds(gdsfile)
     data("HapMap_ASW_MXL_KINGmat")
@@ -85,7 +85,7 @@ test_that("kinobj and divobj NULL", {
 
 
 test_that("divobj NULL", {
-    showfile.gds(closeall=TRUE)
+    showfile.gds(closeall=TRUE, verbose=FALSE)
     gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
     gds <- openfn.gds(gdsfile)
     data("HapMap_ASW_MXL_KINGmat")

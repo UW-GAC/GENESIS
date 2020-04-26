@@ -67,6 +67,7 @@ test_that("alleleFreq - nosex", {
 
 .testGdsXY <- function() {
     # make up file with sex chroms
+    showfile.gds(closeall=TRUE, verbose=FALSE)
     gds.fn <- tempfile()
     invisible(file.copy(seqExampleFileName("gds"), gds.fn))
     gds <- openfn.gds(gds.fn, readonly=FALSE)

@@ -1,6 +1,7 @@
 context("pcairPartition tests")
 
 .testKinGds <- function(x, file) {
+    showfile.gds(closeall=TRUE, verbose=FALSE)
     gds <- gdsfmt::createfn.gds(file)
     gdsfmt::add.gdsn(gds, "sample.id", colnames(x))
     gdsfmt::add.gdsn(gds, "kinship", x)
