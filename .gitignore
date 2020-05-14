@@ -2,3 +2,12 @@
 *.html
 *.so
 *.o
+
+# renv for development
+.Rprofile
+renv.lock
+renv/
+
+# other
+*.Rproj
+.Rproj.user/
