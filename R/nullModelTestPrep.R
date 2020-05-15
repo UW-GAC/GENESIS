@@ -1,12 +1,12 @@
 
 ## takes a null model and prepare specific arguments to streamline the testing
-nullModelTestPrep <- function(nullmod){ 
+nullModelTestPrep <- function(nullmod){
     Y <- nullmod$workingY
     X <- nullmod$model.matrix
     C <- nullmod$cholSigmaInv
 
     if (length(C) > 1) { ## n by n cholSigmaInv (may be Diagonal)
-        if (is(C, "Matrix")) X <- Matrix(X)
+        if (is(C, "Matrix")) X <- Matrix(X, sparse = FALSE)
         CX <- crossprod(C, X)
         CXCXI <- tcrossprod(CX, chol2inv(chol(crossprod(CX))))
         # qrmod <- base::qr(CX)
@@ -15,7 +15,7 @@ nullModelTestPrep <- function(nullmod){
         Ytilde <- CY - tcrossprod(CXCXI, crossprod(CY, CX))
         resid <- C %*% Ytilde
         # resid <- tcrossprod(C, crossprod(nullmod$resid.marginal, C))
-        
+
     } else { ## cholSigmaInv is a scalar
         CX <- C*X
         CXCXI <- tcrossprod(CX, chol2inv(chol(crossprod(CX))))
@@ -63,7 +63,7 @@ calcGtilde <- function(nullmod, G){
         }
         Gtilde <- do.call(cbind, Gtilde)
     }
-    
+
     return(Gtilde)
 }
 

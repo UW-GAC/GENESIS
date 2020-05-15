@@ -1,5 +1,10 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.19.1}{
+    \itemize{
+      \item Force design matrices to be non-sparse.
+    }
+}
 \section{Version 2.17.4}{
     \itemize{
       \item Fix a bug that prevented use of multiple environment variables in GxE.
