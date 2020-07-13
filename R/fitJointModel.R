@@ -5,6 +5,14 @@
 # Outputs:
 # * list with elements: pve, fixef?
 
-.jointModel <- function(nullmod, G) {  # # Check rownames/colnames match.
+.fitJointModel <- function(nullmod, G) {  # # Check rownames/colnames match.
+
+  res <- list()
+
+  res$pve <- numeric()
+  res$fixef <- data.frame(stringsAsFactors = FALSE)
+  res$covar <- matrix()
+
+  return(res)
 
 }
