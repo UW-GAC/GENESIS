@@ -7,11 +7,40 @@
 
 .fitJointModel <- function(nullmod, G) {  # # Check rownames/colnames match.
 
+  # Genotype adjusted for covariates and random effects.
+  Gtilde <- calcGtilde(nullmod, G)
+
+  # Score statistic.
+  GY <- crossprod(Gtilde, nullmod$Ytilde)
+
+  # GPG.
+  GG <- crossprod(Gtilde)
+
+  # Calculate proportion of variance explained.
+  pve <- as.vector(crossprod(GY, solve(GG, GY)) / nullmod$RSS0)
+
+  # Covariance matrix.
+  covar <- solve(GG)
+
+  beta <- as.vector(solve(GG, GY))
+  se <- sqrt(diag(covar))
+
+  # Calculate fixed effects data frame.
+  fixef <- data.frame(
+    Est = beta,
+    SE = se,
+    stringsAsFactors = FALSE
+  ) %>%
+    dplyr::mutate(
+      Stat = beta / se,
+      pval = pchisq(Stat^2, lower.tail = F, df = 1)
+    )
+
   res <- list()
 
-  res$pve <- numeric()
-  res$fixef <- data.frame(stringsAsFactors = FALSE)
-  res$covar <- matrix()
+  res$pve <- pve
+  res$fixef <- fixef
+  res$covar <- covar
 
   return(res)
 

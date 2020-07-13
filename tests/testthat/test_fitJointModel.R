@@ -37,6 +37,19 @@ test_that("works with one snp", {
 })
 
 test_that("works with two snps", {
+  n <- 100
+  nsnp <- 2
+  dat <- .testNullInputs(n)
+  geno <- .testGenoMatrix(n, nsnp = nsnp)
+  nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose = FALSE)
+
+  jointmod <- .fitJointModel(nullmod, geno)
+  expect_equal(length(jointmod$pve), 1)
+  expect_equal(nrow(jointmod$fixef), nsnp)
+  expect_equal(names(jointmod$fixef), c("Est", "SE", "Stat", "pval"))
+  expect_equal(nrow(jointmod$covar), nsnp)
+  expect_equal(ncol(jointmod$covar), nsnp)
+  fail('add checks on names')
 })
 
 test_that("two snps in perfect LD", {
