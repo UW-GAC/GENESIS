@@ -5,13 +5,15 @@ test_that("returns expected names", {
   dat <- .testJointInputs(nsamp=100, nsnp=10)
   jointmod <- jointScoreTest(dat$nullmod, dat$geno)
   expect_is(jointmod, "list")
-  expect_equal(names(jointmod), c("pve", "fixef", "covar"))
+  expect_equal(names(jointmod), c("Stat.joint", "pval.joint", "pve", "fixef", "covar"))
 })
 
 test_that("returns expected types", {
   dat <- .testJointInputs(nsamp=100, nsnp=10)
   jointmod <- jointScoreTest(dat$nullmod, dat$geno)
   expect_is(jointmod, "list")
+  expect_is(jointmod$Stat.joint, "numeric")
+  expect_is(jointmod$pval.joint, "numeric")
   expect_is(jointmod$pve, "numeric")
   expect_is(jointmod$fixef, "data.frame")
   expect_is(jointmod$covar, "matrix")
@@ -28,6 +30,8 @@ test_that("checks names match", {
 test_that("works with one snp", {
   dat <- .testJointInputs(nsamp=100, nsnp=1)
   jointmod <- jointScoreTest(dat$nullmod, dat$geno)
+  expect_equal(length(jointmod$Stat.joint), 1)
+  expect_equal(length(jointmod$pval.joint), 1)
   expect_equal(length(jointmod$pve), 1)
   expect_equal(nrow(jointmod$fixef), 1)
   expect_equal(names(jointmod$fixef), c("Est", "SE", "Stat", "pval"))
@@ -38,6 +42,8 @@ test_that("works with one snp", {
 test_that("works with two snps", {
   dat <- .testJointInputs(nsamp=100, nsnp=2)
   jointmod <- jointScoreTest(dat$nullmod, dat$geno)
+  expect_equal(length(jointmod$Stat.joint), 1)
+  expect_equal(length(jointmod$pval.joint), 1)
   expect_equal(length(jointmod$pve), 1)
   expect_equal(nrow(jointmod$fixef), 2)
   expect_equal(names(jointmod$fixef), c("Est", "SE", "Stat", "pval"))

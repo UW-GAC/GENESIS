@@ -14,7 +14,7 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
 
   # Reorder samples.
   idx <- match(nullmod$sample.id, rownames(G))
-  G <- G[idx, ]
+  G <- G[idx, , drop = FALSE]
 
   # Genotype adjusted for covariates and random effects.
   Gtilde <- calcGtilde(nullmod, G)
@@ -25,8 +25,12 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
   # GPG.
   GG <- crossprod(Gtilde)
 
+  # Joint test statistic. Note this is the equivalent of the stat being squared, by convention.
+  Stat.joint <- crossprod(GY, solve(GG, GY))
+  pval.joint <- pchisq(Stat.joint, df = ncol(G))
+
   # Calculate proportion of variance explained.
-  pve <- as.vector(crossprod(GY, solve(GG, GY)) / nullmod$RSS0)
+  pve <- as.vector(Stat.joint / nullmod$RSS0)
 
   # Covariance matrix.
   covar <- solve(GG)
@@ -49,6 +53,8 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
 
   res <- list()
 
+  res$Stat.joint <- as.numeric(Stat.joint)
+  res$pval.joint <- as.numeric(pval.joint)
   res$pve <- pve
   res$fixef <- fixef
   res$covar <- covar
