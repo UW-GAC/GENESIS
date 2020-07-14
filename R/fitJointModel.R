@@ -4,8 +4,7 @@
 
 # Outputs:
 # * list with elements: pve, fixef?
-
-.fitJointModel <- function(nullmod, G) {  # # Check rownames/colnames match.
+fitJointModel <- function(nullmod, G) {  # # Check rownames/colnames match.
 
   # Genotype adjusted for covariates and random effects.
   Gtilde <- calcGtilde(nullmod, G)
