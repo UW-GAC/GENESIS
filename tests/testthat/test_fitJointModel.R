@@ -68,3 +68,28 @@ test_that("uses names if geno matrix has colnames", {
   expect_equal(rownames(jointmod$covar), expected_names)
   expect_equal(colnames(jointmod$covar), expected_names)
 })
+
+test_that("reorders samples", {
+  dat <- .testJointInputs(nsamp=100, nsnp=2)
+  expected_output <- fitJointModel(dat$nullmod, dat$geno)
+  idx <- sample(1:100)
+  expect_equal(fitJointModel(dat$nullmod, dat$geno[idx, ]), expected_output)
+})
+
+test_that("extra samples in geno matrix", {
+  dat <- .testJointInputs(nsamp=100, nsnp=2)
+  tmp <- .testGenoMatrix(n=10, nsnp=2)
+  rownames(tmp) <- letters[1:10]
+  extra_geno <- rbind(dat$geno, tmp)
+
+  expected_output <- fitJointModel(dat$nullmod, dat$geno)
+  expect_equal(fitJointModel(dat$nullmod, extra_geno), expected_output)
+})
+
+test_that("some samples missing in geno matrix", {
+  dat <- .testJointInputs(nsamp=100, nsnp=2)
+  tmp <- .testGenoMatrix(n=10, nsnp=2)
+  idx <- sample(1:100, 10)
+
+  expect_error(fitJointModel(dat$nullmod, dat$geno[-idx, ]), "missing samples in genotype matrix")
+})
