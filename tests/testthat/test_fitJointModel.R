@@ -63,7 +63,6 @@ test_that("works with two snps", {
   expect_equal(names(jointmod$fixef), c("Est", "SE", "Stat", "pval"))
   expect_equal(nrow(jointmod$covar), nsnp)
   expect_equal(ncol(jointmod$covar), nsnp)
-  fail('add checks on names')
 })
 
 test_that("two snps in perfect LD", {
@@ -75,4 +74,33 @@ test_that("two snps in perfect LD", {
   nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose = FALSE)
 
   expect_error(.fitJointModel(nullmod, geno))
+})
+
+test_that("geno matrix has no colnames", {
+  n <- 100
+  nsnp <- 2
+  dat <- .testNullInputs(n)
+  geno <- .testGenoMatrix(n, nsnp = nsnp)
+  nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose = FALSE)
+
+  jointmod <- .fitJointModel(nullmod, geno)
+  expect_equal(rownames(jointmod$fixef), c("1", "2"))
+  expect_true(is.null(rownames(jointmod$covar)))
+  expect_true(is.null(colnames(jointmod$covar)))
+})
+
+test_that("uses names if geno matrix has colnames", {
+  n <- 100
+  nsnp <- 2
+  dat <- .testNullInputs(n)
+  geno <- .testGenoMatrix(n, nsnp = nsnp)
+  expected_names <- c("aaa", "bbb")
+  colnames(geno) <- expected_names
+  nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose = FALSE)
+
+  jointmod <- .fitJointModel(nullmod, geno)
+  expect_equal(rownames(jointmod$fixef), expected_names)
+  expect_equal(rownames(jointmod$covar), expected_names)
+  expect_equal(colnames(jointmod$covar), expected_names)
+
 })

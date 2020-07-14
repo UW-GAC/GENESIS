@@ -21,6 +21,7 @@
 
   # Covariance matrix.
   covar <- solve(GG)
+  rownames(covar) <- colnames(covar) <- colnames(G)
 
   beta <- as.vector(solve(GG, GY))
   se <- sqrt(diag(covar))
@@ -35,6 +36,7 @@
       Stat = beta / se,
       pval = pchisq(Stat^2, lower.tail = F, df = 1)
     )
+  rownames(fixef) <- colnames(G)
 
   res <- list()
 
