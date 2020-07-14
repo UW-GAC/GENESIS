@@ -2,25 +2,15 @@ context("joint model")
 library(Biobase)
 
 test_that("returns expected names", {
-  n <- 100
-  nsnp <- 10
-  dat <- .testNullInputs(n)
-  geno <- .testGenoMatrix(n, nsnp = nsnp)
-  nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose = FALSE)
-
-  jointmod <- .fitJointModel(nullmod, geno)
+  dat <- .testJointInputs(nsamp=100, nsnp=10)
+  jointmod <- .fitJointModel(dat$nullmod, dat$geno)
   expect_is(jointmod, "list")
   expect_equal(names(jointmod), c("pve", "fixef", "covar"))
 })
 
 test_that("returns expected types", {
-  n <- 100
-  nsnp <- 10
-  dat <- .testNullInputs(n)
-  geno <- .testGenoMatrix(n, nsnp = nsnp)
-  nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose = FALSE)
-
-  jointmod <- .fitJointModel(nullmod, geno)
+  dat <- .testJointInputs(nsamp=100, nsnp=10)
+  jointmod <- .fitJointModel(dat$nullmod, dat$geno)
   expect_is(jointmod, "list")
   expect_is(jointmod$pve, "numeric")
   expect_is(jointmod$fixef, "data.frame")
@@ -36,71 +26,45 @@ test_that("checks names match", {
 })
 
 test_that("works with one snp", {
-  n <- 100
-  nsnp <- 1
-  dat <- .testNullInputs(n)
-  geno <- .testGenoMatrix(n, nsnp = nsnp)
-  nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose = FALSE)
-
-  jointmod <- .fitJointModel(nullmod, geno)
+  dat <- .testJointInputs(nsamp=100, nsnp=1)
+  jointmod <- .fitJointModel(dat$nullmod, dat$geno)
   expect_equal(length(jointmod$pve), 1)
-  expect_equal(nrow(jointmod$fixef), nsnp)
+  expect_equal(nrow(jointmod$fixef), 1)
   expect_equal(names(jointmod$fixef), c("Est", "SE", "Stat", "pval"))
-  expect_equal(nrow(jointmod$covar), nsnp)
-  expect_equal(ncol(jointmod$covar), nsnp)
+  expect_equal(nrow(jointmod$covar), 1)
+  expect_equal(ncol(jointmod$covar), 1)
 })
 
 test_that("works with two snps", {
-  n <- 100
-  nsnp <- 2
-  dat <- .testNullInputs(n)
-  geno <- .testGenoMatrix(n, nsnp = nsnp)
-  nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose = FALSE)
-
-  jointmod <- .fitJointModel(nullmod, geno)
+  dat <- .testJointInputs(nsamp=100, nsnp=2)
+  jointmod <- .fitJointModel(dat$nullmod, dat$geno)
   expect_equal(length(jointmod$pve), 1)
-  expect_equal(nrow(jointmod$fixef), nsnp)
+  expect_equal(nrow(jointmod$fixef), 2)
   expect_equal(names(jointmod$fixef), c("Est", "SE", "Stat", "pval"))
-  expect_equal(nrow(jointmod$covar), nsnp)
-  expect_equal(ncol(jointmod$covar), nsnp)
+  expect_equal(nrow(jointmod$covar), 2)
+  expect_equal(ncol(jointmod$covar), 2)
 })
 
 test_that("two snps in perfect LD", {
-  n <- 100
-  nsnp <- 2
-  dat <- .testNullInputs(n)
-  geno <- .testGenoMatrix(n, nsnp = nsnp)
-  geno[, 2] <- geno[, 1]
-  nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose = FALSE)
-
-  expect_error(.fitJointModel(nullmod, geno))
+  dat <- .testJointInputs(nsamp=100, nsnp=2)
+  dat$geno[, 2] <- dat$geno[, 1]
+  expect_error(.fitJointModel(dat$nullmod, dat$geno))
 })
 
 test_that("geno matrix has no colnames", {
-  n <- 100
-  nsnp <- 2
-  dat <- .testNullInputs(n)
-  geno <- .testGenoMatrix(n, nsnp = nsnp)
-  nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose = FALSE)
-
-  jointmod <- .fitJointModel(nullmod, geno)
+  dat <- .testJointInputs(nsamp=100, nsnp=2)
+  jointmod <- .fitJointModel(dat$nullmod, dat$geno)
   expect_equal(rownames(jointmod$fixef), c("1", "2"))
   expect_true(is.null(rownames(jointmod$covar)))
   expect_true(is.null(colnames(jointmod$covar)))
 })
 
 test_that("uses names if geno matrix has colnames", {
-  n <- 100
-  nsnp <- 2
-  dat <- .testNullInputs(n)
-  geno <- .testGenoMatrix(n, nsnp = nsnp)
+  dat <- .testJointInputs(nsamp=100, nsnp=2)
   expected_names <- c("aaa", "bbb")
-  colnames(geno) <- expected_names
-  nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose = FALSE)
-
-  jointmod <- .fitJointModel(nullmod, geno)
+  colnames(dat$geno) <- expected_names
+  jointmod <- .fitJointModel(dat$nullmod, dat$geno)
   expect_equal(rownames(jointmod$fixef), expected_names)
   expect_equal(rownames(jointmod$covar), expected_names)
   expect_equal(colnames(jointmod$covar), expected_names)
-
 })
