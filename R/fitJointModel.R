@@ -3,15 +3,15 @@
 # * G: genotype matrix with variants to estimate jointly
 
 # Outputs:
-# * list with elements: pve, fixef?
-fitJointModel <- function(nullmod, G) {  # # Check rownames/colnames match.
+# * list with elements: pve, fixef, covar
+jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
 
   # Check that all samples in null model are in the genotype matrix.
   missing_ids <- setdiff(nullmod$sample.id, rownames(G))
   if (length(missing_ids) > 0) {
     stop("missing samples in genotype matrix!")
   }
-  
+
   # Reorder samples.
   idx <- match(nullmod$sample.id, rownames(G))
   G <- G[idx, ]
