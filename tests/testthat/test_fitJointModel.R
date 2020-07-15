@@ -5,7 +5,7 @@ test_that("returns expected names", {
   dat <- .testJointInputs(nsamp=100, nsnp=10)
   jointmod <- jointScoreTest(dat$nullmod, dat$geno)
   expect_is(jointmod, "list")
-  expect_equal(names(jointmod), c("Stat.joint", "pval.joint", "pve", "fixef", "covar"))
+  expect_equal(names(jointmod), c("Stat.joint", "pval.joint", "pve", "fixef", "betaCov"))
 })
 
 test_that("returns expected types", {
@@ -16,7 +16,7 @@ test_that("returns expected types", {
   expect_is(jointmod$pval.joint, "numeric")
   expect_is(jointmod$pve, "numeric")
   expect_is(jointmod$fixef, "data.frame")
-  expect_is(jointmod$covar, "matrix")
+  expect_is(jointmod$betaCov, "matrix")
 })
 
 test_that("checks input types", {
@@ -35,8 +35,8 @@ test_that("works with one snp", {
   expect_equal(length(jointmod$pve), 1)
   expect_equal(nrow(jointmod$fixef), 1)
   expect_equal(names(jointmod$fixef), c("Est", "SE", "Stat", "pval"))
-  expect_equal(nrow(jointmod$covar), 1)
-  expect_equal(ncol(jointmod$covar), 1)
+  expect_equal(nrow(jointmod$betaCov), 1)
+  expect_equal(ncol(jointmod$betaCov), 1)
 })
 
 test_that("works with two snps", {
@@ -47,8 +47,8 @@ test_that("works with two snps", {
   expect_equal(length(jointmod$pve), 1)
   expect_equal(nrow(jointmod$fixef), 2)
   expect_equal(names(jointmod$fixef), c("Est", "SE", "Stat", "pval"))
-  expect_equal(nrow(jointmod$covar), 2)
-  expect_equal(ncol(jointmod$covar), 2)
+  expect_equal(nrow(jointmod$betaCov), 2)
+  expect_equal(ncol(jointmod$betaCov), 2)
 })
 
 test_that("two snps in perfect LD", {
@@ -61,8 +61,8 @@ test_that("geno matrix has no colnames", {
   dat <- .testJointInputs(nsamp=100, nsnp=2)
   jointmod <- jointScoreTest(dat$nullmod, dat$geno)
   expect_equal(rownames(jointmod$fixef), c("1", "2"))
-  expect_true(is.null(rownames(jointmod$covar)))
-  expect_true(is.null(colnames(jointmod$covar)))
+  expect_true(is.null(rownames(jointmod$betaCov)))
+  expect_true(is.null(colnames(jointmod$betaCov)))
 })
 
 test_that("uses names if geno matrix has colnames", {
@@ -71,8 +71,8 @@ test_that("uses names if geno matrix has colnames", {
   colnames(dat$geno) <- expected_names
   jointmod <- jointScoreTest(dat$nullmod, dat$geno)
   expect_equal(rownames(jointmod$fixef), expected_names)
-  expect_equal(rownames(jointmod$covar), expected_names)
-  expect_equal(colnames(jointmod$covar), expected_names)
+  expect_equal(rownames(jointmod$betaCov), expected_names)
+  expect_equal(colnames(jointmod$betaCov), expected_names)
 })
 
 test_that("reorders samples", {

@@ -33,11 +33,11 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
   pve <- as.vector(Stat.joint / nullmod$RSS0)
 
   # Covariance matrix.
-  covar <- solve(GG)
-  rownames(covar) <- colnames(covar) <- colnames(G)
+  betaCov <- solve(GG)
+  rownames(betaCov) <- colnames(betaCov) <- colnames(G)
 
   beta <- as.vector(solve(GG, GY))
-  se <- sqrt(diag(covar))
+  se <- sqrt(diag(betaCov))
 
   # Calculate fixed effects data frame.
   fixef <- data.frame(
@@ -57,7 +57,7 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
   res$pval.joint <- as.numeric(pval.joint)
   res$pve <- pve
   res$fixef <- fixef
-  res$covar <- covar
+  res$betaCov <- betaCov
 
   return(res)
 
