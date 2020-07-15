@@ -25,28 +25,30 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
   # GPG.
   GG <- crossprod(Gtilde)
 
-  # Joint test statistic. Note this is the equivalent of the stat being squared, by convention.
-  Stat.joint <- crossprod(GY, solve(GG, GY))
-  pval.joint <- pchisq(Stat.joint, df = ncol(G))
-
-  # Calculate proportion of variance explained.
-  pve <- as.vector(Stat.joint / nullmod$RSS0)
-
-  # Covariance matrix.
+  # Covariance matrix for estimates.
   betaCov <- solve(GG)
   rownames(betaCov) <- colnames(betaCov) <- colnames(G)
 
-  beta <- as.vector(solve(GG, GY))
+  # Fixed effect estimates for the variants.
+  beta <- crossprod(betaCov, GY)
   se <- sqrt(diag(betaCov))
 
-  # Calculate fixed effects data frame.
+  # Joint test statistic. Note this is the equivalent of the stat being squared,
+  # by convention.
+  Stat.joint <- as.vector(crossprod(GY, beta))
+  pval.joint <- pchisq(Stat.joint, df = ncol(G))
+
+  # Percentage of variance explained jointly by these variants.
+  pve <- as.vector(Stat.joint / nullmod$RSS0)
+
+  # Create fixed effects data frame.
   fixef <- data.frame(
-    Est = beta,
+    Est = as.vector(beta),
     SE = se,
     stringsAsFactors = FALSE
   ) %>%
     dplyr::mutate(
-      Stat = beta / se,
+      Stat = Est / SE,
       pval = pchisq(Stat^2, lower.tail = F, df = 1)
     )
   rownames(fixef) <- colnames(G)
