@@ -12,6 +12,13 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
     stop("missing samples in genotype matrix!")
   }
 
+  # Check for missingness in genotype data.
+  # For now, missingness is not allowed.
+  # Eventually, update to handle missingness the same way as assocTestSingle.
+  if (any(is.na(G))) {
+    stop("genotype matrix cannot contain missing data!")
+  }
+  
   # Reorder samples.
   idx <- match(nullmod$sample.id, rownames(G))
   G <- G[idx, , drop = FALSE]

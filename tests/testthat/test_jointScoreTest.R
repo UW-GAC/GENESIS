@@ -99,3 +99,9 @@ test_that("some samples missing in geno matrix", {
 
   expect_error(jointScoreTest(dat$nullmod, dat$geno[-idx, ]), "missing samples in genotype matrix")
 })
+
+test_that("missingness in genotype data", {
+  dat <- .testJointInputs(nsamp = 100, nsnp = 2)
+  dat$geno[10, 1] <- NA
+  expect_error(jointScoreTest(dat$nullmod, dat$geno), "missing data")
+})
