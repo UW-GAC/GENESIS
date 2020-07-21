@@ -7,7 +7,7 @@
 jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
 
   # Check that all samples in null model are in the genotype matrix.
-  missing_ids <- setdiff(nullmod$sample.id, rownames(G))
+  missing_ids <- setdiff(rownames(nullmod$model.matrix), rownames(G))
   if (length(missing_ids) > 0) {
     stop("missing samples in genotype matrix!")
   }
@@ -18,9 +18,9 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
   if (any(is.na(G))) {
     stop("genotype matrix cannot contain missing data!")
   }
-  
+
   # Reorder samples.
-  idx <- match(nullmod$sample.id, rownames(G))
+  idx <- match(rownames(nullmod$model.matrix), rownames(G))
   G <- G[idx, , drop = FALSE]
 
   # Genotype adjusted for covariates and random effects.
