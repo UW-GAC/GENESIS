@@ -19,14 +19,6 @@ test_that("returns expected types", {
   expect_is(jointmod$betaCov, "matrix")
 })
 
-test_that("checks input types", {
-  # test in wrapper function
-})
-
-test_that("checks names match", {
-  # test in wrapper function
-})
-
 test_that("works with one snp", {
   dat <- .testJointInputs(nsamp=100, nsnp=1)
   jointmod <- jointScoreTest(dat$nullmod, dat$geno)
