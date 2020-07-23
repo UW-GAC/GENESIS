@@ -11,6 +11,7 @@ jointScoreTest(nullmod, G)
 }
 \details{
   \code{jointScoreTest} takes the object returned by \code{\link{fitNullModel}} and performs a joint score test for all variants in the \code{G} matrix using this null model.
+  All effect size and PVE estimates in \code{fixef} are adjusted for (i.e. conditional on) all other variants included in \code{G}.
 
   The \code{G} matrix must be formatted such that the rows are samples and the columns are variants, and the entries are the dosage for that sample and variant.
   The matrix must have \code{sample.id} as rownames; this is used to match the genotypes to the null model.
@@ -19,18 +20,16 @@ jointScoreTest(nullmod, G)
 
   Colnames for \code{G} are not required.
   If present, the column names of \code{G} will be used as the rownames of the \code{fixef} element and the column and rownames of the \code{betaCov} element of the output.
-  \code{fixef} and \code{betaCov} will be in the same order as \code{G}.
-
+  \code{fixef} and \code{betaCov} will be in the same order as the columns in \code{G}.
 
   Missing data in \code{G} are not allowed.
 }
 \value{\code{jointScoreTest} returns a list with the following elements:
-  \item{Stat.joint}{Joint test statistic for all variants in \code{G}.}
-  \item{pval.joint}{p-value associated with the joint test statistic drawn from a \eqn{\Chi^2} distribution with \eqn{n_\mathrm{variants}} degrees of freedom.}
-  \item{pve}{The proportion of variance explained by the variants in \code{G}.}
-  \item{fixef}{Data frame of fixed effects for the variants in \code{G}.}
-  \item{betaCov}{Covariance matrix for the variance in \code{G}.}
-
+  \item{Stat.joint}{Squared joint score test statistic for all variants in \code{G}.}
+  \item{pval.joint}{p-value associated with the joint score test statistic drawn from a \eqn{\Chi^2} distribution with \eqn{n_\mathrm{variants}} degrees of freedom.}
+  \item{pve}{Estimate of the proportion of variance explained by the variants in \code{G}.}
+  \item{fixef}{A data.frame with joint effect size estimates (Est), standard errors (SE), chi-squared test statistics (Stat), and p-values (pval) for each of the variants specified in \code{G}.}
+  \item{betaCov}{Estimated covariance matrix for the variants in \code{G}.}
 }
 %\references{
 %}
