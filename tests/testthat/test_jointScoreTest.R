@@ -99,3 +99,12 @@ test_that("missingness in genotype data", {
   dat$geno[10, 1] <- NA
   expect_error(jointScoreTest(dat$nullmod, dat$geno), "missing data")
 })
+
+test_that("works without sample.id element in null model", {
+  dat <- .testJointInputs(nsamp=100, nsnp=10)
+  nm <- dat$nullmod
+  expected_output <- jointScoreTest(dat$nullmod, dat$geno)
+  nm$sample.id <- NULL
+  jointmod <- jointScoreTest(nm, dat$geno)
+  expect_equal(jointmod, expected_output)
+})
