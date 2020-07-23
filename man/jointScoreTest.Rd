@@ -15,7 +15,7 @@ jointScoreTest(nullmod, G)
   The \code{G} matrix must be formatted such that the rows are samples and the columns are variants, and the entries are the dosage for that sample and variant.
   The matrix must have \code{sample.id} as rownames; this is used to match the genotypes to the null model.
   Therefore, the same sample identifiers must be used in both \code{nullmod} and \code{G}.
-  \code{G} can contain additional samples and ordering is unimportant; it will be subset and reordered to match the set of samples in the null model.
+  \code{G} can contain additional samples and ordering is unimportant as long as all samples from the null model are present; it will be subset and reordered to match the set of samples in the null model.
 
   Colnames for \code{G} are not required.
   If present, the column names of \code{G} will be used as the rownames of the \code{fixef} element and the column and rownames of the \code{betaCov} element of the output.
