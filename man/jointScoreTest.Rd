@@ -34,7 +34,7 @@ jointScoreTest(nullmod, G)
 %\references{
 %}
 
-\author{Adrienne M. Stilp}
+\author{Adrienne M. Stilp, Matthew P. Conomos}
 \seealso{
 \code{\link{fitNullModel}} for fitting the mixed model and performing the variance component estimation.
 \code{\link[GWASTools]{GenotypeData}} and \code{\link[SeqVarTools]{SeqVarData}} for obtaining genotype matrices.
