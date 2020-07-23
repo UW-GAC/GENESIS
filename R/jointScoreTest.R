@@ -55,9 +55,9 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
     stringsAsFactors = FALSE
   ) %>%
     dplyr::mutate(
-      Stat = Est / SE,
-      pval = pchisq(Stat^2, lower.tail = F, df = 1),
-      pve = Stat^2 / nullmod$RSS0
+      Stat = .data$Est / .data$SE,
+      pval = pchisq(.data$Stat^2, lower.tail = F, df = 1),
+      pve = .data$Stat^2 / nullmod$RSS0
     )
   rownames(fixef) <- colnames(G)
 

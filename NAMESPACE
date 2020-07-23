@@ -12,6 +12,7 @@ import(Matrix)
 import(data.table)
 import(foreach)
 importFrom(dplyr, "%>%")
+importFrom(rlang, ".data")
 
 importFrom(GWASTools,
            GdsGenotypeReader,
