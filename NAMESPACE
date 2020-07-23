@@ -11,6 +11,7 @@ import(gdsfmt)
 import(Matrix)
 import(data.table)
 import(foreach)
+importFrom(dplyr, "%>%")
 
 importFrom(GWASTools,
            GdsGenotypeReader,
@@ -77,6 +78,7 @@ export(admixMap,
        correctKin,
        correctK0,
        correctK2,
+       jointScoreTest,
        kin2gds,
        mat2gds,
        nullModelInvNorm,
