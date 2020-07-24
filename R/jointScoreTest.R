@@ -46,7 +46,7 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
   pval.joint <- pchisq(Stat.joint, lower.tail = FALSE, df = ncol(G))
 
   # Percentage of variance explained jointly by these variants.
-  pve <- as.numeric(Stat.joint / nullmod$RSS0)
+  pve.joint <- as.numeric(Stat.joint / nullmod$RSS0)
 
   # Create fixed effects data frame.
   fixef <- data.frame(
@@ -65,7 +65,7 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
 
   res$Stat.joint <- as.numeric(Stat.joint)
   res$pval.joint <- as.numeric(pval.joint)
-  res$pve <- pve
+  res$pve.joint <- pve.joint
   res$fixef <- fixef
   res$betaCov <- betaCov
 
