@@ -43,7 +43,7 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
   # Joint test statistic. Note this is the equivalent of the stat being squared,
   # by convention.
   Stat.joint <- as.numeric(crossprod(GY, beta))
-  pval.joint <- pchisq(Stat.joint, df = ncol(G))
+  pval.joint <- pchisq(Stat.joint, lower.tail = FALSE, df = ncol(G))
 
   # Percentage of variance explained jointly by these variants.
   pve <- as.numeric(Stat.joint / nullmod$RSS0)
