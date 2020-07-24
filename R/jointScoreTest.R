@@ -42,11 +42,11 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
 
   # Joint test statistic. Note this is the equivalent of the stat being squared,
   # by convention.
-  Stat.joint <- as.vector(crossprod(GY, beta))
+  Stat.joint <- as.numeric(crossprod(GY, beta))
   pval.joint <- pchisq(Stat.joint, df = ncol(G))
 
   # Percentage of variance explained jointly by these variants.
-  pve <- as.vector(Stat.joint / nullmod$RSS0)
+  pve <- as.numeric(Stat.joint / nullmod$RSS0)
 
   # Create fixed effects data frame.
   fixef <- data.frame(
