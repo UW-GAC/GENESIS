@@ -72,7 +72,7 @@ cov.mat = HapMap_ASW_MXL_KINGmat[rownames(phen), rownames(phen)]
 # Fit a null model.
 nullmod <- fitNullModel(phen,
                         outcome = "outcome",
-                        "covars" = "covar",
+                        covars = "covar",
                         cov.mat = cov.mat)
 
 
