@@ -36,3 +36,17 @@
     mypcair <- suppressWarnings(pcair(seqData, kinobj=kinship, divobj=kinship, verbose=FALSE, ...))
     mypcair$vectors[,1:2]
 }
+
+.testJointInputs <- function(nsamp, nsnp) {
+  sample.ids <- sprintf("s%s", 1:nsamp)
+  dat <- .testNullInputs(n=nsamp)
+  rownames(dat$X) <- sample.ids
+  rownames(dat$cor.mat) <- colnames(dat$cor.mat) <- sample.ids
+  nm <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose=FALSE)
+  nm$sample.id <- sample.ids
+
+  geno <- .testGenoMatrix(nsamp, nsnp=nsnp)
+  rownames(geno) <- sample.ids
+
+  list(nullmod=nm, geno=geno)
+}
