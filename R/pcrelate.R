@@ -371,9 +371,9 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
     muqu[filt.idx] <- 0
 
     # numerator (crossprod of residuals)
-    kinNum <- tcrossprod(R[idx,], R[jdx,])
+    kinNum <- tcrossprod(R[idx,,drop=F], R[jdx,,drop=F])
     # denominator
-    kinDen <- tcrossprod(sqrt(muqu[idx,]), sqrt(muqu[jdx,]))
+    kinDen <- tcrossprod(sqrt(muqu[idx,,drop=F]), sqrt(muqu[jdx,,drop=F]))
 
     return(list(kinNum = kinNum, kinDen = kinDen))
 }
@@ -401,12 +401,12 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
     muqu[filt.idx] <- 0
 
     # k0	
-    k0Num <- tcrossprod(IAA[idx,], Iaa[jdx,]) + tcrossprod(Iaa[idx,], IAA[jdx,])
-    k0Den <- tcrossprod(mu[idx,]^2, qu[jdx,]^2) + tcrossprod(qu[idx,]^2, mu[jdx,]^2)
+    k0Num <- tcrossprod(IAA[idx,,drop=F], Iaa[jdx,,drop=F]) + tcrossprod(Iaa[idx,,drop=F], IAA[jdx,,drop=F])
+    k0Den <- tcrossprod(mu[idx,,drop=F]^2, qu[jdx,,drop=F]^2) + tcrossprod(qu[idx,,drop=F]^2, mu[jdx,,drop=F]^2)
 
     # k2
-    k2Num <- tcrossprod(Gd[idx,], Gd[jdx,])
-    k2Den <- tcrossprod(muqu[idx,], muqu[jdx,])
+    k2Num <- tcrossprod(Gd[idx,,drop=F], Gd[jdx,,drop=F])
+    k2Den <- tcrossprod(muqu[idx,,drop=F], muqu[jdx,,drop=F])
 
     return(list(k0Num = k0Num, k0Den = k0Den, k2Num = k2Num, k2Den = k2Den))
 }
@@ -448,7 +448,7 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
     R[filt.idx] <- 0
 
     # numerator (crossprod of scaled residuals)
-    kinNum <- tcrossprod(R[idx,], R[jdx,])
+    kinNum <- tcrossprod(R[idx,,drop=F], R[jdx,,drop=F])
     
     return(kinNum)
 }
@@ -477,10 +477,10 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
     Gd[filt.idx] <- 0
 
     # k0
-    k0Num <- tcrossprod(IAA[idx,], Iaa[jdx,]) + tcrossprod(Iaa[idx,], IAA[jdx,])
+    k0Num <- tcrossprod(IAA[idx,,drop=F], Iaa[jdx,,drop=F]) + tcrossprod(Iaa[idx,,drop=F], IAA[jdx,,drop=F])
 
     # k2
-    k2Num <- tcrossprod(Gd[idx,], Gd[jdx,])
+    k2Num <- tcrossprod(Gd[idx,,drop=F], Gd[jdx,,drop=F])
 
     return(list(k0Num = k0Num, k2Num = k2Num))
 }
@@ -508,7 +508,7 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
     R[filt.idx] <- 0
 
     # crossprod of scaled residuals
-    kin <- tcrossprod(R[idx,], R[jdx,])
+    kin <- tcrossprod(R[idx,,drop=F], R[jdx,,drop=F])
 
     return(kin)
 }
