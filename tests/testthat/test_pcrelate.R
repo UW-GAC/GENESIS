@@ -141,3 +141,18 @@ test_that("pcrelate2 - make GRM", {
     expect_equivalent(myrel2$kinBtwn$kin[1:10], grm2[2:11,1])
     seqClose(svd)
 })
+
+test_that("pcrelateSampBlock with 1 sample in block 1", {
+    svd <- .testData()
+    mypcs <- .testPCs(svd)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    samp <- seqGetData(svd, "sample.id")
+    beta <- calcISAFBeta(iterator, pcs=mypcs, sample.include=samp[1:10], verbose=FALSE)
+    resetIterator(iterator, verbose=FALSE)
+    myrel <- pcrelateSampBlock(iterator, betaobj=beta, pcs=mypcs,
+                               sample.include.block1=samp[1],
+                               sample.include.block2=samp[2:10],
+                               verbose=FALSE)
+    expect_equal(nrow(myrel$kinBtwn), 9)
+    seqClose(svd)
+})
