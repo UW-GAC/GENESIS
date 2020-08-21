@@ -17,7 +17,8 @@ importFrom(rlang, ".data")
 importFrom(GWASTools,
            GdsGenotypeReader,
            GenotypeData,
-           GenotypeBlockIterator)
+           GenotypeBlockIterator,
+           getAlleleA)
 importClassesFrom(GWASTools,
                   GdsGenotypeReader,
                   GenotypeData,
@@ -67,6 +68,7 @@ export(admixMapMM,
 
 exportMethods(assocTestSingle,
               assocTestAggregate,
+              effectAllele,
               fitNullModel,
               kingToMatrix,
               makeSparseMatrix,
