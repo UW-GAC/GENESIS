@@ -55,8 +55,7 @@
   association test, even if a different set of samples is present in the
   current filter for \code{gdsobj}.
   
-    The effect size estimate is for each copy of the alternate allele.
-    For multiallelic variants, each alternate allele is tested separately.
+    The effect size estimate is for each copy of the alternate allele (when \code{gdsobj} is a \code{\link{SeqVarIterator}} object) or the "A" allele (when \code{gdsobj} is a \code{\link{GenotypeIterator}} object). For multiallelic variants, each alternate (or "A") allele is tested separately.
 
     Monomorphic variants (including variants where every sample is a heterozygote) are always omitted from the aggregate unit prior to testing.
   
