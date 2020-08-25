@@ -17,8 +17,7 @@ importFrom(rlang, ".data")
 importFrom(GWASTools,
            GdsGenotypeReader,
            GenotypeData,
-           GenotypeBlockIterator,
-           getAlleleA)
+           GenotypeBlockIterator)
 importClassesFrom(GWASTools,
                   GdsGenotypeReader,
                   GenotypeData,
@@ -27,6 +26,8 @@ importClassesFrom(GWASTools,
                   ScanAnnotationDataFrame)
 importMethodsFrom(GWASTools,
                   close,
+                  getAlleleA,
+                  getAlleleB,
                   getChromosome,
                   getGenotypeSelection,
                   getPosition,

@@ -20,6 +20,7 @@
   A data.frame with the following columns:
   \item{variant.id}{The variant ID}
   \item{effect.allele}{The character value for the effect allele}
+  \item{other.allele}{The character value for the other (non-effect) allele}
 }
 
 \author{Stephanie M. Gogarten}
