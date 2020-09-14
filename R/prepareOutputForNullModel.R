@@ -178,17 +178,14 @@
 
     resid.conditional <- workingY - drop(vc.mod$eta)
 
-    converged <- vc.mod$converged
-    zeroFLAG <- vc.mod$zeroFLAG
-    niter <- vc.mod$niter
-
     out <- list(family = family, hetResid = hetResid, varComp = varComp,
                 varCompCov = varCompCov, fixef = fixef, betaCov = betaCov,
                 fitted.values = fitted.values, resid.marginal =resid.marginal,
                 resid.conditional = resid.conditional, logLik = logLik,
                 logLikR = logLikR, AIC = AIC, workingY = workingY, outcome = y,
                 model.matrix = X, group.idx = group.idx, cholSigmaInv = cholSigmaInv,
-                converged = converged, zeroFLAG = zeroFLAG, niter = niter, RSS = RSS)
+                W = vc.mod$W, converged = vc.mod$converged, zeroFLAG = vc.mod$zeroFLAG, 
+                niter = vc.mod$niter, RSS = RSS)
     class(out) <- "GENESIS.nullMixedModel"
     return(out)
 }

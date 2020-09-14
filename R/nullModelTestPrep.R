@@ -36,7 +36,6 @@ nullModelTestPrep <- function(nullmod){
 
 
 ##  adjust genotypes for correlation structure and fixed effects
-##  this replaces calcXtilde; changed the name to be less confusing; X is covariates and G is genotypes
 calcGtilde <- function(nullmod, G){
     C <- nullmod$cholSigmaInv
 
@@ -67,16 +66,18 @@ calcGtilde <- function(nullmod, G){
     return(Gtilde)
 }
 
-##  adjust genotypes for correlation structure and fixed effects
-# calcXtilde <- function(nullmod, G){
-#     C <- nullmod$cholSigmaInv
-#     if (length(C) > 1) { ## n by n cholSigmaInv (may be Diagonal)
-#         M1 <- crossprod(C, G)
-#     } else { ## cholSigmaInv is a scalar
-#         M1 <- G * C
-#     }
+## adjust genotypes for correlation structure and fixed effects using fast approximation from SAIGE
+## replace C = sqrt(Sigma^{-1}) with W^{1/2} (diagonal matrix)
+calcGtildeWithW <- function(nullmod, G, r = 1){    
+    X <- nullmod$model.matrix
+    W <- nullmod$W
+    # W is the diagonal of a matrix
+    WX <- W*X
+    XWX.inv <- solve(crossprod(X,WX))
+    # G - X(X'WX)^{-1}(X'WG) (formula from SAIGE)
+    Gtilde <- G - tcrossprod(X, crossprod(crossprod(WX, G), XWX.inv))
+    # multiply by sqrt(r*W) so that Gtilde'Gtilde = variance
+    Gtilde <- sqrt(r*W)*Gtilde
 
-#     rm(G)
-#     Xtilde <- M1 - tcrossprod(nullmod$CXCXI, crossprod(M1, nullmod$CX))
-#     return(Xtilde)
-# }
+    return(Gtilde)
+}

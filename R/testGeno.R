@@ -8,7 +8,8 @@
 
 # E an environmental variable for optional GxE interaction analysis. 
 testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA"),
-                              recalc.pval.thresh = 1, GxE.return.cov = FALSE){
+                              recalc.pval.thresh = 1, score.var.approx = FALSE,
+                              GxE.return.cov = FALSE){
     test <- match.arg(test)
 
     G <- .genoAsMatrix(nullmod, G)
@@ -27,7 +28,12 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
 
     # run the test
     if(test == "Score"){
-        Gtilde <- calcGtilde(nullmod, G)
+        if(score.var.approx){
+            if(is.null(nullmod$r)) stop("nullmod must have element `r` to use score.var.approx")
+            Gtilde <- calcGtildeWithW(nullmod, G, r = nullmod$r)
+        }else{
+            Gtilde <- calcGtilde(nullmod, G)
+        }
         if(is.null(nullmod$RSS0)){
             nullmod$RSS0 <- as.numeric(crossprod(nullmod$Ytilde))
         }
@@ -35,7 +41,12 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     }
 
     if(test == "Score.SPA"){
-        Gtilde <- calcGtilde(nullmod, G)
+        if(score.var.approx){
+            if(is.null(nullmod$r)) stop("nullmod must have element `r` to use score.var.approx")
+            Gtilde <- calcGtildeWithW(nullmod, G, r = nullmod$r)
+        }else{
+            Gtilde <- calcGtilde(nullmod, G)
+        }
         if(is.null(nullmod$RSS0)){
             nullmod$RSS0 <- as.numeric(crossprod(nullmod$Ytilde))
         }
