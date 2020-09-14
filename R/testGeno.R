@@ -29,26 +29,18 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     # run the test
     if(test == "Score"){
         if(score.var.approx){
-            if(is.null(nullmod$r)) stop("nullmod must have element `r` to use score.var.approx")
             Gtilde <- calcGtildeWithW(nullmod, G, r = nullmod$r)
         }else{
             Gtilde <- calcGtilde(nullmod, G)
-        }
-        if(is.null(nullmod$RSS0)){
-            nullmod$RSS0 <- as.numeric(crossprod(nullmod$Ytilde))
         }
         res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid, nullmod$RSS0)
     }
 
     if(test == "Score.SPA"){
         if(score.var.approx){
-            if(is.null(nullmod$r)) stop("nullmod must have element `r` to use score.var.approx")
             Gtilde <- calcGtildeWithW(nullmod, G, r = nullmod$r)
         }else{
             Gtilde <- calcGtilde(nullmod, G)
-        }
-        if(is.null(nullmod$RSS0)){
-            nullmod$RSS0 <- as.numeric(crossprod(nullmod$Ytilde))
         }
         res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid, nullmod$RSS0)
         # saddle point approximation

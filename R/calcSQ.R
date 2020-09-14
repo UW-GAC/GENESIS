@@ -32,6 +32,6 @@
     Sigma.inv <- chol2inv(cholSigma)
 
     return(list(Sigma.inv = Sigma.inv, Vre = Vre, W = 1/diagV, cholSigma.diag = diag(cholSigma)))
-    # W is the diagonal matrix for the fast approximation implemented in SAIGE
+    # W is the diagonal matrix for the fast score variance approximation implemented in SAIGE
 
 }
