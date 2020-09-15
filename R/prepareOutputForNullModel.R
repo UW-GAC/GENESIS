@@ -51,9 +51,9 @@
     }
 
     varComp <- vc.mod$varComp
-    names(varComp) <- group.names
+    names(varComp) <- paste("V_", group.names, sep="")
     varCompCov <- solve(vc.mod$AI)
-    dimnames(varCompCov) <- list(group.names, group.names)
+    dimnames(varCompCov) <- list(paste("V_", group.names, sep=""), paste("V_", group.names, sep=""))
 
     hetResid <- TRUE
     varNames <- colnames(X)
