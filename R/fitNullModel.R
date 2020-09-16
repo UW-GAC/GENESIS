@@ -148,9 +148,9 @@ nullModelInvNorm <- function(null.model, cov.mat = NULL,
         }
     }
     if (!is.list(cov.mat)) {
-        .subset(cov.mat, index)
+        return(.subset(cov.mat, index))
     } else {
-        cov.mat <- return(lapply(cov.mat, .subset, index))
+        return(lapply(cov.mat, .subset, index))
     }
 }
 
