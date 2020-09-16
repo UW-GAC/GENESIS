@@ -57,16 +57,6 @@ importFrom(S4Vectors, mcols, queryHits, subjectHits)
 
 importFrom(dplyr, bind_rows, inner_join)
 
-# deprecated/defunct
-export(admixMapMM,
-       assocTestMM,
-       fitNullMM,
-       fitNullReg,
-       king2mat,
-       pcrelateMakeGRM,
-       pcrelateReadInbreed,
-       pcrelateReadKinship)
-
 exportMethods(assocTestSingle,
               assocTestAggregate,
               effectAllele,
