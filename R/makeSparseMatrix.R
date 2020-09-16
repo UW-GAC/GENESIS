@@ -155,7 +155,10 @@ setMethod("makeSparseMatrix",
         x <- x[ID1 %in% sample.include & ID2 %in% sample.include]
     }else{
         # get list of all samples in the data
-        sample.include <- sort(unique(c(x$ID1, x$ID2)))
+        sample.include <- unique(rbind(setnames(unique(x[,.(ID1)]), 'ID1', 'ID'), setnames(unique(x[,.(ID2)]), 'ID2', 'ID'))[,.(ID)])
+        setkey(sample.include, 'ID')
+        sample.include <- sample.include[['ID']]
+        # sample.include <- sort(unique(c(x$ID1, x$ID2)))
         if(verbose) message("Using ", length(sample.include), " samples provided")
     }
 

@@ -51,9 +51,10 @@
     }
 
     varComp <- vc.mod$varComp
-    names(varComp) <- group.names
+    vc.names <- paste0("V_", group.names)
+    names(varComp) <- vc.names
     varCompCov <- solve(vc.mod$AI)
-    dimnames(varCompCov) <- list(group.names, group.names)
+    dimnames(varCompCov) <- list(vc.names, vc.names)
 
     hetResid <- TRUE
     varNames <- colnames(X)
@@ -132,11 +133,10 @@
     varComp <- vc.mod$varComp
     hetResid <- (length(group.idx) > 1)
 
-
-    names(varComp) <- paste("V_",c(names(covMatList),group.names),sep="")
+    vc.names <- paste0("V_", c(names(covMatList), group.names))
+    names(varComp) <- vc.names
     varCompCov <- matrix(NA, nrow=(m+g), ncol=(m+g))
-    colnames(varCompCov) <- paste("V_",c(names(covMatList),group.names),sep="")
-    rownames(varCompCov) <- paste("V_",c(names(covMatList),group.names),sep="")
+    dimnames(varCompCov) <- list(vc.names, vc.names)
 
 
     if(drop.zeros){
