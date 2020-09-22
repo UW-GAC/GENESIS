@@ -85,6 +85,17 @@ test_that("group.var", {
     expect_equal(nm$group.idx, list(a=1:3, b=4:5))
 })
 
+test_that("group.var is a factor", {
+    set.seed(26); a <- rnorm(10)
+    dat <- data.frame(sample.id=letters[1:10],
+                      a=a,
+                      b=factor(c(rep("a",5), rep("b", 5))),
+                      stringsAsFactors=FALSE)
+    dat <- AnnotatedDataFrame(dat)
+    nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", verbose=FALSE)
+    expect_equal(nm$group.idx, list(a=1:5, b=6:10))
+})
+
 test_that("dimnames for cov.mat", {
     set.seed(27); a <- rnorm(10)
     dat <- data.frame(sample.id=letters[1:10],

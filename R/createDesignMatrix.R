@@ -42,5 +42,7 @@ createDesignMatrix <- function(x, outcome, covars=NULL, group.var=NULL) {
 
 .indexList <- function(x) {
     groups <- unique(x)
-    lapply(setNames(groups, groups), function(g) which(x == g))
+    idx <- lapply(groups, function(g) which(x == g))
+    names(idx) <- as.character(groups)
+    idx
 }
