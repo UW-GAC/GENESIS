@@ -63,9 +63,9 @@ SPA_pval <- function(score.result, nullmod, G, pval.thresh = 1){
 
 			# compute SPA p-value
 			if(length(homRefSet)/length(g) < 0.5){
-	        	tmp <- SPAtest:::Saddle_Prob(q = qtilde, mu = mu, g = g, alpha=5e-8, output = "P")
+	        	tmp <- SPAtest::Saddle_Prob(q = qtilde, mu = mu, g = g, alpha=5e-8, output = "P")
 	        }else{
-	        	tmp <- SPAtest:::Saddle_Prob_fast(	q = qtilde, mu = mu, g = g, alpha = 5e-8, output = "P",
+	        	tmp <- SPAtest::Saddle_Prob_fast(	q = qtilde, mu = mu, g = g, alpha = 5e-8, output = "P",
 	        										gNA = g[homRefSet], gNB = g[-homRefSet], 
 	        										muNA = mu[homRefSet], muNB = mu[-homRefSet])
 	        }
