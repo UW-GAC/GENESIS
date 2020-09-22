@@ -145,7 +145,7 @@ setMethod("makeSparseMatrix",
 .makeSparseMatrix_df <- function(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE){
 
     # keep R CMD check from warning about undefined global variables
-    ID1 <- ID2 <- value <- NULL
+    ID <- ID1 <- ID2 <- value <- NULL
     `.` <- function(...) NULL
 
     # check sample.include
