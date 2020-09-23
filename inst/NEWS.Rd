@@ -1,5 +1,10 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.19.4}{
+    \itemize{
+      \item Add function effectAllele to return the effect allele for association tests.
+    }
+}
 \section{Version 2.19.1}{
     \itemize{
       \item Force design matrices to be non-sparse.
