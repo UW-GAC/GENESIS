@@ -173,14 +173,16 @@ setMethod("variantFilter",
 }
 
 .matchAlleles <- function(gdsobj, var.info) {
+    seqnames <- NULL
     if (nrow(var.info) == 0) return(integer(0))
     var.info$n <- 1:nrow(var.info)
-    var.sel <- as.data.frame(currentRanges(gdsobj))
-    var.sel$seqnames <- as.character(var.sel$seqnames)
-    match.cols <- c("chr"="seqnames", "pos"="start")
-    if ("ref" %in% names(var.sel)) match.cols <- c(match.cols, "ref"="ref")
-    if ("alt" %in% names(var.sel)) match.cols <- c(match.cols, "alt"="alt")
-    var.match <- inner_join(var.info, var.sel, by=match.cols)
+    var.sel <- as.data.table(currentRanges(gdsobj))
+    var.sel <- var.sel[,`:=`(seqnames=as.character(seqnames))]
+    setnames(var.sel, c("seqnames", "start"), c("chr", "pos"))
+    match.cols <- c("chr", "pos")
+    if ("ref" %in% names(var.sel)) match.cols <- c(match.cols, "ref")
+    if ("alt" %in% names(var.sel)) match.cols <- c(match.cols, "alt")
+    var.match <- merge(as.data.table(var.info), var.sel, by=match.cols)
     unique(var.match$n)
 }
 
