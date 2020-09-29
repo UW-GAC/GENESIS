@@ -2,14 +2,14 @@ setGeneric("assocTestAggregate", function(gdsobj, ...) standardGeneric("assocTes
 
 .match.arg <- function(test) {
     if (length(test) > 1) test <- NULL
-    match.arg(test, choices=c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKATO"))
+    match.arg(test, choices=c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKATO", "BinomiRare", "CMP"))
 }
 
 setMethod("assocTestAggregate",
           "SeqVarIterator",
           function(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
-                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO"),
+                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO", "BinomiRare", "CMP"),
                    # burden.test=c("Score"),
                    # pval.method=c("davies", "kuonen", "liu"),
                    neig = 200, ntrace = 500,
@@ -85,7 +85,11 @@ setMethod("assocTestAggregate",
                   # weights
                   if (is.null(weight.user)) {
                       # Beta weights
-                      weight <- .weightFromFreq(freq$freq, weight.beta)
+                      if (test %in% c("BinomiRare", "CMP")){
+                          weight <- seq(from=1, to=1, length.out=length(freq$freq))
+                      } else {
+                          weight <- .weightFromFreq(freq$freq, weight.beta)
+                      }
                   } else {
                       # user supplied weights
                       weight <- currentVariants(gdsobj)[[weight.user]][expandedVariantIndex(gdsobj)]
@@ -147,7 +151,7 @@ setMethod("assocTestAggregate",
           "GenotypeIterator",
           function(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
-                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO"),
+                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO", "BinomiRare", "CMP"),
                    # burden.test=c("Score"),
                    # pval.method=c("davies", "kuonen", "liu"),
                    neig = 200, ntrace = 500,
@@ -198,7 +202,11 @@ setMethod("assocTestAggregate",
                   # weights
                   if (is.null(weight.user)) {
                       # Beta weights
-                      weight <- .weightFromFreq(freq$freq, weight.beta)
+                      if (test %in% c("BinomiRare", "CMP")){
+                          weight <- seq(from=1, to=1, length.out=length(freq$freq))
+                      } else {
+                          weight <- .weightFromFreq(freq$freq, weight.beta)
+                      }
                   } else {
                       # user supplied weights
                       weight <- getSnpVariable(gdsobj, weight.user)
