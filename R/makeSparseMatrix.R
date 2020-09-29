@@ -72,7 +72,7 @@ setMethod("makeSparseMatrix",
     # get the table of all related pairs
     rel <- apply(x, MARGIN = 1, FUN = function(v){ names(v)[v > thresh & !is.na(v)] })
     rel <- lapply(seq_along(rel), function(i) { data.table('ID1' = names(rel)[[i]], 'ID2' = rel[[i]]) })
-    rel <- do.call(rbind, rel)
+    rel <- rbindlist(rel)
     rel <- rel[,`:=`(ID1 = as.character(ID1), ID2 = as.character(ID2))]
     setkeyv(rel, c('ID1', 'ID2'))
 
@@ -334,7 +334,7 @@ setMethod("kingToMatrix",
         # pull out column names in common
         cnames <- Reduce(intersect, lapply(king, colnames))
         # subset and rbind
-        king <- do.call(rbind, lapply(king, function(x){ x[, colnames(x) %in% cnames, with = FALSE]} ))
+        king <- rbindlist(lapply(king, function(x){ x[, colnames(x) %in% cnames, with = FALSE]} ))
         
     # one input file
     }else{

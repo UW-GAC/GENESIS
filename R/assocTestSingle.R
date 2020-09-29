@@ -79,7 +79,7 @@ setMethod("assocTestSingle",
                   iterate <- iterateFilter(gdsobj, verbose=FALSE)
               }
 
-              do.call(rbind, res)
+              as.data.frame(rbindlist(res))
           })
 
 
@@ -150,5 +150,5 @@ setMethod("assocTestSingle",
                   iterate <- GWASTools::iterateFilter(gdsobj)
               }
 
-              do.call(rbind, res)
+              as.data.frame(rbindlist(res))
           })
