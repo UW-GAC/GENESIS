@@ -53,7 +53,7 @@ assoc <- assocTestSingle(iterator, nullmod)
 
 # add effect allele to the results
 eff <- effectAllele(seqData, variant.id=assoc$variant.id)
-assoc <- dplyr::left_join(assoc,eff)
+assoc <- merge(assoc, eff)
 head(assoc)
 
 seqClose(iterator)
