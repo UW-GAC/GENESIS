@@ -141,7 +141,8 @@ setMethod("assocTestAggregate",
                   iterate <- iterateFilter(gdsobj, verbose=FALSE)
               }
 
-              res <- list(results=bind_rows(res), variantInfo=res.var)
+              res <- list(results=as.data.frame(rbindlist(res, use.names=TRUE, fill=TRUE)),
+                          variantInfo=res.var)
               .annotateAssoc(gdsobj, res)
           })
 
@@ -257,6 +258,7 @@ setMethod("assocTestAggregate",
                   iterate <- GWASTools::iterateFilter(gdsobj)
               }
 
-              res <- list(results=bind_rows(res), variantInfo=res.var)
+              res <- list(results=as.data.frame(rbindlist(res, use.names=TRUE, fill=TRUE)),
+                          variantInfo=res.var)
               .annotateAssoc(gdsobj, res)
           })
