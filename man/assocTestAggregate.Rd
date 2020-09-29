@@ -64,6 +64,8 @@
     SKAT and SMMAT will attempt to use Davies' method (i.e. integration) to calculate p-values; if an error occurs in integration or the reported p-values are too small that they are unreliable (i.e. near machine epsilon), then the saddlepoint approximation will instead be used to calculate the p-values.
 
     The fastSKAT method of Lumley et al. (2018) uses random matrix theory to speed up the computation of SKAT p-values. When \code{test = "fastSKAT"}, the function attempts to inteligently determine which p-value calculation approach to use for each aggregation unit: (1) if min(number samples, number variants) is small enough, then the standard SKAT p-value calculation is used; (2) if min(number samples, number variants) is too large for standard SKAT, but small enough to explicitly compute the genotype covariance matrix, random projections are used to approximate the eigenvalues of the covariance matrix, and the fastSKAT p-value calculation is used; (3) if min(number samples, number variants) is too big to explicitly compute the genotype covariance matrix, random projections are used to approximate both the eigenvalues and the trace of the covariance matrix, and the fastSKAT p-value calculation is used.)
+    
+    The BinomiRare test, run by using \code{test = "BinomiRare"}, and the CMP test, run by using \code{test = "CMP"} are carrier-only, robust tests. Both tests focuse on carriers of the rare variant allele ("carriers"), and use the estimated probabilities of the binary outcome within the carriers, estimated under the null of not association, and the actual number of observed outcomes, to compute p-values. BinomiRare uses the Poisson-Binomial distribution, and the CMP uses the Conway-Maxwell-Poisson distribution, and is specifically designed for mixed models. (If \code{test = "CMP"} but \code{null.model$family$mixedmodel = FALSE}, the BinomiRare test will be run instead.) These tests provide both a traditional p-value (\code{"pval"}) and a mid-p-value (\code{"midp"}), which is less conservative/more liberal, with the difference being more pronounced for small number of carriers. The BinomiRare test is described in Sofer (2017) and compared to the Score and SPA in various settings in Sofer and Guo (2020).
 }
 
 \value{A list with the following items:
@@ -118,15 +120,11 @@
     \item{opt.rho}{The optimal rho value; i.e. the rho value that gave the minimum p-value.}
     \item{pval_SKATO}{The SKAT-O p-value after adjustment for searching across multiple rho values.}
 
-    If \code{test} is \code{"BinomiRare"}:
+    If \code{test} is \code{"BinomiRare" or "CMP"}:
     \item{n.carrier}{Number of individuals with at least one copy of the alternate allele}
     \item{n.D.carrier}{Number of cases with at least one copy of the alternate allele}
-    \item{pval}{BinomiRare p-value}
-    If \code{burden.test} is \code{"CMP"}:
-    \item{n.carrier}{Number of individuals with at least one copy of the alternate allele}
-    \item{n.D.carrier}{Number of cases with at least one copy of the alternate allele}
-    \item{pval}{CMP p-value}
-    \item{mid.pval}{CMP mid-p-value}
+    \item{pval}{p-value}
+    \item{mid.pval}{mid-p-value}
 
     \item{variantInfo}{A list with as many elements as aggregate tests performed. Each element of the list is a data.frame providing information on the variants used in the aggregate test with results presented in the corresponding row of \code{results}. Each of these data.frames has the following information:}
     \item{variant.id}{The variant ID}

@@ -87,22 +87,38 @@ test_that("singleVarTest - logistic - score", {
 ### BR and CMP unit tests -- no equivalent built-in functions available
 test_that("singleVarTest - logistic - BR", {
     n <- 100
-    dat <- .testNullInputs(n, binary=TRUE)
+    nullmod <- .testNullmod(n, MM=FALSE, binary=TRUE)
     geno <- .testGenoMatrix(n)
-    nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
     test.br <- testGenoSingleVar(nullmod, G = geno, test = "BinomiRare")
     expect_true(all(colSums(geno) >= test.br$n.carrier))
     expect_true(all(test.br$n.carrier >= test.br$n.D.carrier))
+    expect_true(all(test.br$pval > test.br$mid.pval))
+
+    test.score <- testGenoSingleVar(nullmod, G = geno, test = "Score")
+    test.br <- testGenoSingleVar(nullmod, G = geno, test = "BinomiRare", recalc.pval.thresh = 0)
+    expect_equal(test.score$Score.pval, test.br$pval)
+    expect_equal(test.score$Score.pval, test.br$mid.pval)
 })
 
 test_that("singleVarTest - logistic - CMP", {
     n <- 100
-    dat <- .testNullInputs(n, binary=TRUE)
+    nullmod <- .testNullmod(n, MM=TRUE, binary=TRUE)
     geno <- .testGenoMatrix(n)
-    nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
     test.cmp <- testGenoSingleVar(nullmod, G = geno, test = "CMP")
     expect_true(all(colSums(geno) >= test.cmp$n.carrier))
     expect_true(all(test.cmp$n.carrier >= test.cmp$n.D.carrier))
+    expect_true(all(test.cmp$pval > test.cmp$mid.pval))
+
+    test.score <- testGenoSingleVar(nullmod, G = geno, test = "Score")
+    test.cmp <- testGenoSingleVar(nullmod, G = geno, test = "CMP", recalc.pval.thresh = 0)
+    expect_equal(test.score$Score.pval, test.cmp$pval)
+    expect_equal(test.score$Score.pval, test.cmp$mid.pval)
+
+    # CMP switches to BinomiRare if not a mixed model
+    nullmod <- .testNullmod(n, MM=FALSE, binary=TRUE)
+    test.cmp <- testGenoSingleVar(nullmod, G = geno, test = "CMP")
+    test.br <- testGenoSingleVar(nullmod, G = geno, test = "BinomiRare")
+    expect_equal(test.br$pval, test.cmp$pval)
 })
 
 

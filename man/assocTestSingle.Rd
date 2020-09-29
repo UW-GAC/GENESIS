@@ -47,6 +47,9 @@
 
     The saddle point approximation (SPA), run by using \code{test = "Score.SPA"}, implements the method described by Dey et al. (2017), which was extended to mixed models by Zhou et al. (2018) in their SAIGE software. SPA provides better calibration of p-values when fitting mixed models with a binomial family for a sample with an imbalanced case to control ratio.
 
+    The BinomiRare test, run by using \code{test = "BinomiRare"}, and the CMP test, run by using \code{test = "CMP"} are carrier-only, robust tests. Both tests focuse on carriers of the rare variant allele ("carriers"), and use the estimated probabilities of the binary outcome within the carriers, estimated under the null of not association, and the actual number of observed outcomes, to compute p-values. BinomiRare uses the Poisson-Binomial distribution, and the CMP uses the Conway-Maxwell-Poisson distribution, and is specifically designed for mixed models. (If \code{test = "CMP"} but \code{null.model$family$mixedmodel = FALSE}, the BinomiRare test will be run instead.) These tests provide both a traditional p-value (\code{"pval"}) and a mid-p-value (\code{"midp"}), which is less conservative/more liberal, with the difference being more pronounced for small number of carriers. The BinomiRare test is described in Sofer (2017) and compared to the Score and SPA in various settings in Sofer and Guo (2020).
+    %A reference to the CMP test and the BinomiRare for mixed models will be provided once a preprint is available.
+
     For the \code{\link{GenotypeIterator}} method, objects created with \code{\link{GdsGenotypeReader}} or \code{\link{MatrixGenotypeReader}} are supported. \code{\link{NcdfGenotypeReader}} objects are not supported.
 }
 
@@ -83,21 +86,19 @@
     \item{GxE.pval}{The Wald p-value for the test of all genotype interaction terms; i.e. the test of any genotype interaction effect}
     \item{Joint.Stat}{The Wald Z test statistic for the joint test of the genotype term and all of the genotype interaction terms}
     \item{Joint.pval}{The Wald p-value for the joint test of the genotype term and all of the genotype interaction terms; i.e. the test of any genotype effect}
-    If \code{test} is \code{"BinomiRare"}:
+    If \code{test} is \code{"BinomiRare" or "CMP"}:
     \item{n.carrier}{Number of individuals with at least one copy of the alternate allele}
     \item{n.D.carrier}{Number of cases with at least one copy of the alternate allele}
-    \item{pval}{BinomiRare p-value}
-    If \code{test} is \code{"CMP"}:
-    \item{n.carrier}{Number of individuals with at least one copy of the alternate allele}
-    \item{n.D.carrier}{Number of cases with at least one copy of the alternate allele}
-    \item{pval}{CMP p-value}
-    \item{mid.pval}{CMP mid-p-value}
+    \item{pval}{p-value}
+    \item{mid.pval}{mid-p-value}
     
     %When \code{GxE} is not \code{NULL}, if \code{ivar.return.betaCov} is \code{TRUE}, then the output is a list with two elements.  The first, "results", is the data.frame described above.  The second, "betaCov", is a list with length equal to the number of rows of "results", where each element of the list is the covariance matrix of the effect size estimates (betas) for the genotype and genotype interaction terms.
 }
 
 \references{
     Dey, R., Schmidt, E. M., Abecasis, G. R., & Lee, S. (2017). A fast and accurate algorithm to test for binary phenotypes and its application to PheWAS. The American Journal of Human Genetics, 101(1), 37-49.
+    Sofer, T. (2017). BinomiRare: A robust test of the association of a rare variant with a disease for pooled analysis and meta-analysis, with application to the HCHS/SOL. Genetic Epidemiology, 41(5), 388-395.
+    Sofer, T. & Guo, N. (2020). Rare variants association testing for a binary outcome when pooling individual level data from heterogeneous studies. \url{https://www.biorxiv.org/content/10.1101/2020.04.17.047530v1}.
     Zhou, W., Nielsen, J. B., Fritsche, L. G., Dey, R., Gabrielsen, M. E., Wolford, B. N., ... & Bastarache, L. A. (2018). Efficiently controlling for case-control imbalance and sample relatedness in large-scale genetic association studies. Nature genetics, 50(9), 1335.
 }
 
