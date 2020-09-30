@@ -100,6 +100,7 @@ pcs <- pcair(seqData,
 We need to determine which PCs are ancestry informative. To do this we need population information for the 1000 Genomes samples. We make a parallel coordinates plot, color-coding by 1000 Genomes population.
 
 ```{r pcair_plot, fig.width=7, out.width="100%"}
+library(dplyr)
 library(RColorBrewer)
 library(ggplot2)
 library(GGally)
@@ -107,7 +108,7 @@ library(GGally)
 pc.df <- as.data.frame(pcs$vectors)
 names(pc.df) <- paste0("PC", 1:ncol(pcs$vectors))
 pc.df$sample.id <- row.names(pcs$vectors)
-pc.df <- merge(pc.df, pData(annot), by="sample.id", sort=FALSE)
+pc.df <- left_join(pc.df, pData(annot), by="sample.id")
 
 pop.cols <- setNames(brewer.pal(12, "Paired"),
     c("ACB", "ASW", "CEU", "GBR", "CHB", "JPT", 

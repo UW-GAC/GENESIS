@@ -31,7 +31,7 @@ Imports: Biobase, BiocGenerics, GWASTools, gdsfmt, GenomicRanges, IRanges, S4Vec
 	 data.table, foreach, graphics, grDevices, igraph, Matrix, methods, reshape2, stats, utils
 Suggests: CompQuadForm, COMPoissonReg, poibin, SPAtest, survey,
     testthat, BiocStyle, knitr, rmarkdown,
-    GWASdata, ggplot2, GGally, RColorBrewer, TxDb.Hsapiens.UCSC.hg19.knownGene
+    GWASdata, dplyr, ggplot2, GGally, RColorBrewer, TxDb.Hsapiens.UCSC.hg19.knownGene
 VignetteBuilder: knitr
 biocViews: SNP, GeneticVariability, Genetics, StatisticalMethod,
         DimensionReduction, PrincipalComponent, GenomeWideAssociation,
