@@ -29,7 +29,6 @@ setMethod("makeSparseMatrix",
 
     # keep R CMD check from warning about undefined global variables
     ID1 <- ID2 <- NULL
-    `.` <- function(...) NULL
 
     # check that thresh is not NULL
     if(is.null(thresh)){
@@ -145,8 +144,7 @@ setMethod("makeSparseMatrix",
 .makeSparseMatrix_df <- function(x, thresh = NULL, sample.include = NULL, diag.value = NULL, verbose = TRUE){
 
     # keep R CMD check from warning about undefined global variables
-    ID <- ID1 <- ID2 <- value <- NULL
-    `.` <- function(...) NULL
+    ID1 <- ID2 <- value <- NULL
 
     # check sample.include
     if(!is.null(sample.include)){
@@ -155,7 +153,7 @@ setMethod("makeSparseMatrix",
         x <- x[ID1 %in% sample.include & ID2 %in% sample.include]
     }else{
         # get list of all samples in the data
-        sample.include <- unique(rbind(setnames(unique(x[,.(ID1)]), 'ID1', 'ID'), setnames(unique(x[,.(ID2)]), 'ID2', 'ID'))[,.(ID)])
+        sample.include <- unique(rbind(setnames(unique(x[,'ID1']), 'ID1', 'ID'), setnames(unique(x[,'ID2']), 'ID2', 'ID'))[,'ID'])
         setkey(sample.include, 'ID')
         sample.include <- sample.include[['ID']]
         # sample.include <- sort(unique(c(x$ID1, x$ID2)))
@@ -220,7 +218,7 @@ setMethod("makeSparseMatrix",
     if(length(unrel.id) > 0) {
         if(is.null(diag.value)){
             # data for the diagonal
-            ddat <- x[ID1 == ID2, .(ID1, value)][data.table(ID1 = unrel.id), on = 'ID1']
+            ddat <- x[ID1 == ID2, c('ID1', 'value')][data.table(ID1 = unrel.id), on = 'ID1']
             blocks[[clu$no + 1]] <- Diagonal(n = nrow(ddat), x = ddat$value)
             block.id[[clu$no + 1]] <- ddat$ID1
         }else{
@@ -265,17 +263,16 @@ setMethod("pcrelateToMatrix",
 
 .pcrelateToMatrix <- function(pcrelobj, sample.include = NULL, thresh = NULL, scaleKin = 2, verbose = TRUE){
     # keep R CMD check from warning about undefined global variables
-    ID <- f <- ID1 <- ID2 <- kin <- NULL
-    `.` <- function(...) NULL
+    f <- ID1 <- ID2 <- kin <- NULL
     
     # get the diagonals
-    x <- as.data.table(pcrelobj$kinSelf)[, .(ID, f)]
+    x <- as.data.table(pcrelobj$kinSelf)[, c('ID', 'f')]
     setnames(x, 'ID', 'ID1')
     x[, ID2 := ID1]
     x[, kin := 0.5*(1 + f)][, f := NULL]
 
     # append the off-diagonal
-    x <- rbind(x, as.data.table(pcrelobj$kinBtwn)[,.(ID1, ID2, kin)])
+    x <- rbind(x, as.data.table(pcrelobj$kinBtwn)[,c('ID1', 'ID2', 'kin')])
 
     # scale the values
     x[, kin := scaleKin*kin]
@@ -317,8 +314,9 @@ setMethod("kingToMatrix",
 
 .kingToMatrix <- function(file.king, estimator = c("PropIBD", "Kinship"), sample.include = NULL, thresh = NULL, verbose = TRUE){
     # keep R CMD check from warning about undefined global variables
-    ID1 <- ID2 <- PropIBD <- Kinship <- value <- NULL
-    `.` <- function(...) NULL
+    PropIBD <- Kinship <- value <- NULL
+    #ID1 <- ID2 <- PropIBD <- Kinship <- value <- NULL
+    #`.` <- function(...) NULL
 
     # check argument values
     estimator <- match.arg(estimator)
