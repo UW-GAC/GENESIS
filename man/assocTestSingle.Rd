@@ -10,11 +10,16 @@
   using the null model fit with \code{\link{fitNullModel}}.}
 
 \usage{
-\S4method{assocTestSingle}{SeqVarIterator}(gdsobj, null.model, test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
-                recalc.pval.thresh=0.05, AF.max=NULL, GxE=NULL, sparse=TRUE, imputed=FALSE, male.diploid=TRUE,
-                genome.build=c("hg19", "hg38"), verbose=TRUE)
-\S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model, test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
-                recalc.pval.thresh=0.05, AF.max=NULL, GxE=NULL, male.diploid=TRUE, verbose=TRUE)
+\S4method{assocTestSingle}{SeqVarIterator}(gdsobj, null.model,
+                test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
+                recalc.pval.thresh=0.05, AF.max=NULL, GxE=NULL,
+                sparse=TRUE, imputed=FALSE,
+                male.diploid=TRUE, genome.build=c("hg19", "hg38"),
+                verbose=TRUE)
+\S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model,
+                test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
+                recalc.pval.thresh=0.05, AF.max=NULL, GxE=NULL,
+                male.diploid=TRUE, verbose=TRUE)
 }
 
 \arguments{
