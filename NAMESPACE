@@ -11,8 +11,6 @@ import(gdsfmt)
 import(Matrix)
 import(data.table)
 import(foreach)
-importFrom(dplyr, "%>%")
-importFrom(rlang, ".data")
 
 importFrom(GWASTools,
            GdsGenotypeReader,
@@ -54,8 +52,6 @@ importFrom(BiocGenerics, start, end)
 importFrom(GenomicRanges, GRanges)
 importFrom(IRanges, IRanges, findOverlaps)
 importFrom(S4Vectors, mcols, queryHits, subjectHits)
-
-importFrom(dplyr, bind_rows, inner_join)
 
 exportMethods(assocTestSingle,
               assocTestAggregate,

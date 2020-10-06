@@ -555,14 +555,13 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
 ### functions for final processing
 correctKin <- function(kinBtwn, kinSelf, pcs, sample.include = NULL){
     # keep R CMD check from warning about undefined global variables
-    `.` <- function(...) NULL
-    ID <- f <- ID1 <- ID2 <- kin <- newval <- value <- NULL
+    f <- ID1 <- ID2 <- kin <- newval <- value <- NULL
     
     # temporary data.table to store values
-    tmp <- kinSelf[, .(ID, f)]
+    tmp <- kinSelf[, c('ID', 'f')]
     setnames(tmp, c('ID','f'), c('ID1', 'kin'))
     tmp[, ID2 := ID1]
-    tmp <- rbind(kinBtwn[, .(ID1, ID2, kin)], tmp)
+    tmp <- rbind(kinBtwn[, c('ID1', 'ID2', 'kin')], tmp)
     setnames(tmp, 'kin', 'newval')
     setkeyv(tmp, c('ID1', 'ID2'))
     
@@ -596,19 +595,18 @@ correctKin <- function(kinBtwn, kinSelf, pcs, sample.include = NULL){
 
 correctK2 <- function(kinBtwn, kinSelf, pcs, sample.include = NULL, small.samp.correct = FALSE){
     # keep R CMD check from warning about undefined global variables
-    `.` <- function(...) NULL
-    ID <- f <- f.1 <- f.2 <- kin <- k0 <- k2 <- ID1 <- ID2 <- newval <- value <- NULL
+    f.1 <- f.2 <- kin <- k2 <- newval <- value <- NULL
     
     # correct k2 for HW departure
-    kinBtwn <- merge(kinBtwn, kinSelf[,.(ID, f)], by.x = 'ID2', by.y = 'ID')
+    kinBtwn <- merge(kinBtwn, kinSelf[, c('ID', 'f')], by.x = 'ID2', by.y = 'ID')
     setnames(kinBtwn, 'f', 'f.2')
-    kinBtwn <- merge(kinBtwn, kinSelf[,.(ID, f)], by.x = 'ID1', by.y = 'ID')
+    kinBtwn <- merge(kinBtwn, kinSelf[, c('ID', 'f')], by.x = 'ID1', by.y = 'ID')
     setnames(kinBtwn, 'f', 'f.1')
     kinBtwn[, k2 := k2 - f.1*f.2][, `:=`(f.1 = NULL, f.2 = NULL)]
 
     if(small.samp.correct){
         # temporary data.table to store values
-        tmp <- kinBtwn[, .(ID1, ID2, kin, k2)]
+        tmp <- kinBtwn[, c('ID1', 'ID2', 'kin', 'k2')]
         setnames(tmp, 'k2', 'newval')
         setkeyv(tmp, c('ID1', 'ID2'))
 

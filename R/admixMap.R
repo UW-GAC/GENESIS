@@ -158,5 +158,5 @@ admixMap <- function(admixDataList,
         }
     }
     
-    do.call(rbind, res.list)
+    as.data.frame(rbindlist(res.list))
 }
