@@ -51,20 +51,20 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
   # Create fixed effects data frame.
   fixef <- data.frame(
     Est = as.vector(beta),
-    SE = se,
+    Est.SE = se,
     stringsAsFactors = FALSE
   )
-  fixef$Stat <- fixef$Est / fixef$SE
+  fixef$Stat <- fixef$Est / fixef$Est.SE
   fixef$pval <- pchisq(fixef$Stat^2, lower.tail = FALSE, df = 1)
-  fixef$pve <- fixef$Stat^2 / nullmod$RSS0
+  fixef$PVE <- fixef$Stat^2 / nullmod$RSS0
 
   rownames(fixef) <- colnames(G)
 
   res <- list()
 
-  res$Stat.joint <- as.numeric(Stat.joint)
-  res$pval.joint <- as.numeric(pval.joint)
-  res$pve.joint <- pve.joint
+  res$Joint.Stat <- as.numeric(Stat.joint)
+  res$Joint.pval <- as.numeric(pval.joint)
+  res$Joint.PVE <- pve.joint
   res$fixef <- fixef
   res$betaCov <- betaCov
 
