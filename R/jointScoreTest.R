@@ -51,10 +51,10 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
   # Create fixed effects data frame.
   fixef <- data.frame(
     Est = as.vector(beta),
-    Est.SE = se,
+    SE = se,
     stringsAsFactors = FALSE
   )
-  fixef$Stat <- fixef$Est / fixef$Est.SE
+  fixef$Stat <- fixef$Est / fixef$SE
   fixef$pval <- pchisq(fixef$Stat^2, lower.tail = FALSE, df = 1)
   fixef$PVE <- fixef$Stat^2 / nullmod$RSS0
 

@@ -26,7 +26,7 @@ test_that("works with one snp", {
   expect_equal(length(jointmod$Joint.pval), 1)
   expect_equal(length(jointmod$Joint.PVE), 1)
   expect_equal(nrow(jointmod$fixef), 1)
-  expect_equal(names(jointmod$fixef), c("Est", "Est.SE", "Stat", "pval", "PVE"))
+  expect_equal(names(jointmod$fixef), c("Est", "SE", "Stat", "pval", "PVE"))
   # Special check here - total pve should be the same as indiidual pve since its only one variant.
   expect_equal(jointmod$Joint.PVE, jointmod$fixef$PVE)
   expect_equal(nrow(jointmod$betaCov), 1)
@@ -40,7 +40,7 @@ test_that("works with two snps", {
   expect_equal(length(jointmod$Joint.pval), 1)
   expect_equal(length(jointmod$Joint.PVE), 1)
   expect_equal(nrow(jointmod$fixef), 2)
-  expect_equal(names(jointmod$fixef), c("Est", "Est.SE", "Stat", "pval", "PVE"))
+  expect_equal(names(jointmod$fixef), c("Est", "SE", "Stat", "pval", "PVE"))
   expect_equal(nrow(jointmod$betaCov), 2)
   expect_equal(ncol(jointmod$betaCov), 2)
 })
