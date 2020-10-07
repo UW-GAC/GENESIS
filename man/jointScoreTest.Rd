@@ -28,7 +28,7 @@ jointScoreTest(nullmod, G)
   \item{Joint.Stat}{Squared joint score test statistic for all variants in \code{G}.}
   \item{Joint.pval}{p-value associated with the joint score test statistic drawn from a \deqn{\chi^2} distribution with \eqn{n_\mathrm{variants}} degrees of freedom.}
   \item{Joint.PVE}{Estimate of the proportion of variance explained jointly by the variants in \code{G}.}
-  \item{fixef}{A data.frame with joint effect size estimates (Est), standard errors (Est.SE), chi-squared test statistics (Stat), p-values (pval), and estimated proportion of variance explained (PVE) for each of the variants specified in \code{G}.}
+  \item{fixef}{A data.frame with joint effect size estimates (Est), standard errors (SE), chi-squared test statistics (Stat), p-values (pval), and estimated proportion of variance explained (PVE) for each of the variants specified in \code{G}.}
   \item{betaCov}{Estimated covariance matrix for the variants in \code{G}.}
 }
 %\references{
