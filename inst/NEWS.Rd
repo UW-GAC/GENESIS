@@ -1,5 +1,15 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.19.6}{
+    \itemize{
+      \item Add test options "BinomiRare" and "CMP" to assocTestSingle and assocTestAggregate.
+    }
+}
+\section{Version 2.19.5}{
+    \itemize{
+      \item Add function jointScoreTest to perform a joint score test of a set of variants using a null model and a matrix of genotype dosages.
+    }
+}
 \section{Version 2.19.4}{
     \itemize{
       \item Add function effectAllele to return the effect allele for association tests.
