@@ -14,6 +14,8 @@ setMethod("fitNullModel",
                    EM.iter = 0,
                    drop.zeros = TRUE,
                    verbose = TRUE) {
+
+              if (is.data.table(x)) x <- as.data.frame(x)
               
               desmat <- createDesignMatrix(x, outcome, covars, group.var)
 
@@ -43,6 +45,7 @@ setMethod("fitNullModel",
                    ...) {
               
               x <- pData(x)
+              if (is(x, "tbl")) x <- as.data.frame(x)
               rownames(x) <- x$sample.id
 
               if (!is.null(cov.mat)) {

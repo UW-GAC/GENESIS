@@ -263,3 +263,35 @@ test_that("code for checking lists identical", {
     expect_true(.listIdentical(list(a=1:10, b=1:10, c=1:10)))
     expect_false(.listIdentical(list(1:10, 1:10, 11:20)))
 })
+
+
+test_that("tibbles are supported", {
+    set.seed(43); a <- rnorm(10)
+    dat <- dplyr::tibble(sample.id=letters[1:10],
+                         a=a,
+                         b=c(rep("a",5), rep("b", 5)))
+    set.seed(44); covMat <- crossprod(matrix(rnorm(100,sd=0.05),10,10))
+    nm1 <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, verbose=FALSE)
+    
+    dat <- AnnotatedDataFrame(dat)
+    dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
+    nm2 <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, verbose=FALSE)
+
+    expect_equal(nm1$fixef, nm2$fixef)
+})
+
+
+test_that("data.tables are supported", {
+    set.seed(43); a <- rnorm(10)
+    dat <- data.table(sample.id=letters[1:10],
+                      a=a,
+                      b=c(rep("a",5), rep("b", 5)))
+    set.seed(44); covMat <- crossprod(matrix(rnorm(100,sd=0.05),10,10))
+    nm1 <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, verbose=FALSE)
+    
+    dat <- AnnotatedDataFrame(dat)
+    dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
+    nm2 <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, verbose=FALSE)
+
+    expect_equal(nm1$fixef, nm2$fixef)
+})
