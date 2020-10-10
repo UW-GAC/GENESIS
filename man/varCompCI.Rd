@@ -3,10 +3,10 @@
 \title{Variance Component Confidence Intervals}
 \description{\code{varCompCI} provides confidence intervals for the variance component estimates found using \code{\link{fitNullModel}}. The confidence intervals can be found on either the original scale or for the proportion of total variability explained.}
 \usage{
-varCompCI(nullMMobj, prop = TRUE)
+varCompCI(null.model, prop = TRUE)
 }
 \arguments{
-  \item{nullMMobj}{A null model object returned by \code{\link{fitNullModel}}.}
+  \item{null.model}{A null model object returned by \code{\link{fitNullModel}}.}
   \item{prop}{A logical indicator of whether the point estimates and confidence intervals should be returned as the proportion of total variability explained (TRUE) or on the orginal scale (FALSE).}
 }
 \details{
