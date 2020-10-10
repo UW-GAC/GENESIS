@@ -75,6 +75,7 @@ export(admixMap,
        pcairPartition,
        pcrelateSampBlock,
        samplesGdsOrder,
+       smallNullModel,
        varCompCI)
 
 S3method(plot, pcair)

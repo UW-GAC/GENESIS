@@ -13,6 +13,7 @@ setMethod("fitNullModel",
                    max.iter = 100,
                    EM.iter = 0,
                    drop.zeros = TRUE,
+                   return.small = FALSE,
                    verbose = TRUE) {
 
               if (is.data.table(x)) x <- as.data.frame(x)
@@ -32,7 +33,9 @@ setMethod("fitNullModel",
                             group.idx=desmat$group.idx, family=family,
                             start=start, AIREML.tol=AIREML.tol,
                             max.iter=max.iter, EM.iter=EM.iter,
-                            drop.zeros=drop.zeros, verbose=verbose)
+                            drop.zeros=drop.zeros,
+                            return.small=return.small,
+                            verbose=verbose)
           })
 
 setMethod("fitNullModel",
@@ -175,4 +178,13 @@ nullModelInvNorm <- function(null.model, cov.mat = NULL,
     } else if (!all(nms %in% x$sample.id)) {
         stop("all sample names in dimnames of cov.mat must be present in x$sample.id")
     }
+}
+
+
+## Return a small version of the null model (no NxN matrices)
+smallNullModel <- function(null.model) {
+    null.model$cholSigmaInv <- NULL
+    null.model$CX <- NULL
+    null.model$CXCXI <- NULL
+    null.model
 }

@@ -7,6 +7,7 @@
 \alias{fitNullModel,ScanAnnotationDataFrame-method}
 \alias{fitNullModel,GenotypeData-method}
 \alias{nullModelInvNorm}
+\alias{smallNullModel}
 
 \title{Fit a Model Under the Null Hypothesis}
 
@@ -21,13 +22,15 @@
   association testing.
 
   \code{nullModelInvNorm} does an inverse normal transform of a previously fit null model.
+
+  \code{smallNullModel} returns a small version of the null model with no NxN matrices.
 }
 
 \usage{
 \S4method{fitNullModel}{data.frame}(x, outcome, covars = NULL, cov.mat = NULL,
             group.var = NULL, family = "gaussian", start = NULL, 
             AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0, drop.zeros = TRUE,
-            verbose = TRUE)
+            return.small = FALSE, verbose = TRUE)
 \S4method{fitNullModel}{AnnotatedDataFrame}(x, outcome, covars = NULL, cov.mat = NULL,
             group.var = NULL, sample.id = NULL, ...)
 \S4method{fitNullModel}{SeqVarData}(x, ...)
@@ -37,6 +40,8 @@
 nullModelInvNorm(null.model, cov.mat = NULL, norm.option = c("by.group", "all"),
                  rescale = c("none", "model", "residSD"),
                  AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0, verbose = TRUE)
+
+smallNullModel(null.model)
 }
 
 \arguments{
@@ -52,6 +57,7 @@ nullModelInvNorm(null.model, cov.mat = NULL, norm.option = c("by.group", "all"),
   \item{max.iter}{The maximum number of iterations allowed to reach convergence.}
   \item{EM.iter}{The number of EM iterations to run prior to AIREML; default is 0.}
   \item{drop.zeros}{Logical indicator of whether variance component terms that converge to 0 should be removed from the model; the default is TRUE. See 'Details' for more information.}
+  \item{return.small}{Logical for whether to return a small version of the null model without NxN matrices. Default is FALSE; only set to TRUE for use in association tests with \code{test = "BinomiRare"} or \code{"CMP"} and \code{recalc.pval.thresh = 1}.}
   \item{verbose}{Logical indicator of whether updates from the function
     should be printed to the console; the default is TRUE.}
   \item{...}{Arguments to pass to other methods.}
