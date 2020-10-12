@@ -7,7 +7,7 @@
 \alias{fitNullModel,ScanAnnotationDataFrame-method}
 \alias{fitNullModel,GenotypeData-method}
 \alias{nullModelInvNorm}
-\alias{smallNullModel}
+\alias{nullModelSmall}
 
 \title{Fit a Model Under the Null Hypothesis}
 
@@ -23,7 +23,7 @@
 
   \code{nullModelInvNorm} does an inverse normal transform of a previously fit null model.
 
-  \code{smallNullModel} returns a small version of the null model with no NxN matrices.
+  \code{nullModelSmall} returns a small version of the null model with no NxN matrices.
 }
 
 \usage{
@@ -41,7 +41,7 @@ nullModelInvNorm(null.model, cov.mat = NULL, norm.option = c("by.group", "all"),
                  rescale = c("none", "model", "residSD"),
                  AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0, verbose = TRUE)
 
-smallNullModel(null.model)
+nullModelSmall(null.model)
 }
 
 \arguments{

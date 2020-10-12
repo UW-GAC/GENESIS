@@ -190,7 +190,7 @@ test_that("small null model", {
     test.cmp.small1 <- testGenoSingleVar(nullmod.small1, G = geno, test = "CMP")
     expect_equal(test.cmp.big, test.cmp.small1)
 
-    nullmod.small2 <- smallNullModel(nullmod.big)
+    nullmod.small2 <- nullModelSmall(nullmod.big)
     expect_equal(setdiff(names(nullmod.big), names(nullmod.small2)),
                  c("cholSigmaInv", "CX", "CXCXI"))
 

@@ -182,7 +182,7 @@ nullModelInvNorm <- function(null.model, cov.mat = NULL,
 
 
 ## Return a small version of the null model (no NxN matrices)
-smallNullModel <- function(null.model) {
+nullModelSmall <- function(null.model) {
     null.model$cholSigmaInv <- NULL
     null.model$CX <- NULL
     null.model$CXCXI <- NULL

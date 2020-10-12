@@ -93,7 +93,7 @@
         nullprep <- nullModelTestPrep(out)
         out <- c(out, nullprep)
     } else {
-        out <- smallNullModel(out)
+        out <- nullModelSmall(out)
     }
     class(out) <- out.class
     
