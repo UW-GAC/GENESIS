@@ -12,7 +12,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     test <- match.arg(test)
     calc.score <- test %in% c("Score", "Score.SPA") | (recalc.pval.thresh < 1)
 
-    if (is.null(nullmod$cholSigmaInv) && (calc.score || !is.null(E))) {
+    if (isNullModelSmall(nullmod) && (calc.score || !is.null(E))) {
         stop("small null model cannot be used with options provided")
     }
 

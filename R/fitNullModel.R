@@ -188,3 +188,8 @@ nullModelSmall <- function(null.model) {
     null.model$CXCXI <- NULL
     null.model
 }
+
+
+isNullModelSmall <- function(null.model) {
+    is.null(null.model$cholSigmaInv)
+}

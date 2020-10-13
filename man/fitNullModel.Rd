@@ -8,6 +8,7 @@
 \alias{fitNullModel,GenotypeData-method}
 \alias{nullModelInvNorm}
 \alias{nullModelSmall}
+\alias{isNullModelSmall}
 
 \title{Fit a Model Under the Null Hypothesis}
 
@@ -24,6 +25,8 @@
   \code{nullModelInvNorm} does an inverse normal transform of a previously fit null model.
 
   \code{nullModelSmall} returns a small version of the null model with no NxN matrices.
+
+  \code{isNullModelSmall} returns TRUE if a null model is small; FALSE otherwise.
 }
 
 \usage{
