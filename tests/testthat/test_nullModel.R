@@ -44,10 +44,10 @@ test_that("design matrix with collinear covariates", {
      expect_silent(fitNullModel(dat, outcome="a", covars = c("b", "c", "d")))
      # Simple case where one covariate equals another.
      expect_error(fitNullModel(dat, outcome="a", covars = c("b", "c", "d", "e")),
-                  "collinear")
+                  "multicollinearity")
      # Slightly more complicated case involving linear combination of more than one covariate.
      expect_error(fitNullModel(dat, outcome="a", covars = c("b", "c", "d", "f")),
-                  "collinear")
+                  "multicollinearity")
 })
 
 test_that("null model", {

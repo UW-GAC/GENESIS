@@ -40,7 +40,7 @@ createDesignMatrix <- function(x, outcome, covars=NULL, group.var=NULL) {
     # Check that design matrix is not collinear.
     rank <- Matrix::rankMatrix(X)
     if (rank < ncol(X)) {
-      err <- "Design matrix is not full rank; are some covariates collinear?"
+      err <- "Design matrix is not full rank; the model can not be fit. Check for multicollinearity among your covariates."
       stop(err)
     }
     list(y=y, X=X, group.idx=group.idx)
