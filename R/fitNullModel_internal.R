@@ -8,7 +8,7 @@
 ## X - data.frame or model.matrix
 .fitNullModel <- function(y, X, covMatList = NULL, group.idx = NULL, family = "gaussian", start = NULL,
                           AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0,
-                          drop.zeros = TRUE, verbose = TRUE){
+                          drop.zeros = TRUE, return.small = FALSE, verbose = TRUE){
     
     ### checks
     if(!is.null(covMatList)){
@@ -91,6 +91,9 @@
     out.class <- class(out)
     nullprep <- nullModelTestPrep(out)
     out <- c(out, nullprep)
+    if (return.small) {
+        out <- nullModelSmall(out)
+    }
     class(out) <- out.class
     
     return(out)

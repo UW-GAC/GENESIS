@@ -1,13 +1,18 @@
 # Inputs:
-# * nullmod: null model object without variants
+# * null.model: null model object without variants
 # * G: genotype matrix with variants to estimate jointly
 
 # Outputs:
 # * list with elements: pve, fixef, covar
-jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
+jointScoreTest <- function(null.model, G) {  # # Check rownames/colnames match.
 
+  # check that null model has required elements
+  if (isNullModelSmall(null.model)) {
+    stop("small null model cannot be used for a joint score test")
+  }
+  
   # Check that all samples in null model are in the genotype matrix.
-  missing_ids <- setdiff(rownames(nullmod$model.matrix), rownames(G))
+  missing_ids <- setdiff(rownames(null.model$model.matrix), rownames(G))
   if (length(missing_ids) > 0) {
     stop("missing samples in genotype matrix!")
   }
@@ -20,14 +25,14 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
   }
 
   # Reorder samples.
-  idx <- match(rownames(nullmod$model.matrix), rownames(G))
+  idx <- match(rownames(null.model$model.matrix), rownames(G))
   G <- G[idx, , drop = FALSE]
 
   # Genotype adjusted for covariates and random effects.
-  Gtilde <- calcGtilde(nullmod, G)
+  Gtilde <- calcGtilde(null.model, G)
 
   # Score statistic.
-  GY <- crossprod(Gtilde, nullmod$Ytilde)
+  GY <- crossprod(Gtilde, null.model$Ytilde)
 
   # GPG.
   GG <- crossprod(Gtilde)
@@ -46,7 +51,7 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
   pval.joint <- pchisq(Stat.joint, lower.tail = FALSE, df = ncol(G))
 
   # Percentage of variance explained jointly by these variants.
-  pve.joint <- as.numeric(Stat.joint / nullmod$RSS0)
+  pve.joint <- as.numeric(Stat.joint / null.model$RSS0)
 
   # Create fixed effects data frame.
   fixef <- data.frame(
@@ -56,7 +61,7 @@ jointScoreTest <- function(nullmod, G) {  # # Check rownames/colnames match.
   )
   fixef$Stat <- fixef$Est / fixef$SE
   fixef$pval <- pchisq(fixef$Stat^2, lower.tail = FALSE, df = 1)
-  fixef$PVE <- fixef$Stat^2 / nullmod$RSS0
+  fixef$PVE <- fixef$Stat^2 / null.model$RSS0
 
   rownames(fixef) <- colnames(G)
 
