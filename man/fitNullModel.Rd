@@ -31,7 +31,7 @@
 
 \usage{
 \S4method{fitNullModel}{data.frame}(x, outcome, covars = NULL, cov.mat = NULL,
-            group.var = NULL, family = "gaussian", start = NULL, 
+            group.var = NULL, family = "gaussian", start = NULL,
             AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0, drop.zeros = TRUE,
             return.small = FALSE, verbose = TRUE)
 \S4method{fitNullModel}{AnnotatedDataFrame}(x, outcome, covars = NULL, cov.mat = NULL,
@@ -74,19 +74,21 @@ isNullModelSmall(null.model)
 \details{
     If \code{x} is a data.frame, the rownames of \code{x} must match the row and column names of \code{cov.mat} (if \code{cov.mat} is specified). If \code{x} is an \code{\link{AnnotatedDataFrame}} or other object containing an \code{\link{AnnotatedDataFrame}}, \code{x} will be re-ordered (if necessary) so that \code{sample.id} or \code{scanID} is in the same order as the row and column names of \code{cov.mat}.
 
+    The code checks for multicollinearity of covariates by checking that the rank of the design matrix is equal to the number of columns; if the rank is smaller, it fails with an error.
+
     \code{cov.mat} is used to specify the covariance structures of the random effects terms in the model.  For example, to include a polygenic random effect, one matrix in \code{cov.mat} could be a kinship matrix or a genetic relationship matrix (GRM).  As another example, to include household membership as a random effect, one matrix in \code{cov.mat} should be a 0/1 matrix with a 1 in the \code{[i,j]} and \code{[j,i]} entries if individuals \code{i} and \code{j} are in the same household and 0 otherwise; the diagonals of such a matrix should all be 1.
-    
+
     When \code{family} is not gaussian, the penalized quasi-likelihood (PQL) approximation to the generalized linear mixed model (GLMM) is fit following the procedure of GMMAT (Chen et al.).
-    
+
     For some outcomes, there may be evidence that different groups of observations have different residual variances, and the standard LMM assumption of homoscedasticity is violated. When \code{group.var} is specified, separate (heterogeneous) residual variance components are fit for each unique value of \code{group.var}.
-    
+
     Let \code{m} be the number of matrices in \code{cov.mat} and let \code{g} be the number of categories in the variable specified by \code{group.var}. The length of the \code{start} vector must be \code{(m + 1)} when \code{family} is gaussian and \code{group.var} is \code{NULL}; \code{(m + g)} when \code{family} is gaussian and \code{group.var} is specified; or m when \code{family} is not gaussian.
-    
+
     A Newton-Raphson iterative procedure with Average Information REML (AIREML) is used to estimate the variance components of the random effects. When the absolute change between all of the new and previous variance component estimates is less than \code{var(outcome)*AIREML.tol}, the algorithm declares convergence of the estimates. Sometimes a variance component may approach the boundary of the parameter space at 0; step-halving is used to prevent any component from becomming negative. However, when a variance component gets near the 0 boundary, the algorithm can sometimes get "stuck", preventing the other variance components from converging; if \code{drop.zeros} is TRUE, then variance components that converge to a value less than \code{AIREML.tol} will be dropped from the model and the estimation procedure will continue with the remaining variance components.
 
     After inverse-normal transformation, the variance rescaling is done with the same grouping; i.e. if \code{norm.option == "by.group"}, rescaling is done within each group, and if \code{norm.option == "all"}, rescaling is done with all samples.
 }
-  
+
 \value{An object of class '\code{GENESIS.nullModel}' or '\code{GENESIS.nullMixedModel}'. A list including:
     \item{family}{A character string specifying the family used in the analysis.}
     \item{hetResid}{A logical indicator of whether heterogeneous residual variance components were used in the model (specified by \code{group.var}).}
@@ -116,16 +118,16 @@ isNullModelSmall(null.model)
     %\item{Ytilde}{phenotype values adjusted for covariates and random effects. This adjusted phenotype vector approximately follow a distribution with mean 0 and an identity covariance matrix. Linear regression of this adjusted phenotype vector on an equivalently adjusted genotype vector provides the same estimates as fitting the full GLS model (by the Frisch-Waugh-Lovell theorem).}
     %\item{RSS0}{the sum of the `Ytilde` values squared. This is the sum of squared residuals under the null hypothesis of no genetic effect for the covariate and random effect adjusted model using the Frisch-Waugh-Lovell theorem.}
 }
-  
+
 \references{
     Chen H, Wang C, Conomos MP, Stilp AM, Li Z, Sofer T, Szpiro AA, Chen
     W, Brehm JM, Celedon JC, Redline S, Papanicolaou GJ, Thornton TA,
     Laurie CC, Rice K and Lin X. (2016) Control for Population Structure and
     Relatedness for Binary Traits in Genetic Association Studies Using
     Logistic Mixed Models. American Journal of Human Genetics, 98(4):653-66.
-    
+
     Breslow NE and Clayton DG. (1993). Approximate Inference in Generalized Linear Mixed Models. Journal of the American Statistical Association 88: 9-25.
-    
+
     Gilmour, A.R., Thompson, R., & Cullis, B.R. (1995). Average information REML: an efficient algorithm for variance parameter estimation in linear mixed models. Biometrics, 1440-1450.
 }
 
@@ -134,7 +136,7 @@ isNullModelSmall(null.model)
 \seealso{
     \code{\link{varCompCI}} for estimating confidence intervals for the variance components and the proportion of variability (heritability) they explain, \code{\link{assocTestSingle}} or \code{\link{assocTestAggregate}} for running genetic association tests using the output from \code{fitNullModel}.
 }
-  
+
 \examples{
 library(GWASTools)
 
@@ -148,7 +150,7 @@ HapMap_genoData <- GenotypeData(HapMap_geno)
 data("HapMap_ASW_MXL_KINGmat")
 
 # run PC-AiR
-mypcair <- pcair(HapMap_genoData, kinobj = HapMap_ASW_MXL_KINGmat, 
+mypcair <- pcair(HapMap_genoData, kinobj = HapMap_ASW_MXL_KINGmat,
                 divobj = HapMap_ASW_MXL_KINGmat)
 
 # run PC-Relate
@@ -161,7 +163,7 @@ close(HapMap_genoData)
 set.seed(4)
 pheno <- 0.2*mypcair$vectors[,1] + rnorm(mypcair$nsamp, mean = 0, sd = 1)
 
-annot <- data.frame(sample.id = mypcair$sample.id, 
+annot <- data.frame(sample.id = mypcair$sample.id,
                     pc1 = mypcair$vectors[,1], pheno = pheno)
 
 # make covariance matrix

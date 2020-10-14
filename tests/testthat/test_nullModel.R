@@ -28,6 +28,28 @@ test_that("design matrix with missing reference level", {
     expect_equal(colnames(nm$model.matrix)[2], "by")
 })
 
+test_that("design matrix with collinear covariates", {
+    set.seed(20); a <- rnorm(10)
+    set.seed(21); c <- sample(1:10, 10, replace=TRUE)
+    dat <- data.frame(a=a,
+                      b=c(rep("a",5), rep("b", 5)),
+                      c=c,
+                      d=sample(1:10, 10, replace=TRUE),
+                      stringsAsFactors = FALSE)
+    dat$e <- dat$c
+    dat$f <- dat$c + 2 * dat$d
+    # No failure with no covariates.
+     expect_silent(nm <- fitNullModel(dat, outcome="a"))
+     # No failure with no colinear covariates.
+     expect_silent(fitNullModel(dat, outcome="a", covars = c("b", "c", "d")))
+     # Simple case where one covariate equals another.
+     expect_error(fitNullModel(dat, outcome="a", covars = c("b", "c", "d", "e")),
+                  "multicollinearity")
+     # Slightly more complicated case involving linear combination of more than one covariate.
+     expect_error(fitNullModel(dat, outcome="a", covars = c("b", "c", "d", "f")),
+                  "multicollinearity")
+})
+
 test_that("null model", {
     set.seed(22); a <- rnorm(10)
     dat <- data.frame(sample.id=letters[1:10],
@@ -108,10 +130,10 @@ test_that("dimnames for cov.mat", {
 
     dimnames(covMat) <- list(1:10, 1:10)
     expect_error(.checkSampleId(covMat, dat))
-    
-    rownames(dat) <- dat$sample.id  
+
+    rownames(dat) <- dat$sample.id
     expect_error(.checkRownames(covMat, dat))
-    
+
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
     .checkSampleId(covMat, dat)
 })
@@ -125,7 +147,7 @@ test_that("sample selection", {
     dat <- AnnotatedDataFrame(dat)
     set.seed(29); covMat <- crossprod(matrix(rnorm(100,sd=0.05),10,10))
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
-    
+
     keep <- rev(dat$sample.id[c(TRUE,FALSE)])
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, sample.id=keep, verbose=FALSE)
     expect_equal(nm$sample.id, rev(keep))
@@ -140,7 +162,7 @@ test_that("change sample order", {
     dat <- AnnotatedDataFrame(dat)
     set.seed(301); covMat <- crossprod(matrix(rnorm(100,sd=0.05),10,10))
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
-    
+
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, verbose=FALSE)
     expect_equal(nm$sample.id, dat$sample.id)
     expect_equal(rownames(nm$model.matrix), dat$sample.id)
@@ -170,7 +192,7 @@ test_that("inv norm", {
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, verbose=FALSE)
     inv <- nullModelInvNorm(nm, covMat, verbose=FALSE)
     expect_equal(nm$sample.id, inv$sample.id)
-    
+
     # change order of covMat with respect to dat
     dimnames(covMat) <- list(rev(dat$sample.id), rev(dat$sample.id))
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, verbose=FALSE)
@@ -185,13 +207,13 @@ test_that("outcome has colnames", {
 
     nullmod <- fitNullModel(df, outcome="outcome", covars="sex", verbose=FALSE)
     expect_equal(colnames(nullmod$outcome), "outcome")
-    
+
     nullmod <- fitNullModel(adf, outcome="outcome", covars="sex", verbose=FALSE)
     expect_equal(colnames(nullmod$outcome), "outcome")
-    
+
     nullmod <- fitNullModel(svd, outcome="outcome", covars="sex", verbose=FALSE)
     expect_equal(colnames(nullmod$outcome), "outcome")
-    
+
     seqClose(svd)
 })
 
@@ -272,7 +294,7 @@ test_that("tibbles are supported", {
                          b=c(rep("a",5), rep("b", 5)))
     set.seed(44); covMat <- crossprod(matrix(rnorm(100,sd=0.05),10,10))
     nm1 <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, verbose=FALSE)
-    
+
     dat <- AnnotatedDataFrame(dat)
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
     nm2 <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, verbose=FALSE)
@@ -288,7 +310,7 @@ test_that("data.tables are supported", {
                       b=c(rep("a",5), rep("b", 5)))
     set.seed(44); covMat <- crossprod(matrix(rnorm(100,sd=0.05),10,10))
     nm1 <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, verbose=FALSE)
-    
+
     dat <- AnnotatedDataFrame(dat)
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
     nm2 <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, verbose=FALSE)
