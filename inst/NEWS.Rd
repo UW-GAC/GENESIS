@@ -2,6 +2,7 @@
 \title{NEWS for GENESIS}
 \section{Version 2.19.7}{
     \itemize{
+      \item Change default value of small.samp.correct in pcrelate to TRUE.
       \item Add options to remove NxN matrices from a null model (function nullModelSmall and fitNullModel argument return.small).
       \item Add check for collinearity in covariates.
     }

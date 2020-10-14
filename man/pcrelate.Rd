@@ -20,7 +20,7 @@
 	sample.block.size = 5000,
 	maf.thresh = 0.01,
 	maf.bound.method = c('filter', 'truncate'),
-	small.samp.correct = FALSE,
+	small.samp.correct = TRUE,
 	verbose = TRUE)
 \S4method{pcrelate}{SeqVarIterator}(gdsobj,
 	pcs,
@@ -31,7 +31,7 @@
 	sample.block.size = 5000,
 	maf.thresh = 0.01,
 	maf.bound.method = c('filter', 'truncate'),
-	small.samp.correct = FALSE,
+	small.samp.correct = TRUE,
 	verbose = TRUE)
 samplesGdsOrder(gdsobj, sample.include)
 calcISAFBeta(gdsobj,
@@ -55,7 +55,7 @@ correctKin(kinBtwn, kinSelf,
 correctK2(kinBtwn, kinSelf,
         pcs,
         sample.include = NULL,
-        small.samp.correct = FALSE)
+        small.samp.correct = TRUE)
 correctK0(kinBtwn)
 }
 \arguments{
@@ -68,7 +68,7 @@ correctK0(kinBtwn)
   \item{sample.block.size}{The number of individuals to read-in/analyze at once; the default value is 5000. See 'Details' for more information.}
   \item{maf.thresh}{Minor allele frequency threshold; if an individual's estimated individual-specific minor allele frequency at a SNP is less than this value, that indivdiual will either have that SNP excluded from the analysis or have their estimated indivdiual-specific minor allele frequency truncated to this value, depending on \code{maf.bound.method}. The default value is 0.01.}
   \item{maf.bound.method}{How individual-specific minor allele frequency estimates less that \code{maf.thresh} are handled. When set to `filter` (default), SNPs for which an individual's estimated individual-specific minor allele frequency are below \code{maf.thresh} are excluded from the analysis for that individual. When set to `truncate`, estimated individual-specific minor allele frequncies below \code{maf.thresh} have their value set to \code{maf.thresh}.}
- \item{small.samp.correct}{Logical indicator of whether to implement a small sample correction.}
+ \item{small.samp.correct}{Logical indicator of whether to implement a small sample correction. The default is \code{TRUE}, but must be set to \code{FALSE} if \code{sample.block.size} is less than the number of samples or if \code{scale} is \code{'none'}.}
   %\item{num.cores}{The number of cores to use. If \code{> 1}, multiple blocks of variants and/or samples can be analyzed in parallel.}
   \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is TRUE.}
   \item{betaobj}{Outut of \code{calcISAFBeta}.}
