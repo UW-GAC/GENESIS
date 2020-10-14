@@ -89,10 +89,9 @@
     }
 
     out.class <- class(out)
-    if (!return.small) {
-        nullprep <- nullModelTestPrep(out)
-        out <- c(out, nullprep)
-    } else {
+    nullprep <- nullModelTestPrep(out)
+    out <- c(out, nullprep)
+    if (return.small) {
         out <- nullModelSmall(out)
     }
     class(out) <- out.class

@@ -176,14 +176,16 @@ test_that("SPA_pval works with empty input", {
 test_that("small null model", {
     n <- 100
     dat <- .testNullInputs(n, binary=TRUE)
-    nullmod.big <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial", return.small=FALSE, verbose=FALSE)
+    nullmod.big <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial",
+                                 return.small=FALSE, verbose=FALSE)
     geno <- .testGenoMatrix(n)
     test.br.big <- testGenoSingleVar(nullmod.big, G = geno, test = "BinomiRare")
     test.cmp.big <- testGenoSingleVar(nullmod.big, G = geno, test = "CMP")
     
-    nullmod.small1 <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial", return.small=TRUE, verbose=FALSE)
+    nullmod.small1 <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial",
+                                    return.small=TRUE, verbose=FALSE)
     expect_equal(setdiff(names(nullmod.big), names(nullmod.small1)),
-                 c("cholSigmaInv", "Ytilde", "resid", "CX", "CXCXI", "RSS0"))
+                 c("cholSigmaInv", "CX", "CXCXI"))
     
     test.br.small1 <- testGenoSingleVar(nullmod.small1, G = geno, test = "BinomiRare")
     expect_equal(test.br.big, test.br.small1)
@@ -199,6 +201,9 @@ test_that("small null model", {
     test.cmp.small2 <- testGenoSingleVar(nullmod.small2, G = geno, test = "CMP")
     expect_equal(test.cmp.big, test.cmp.small2)
 
-    expect_error(testGenoSingleVar(nullmod.small2, G = geno, test = "BinomiRare", recalc.pval.thresh=0.5), "small null model cannot be used")
-    expect_error(testGenoSingleVar(nullmod.small2, G = geno, test = "Score"), "small null model cannot be used")
+    expect_error(testGenoSingleVar(nullmod.small2, G = geno, test = "BinomiRare",
+                                   recalc.pval.thresh=0.5),
+                 "small null model cannot be used")
+    expect_error(testGenoSingleVar(nullmod.small2, G = geno, test = "Score"),
+                 "small null model cannot be used")
 })
