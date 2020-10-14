@@ -1,5 +1,11 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.19.7}{
+    \itemize{
+      \item Add options to remove NxN matrices from a null model (function nullModelSmall and fitNullModel argument return.small).
+      \item Add check for collinearity in covariates.
+    }
+}
 \section{Version 2.19.6}{
     \itemize{
       \item Add test options "BinomiRare" and "CMP" to assocTestSingle and assocTestAggregate.
