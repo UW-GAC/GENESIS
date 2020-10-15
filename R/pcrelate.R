@@ -23,7 +23,7 @@ setMethod("pcrelate",
                    sample.block.size = 5000,
                    maf.thresh = 0.01,
                    maf.bound.method = c('filter', 'truncate'),
-                   small.samp.correct = FALSE,
+                   small.samp.correct = TRUE,
                    #num.cores = 1,
                    verbose = TRUE) {
               .pcrelate(gdsobj, 
@@ -51,7 +51,7 @@ setMethod("pcrelate",
                    sample.block.size = 5000,
                    maf.thresh = 0.01,
                    maf.bound.method = c('filter', 'truncate'),
-                   small.samp.correct = FALSE,
+                   small.samp.correct = TRUE,
                    #num.cores = 1,
                    verbose = TRUE) {
               filt <- seqGetFilter(gdsobj)
@@ -83,7 +83,7 @@ setMethod("pcrelate",
                       sample.block.size = 5000,
                       maf.thresh = 0.01,
                       maf.bound.method = c('filter', 'truncate'),
-                      small.samp.correct = FALSE,
+                      small.samp.correct = TRUE,
                       #num.cores = 1,
                       verbose = TRUE){
 
@@ -593,7 +593,7 @@ correctKin <- function(kinBtwn, kinSelf, pcs, sample.include = NULL){
     return(list(kinBtwn = kinBtwn, kinSelf = kinSelf))
 }
 
-correctK2 <- function(kinBtwn, kinSelf, pcs, sample.include = NULL, small.samp.correct = FALSE){
+correctK2 <- function(kinBtwn, kinSelf, pcs, sample.include = NULL, small.samp.correct = TRUE){
     # keep R CMD check from warning about undefined global variables
     f.1 <- f.2 <- kin <- k2 <- newval <- value <- NULL
     
