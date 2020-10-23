@@ -146,3 +146,12 @@ test_that("missing sample.id in null model", {
     expect_equal(max(assoc$n.obs), n)
     seqClose(svd)
 })
+
+test_that("BinomiRare", {
+    svd <- .testData()
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="status", family="binomial", verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, test="BinomiRare", verbose=FALSE)
+    expect_true(all(assoc$freq <= 0.5))
+    seqClose(svd)
+})

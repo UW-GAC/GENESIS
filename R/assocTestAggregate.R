@@ -23,6 +23,11 @@ setMethod("assocTestAggregate",
               # burden.test <- match.arg(burden.test)
               # pval.method <- match.arg(pval.method)
 
+              # for BinomiRare and CMP, restrict to variants where the alternate allele is minor
+              if (test %in% c("BinomiRare", "CMP") && AF.max > 0.5) {
+                  AF.max  <-  0.5
+              }
+
               # don't use sparse matrices for imputed dosages
               if (imputed) sparse <- FALSE
 
@@ -163,6 +168,11 @@ setMethod("assocTestAggregate",
               test <- .match.arg(test)
               # burden.test <- match.arg(burden.test)
               # pval.method <- match.arg(pval.method)
+
+              # for BinomiRare and CMP, restrict to variants where the alternate allele is minor
+              if (test %in% c("BinomiRare", "CMP") && AF.max > 0.5) {
+                  AF.max  <-  0.5
+              }
 
               # filter samples to match null model
               sample.index <- .sampleIndexNullModel(gdsobj, null.model)

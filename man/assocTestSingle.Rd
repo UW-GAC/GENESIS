@@ -12,13 +12,13 @@
 \usage{
 \S4method{assocTestSingle}{SeqVarIterator}(gdsobj, null.model,
                 test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
-                recalc.pval.thresh=0.05, AF.max=NULL, GxE=NULL,
+                recalc.pval.thresh=0.05, GxE=NULL,
                 sparse=TRUE, imputed=FALSE,
                 male.diploid=TRUE, genome.build=c("hg19", "hg38"),
                 verbose=TRUE)
 \S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model,
                 test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
-                recalc.pval.thresh=0.05, AF.max=NULL, GxE=NULL,
+                recalc.pval.thresh=0.05, GxE=NULL,
                 male.diploid=TRUE, verbose=TRUE)
 }
 
@@ -28,7 +28,6 @@
     \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Score"} (default), \code{"Score.SPA"}, \code{"BinomiRare"}, or \code{"CMP"}; \code{"Score.SPA"} can only be used when the family of the null model fit with \code{\link{fitNullModel}} is binomial.}
     %\item{impute.geno}{A logical indicator of whether sporadic missing genotype values should be mean imputed. The default is TRUE. See 'Details' for further information.}
     \item{recalc.pval.thresh}{If test is not "Score",  recalculate p-values using the specified `test` for variants with a Score p-value below this threshold; return the score p-value for all other variants.}
-    \item{AF.max}{Maximum alternate allele frequency threshold for testing variants. A minimum of 0.5 is recommended when running \code{BinomiRare} or \code{CMP} tests.}
     \item{GxE}{A vector of character strings specifying the names of the variables for which a genotype interaction term should be included.If \code{GxE} is not \code{NULL}, \code{test} is ignored and Wald tests of interaction are performed. If \code{GxE} is \code{NULL} (default) no genotype interactions are included. See 'Details' for further information.}
     %\item{ivar.return.betaCov}{Logical indicator of whether the estimated covariance matrix of the effect size estimates (betas) for the genotype and genotype interaction terms should be returned; the default is FALSE.}
     \item{sparse}{Logical indicator of whether to read genotypes as sparse Matrix objects; the default is \code{TRUE}. Set this to \code{FALSE} if the alternate allele dosage of the genotypes in the test are not expected to be mostly 0.}
@@ -52,7 +51,7 @@
 
     The saddle point approximation (SPA), run by using \code{test = "Score.SPA"}, implements the method described by Dey et al. (2017), which was extended to mixed models by Zhou et al. (2018) in their SAIGE software. SPA provides better calibration of p-values when fitting mixed models with a binomial family for a sample with an imbalanced case to control ratio.
 
-    The BinomiRare test, run by using \code{test = "BinomiRare"}, and the CMP test, run by using \code{test = "CMP"} are carrier-only, robust tests. Both tests focuse on carriers of the rare variant allele ("carriers"), and use the estimated probabilities of the binary outcome within the carriers, estimated under the null of not association, and the actual number of observed outcomes, to compute p-values. BinomiRare uses the Poisson-Binomial distribution, and the CMP uses the Conway-Maxwell-Poisson distribution, and is specifically designed for mixed models. (If \code{test = "CMP"} but \code{null.model$family$mixedmodel = FALSE}, the BinomiRare test will be run instead.) These tests provide both a traditional p-value (\code{"pval"}) and a mid-p-value (\code{"midp"}), which is less conservative/more liberal, with the difference being more pronounced for small number of carriers. The BinomiRare test is described in Sofer (2017) and compared to the Score and SPA in various settings in Sofer and Guo (2020).
+    The BinomiRare test, run by using \code{test = "BinomiRare"}, and the CMP test, run by using \code{test = "CMP"} are carrier-only, robust tests. Only variants where the alternate allele is minor will be tested. Both tests focuse on carriers of the rare variant allele ("carriers"), and use the estimated probabilities of the binary outcome within the carriers, estimated under the null of not association, and the actual number of observed outcomes, to compute p-values. BinomiRare uses the Poisson-Binomial distribution, and the CMP uses the Conway-Maxwell-Poisson distribution, and is specifically designed for mixed models. (If \code{test = "CMP"} but \code{null.model$family$mixedmodel = FALSE}, the BinomiRare test will be run instead.) These tests provide both a traditional p-value (\code{"pval"}) and a mid-p-value (\code{"midp"}), which is less conservative/more liberal, with the difference being more pronounced for small number of carriers. The BinomiRare test is described in Sofer (2017) and compared to the Score and SPA in various settings in Sofer and Guo (2020).
     %A reference to the CMP test and the BinomiRare for mixed models will be provided once a preprint is available.
 
     For the \code{\link{GenotypeIterator}} method, objects created with \code{\link{GdsGenotypeReader}} or \code{\link{MatrixGenotypeReader}} are supported. \code{\link{NcdfGenotypeReader}} objects are not supported.

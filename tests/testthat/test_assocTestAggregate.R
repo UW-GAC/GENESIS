@@ -226,3 +226,12 @@ test_that("user weights in variantData with list iterator", {
     expect_equal(assoc$variantInfo[[2]]$weight, rep(0.5, 8))
     seqClose(svd)
 })
+
+test_that("BinomiRare", {
+    svd <- .testData()
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="status", family="binomial", verbose=FALSE)
+    assoc <- assocTestAggregate(iterator, nullmod, test="BinomiRare", verbose=FALSE)
+    expect_true(all(assoc$variantInfo[[1]]$freq <= 0.5))
+    seqClose(svd)
+})

@@ -5,7 +5,7 @@ setGeneric("assocTestSingle", function(gdsobj, ...) standardGeneric("assocTestSi
 setMethod("assocTestSingle",
           "SeqVarIterator",
           function(gdsobj, null.model, test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
-                   recalc.pval.thresh=0.05, AF.max=NULL, GxE=NULL,
+                   recalc.pval.thresh=0.05, GxE=NULL,
                    sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), verbose=TRUE) {
               test <- match.arg(test)
 
@@ -45,11 +45,14 @@ setMethod("assocTestSingle",
                   freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index,
                                       male.diploid=male.diploid, genome.build=genome.build)
                   
-                  # filter monomorphic variants (and max alternate frequency variants)
+                  # filter monomorphic variants
                   keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq, imputed=imputed)
-                  if (!is.null(AF.max)){
-                      keep <- keep & (freq$freq <= AF.max)
+
+                  # for BinomiRare and CMP, restrict to variants where the alternate allele is minor
+                  if (test %in% c("BinomiRare", "CMP")) {
+                      keep <- keep & (freq$freq <= 0.5)
                   }
+                  
                   if (!all(keep)) {
                       var.info <- var.info[keep,,drop=FALSE]
                       geno <- geno[,keep,drop=FALSE]
@@ -87,7 +90,7 @@ setMethod("assocTestSingle",
 setMethod("assocTestSingle",
           "GenotypeIterator",
           function(gdsobj, null.model, test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
-                   recalc.pval.thresh=0.05, AF.max=NULL, GxE=NULL,
+                   recalc.pval.thresh=0.05, GxE=NULL,
                    male.diploid=TRUE, verbose=TRUE) {
               test <- match.arg(test)
 
@@ -118,9 +121,12 @@ setMethod("assocTestSingle",
                   
                   # filter monomorphic variants (and max alternate frequency variants)
                   keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq)
-                  if (!is.null(AF.max)){
-                      keep <- keep & (freq$freq <= AF.max)
+                  
+                  # for BinomiRare and CMP, restrict to variants where the alternate allele is minor
+                  if (test %in% c("BinomiRare", "CMP")) {
+                      keep <- keep & (freq$freq <= 0.5)
                   }
+                  
                   if (!all(keep)) {
                       var.info <- var.info[keep,,drop=FALSE]
                       geno <- geno[,keep,drop=FALSE]
