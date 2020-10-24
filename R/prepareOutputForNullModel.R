@@ -112,14 +112,15 @@
         }
     }
     if (is.null(group.idx)){
-        if (family$family == "gaussian"){
-            group.idx <- list(E = 1:n)
-            g <- 1
-            group.names <- "E"
-        } else{
+## commented this out for multi-variate analyses for the moment
+##        if (family$family == "gaussian"){
+##            group.idx <- list(E = 1:n)
+##            g <- 1
+##            group.names <- "E"
+##        } else{
             g <- 0
             group.names <- NULL
-        }
+##        }
     }
 
     if(is.null(names(covMatList))){
@@ -129,7 +130,7 @@
     matrix.names <- names(covMatList)
 
     family$mixedmodel <- TRUE
-    varComp <- vc.mod$varComp
+    varComp <- as.numeric(vc.mod$varComp)
     hetResid <- (length(group.idx) > 1)
 
 
@@ -137,7 +138,6 @@
     varCompCov <- matrix(NA, nrow=(m+g), ncol=(m+g))
     colnames(varCompCov) <- paste("V_",c(names(covMatList),group.names),sep="")
     rownames(varCompCov) <- paste("V_",c(names(covMatList),group.names),sep="")
-
 
     if(drop.zeros){
         varCompCov[!vc.mod$zeroFLAG, !vc.mod$zeroFLAG] <- solve(vc.mod$AI)
@@ -166,7 +166,7 @@
     pval <- pchisq(Stat, df = 1, lower.tail = FALSE)
 
     fixef <- data.frame(Est = vc.mod$beta, SE = SE, Stat = Stat, pval = pval)
-    rownames(fixef) <- varNames
+##    rownames(fixef) <- varNames
 
     fitted.values <- as.vector(vc.mod$fits)
     resid.marginal <-  vc.mod$residM

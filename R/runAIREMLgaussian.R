@@ -1,14 +1,21 @@
 .runAIREMLgaussian <- function(Y, X, start, covMatList, group.idx, AIREML.tol, 
-                                drop.zeros, max.iter, EM.iter, verbose){
+                                drop.zeros, max.iter, EM.iter, verbose, ntraits=1, kinMatSmall){
 
     # initial values
     m <- length(covMatList)
     g <- length(group.idx)
     n <- length(Y)
-    sigma2.p <- drop(var(Y))
+    ## change this for multi-trait analyses for now
+    ##    sigma2.p <- drop(var(Y))
+    sigma2.p <- var(Y)
     AIREML.tol <- AIREML.tol*sigma2.p  # set convergence tolerance dependent on trait
+    
+    np <- (4*as.integer(ntraits)) - 3 # number of parameters
+    nsamp <- length(Y)/ntraits # number of samples
+    
     if(is.null(start)){
-        sigma2.k <- rep((1/(m+1))*sigma2.p, (m+g))
+#        sigma2.k <- rep((1/(m+1))*sigma2.p, (m+g))
+        sigma2.k <- rep((1/(m+1))*sigma2.p, np)
     }else{
         sigma2.k <- as.vector(start)
         sigma2.k[sigma2.k < 2*AIREML.tol] <- 2*AIREML.tol # starting values that are too small are slightly increased
@@ -24,7 +31,7 @@
         reps <- reps+1
         
         ### compute sigma quantities
-        sq <- .computeSigmaQuantities(varComp = sigma2.k, covMatList = covMatList, group.idx = group.idx)
+        sq <- .computeSigmaQuantities(varComp = sigma2.k, covMatList = covMatList, group.idx = group.idx, nsamp=nsamp, ntraits=ntraits)
         ### compute likelihood quantities
         lq <- .calcLikelihoodQuantities(Y = Y, X = X, Sigma.inv = sq$Sigma.inv, cholSigma.diag = sq$cholSigma.diag)
 
@@ -33,23 +40,35 @@
                 
         if(reps > EM.iter){
             # Average Information and Scores
-            AI <- matrix(NA, nrow=(m+g), ncol=(m+g))
-            score <- rep(NA,(m+g))
-            covMats.score.AI <- .calcAIcovMats(PY = lq$PY, covMatList = covMatList,
-                                               Sigma.inv = sq$Sigma.inv, Sigma.inv_X = lq$Sigma.inv_X, Xt_Sigma.inv_X.inv = lq$Xt_Sigma.inv_X.inv)
-            AI[1:m, 1:m] <- covMats.score.AI$AI
-            score[1:m]  <- covMats.score.AI$score
-            het.vars.score.AI <- .calcAIhetvars(PY = lq$PY, group.idx = group.idx,
-                                                Sigma.inv = sq$Sigma.inv, Sigma.inv_X = lq$Sigma.inv_X, Xt_Sigma.inv_X.inv = lq$Xt_Sigma.inv_X.inv)
-            score[(m + 1):(m + g)]  <- het.vars.score.AI$score
-            AI[(m + 1):(m + g),(m+1):(m + g)]  <- het.vars.score.AI$AI
+            AI <- matrix(NA, nrow=np, ncol=np) # changed these dimensions for multi-trait
+            score <- rep(NA,np)
+            if(ntraits > 1){
+                covMats.score.AI <- .calcAIcovMatsMulti(PY = lq$PY, covMatList = covMatList,
+                                                        Sigma.inv = sq$Sigma.inv, Sigma.inv_X = lq$Sigma.inv_X, 
+                                                        Xt_Sigma.inv_X.inv = lq$Xt_Sigma.inv_X.inv, nsamp=nsamp, 
+                                                        np=np, kinMatSmall)
+            }else{
+                covMats.score.AI <- .calcAIcovMats(PY = lq$PY, covMatList = covMatList,
+                                                   Sigma.inv = sq$Sigma.inv, Sigma.inv_X = lq$Sigma.inv_X, Xt_Sigma.inv_X.inv = lq$Xt_Sigma.inv_X.inv)
+            }
+
+            AI <- covMats.score.AI$AI
+            score <- covMats.score.AI$score ## make this change for multi-trait analyses for now
+            ##            AI[1:m, 1:m] <- covMats.score.AI$AI
+            ##            score[1:m]  <- covMats.score.AI$score
+
+            ## commenting out calcAIhetvars for now for multi-trait analyses
+##            het.vars.score.AI <- .calcAIhetvars(PY = lq$PY, group.idx = group.idx,
+##                                                Sigma.inv = sq$Sigma.inv, Sigma.inv_X = lq$Sigma.inv_X, Xt_Sigma.inv_X.inv = lq$Xt_Sigma.inv_X.inv)
+##            score[(m + 1):(m + g)]  <- het.vars.score.AI$score
+##            AI[(m + 1):(m + g),(m+1):(m + g)]  <- het.vars.score.AI$AI
             
             ### take care of "off diagonal" (terms for covariance between variance components corresponding to 
             ### the random effects and the residuals variances) 
             AI.off <- .calcAIcovMatsResids(PY = lq$PY, covMatList = covMatList, group.idx = group.idx,
                                            Sigma.inv = sq$Sigma.inv, Sigma.inv_X = lq$Sigma.inv_X, Xt_Sigma.inv_X.inv = lq$Xt_Sigma.inv_X.inv)
-            AI[1:m, (m + 1):(m + g)] <- AI.off
-            AI[(m + 1):(m + g), 1:m] <- t(AI.off)
+##            AI[1:m, (m + 1):(m + g)] <- AI.off
+##            AI[(m + 1):(m + g), 1:m] <- t(AI.off)
             
             if(drop.zeros){
                 # remove Zero terms
@@ -64,9 +83,9 @@
                 sigma2.kplus1[!zeroFLAG] <- sigma2.k[!zeroFLAG] + AIinvScore
                 sigma2.kplus1[zeroFLAG] <- 0
             }else{
-                sigma2.kplus1 <- sigma2.k + AIinvScore
+                sigma2.kplus1 <- sigma2.k + as.numeric(AIinvScore) ## make AIinvScore as.numeric() for multi-trait analyses
                 # set elements that were previously "0" and are still < 0 back to 0 (prevents step-halving due to this component)
-                sigma2.kplus1[zeroFLAG & sigma2.kplus1 < AIREML.tol] <- 0 
+##                sigma2.kplus1[zeroFLAG & sigma2.kplus1 < AIREML.tol] <- 0 
             }
             
             # step-halving if step too far
@@ -79,7 +98,7 @@
                 }else{
                     sigma2.kplus1 <- sigma2.k + tau*AIinvScore
                     # set elements that were previously "0" and are still < 0 back to 0 (prevents step-halving due to this component)
-                    sigma2.kplus1[zeroFLAG & sigma2.kplus1 < AIREML.tol] <- 0 
+##                    sigma2.kplus1[zeroFLAG & sigma2.kplus1 < AIREML.tol] <- 0 
                 }
             }
             

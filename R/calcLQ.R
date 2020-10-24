@@ -7,16 +7,22 @@
     ### Calulate the generalized least squares estimate
     Sigma.inv_X <- crossprod(Sigma.inv, X)
     Xt_Sigma.inv_X <- crossprod(X, Sigma.inv_X)
+    
     # fix issue with not recognizing the matrix as symmetric
     Xt_Sigma.inv_X <- (Xt_Sigma.inv_X + t(Xt_Sigma.inv_X))/2
     chol.Xt_Sigma.inv_X <- chol(Xt_Sigma.inv_X)
     Xt_Sigma.inv_X.inv <- chol2inv(chol.Xt_Sigma.inv_X)
-    beta <- crossprod(Xt_Sigma.inv_X.inv, crossprod(Sigma.inv_X, Y))
+    beta <- crossprod(Xt_Sigma.inv_X.inv, crossprod(Sigma.inv_X, as.numeric(Y)))
 
     # calc Xb
     fits <- X %*% beta
-    # calc marginal residuals = (Y - Xb)
-    residM <- as.vector(Y - fits)
+    ## calc marginal residuals = (Y - Xb)
+    ##if(ncol(Y)>1){
+        residM <- Y - fits ## don't make this a vector for the multi-trait analyses
+        ## make sure to test this with just one outcome...
+    ##}else{
+    ##    residM <- as.vector(Y - fits)
+    ##}
 
     ### calculate PY
     PY <- crossprod(Sigma.inv, residM)
