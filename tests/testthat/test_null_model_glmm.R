@@ -2,8 +2,14 @@ context("check null model glmm")
 
 test_that("glmm", {
     dat <- .testNullInputs(binary=TRUE)
-    
+
     nullmod <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial", verbose=FALSE)
+
+    expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
+                        "betaCov", "fitted.values", "resid.marginal", "logLik",
+                        "AIC", "workingY", "outcome", "model.matrix",
+                        "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
+                        "RSS", "Ytilde", "resid", "CX", "CXCXI", "RSS0")
 
     expect_equal(nullmod$family$family, "binomial")
     if (!nullmod$zeroFLAG) {

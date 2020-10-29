@@ -6,6 +6,14 @@ test_that("linear regression", {
 
     nullmod <- .fitNullModel(dat$y, dat$X, verbose=FALSE)
 
+    # Check for expected names.
+    expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
+                        "betaCov", "fitted.values", "resid.marginal", "logLik",
+                        "AIC", "workingY", "outcome", "model.matrix",
+                        "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
+                        "RSS", "Ytilde", "resid", "CX", "CXCXI", "RSS0")
+    expect_true(setequal(names(nullmod), expected_names))
+
     lm.mod <- lm(dat$y ~ -1 + dat$X)
 
     expect_equal(nullmod$fitted.values, fitted(lm.mod))
@@ -29,4 +37,3 @@ test_that("linear regression", {
     expect_equal(nullmod$RSS, sum(lm.mod$resid^2)/(summary(lm.mod)$sigma^2*(n - ncol(dat$X))))
     expect_true(is(nullmod, "GENESIS.nullModel"))
 })
-

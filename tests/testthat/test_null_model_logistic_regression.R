@@ -2,8 +2,16 @@ context("check null model logistic regression")
 
 test_that("logistic", {
     dat <- .testNullInputs(binary=TRUE)
-    
+
     nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
+
+    # Check for expected names.
+    expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
+                        "betaCov", "fitted.values", "resid.marginal", "logLik",
+                        "AIC", "workingY", "outcome", "model.matrix",
+                        "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
+                        "RSS", "Ytilde", "resid", "CX", "CXCXI", "RSS0")
+    expect_true(setequal(names(nullmod), expected_names))
 
     glm.mod <- glm(dat$y ~ -1 + dat$X, family = "binomial")
 

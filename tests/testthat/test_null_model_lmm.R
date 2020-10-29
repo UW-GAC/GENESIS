@@ -2,8 +2,17 @@ context("check null model lmm")
 
 test_that("lmm - with group", {
     dat <- .testNullInputs()
-    
+
     nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, group.idx=dat$group.idx, verbose=FALSE)
+
+    # Check for expected names.
+    expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
+                        "betaCov", "fitted.values", "resid.marginal",
+                        "resid.conditional", "logLik", "logLikR", "AIC",
+                        "workingY", "outcome", "model.matrix", "group.idx",
+                        "cholSigmaInv", "converged", "zeroFLAG", "niter", "RSS",
+                        "Ytilde", "resid", "CX", "CXCXI", "RSS0")
+    expect_true(setequal(names(nullmod), expected_names))
 
     expect_equal(nullmod$family$family, "gaussian")
     expect_true(nullmod$family$mixedmodel)

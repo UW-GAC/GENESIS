@@ -5,11 +5,19 @@ test_that("WLS", {
 
     nullmod <- .fitNullModel(dat$y, dat$X, group.idx=dat$group.idx, verbose=FALSE)
 
+    expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
+                        "betaCov", "fitted.values", "resid.marginal",
+                        "resid.conditional", "logLik", "logLikR", "AIC",
+                        "workingY", "outcome", "model.matrix", "group.idx",
+                        "cholSigmaInv", "converged", "zeroFLAG", "niter", "RSS",
+                        "Ytilde", "resid", "CX", "CXCXI", "RSS0")
+    expect_true(setequal(names(nullmod), expected_names))
+
     expect_equal(nullmod$family$family, "gaussian")
     expect_false(nullmod$family$mixedmodel)
     expect_true(nullmod$hetResid)
     expect_true(nullmod$converged)
-    expect_null(nullmod$zeroFLAG) 
+    expect_null(nullmod$zeroFLAG)
     expect_equivalent(nullmod$workingY, dat$y)
     expect_equivalent(nullmod$outcome, dat$y)
     expect_equivalent(nullmod$model.matrix, dat$X)
