@@ -183,7 +183,14 @@
     niter <- vc.mod$niter
 
     # Sample-level data frame.
-    fit <- data.frame()
+    # XXX: How to get sample id in here?
+    fit <- data.frame(
+      outcome = y,
+      workingY = workingY,
+      fitted.values = fitted.values,
+      resid.marginal = resid.marginal,
+      resid.conditional = resid.conditional
+    )
 
     out <- list(family = family, hetResid = hetResid, varComp = varComp,
                 varCompCov = varCompCov, fixef = fixef, betaCov = betaCov,

@@ -14,12 +14,17 @@ test_that("lmm - with group", {
                         "Ytilde", "resid", "CX", "CXCXI", "RSS0")
     expect_true(setequal(names(nullmod), expected_names))
 
+    # Check names of fit data frame.
+    expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
+                        "resid.conditional")
+    expect_true(setequal(names(nullmod$fit), expected_names))
+
     expect_equal(nullmod$family$family, "gaussian")
     expect_true(nullmod$family$mixedmodel)
     expect_true(nullmod$hetResid)
     expect_true(nullmod$converged)
-    expect_equivalent(nullmod$workingY, dat$y)
-    expect_equivalent(nullmod$outcome, dat$y)
+    expect_equivalent(nullmod$fit$workingY, dat$y)
+    expect_equivalent(nullmod$fit$outcome, dat$y)
     expect_equivalent(nullmod$model.matrix, dat$X)
     expect_true(is(nullmod, "GENESIS.nullMixedModel"))
 })
