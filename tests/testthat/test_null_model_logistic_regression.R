@@ -7,8 +7,8 @@ test_that("logistic", {
 
     # Check for expected names.
     expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
-                        "betaCov", "fit", "fitted.values", "resid.marginal", "logLik",
-                        "AIC", "workingY", "outcome", "model.matrix",
+                        "betaCov", "fit", "logLik",
+                        "AIC", "model.matrix",
                         "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
                         "RSS", "CX", "CXCXI", "RSS0")
     expect_true(setequal(names(nullmod), expected_names))

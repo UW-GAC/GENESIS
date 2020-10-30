@@ -7,11 +7,9 @@ test_that("lmm - with group", {
 
     # Check for expected names.
     expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
-                        "betaCov", "fit", "fitted.values", "resid.marginal",
-                        "resid.conditional", "logLik", "logLikR", "AIC",
-                        "workingY", "model.matrix", "group.idx", "outcome",
-                        "cholSigmaInv", "converged", "zeroFLAG", "niter", "RSS",
-                        "CX", "CXCXI", "RSS0")
+                        "betaCov", "fit", "logLik", "logLikR", "AIC", "model.matrix",
+                        "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
+                        "niter", "RSS", "CX", "CXCXI", "RSS0")
     expect_true(setequal(names(nullmod), expected_names))
 
     # Check names of fit data frame.

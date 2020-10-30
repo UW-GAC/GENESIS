@@ -6,8 +6,7 @@ test_that("glmm", {
     nullmod <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial", verbose=FALSE)
 
     expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
-                        "betaCov", "fit", "fitted.values", "resid.marginal", "logLik",
-                        "AIC", "workingY", "outcome", "model.matrix",
+                        "betaCov", "fit", "logLik", "AIC", "model.matrix",
                         "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
                         "RSS", "CX", "CXCXI", "RSS0")
     expect_true(setequal(names(nullmod), expected_names))
@@ -27,7 +26,7 @@ test_that("glmm", {
     }
     expect_false(nullmod$hetResid)
     expect_true(nullmod$converged)
-    expect_equivalent(nullmod$outcome, dat$y)
+    expect_equivalent(nullmod$fit$outcome, dat$y)
     expect_equivalent(nullmod$model.matrix, dat$X)
     expect_equal(nullmod$RSS, 1)
 })

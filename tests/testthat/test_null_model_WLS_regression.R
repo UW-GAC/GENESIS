@@ -6,9 +6,8 @@ test_that("WLS", {
     nullmod <- .fitNullModel(dat$y, dat$X, group.idx=dat$group.idx, verbose=FALSE)
 
     expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
-                        "betaCov", "fit", "fitted.values", "resid.marginal",
-                        "resid.conditional", "logLik", "logLikR", "AIC",
-                        "workingY", "outcome", "model.matrix", "group.idx",
+                        "betaCov", "fit", "logLik", "logLikR", "AIC",
+                        "model.matrix", "group.idx",
                         "cholSigmaInv", "converged", "zeroFLAG", "niter", "RSS",
                         "CX", "CXCXI", "RSS0")
     expect_true(setequal(names(nullmod), expected_names))

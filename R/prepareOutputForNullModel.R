@@ -40,8 +40,7 @@
     out <- list(family = family, hetResid = hetResid, varComp = varComp,
                 varCompCov = varCompCov, fixef = fixef, betaCov = betaCov,
                 fit = fit,
-                fitted.values = fitted.values, resid.marginal = resid.marginal,
-                logLik = logLik, AIC = AIC, workingY = workingY, outcome = y,
+                logLik = logLik, AIC = AIC,
                 model.matrix = X, group.idx = group.idx, cholSigmaInv = cholSigmaInv,
                 converged = converged, zeroFLAG = zeroFLAG, RSS = RSS)
     class(out) <- "GENESIS.nullModel"
@@ -107,10 +106,9 @@
     )
 
     out <- list(family = family, hetResid = hetResid, varComp = varComp, varCompCov = varCompCov,
-                fixef = fixef, betaCov = betaCov, fit = fit, fitted.values = fitted.values,
-                resid.marginal = resid.marginal, resid.conditional = resid.conditional,
-                logLik = logLik, logLikR  = logLikR, AIC = AIC, workingY = workingY,
-                outcome = y, model.matrix = X, group.idx = group.idx, cholSigmaInv = cholSigmaInv,
+                fixef = fixef, betaCov = betaCov, fit = fit,
+                logLik = logLik, logLikR  = logLikR, AIC = AIC,
+                model.matrix = X, group.idx = group.idx, cholSigmaInv = cholSigmaInv,
                 converged = converged, zeroFLAG = zeroFLAG, niter = vc.mod$niter, RSS = RSS)
     class(out) <- "GENESIS.nullModel"
     return(out)
@@ -211,9 +209,8 @@
 
     out <- list(family = family, hetResid = hetResid, varComp = varComp,
                 varCompCov = varCompCov, fixef = fixef, betaCov = betaCov,
-                fit = fit, fitted.values = fitted.values, resid.marginal =resid.marginal,
-                resid.conditional = resid.conditional, logLik = logLik,
-                logLikR = logLikR, AIC = AIC, workingY = workingY, outcome = y,
+                fit = fit, logLik = logLik,
+                logLikR = logLikR, AIC = AIC,
                 model.matrix = X, group.idx = group.idx, cholSigmaInv = cholSigmaInv,
                 converged = converged, zeroFLAG = zeroFLAG, niter = niter, RSS = RSS)
     class(out) <- "GENESIS.nullMixedModel"

@@ -63,7 +63,7 @@ test_that("null model", {
     # Make sure that sample id was added to the fit data frame.
     expect_true("sample.id" %in% names(nm$fit))
     expect_equal(nm$fit$sample.id, keep)
-    expect_equivalent(nm$workingY, dat$a[c(TRUE,FALSE)])
+    expect_equivalent(nm$fit$workingY, dat$a[c(TRUE,FALSE)])
 })
 
 test_that("null model - cov.mat", {
@@ -77,7 +77,7 @@ test_that("null model - cov.mat", {
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
     nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, verbose=FALSE)
     expect_equal(nm$fit$sample.id, dat$sample.id)
-    expect_equivalent(nm$workingY, dat$a)
+    expect_equivalent(nm$fit$workingY, dat$a)
 })
 
 test_that("null model from data.frame", {
@@ -86,7 +86,7 @@ test_that("null model from data.frame", {
                       b=c(rep("a",5), rep("b", 5)),
                       stringsAsFactors=FALSE)
     nm <- fitNullModel(dat, outcome="a", covars="b", verbose=FALSE)
-    expect_equivalent(nm$workingY, dat$a)
+    expect_equivalent(nm$fit$workingY, dat$a)
     expect_equal(rownames(nm$model.matrix), as.character(1:nrow(dat)))
     expect_equal(rownames(nm$fit), rownames(nm$model.matrix))
 })
@@ -99,7 +99,7 @@ test_that("null model from data.frame with rownames", {
     keep <- letters[1:10]
     rownames(dat) <- keep
     nm <- fitNullModel(dat, outcome="a", covars="b", verbose=FALSE)
-    expect_equivalent(nm$workingY, dat$a)
+    expect_equivalent(nm$fit$workingY, dat$a)
     expect_equal(rownames(nm$model.matrix), keep)
     expect_equal(rownames(nm$fit), keep)
 })
@@ -120,7 +120,7 @@ test_that("group.var", {
     keep <- dat$sample.id[c(TRUE,FALSE)]
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", sample.id=keep, verbose=FALSE)
     expect_equal(rownames(nm$model.matrix), keep)
-    expect_equivalent(nm$workingY, dat$a[c(TRUE,FALSE)])
+    expect_equivalent(nm$fit$workingY, dat$a[c(TRUE,FALSE)])
     expect_equal(nm$group.idx, list(a=1:3, b=4:5))
 })
 
@@ -190,7 +190,7 @@ test_that("change sample order", {
     expect_equal(nm2$sample.id, samp)
     expect_equal(rownames(nm2$model.matrix), samp)
 
-    expect_equal(nm$workingY, rev(nm2$workingY))
+    expect_equal(nm$fit$workingY, rev(nm2$fit$workingY))
     expect_equal(nm$resid[samp,], nm2$resid[samp,])
     ## why are these not equal? in assocTestSingle, results are the same
     #expect_equal(nm$Ytilde[samp,], nm2$Ytilde[samp,])
@@ -242,7 +242,7 @@ test_that("missing data - data.frame", {
     set.seed(35); covMat <- crossprod(matrix(rnorm(15*2,sd=0.05),15,15))
     nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, group="b", verbose=FALSE)
     expect_equivalent(rownames(nm$model.matrix), as.character(6:15))
-    expect_equivalent(nm$workingY, dat$a[6:15])
+    expect_equivalent(nm$fit$workingY, dat$a[6:15])
 })
 
 test_that("missing data - AnnotatedDataFrame", {
@@ -256,7 +256,7 @@ test_that("missing data - AnnotatedDataFrame", {
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
     nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, group="b", verbose=FALSE)
     expect_equal(nm$fit$sample.id, dat$sample.id[6:15])
-    expect_equivalent(nm$workingY, dat$a[6:15])
+    expect_equivalent(nm$fit$workingY, dat$a[6:15])
 })
 
 test_that("ScanAnnotationDataFrame", {

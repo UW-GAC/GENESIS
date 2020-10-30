@@ -8,8 +8,8 @@ test_that("linear regression", {
 
     # Check for expected names.
     expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
-                        "betaCov", "fit", "fitted.values", "resid.marginal", "logLik",
-                        "AIC", "workingY", "outcome", "model.matrix",
+                        "betaCov", "fit", "logLik",
+                        "AIC", "model.matrix",
                         "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
                         "RSS", "CX", "CXCXI", "RSS0")
     expect_true(setequal(names(nullmod), expected_names))
@@ -21,7 +21,7 @@ test_that("linear regression", {
 
     lm.mod <- lm(dat$y ~ -1 + dat$X)
 
-    expect_equal(nullmod$fitted.values, fitted(lm.mod))
+    expect_equal(nullmod$fit$fitted.values, unname(fitted(lm.mod)))
     expect_equal(nullmod$family$family, "gaussian")
     expect_false(nullmod$family$mixedmodel)
     expect_false(nullmod$hetResid)
