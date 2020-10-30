@@ -17,7 +17,7 @@ setMethod("fitNullModel",
                    verbose = TRUE) {
 
               if (is.data.table(x)) x <- as.data.frame(x)
-              
+
               desmat <- createDesignMatrix(x, outcome, covars, group.var)
 
               # if there was missing data, need to subset cov.mat
@@ -28,7 +28,7 @@ setMethod("fitNullModel",
                       cov.mat <- .covMatSubset(cov.mat, ind)
                   }
               }
-              
+
               .fitNullModel(y=desmat$y, X=desmat$X, covMatList=cov.mat,
                             group.idx=desmat$group.idx, family=family,
                             start=start, AIREML.tol=AIREML.tol,
@@ -36,6 +36,7 @@ setMethod("fitNullModel",
                             drop.zeros=drop.zeros,
                             return.small=return.small,
                             verbose=verbose)
+
           })
 
 setMethod("fitNullModel",
@@ -46,7 +47,7 @@ setMethod("fitNullModel",
                    group.var = NULL,
                    sample.id = NULL,
                    ...) {
-              
+
               x <- pData(x)
               if (is(x, "tbl")) x <- as.data.frame(x)
               rownames(x) <- x$sample.id
@@ -54,7 +55,7 @@ setMethod("fitNullModel",
               if (!is.null(cov.mat)) {
                   .checkSampleId(cov.mat, x)
               }
-              
+
               ## subset data.frame and cov.mat for selected samples
               if (!is.null(sample.id)) {
                   stopifnot(all(sample.id %in% x$sample.id))
@@ -71,8 +72,10 @@ setMethod("fitNullModel",
                   ind <- match(.covMatNames(cov.mat), rownames(x))
                   x <- x[ind,]
               }
-              
+
               nm <- fitNullModel(x, outcome, covars, cov.mat, group.var, ...)
+              # XXX: Decide if we should reorder columns in the fit data frame such that sample.id is the first column.
+              nm$fit$sample.id <- rownames(nm$model.matrix)
               nm$sample.id <- rownames(nm$model.matrix)
               nm
           })
@@ -101,12 +104,12 @@ setMethod("fitNullModel",
 nullModelInvNorm <- function(null.model, cov.mat = NULL,
                              norm.option = c("by.group", "all"),
                              rescale = c("none", "model", "residSD"),
-                             AIREML.tol = 1e-4, 
+                             AIREML.tol = 1e-4,
                              max.iter = 100, EM.iter = 0,
                              verbose = TRUE) {
 
     updateNullModOutcome(null.model, covMatList=cov.mat, rankNorm.option=norm.option,
-                         rescale=rescale, AIREML.tol=AIREML.tol, 
+                         rescale=rescale, AIREML.tol=AIREML.tol,
                          max.iter=max.iter, EM.iter=EM.iter,
                          verbose=verbose)
 }

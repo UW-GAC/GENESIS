@@ -60,7 +60,9 @@ test_that("null model", {
     keep <- dat$sample.id[c(TRUE,FALSE)]
     nm <- fitNullModel(dat, outcome="a", covars="b", sample.id=keep, verbose=FALSE)
     expect_equal(rownames(nm$model.matrix), keep)
-    expect_equal(nm$sample.id, keep)
+    # Make sure that sample id was added to the fit data frame.
+    expect_true("sample.id" %in% names(nm$fit))
+    expect_equal(nm$fit$sample.id, keep)
     expect_equivalent(nm$workingY, dat$a[c(TRUE,FALSE)])
 })
 
@@ -74,7 +76,7 @@ test_that("null model - cov.mat", {
     set.seed(24); covMat <- crossprod(matrix(rnorm(100,sd=0.05),10,10))
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
     nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, verbose=FALSE)
-    expect_equal(nm$sample.id, dat$sample.id)
+    expect_equal(nm$fit$sample.id, dat$sample.id)
     expect_equivalent(nm$workingY, dat$a)
 })
 
@@ -85,6 +87,21 @@ test_that("null model from data.frame", {
                       stringsAsFactors=FALSE)
     nm <- fitNullModel(dat, outcome="a", covars="b", verbose=FALSE)
     expect_equivalent(nm$workingY, dat$a)
+    expect_equal(rownames(nm$model.matrix), as.character(1:nrow(dat)))
+    expect_equal(rownames(nm$fit), rownames(nm$model.matrix))
+})
+
+test_that("null model from data.frame with rownames", {
+    set.seed(25); a <- rnorm(10)
+    dat <- data.frame(a=a,
+                      b=c(rep("a",5), rep("b", 5)),
+                      stringsAsFactors=FALSE)
+    keep <- letters[1:10]
+    rownames(dat) <- keep
+    nm <- fitNullModel(dat, outcome="a", covars="b", verbose=FALSE)
+    expect_equivalent(nm$workingY, dat$a)
+    expect_equal(rownames(nm$model.matrix), keep)
+    expect_equal(rownames(nm$fit), keep)
 })
 
 test_that("index list", {
@@ -150,7 +167,7 @@ test_that("sample selection", {
 
     keep <- rev(dat$sample.id[c(TRUE,FALSE)])
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, sample.id=keep, verbose=FALSE)
-    expect_equal(nm$sample.id, rev(keep))
+    expect_equal(nm$fit$sample.id, rev(keep))
 })
 
 test_that("change sample order", {
@@ -164,7 +181,7 @@ test_that("change sample order", {
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
 
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, verbose=FALSE)
-    expect_equal(nm$sample.id, dat$sample.id)
+    expect_equal(nm$fit$sample.id, dat$sample.id)
     expect_equal(rownames(nm$model.matrix), dat$sample.id)
 
     samp <- rev(dat$sample.id)
@@ -191,13 +208,13 @@ test_that("inv norm", {
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, verbose=FALSE)
     inv <- nullModelInvNorm(nm, covMat, verbose=FALSE)
-    expect_equal(nm$sample.id, inv$sample.id)
+    expect_equal(nm$fit$sample.id, inv$sample.id)
 
     # change order of covMat with respect to dat
     dimnames(covMat) <- list(rev(dat$sample.id), rev(dat$sample.id))
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, verbose=FALSE)
     inv <- nullModelInvNorm(nm, covMat, verbose=FALSE)
-    expect_equal(nm$sample.id, inv$sample.id)
+    expect_equal(nm$fit$sample.id, inv$sample.id)
 })
 
 test_that("outcome has colnames", {
@@ -238,7 +255,7 @@ test_that("missing data - AnnotatedDataFrame", {
     set.seed(37); covMat <- crossprod(matrix(rnorm(15*2,sd=0.05),15,15))
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
     nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, group="b", verbose=FALSE)
-    expect_equal(nm$sample.id, dat$sample.id[6:15])
+    expect_equal(nm$fit$sample.id, dat$sample.id[6:15])
     expect_equivalent(nm$workingY, dat$a[6:15])
 })
 
