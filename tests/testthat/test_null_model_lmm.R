@@ -7,7 +7,7 @@ test_that("lmm - with group", {
 
     # Check for expected names.
     expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
-                        "betaCov", "fitted.values", "resid.marginal",
+                        "betaCov", "fit", "fitted.values", "resid.marginal",
                         "resid.conditional", "logLik", "logLikR", "AIC",
                         "workingY", "outcome", "model.matrix", "group.idx",
                         "cholSigmaInv", "converged", "zeroFLAG", "niter", "RSS",

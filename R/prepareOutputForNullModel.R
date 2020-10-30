@@ -182,9 +182,12 @@
     zeroFLAG <- vc.mod$zeroFLAG
     niter <- vc.mod$niter
 
+    # Sample-level data frame.
+    fit <- data.frame()
+
     out <- list(family = family, hetResid = hetResid, varComp = varComp,
                 varCompCov = varCompCov, fixef = fixef, betaCov = betaCov,
-                fitted.values = fitted.values, resid.marginal =resid.marginal,
+                fit = fit, fitted.values = fitted.values, resid.marginal =resid.marginal,
                 resid.conditional = resid.conditional, logLik = logLik,
                 logLikR = logLikR, AIC = AIC, workingY = workingY, outcome = y,
                 model.matrix = X, group.idx = group.idx, cholSigmaInv = cholSigmaInv,
