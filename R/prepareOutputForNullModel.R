@@ -29,8 +29,17 @@
     zeroFLAG <- NULL
     RSS <- ifelse(family$family == "gaussian", sum(resid.marginal^2)/varComp/(nrow(X) - ncol(X)), 1)
 
+    # Sample-level data frame.
+    fit <- data.frame(
+      outcome = as.vector(y),
+      workingY = workingY,
+      fitted.values = unname(fitted.values),
+      resid.marginal = unname(resid.marginal)
+    )
+
     out <- list(family = family, hetResid = hetResid, varComp = varComp,
                 varCompCov = varCompCov, fixef = fixef, betaCov = betaCov,
+                fit = fit,
                 fitted.values = fitted.values, resid.marginal = resid.marginal,
                 logLik = logLik, AIC = AIC, workingY = workingY, outcome = y,
                 model.matrix = X, group.idx = group.idx, cholSigmaInv = cholSigmaInv,
@@ -88,8 +97,17 @@
     converged <- TRUE
     zeroFLAG <- NULL
 
+    # Sample-level data frame.
+    fit <- data.frame(
+      outcome = as.vector(y),
+      workingY = workingY,
+      fitted.values = unname(fitted.values),
+      resid.marginal = unname(resid.marginal),
+      resid.conditional = resid.conditional
+    )
+
     out <- list(family = family, hetResid = hetResid, varComp = varComp, varCompCov = varCompCov,
-                fixef = fixef, betaCov = betaCov, fitted.values = fitted.values,
+                fixef = fixef, betaCov = betaCov, fit = fit, fitted.values = fitted.values,
                 resid.marginal = resid.marginal, resid.conditional = resid.conditional,
                 logLik = logLik, logLikR  = logLikR, AIC = AIC, workingY = workingY,
                 outcome = y, model.matrix = X, group.idx = group.idx, cholSigmaInv = cholSigmaInv,
@@ -183,7 +201,6 @@
     niter <- vc.mod$niter
 
     # Sample-level data frame.
-    # XXX: How to get sample id in here?
     fit <- data.frame(
       outcome = y,
       workingY = workingY,
