@@ -11,13 +11,14 @@ test_that("linear regression", {
                         "betaCov", "fit", "fitted.values", "resid.marginal", "logLik",
                         "AIC", "workingY", "outcome", "model.matrix",
                         "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
-                        "RSS", "Ytilde", "resid", "CX", "CXCXI", "RSS0")
+                        "RSS", "CX", "CXCXI", "RSS0")
     expect_true(setequal(names(nullmod), expected_names))
 
     # Check names of fit data frame.
-    expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal")
+    expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
+                        "resid", "Ytilde")
     expect_true(setequal(names(nullmod$fit), expected_names))
-    
+
     lm.mod <- lm(dat$y ~ -1 + dat$X)
 
     expect_equal(nullmod$fitted.values, fitted(lm.mod))

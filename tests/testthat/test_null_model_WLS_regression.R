@@ -10,12 +10,12 @@ test_that("WLS", {
                         "resid.conditional", "logLik", "logLikR", "AIC",
                         "workingY", "outcome", "model.matrix", "group.idx",
                         "cholSigmaInv", "converged", "zeroFLAG", "niter", "RSS",
-                        "Ytilde", "resid", "CX", "CXCXI", "RSS0")
+                        "CX", "CXCXI", "RSS0")
     expect_true(setequal(names(nullmod), expected_names))
 
     # Check names of fit data frame.
     expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
-                        "resid.conditional")
+                        "resid.conditional", "resid", "Ytilde")
     expect_true(setequal(names(nullmod$fit), expected_names))
 
 

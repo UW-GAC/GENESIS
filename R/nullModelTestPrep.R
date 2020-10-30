@@ -1,7 +1,7 @@
 
 ## takes a null model and prepare specific arguments to streamline the testing
 nullModelTestPrep <- function(nullmod){
-    Y <- nullmod$workingY
+    Y <- nullmod$fit$workingY
     X <- nullmod$model.matrix
     C <- nullmod$cholSigmaInv
 
@@ -30,8 +30,10 @@ nullModelTestPrep <- function(nullmod){
     # compute residual sum of squares under the null model
     RSS0 <- as.numeric(crossprod(Ytilde))
 
-    return(list(Ytilde = Ytilde, resid = resid, CX = CX, CXCXI = CXCXI, RSS0 = RSS0))
-    # return(list(Ytilde = Ytilde, resid = resid, CX = CX, CXCXI = CXCXI, qr = qrmod))
+    #return(list(Ytilde = Ytilde, resid = resid, ))
+    out <- list(Ytilde = Ytilde, resid = resid,
+                prep_elements = list(CX = CX, CXCXI = CXCXI, RSS0 = RSS0))
+    return(out)
 }
 
 
