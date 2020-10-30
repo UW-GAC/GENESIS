@@ -1,12 +1,12 @@
 
-## function that gets an n\times p matrix of p genotypes of n individuals, and a null model, and tests the genotypes associations with the outcomes. 
-## Genetic data are always assumed complete. 
-## Types of tests: 
-## Single variant: Score, Score.SPA, BinomiRare, interaction. 
-## Variant set: SKAT, burden, SKAT-O. Multiple types of p-values. Default: Davis with Koenen if does not converge. 
+## function that gets an n\times p matrix of p genotypes of n individuals, and a null model, and tests the genotypes associations with the outcomes.
+## Genetic data are always assumed complete.
+## Types of tests:
+## Single variant: Score, Score.SPA, BinomiRare, interaction.
+## Variant set: SKAT, burden, SKAT-O. Multiple types of p-values. Default: Davis with Koenen if does not converge.
 
 
-# E an environmental variable for optional GxE interaction analysis. 
+# E an environmental variable for optional GxE interaction analysis.
 testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA", "BinomiRare", "CMP"),
                               recalc.pval.thresh = 1, GxE.return.cov = FALSE){
     test <- match.arg(test)
@@ -24,7 +24,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
         res <- .testGenoSingleVarWaldGxE(nullmod, G, E, GxE.return.cov.mat=GxE.return.cov)
         return(res)
     }
- 
+
     if(test == "Score.SPA" & nullmod$family$family != "binomial"){
         test <- "Score"
         message("Saddlepoint approximation (SPA) can only be used for binomial family; using Score test instead.")
@@ -34,36 +34,36 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     if(calc.score){
         Gtilde <- calcGtilde(nullmod, G)
         if(is.null(nullmod$RSS0)){
-            nullmod$RSS0 <- as.numeric(crossprod(nullmod$Ytilde))
+            nullmod$RSS0 <- as.numeric(crossprod(nullmod$fit$Ytilde))
         }
-        res <- .testGenoSingleVarScore(Gtilde, G, nullmod$resid, nullmod$RSS0)
+        res <- .testGenoSingleVarScore(Gtilde, G, nullmod$fit$resid, nullmod$RSS0)
     }
 
     if(test == "Score.SPA"){
         # saddle point approximation
         res <- SPA_pval(score.result = res, nullmod = nullmod, G = G, pval.thresh = recalc.pval.thresh)
     }
-    
+
     if (test == "BinomiRare"){
       if (nullmod$family$family != "binomial") stop("BinomiRare can only be used for binomial family.")
 
       if (nullmod$family$mixedmodel) { ## if this is a mixed model, use conditional probabilities $
-        phat <- expit(nullmod$workingY - nullmod$resid.conditional)
+        phat <- expit(nullmod$fit$workingY - nullmod$fit$resid.conditional)
       } else{ ## not a mixed model
-        phat <- nullmod$fitted.values
+        phat <- nullmod$fit$fitted.values
       }
       score.pval <- if(calc.score) res$Score.pval else NULL
-      res <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G, score.pval=score.pval, pval.thresh=recalc.pval.thresh)
+      res <- .testGenoSingleVarBR(nullmod$fit$outcome, probs=phat, G, score.pval=score.pval, pval.thresh=recalc.pval.thresh)
     }
 
     if (test == "CMP"){
       score.pval <- if(calc.score) res$Score.pval else NULL
       if (nullmod$family$mixedmodel) { ## if this is a mixed model, use conditional probabilities.
-        phat <- expit(nullmod$workingY - nullmod$resid.conditional)
-        res <- .testGenoSingleVarCMP(nullmod$outcome, probs=phat, G, score.pval=score.pval, pval.thresh=recalc.pval.thresh)
+        phat <- expit(nullmod$fit$workingY - nullmod$fit$resid.conditional)
+        res <- .testGenoSingleVarCMP(nullmod$fit$outcome, probs=phat, G, score.pval=score.pval, pval.thresh=recalc.pval.thresh)
       } else{ ## not a mixed model
-        phat <- nullmod$fitted.values
-        res <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G,  score.pval=score.pval, pval.thresh=recalc.pval.thresh)
+        phat <- nullmod$fit$fitted.values
+        res <- .testGenoSingleVarBR(nullmod$fit$outcome, probs=phat, G,  score.pval=score.pval, pval.thresh=recalc.pval.thresh)
       }
     }
 
@@ -72,14 +72,14 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
 
 
 
-## this function currently assumes that the alt allele is the minor allele. So either G 
-## needs to be such that alt allele is minor allele, or the function checks for it, or a vector of 
-## indicators or of frequencies would be provided. 
+## this function currently assumes that the alt allele is the minor allele. So either G
+## needs to be such that alt allele is minor allele, or the function checks for it, or a vector of
+## indicators or of frequencies would be provided.
 .testGenoSingleVarBR <- function(D, probs, G, score.pval=NULL, pval.thresh = 0.05){
     if (!requireNamespace("poibin")) stop("package 'poibin' must be installed for the BinomiRare test")
     cols <- c("n.carrier", "n.D.carrier", "expected.n.D.carrier", "pval", "mid.pval")
     res <- matrix(NA, nrow = ncol(G), ncol = length(cols), dimnames = list(NULL, cols))
-    
+
     for (i in seq(ncol(G))){
         if (sd(G[,i])==0){
             next
@@ -118,12 +118,12 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     score.SE <- sqrt(GPG)
     score <- as.vector(crossprod(G, resid)) # G^T P Y
     Stat <- score/score.SE
-    
-    res <- data.frame(Score = score, Score.SE = score.SE, Score.Stat = Stat, 
+
+    res <- data.frame(Score = score, Score.SE = score.SE, Score.Stat = Stat,
                       Score.pval = pchisq(Stat^2, df = 1, lower.tail = FALSE),
-                      Est = score/GPG, Est.SE = 1/score.SE, 
+                      Est = score/GPG, Est.SE = 1/score.SE,
                       PVE = (Stat^2)/RSS0) # RSS0 = (n-k) when gaussian; not when binary
-    
+
     return(res)
 }
 
@@ -137,7 +137,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
 #     RSS <- as.numeric((sY2 - GPY * beta)/(n - k - 1))
 #     Vbeta <- RSS/GPG
 #     Stat <- beta/sqrt(Vbeta)
-#     res <- data.frame(Est = beta, Est.SE = sqrt(Vbeta), Wald.Stat = Stat, 
+#     res <- data.frame(Est = beta, Est.SE = sqrt(Vbeta), Wald.Stat = Stat,
 #                       Wald.pval = pchisq(Stat^2, df = 1, lower.tail = FALSE))
 #     return(res)
 # }
@@ -148,21 +148,21 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     E <- as.matrix(E)
     p <- ncol(G)
     v <- ncol(E) + 1
-    n <- length(nullmod$Ytilde)
+    n <- length(nullmod$fit$Ytilde)
     k <- ncol(nullmod$model.matrix)
-    sY2 <- as.numeric(crossprod(nullmod$Ytilde))
-    
+    sY2 <- as.numeric(crossprod(nullmod$fit$Ytilde))
+
     if (GxE.return.cov.mat) {
         res.Vbetas <- vector(mode = "list", length = p)
     }
-    
+
     intE <- cbind(1, E) # add intercept the "Environmental" variable E.
     if (is(G, "Matrix")) intE <- Matrix(intE)
-    
+
     var.names <- c("G", paste("G", colnames(E), sep = ":"))
-    
+
     res <- matrix(NA, nrow = p, ncol = length(var.names)*2 + 2,
-                  dimnames = list(NULL, 
+                  dimnames = list(NULL,
                                   c(paste0("Est.", var.names), paste0("SE.", var.names), "GxE.Stat", "Joint.Stat" ) ))
 
     for (g in 1:p) {
@@ -171,34 +171,34 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
         GPGinv <- tryCatch(chol2inv(chol(GPG)), error = function(e) {TRUE}) # this is inverse A matrix of sandwich
         # check that the error function above hasn't been called (which returns TRUE instead of the inverse matrix)
         if (is.logical(GPGinv)) next
-        
-        GPY <- crossprod(Gtilde, nullmod$Ytilde)
+
+        GPY <- crossprod(Gtilde, nullmod$fit$Ytilde)
         betas <- crossprod(GPGinv, GPY)
         res[g, grep("^Est\\.G", colnames(res))] <- as.vector(betas)
-        
+
         RSS <- as.numeric((sY2 - crossprod(GPY, betas))/(n - k - v))
         Vbetas <- GPGinv * RSS
-        
+
         if (GxE.return.cov.mat) {
             res.Vbetas[[g]] <- Vbetas
         }
-        
+
         res[g, grep("^SE\\.G", colnames(res))] <- sqrt(diag(Vbetas))
-        
+
         res[g, "GxE.Stat"] <- tryCatch(sqrt(as.vector(crossprod(betas[-1],
                                                  crossprod(chol2inv(chol(Vbetas[-1, -1])),
-                                                           betas[-1])))), 
+                                                           betas[-1])))),
                                        error = function(e) { NA })
-        
+
         res[g, "Joint.Stat"] <- tryCatch(sqrt(as.vector(crossprod(betas,
-                                                   crossprod(GPG, betas))/RSS)), 
+                                                   crossprod(GPG, betas))/RSS)),
                                          error = function(e) { NA })
     }
-    
+
     res <- as.data.frame(res)
     res$GxE.pval <- pchisq((res$GxE.Stat)^2, df = (v - 1), lower.tail = FALSE)
     res$Joint.pval <- pchisq((res$Joint.Stat)^2, df = v, lower.tail = FALSE)
-    
+
     if (GxE.return.cov.mat) {
         return(list(res = res, GxEcovMatList = res.Vbetas))
     } else {
@@ -259,38 +259,38 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
 
 
 
-## G is an n by v matrix of 2 or more columns, all representing alleles of the same (multi-allelic) variant. 
+## G is an n by v matrix of 2 or more columns, all representing alleles of the same (multi-allelic) variant.
 .testSingleVarMultAlleles <- function(Gtilde, Ytilde, n, k){
     v <- ncol(Gtilde)
-    
+
     var.names <- colnames(Gtilde)
-    
+
     res <- matrix(NA, nrow = 1, ncol = length(var.names)*2 + 2,
-                  dimnames = list(NULL, 
+                  dimnames = list(NULL,
                                   c(paste0("Est.", var.names), paste0("SE.", var.names), "Joint.Stat", "Joint.Pval" ) ))
-    
-    
+
+
     GPG <- crossprod(Gtilde)
     GPGinv <- tryCatch(chol2inv(chol(GPG)), error = function(e) {TRUE})
-    
+
     if (is.logical(GPGinv)) return(list(res = res, allelesCovMat = NA))
-    
+
     GPY <- crossprod(Gtilde, Ytilde)
     betas <- crossprod(GPGinv, GPY) ## effect estimates of the various alleles
     res[1, grep("^Est\\.G", colnames(res))] <- betas
-    
+
     sY2 <- sum(Ytilde^2)
     RSS <- as.numeric((sY2 - crossprod(GPY, betas))/(n - k - v))
     Vbetas <- GPGinv * RSS
-    
+
     res[1, grep("^SE\\.G", colnames(res))] <- sqrt(diag(Vbetas))
-    
+
     res[1, "Joint.Stat"] <- tryCatch(crossprod(betas,
-                                               crossprod(GPG, betas))/RSS, 
+                                               crossprod(GPG, betas))/RSS,
                                      error = function(e) { NA })
-    
+
     res[,"Joint.pval"] <- pchisq(res[,"Joint.Stat"], df = v, lower.tail = FALSE)
-    
+
     res <- as.data.frame(res)
     return(list(res = res, allelesCovMat = Vbetas))
 }
