@@ -5,7 +5,7 @@ test_that("assocTestSingle", {
     genoData <- .testGenoData()
     covMat <- .testGenoDataGRM(genoData)
     iterator <- GenotypeBlockIterator(genoData, snpBlock=1000)
-    
+
     nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", cov.mat=covMat, verbose=FALSE)
     assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
     freq <- GWASTools::alleleFrequency(genoData)
@@ -39,7 +39,7 @@ test_that("code to reorder samples works as expected", {
     geno2 <- GWASTools::getGenotypeSelection(genoData, scanID=samp.reorder, order="selection",
                                              use.names=TRUE)
     expect_equal(geno1[,sample.index], geno2)
-    
+
     close(genoData)
 })
 
@@ -52,7 +52,7 @@ test_that("assocTestSingle - reorder samples", {
     nullmod <- fitNullModel(genoData, outcome="outcome", cov.mat=covMat[samp,samp], verbose=FALSE)
     assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
     expect_equal(nrow(nullmod$model.matrix), 50)
-    expect_equal(nullmod$sample.id, samp)
+    expect_equal(nullmod$fit$sample.id, samp)
 
     # check that we get same assoc results with samples in different order
     samp.sort <- sort(samp)
@@ -63,7 +63,7 @@ test_that("assocTestSingle - reorder samples", {
     # this test may not be reliable - see test_nullModel.R
     expect_equal(assoc, assoc2)
     #expect_equal(assoc[,1:6], assoc2[,1:6])
-    
+
     close(genoData)
 })
 
@@ -73,8 +73,8 @@ test_that("missing sample.id in null model", {
     iterator <- GenotypeBlockIterator(genoData)
     samp <- pData(getScanAnnotation(genoData))[11:20,]
     nullmod <- fitNullModel(samp, outcome="outcome", covars="sex", verbose=FALSE)
-    expect_false("sample.id" %in% names(nullmod))
-    expect_equal(length(nullmod$outcome), 10)
+    expect_false("sample.id" %in% names(nullmod$fit))
+    expect_equal(length(nullmod$fit$outcome), 10)
     assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
     expect_equal(max(assoc$n.obs), 10)
     close(genoData)
@@ -87,8 +87,8 @@ test_that("missing sample.id in null model - row names", {
     genoData <- GenotypeData(genoData@data, scanAnnot=samp)
     samp <- pData(getScanAnnotation(genoData))[11:20,]
     nullmod <- fitNullModel(samp, outcome="outcome", covars="sex", verbose=FALSE)
-    expect_false("sample.id" %in% names(nullmod))
-    expect_equal(length(nullmod$outcome), 10)
+    expect_false("sample.id" %in% names(nullmod$fit))
+    expect_equal(length(nullmod$fit$outcome), 10)
     iterator <- GenotypeBlockIterator(genoData)
     assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
     expect_equal(max(assoc$n.obs), 10)

@@ -58,7 +58,7 @@ test_that("assocTestSingle - reorder samples", {
     iterator <- SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
     nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), cov.mat=grm[samp,samp], verbose=FALSE)
     expect_equal(nrow(nullmod$model.matrix), 50)
-    expect_equal(nullmod$sample.id, samp)
+    expect_equal(nullmod$fit$sample.id, samp)
     assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
     expect_equal(max(assoc$n.obs), 50)
 
@@ -71,7 +71,7 @@ test_that("assocTestSingle - reorder samples", {
     # this test may not be reliable - see test_nullModel.R
     expect_equal(assoc, assoc2)
     #expect_equal(assoc[,1:6], assoc2[,1:6])
-    
+
     seqClose(svd)
 })
 
@@ -85,20 +85,20 @@ test_that("reorder genotypes", {
     sample.index <- .setFilterNullModel(svd, nullmod, verbose=FALSE)
     geno <- expandedAltDosage(svd, use.names=TRUE, sparse=TRUE)[sample.index,,drop=FALSE]
     expect_equal(rownames(geno), samp)
-    
+
     seqClose(svd)
 })
 
 
 test_that("assocTestSingle matches regression", {
     svd <- .testData()
-    
+
     # multiallelic variants are handled differently
     snv <- isSNV(svd, biallelic=TRUE)
     seqSetFilter(svd, variant.sel=snv, verbose=FALSE)
     assoc1 <- regression(svd, outcome="outcome", covar=c("sex", "age"))
     assoc1 <- assoc1[assoc1$freq > 0 & assoc1$freq < 1,]
-    
+
     nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
     assoc2 <- assocTestSingle(iterator, nullmod, verbose=FALSE)
@@ -112,7 +112,7 @@ test_that("assocTestSingle matches regression", {
     #expect_equal(assoc1$SE, assoc2$Est.SE)
     #expect_equal(assoc1$Wald.Stat, (assoc2$Wald.Stat)^2)
     #expect_equal(assoc1$Wald.Pval, assoc2$Wald.pval, tolerance=.1)
-    
+
     seqClose(svd)
 })
 
@@ -141,7 +141,7 @@ test_that("missing sample.id in null model", {
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
     nullmod <- fitNullModel(pData(sampleData(svd)), outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
     expect_false("sample.id" %in% names(nullmod))
-    expect_equal(length(nullmod$outcome), n)
+    expect_equal(length(nullmod$fit$outcome), n)
     assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
     expect_equal(max(assoc$n.obs), n)
     seqClose(svd)
