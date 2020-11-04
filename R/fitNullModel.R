@@ -19,7 +19,6 @@ setMethod("fitNullModel",
               if (is.data.table(x)) x <- as.data.frame(x)
 
               desmat <- createDesignMatrix(x, outcome, covars, group.var)
-
               # if there was missing data, need to subset cov.mat
               if (!is.null(cov.mat)) {
                   .checkRownames(cov.mat, x)
@@ -29,13 +28,15 @@ setMethod("fitNullModel",
                   }
               }
 
-              .fitNullModel(y=desmat$y, X=desmat$X, covMatList=cov.mat,
+              out <- .fitNullModel(y=desmat$y, X=desmat$X, covMatList=cov.mat,
                             group.idx=desmat$group.idx, family=family,
                             start=start, AIREML.tol=AIREML.tol,
                             max.iter=max.iter, EM.iter=EM.iter,
                             drop.zeros=drop.zeros,
                             return.small=return.small,
                             verbose=verbose)
+              rownames(out$fit) <- rownames(desmat$y)
+              out
 
           })
 
