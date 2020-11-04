@@ -10,7 +10,7 @@ jointScoreTest <- function(null.model, G) {  # # Check rownames/colnames match.
   if (isNullModelSmall(null.model)) {
     stop("small null model cannot be used for a joint score test")
   }
-  
+
   # Check that all samples in null model are in the genotype matrix.
   missing_ids <- setdiff(rownames(null.model$model.matrix), rownames(G))
   if (length(missing_ids) > 0) {
@@ -32,7 +32,7 @@ jointScoreTest <- function(null.model, G) {  # # Check rownames/colnames match.
   Gtilde <- calcGtilde(null.model, G)
 
   # Score statistic.
-  GY <- crossprod(Gtilde, null.model$Ytilde)
+  GY <- crossprod(Gtilde, null.model$fit$Ytilde)
 
   # GPG.
   GG <- crossprod(Gtilde)
