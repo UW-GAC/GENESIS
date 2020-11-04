@@ -33,8 +33,8 @@ admixMap <- function(admixDataList,
     # get variant information
     var.info <- lapply(admixDataList, variantInfo, alleles=FALSE)
     if (!.listIdentical(var.info)) stop("variants do not match for all elements of admixDataList")
-    
-    
+
+
     # set up results matrix
     # add in frequency of each ancestry at the SNP
     res.list <- list()
@@ -48,7 +48,7 @@ admixMap <- function(admixDataList,
         nv <- append(nv, c("freq", "Est", "SE", "Stat", "pval"))
     }
 
-    
+
     n.iter <- length(variantFilter(admixDataList[[1]]))
     set.messages <- ceiling(n.iter / 100) # max messages = 100
     b <- 1
@@ -58,7 +58,7 @@ admixMap <- function(admixDataList,
         n.var <- nrow(var.info)
 
         res <- matrix(NA, nrow=n.var, ncol=length(nv), dimnames=list(NULL, nv))
-        
+
         # get local ancestry for the block
         local <- array(NA, dim=c(n.samp,n.var,v)) # indices: scan, snp, ancestry
         for(i in 1:v){
@@ -79,14 +79,14 @@ admixMap <- function(admixDataList,
         }
         col <- if (v > 1) paste(names(admixDataList),".freq", sep="") else "freq"
         res[,col] <- freq
-        
+
         # sample size
         res[, "n.obs"] <- n.samp
-        
+
         k <- ncol(null.model$model.matrix)
-        Ytilde <- null.model$Ytilde
+        Ytilde <- null.model$fit$Ytilde
         sY2 <- sum(Ytilde^2)
-        
+
         # perform regressions
         if(v == 1){
             local <- local[,,1]
@@ -101,7 +101,7 @@ admixMap <- function(admixDataList,
             res[,"Est"] <- beta
             res[,"SE"] <- sqrt(Vbeta)
             res[,"Stat"] <- Stat
-            res[,"pval"] <- pchisq(Stat, df=1, lower.tail=FALSE)      
+            res[,"pval"] <- pchisq(Stat, df=1, lower.tail=FALSE)
 
         }else{
             Joint.Stat <- rep(NA, ncol(local))
@@ -111,7 +111,7 @@ admixMap <- function(admixDataList,
                 if(identical(local[,g,], local[,(g-1),])){
                     Joint.Stat[g] <- Joint.Stat[g-1]
                     Est[g,] <- Est[g-1,]
-                    SE[g,] <- SE[g-1,]                     
+                    SE[g,] <- SE[g-1,]
                     next
                 }
                 # filter monomorphic or missing SNPs
@@ -142,7 +142,7 @@ admixMap <- function(admixDataList,
 
         # results data frame
         res <- cbind(var.info, res)
-        
+
         res.list[[b]] <- res
 
         if (verbose & n.iter > 1 & b %% set.messages == 0) {
@@ -157,6 +157,6 @@ admixMap <- function(admixDataList,
             }
         }
     }
-    
+
     as.data.frame(rbindlist(res.list))
 }
