@@ -12,19 +12,19 @@ test_that("SKAT-O with rho=1 matches burden", {
         skato <- .testVariantSetSKATO(nullmod, geno, weights, rho=1)
         burden <- .testVariantSetBurden(nullmod, geno, weights, burden.test="Score")
         expect_equal(skato$pval_1, burden$Score.pval, tolerance=0.01)
-        
+
         ## basic
 	nullmod <- .testNullmod(n, MM=FALSE)
         skato <- .testVariantSetSKATO(nullmod, geno, weights, rho=1)
         burden <- .testVariantSetBurden(nullmod, geno, weights, burden.test="Score")
         expect_equal(skato$pval_1, burden$Score.pval, tolerance=0.01)
-        
+
         ## mixed model - binary
 	nullmod <- .testNullmod(n, MM=TRUE, binary=TRUE)
         skato <- .testVariantSetSKATO(nullmod, geno, weights, rho=1)
         burden <- .testVariantSetBurden(nullmod, geno, weights, burden.test="Score")
         expect_equal(skato$pval_1, burden$Score.pval, tolerance=0.01)
-        
+
         ## basic - binary
 	nullmod <- .testNullmod(n, MM=FALSE, binary=TRUE)
         skato <- .testVariantSetSKATO(nullmod, geno, weights, rho=1)
@@ -45,19 +45,19 @@ test_that("SMMAT matches burden", {
         smmat <- .testVariantSetSMMAT(nullmod, geno, weights)
         burden <- .testVariantSetBurden(nullmod, geno, weights, burden.test="Score")
         expect_equal(smmat$pval_burden, burden$Score.pval)
-        
+
         ## basic
 	nullmod <- .testNullmod(n, MM=FALSE)
         smmat <- .testVariantSetSMMAT(nullmod, geno, weights)
         burden <- .testVariantSetBurden(nullmod, geno, weights, burden.test="Score")
         expect_equal(smmat$pval_burden, burden$Score.pval)
-        
+
         ## mixed model - binary
 	nullmod <- .testNullmod(n, MM=TRUE, binary=TRUE)
         smmat <- .testVariantSetSMMAT(nullmod, geno, weights)
         burden <- .testVariantSetBurden(nullmod, geno, weights, burden.test="Score")
         expect_equal(smmat$pval_burden, burden$Score.pval)
-        
+
         ## basic - binary
 	nullmod <- .testNullmod(n, MM=FALSE, binary=TRUE)
         smmat <- .testVariantSetSMMAT(nullmod, geno, weights)
@@ -107,19 +107,19 @@ test_that("SKAT matches SKAT-O with rho=0", {
         skat <- .testVariantSetSKAT(nullmod, geno, weights)
         skato <- .testVariantSetSKATO(nullmod, geno, weights, rho=0)
         expect_equal(skat$pval, skato$pval_0)
-        
+
         ## basic
 	nullmod <- .testNullmod(n, MM=FALSE)
         skat <- .testVariantSetSKAT(nullmod, geno, weights)
         skato <- .testVariantSetSKATO(nullmod, geno, weights, rho=0)
         expect_equal(skat$pval, skato$pval_0)
-        
+
         ## mixed model - binary
 	nullmod <- .testNullmod(n, MM=TRUE, binary=TRUE)
         skat <- .testVariantSetSKAT(nullmod, geno, weights)
         skato <- .testVariantSetSKATO(nullmod, geno, weights, rho=0)
         expect_equal(skat$pval, skato$pval_0)
-        
+
         ## basic - binary
 	nullmod <- .testNullmod(n, MM=FALSE, binary=TRUE)
         skat <- .testVariantSetSKAT(nullmod, geno, weights)
@@ -140,19 +140,19 @@ test_that("fastSKAT(H) matches SKAT-O with rho=0", {
         expect_message(skat <- .testVariantSetSKAT(nullmod, geno, weights, neig=100, verbose=TRUE), "fast_H")
         skato <- .testVariantSetSKATO(nullmod, geno, weights, rho=0)
         expect_equal(skat$pval, skato$pval_0, tolerance=0.01)
-        
+
         ## basic
 	nullmod <- .testNullmod(n, MM=FALSE)
         expect_message(skat <- .testVariantSetSKAT(nullmod, geno, weights, neig=100, verbose=TRUE), "fast_H")
         skato <- .testVariantSetSKATO(nullmod, geno, weights, rho=0)
         expect_equal(skat$pval, skato$pval_0, tolerance=0.01)
-        
+
         ## mixed model - binary
 	nullmod <- .testNullmod(n, MM=TRUE, binary=TRUE)
         expect_message(skat <- .testVariantSetSKAT(nullmod, geno, weights, neig=100, verbose=TRUE), "fast_H")
         skato <- .testVariantSetSKATO(nullmod, geno, weights, rho=0)
         expect_equal(skat$pval, skato$pval_0, tolerance=0.01)
-        
+
         ## basic - binary
 	nullmod <- .testNullmod(n, MM=FALSE, binary=TRUE)
         expect_message(skat <- .testVariantSetSKAT(nullmod, geno, weights, neig=100, verbose=TRUE), "fast_H")
@@ -165,7 +165,7 @@ test_that("fastSKAT matches SKAT(regular)", {
 	n <- 500
 	nullmod <- .testNullmod(n, MM=TRUE)
 	G <- .testGenoMatrix(n=n, nsnp=300)
-        U <- as.vector(crossprod(G, nullmod$resid))
+        U <- as.vector(crossprod(G, nullmod$fit$resid))
         Q <- sum(U^2)
         G <- calcGtilde(nullmod, G)
         V <- tcrossprod(G)
@@ -191,19 +191,19 @@ test_that("fastSMMAT matches burden", {
         expect_message(smmat <- .testVariantSetSMMAT(nullmod, geno, weights, neig=100, verbose=TRUE), "fast_H")
         burden <- .testVariantSetBurden(nullmod, geno, weights, burden.test="Score")
         expect_equal(smmat$pval_burden, burden$Score.pval)
-        
+
         ## basic
 	nullmod <- .testNullmod(n, MM=FALSE)
         expect_message(smmat <- .testVariantSetSMMAT(nullmod, geno, weights, neig=100, verbose=TRUE), "fast_H")
         burden <- .testVariantSetBurden(nullmod, geno, weights, burden.test="Score")
         expect_equal(smmat$pval_burden, burden$Score.pval)
-        
+
         ## mixed model - binary
 	nullmod <- .testNullmod(n, MM=TRUE, binary=TRUE)
         expect_message(smmat <- .testVariantSetSMMAT(nullmod, geno, weights, neig=100, verbose=TRUE), "fast_H")
         burden <- .testVariantSetBurden(nullmod, geno, weights, burden.test="Score")
         expect_equal(smmat$pval_burden, burden$Score.pval)
-        
+
         ## basic - binary
 	nullmod <- .testNullmod(n, MM=FALSE, binary=TRUE)
         expect_message(smmat <- .testVariantSetSMMAT(nullmod, geno, weights, neig=100, verbose=TRUE), "fast_H")
@@ -223,5 +223,5 @@ test_that("fastSMMAT matches SMMAT", {
 	nullmod <- .testNullmod(n, MM=TRUE)
         smmat <- testVariantSet(nullmod, geno, weights, test="SMMAT")
         fastsmmat <- testVariantSet(nullmod, geno, weights, test="fastSMMAT", neig=100)
-        expect_equal(smmat$pval_SMMAT, fastsmmat$pval_SMMAT, tolerance=0.01)      
+        expect_equal(smmat$pval_SMMAT, fastsmmat$pval_SMMAT, tolerance=0.01)
 })
