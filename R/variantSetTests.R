@@ -1,14 +1,14 @@
 
-## function that gets an n \times p matrix of p genotypes of n individuals, and a null model, and tests the genotypes associations with the outcomes. 
-## Genetic data are always assumed complete. 
-## Types of tests: 
-## Variant set: SKAT, burden, SKAT-O. Multiple types of p-values. Default: Davies with Kuonen if does not converge. 
+## function that gets an n \times p matrix of p genotypes of n individuals, and a null model, and tests the genotypes associations with the outcomes.
+## Genetic data are always assumed complete.
+## Types of tests:
+## Variant set: SKAT, burden, SKAT-O. Multiple types of p-values. Default: Davies with Kuonen if does not converge.
 
 
-testVariantSet <- function( nullmod, G, weights, 
+testVariantSet <- function( nullmod, G, weights,
                             test = c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", "SKATO", "BinomiRare", "CMP"),
-                            # burden.test = c("Score"), 
-                            neig = 200, ntrace = 500, 
+                            # burden.test = c("Score"),
+                            neig = 200, ntrace = 500,
                             rho = seq(from = 0, to = 1, by = 0.1)){
                            # pval.method = c("davies", "kuonen", "liu"),
                            # return.scores = FALSE, return.scores.cov = FALSE){
@@ -49,7 +49,7 @@ testVariantSet <- function( nullmod, G, weights,
 
 
 
-## create the burden score, than calls the appropriate single variant test function. 
+## create the burden score, than calls the appropriate single variant test function.
 ## can easily implement GxE interaction with the burden score... later!
 .testVariantSetBurden <- function(nullmod, G, weights, burden.test){
     # multiply G by weights and compute burden
@@ -58,14 +58,14 @@ testVariantSet <- function( nullmod, G, weights,
     }else{
         burden <- colSums(t(G) * weights)
     }
-    
+
     # adjust burden for covariates and random effects
     if (burden.test == "Score") {
         Gtilde <- calcGtilde(nullmod, burden)
         if(is.null(nullmod$RSS0)){
-            nullmod$RSS0 <- as.numeric(crossprod(nullmod$Ytilde))
+            nullmod$RSS0 <- as.numeric(crossprod(nullmod$fit$Ytilde))
         }
-        out <- .testGenoSingleVarScore(Gtilde, G = burden, resid = nullmod$resid, RSS0 = nullmod$RSS0) 
+        out <- .testGenoSingleVarScore(Gtilde, G = burden, resid = nullmod$fit$resid, RSS0 = nullmod$RSS0)
     }
     # if (burden.test == "Wald"){
     #     out <- .testGenoSingleVarWald(Gtilde, Ytilde = nullmod$Ytilde,
@@ -75,21 +75,21 @@ testVariantSet <- function( nullmod, G, weights,
     if (burden.test == "BinomiRare"){
         ## if this is a mixed model, used conditional probabilities
         if (nullmod$family$mixedmodel) {
-            phat <- expit(nullmod$workingY - nullmod$resid.conditional)
+            phat <- expit(nullmod$fit$workingY - nullmod$fit$resid.conditional)
         } else {
-            phat <- nullmod$fitted.values
+            phat <- nullmod$fit$fitted.values
         }
-        out <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G=matrix(burden))
+        out <- .testGenoSingleVarBR(nullmod$fit$outcome, probs=phat, G=matrix(burden))
     }
 
     if (burden.test == "CMP"){
         if (nullmod$family$mixedmodel) {
 
-            phat <- expit(nullmod$workingY - nullmod$resid.conditional)
-            out <- .testGenoSingleVarCMP(nullmod$outcome, probs=phat, G=matrix(burden))
+            phat <- expit(nullmod$fit$workingY - nullmod$fit$resid.conditional)
+            out <- .testGenoSingleVarCMP(nullmod$fit$outcome, probs=phat, G=matrix(burden))
         } else{ ## not a mixed model
-            phat <- nullmod$fitted.values
-            out <- .testGenoSingleVarBR(nullmod$outcome, probs=phat, G=matrix(burden))
+            phat <- nullmod$fit$fitted.values
+            out <- .testGenoSingleVarBR(nullmod$fit$outcome, probs=phat, G=matrix(burden))
         }
     }
     return(out)
@@ -98,15 +98,15 @@ testVariantSet <- function( nullmod, G, weights,
 
 ## new function that runs both SKAT and fastSKAT
 .testVariantSetSKAT <- function(nullmod, G, weights, neig = 200, ntrace = 500, verbose = FALSE){
-    # multiply G by weights 
+    # multiply G by weights
     if(is(G, "Matrix")){
-        G <- G %*% Diagonal(x = weights)        
+        G <- G %*% Diagonal(x = weights)
     }else{
         G <- t(t(G) * weights)
     }
 
     # scores
-    U <- as.vector(crossprod(G, nullmod$resid)) # WGPY
+    U <- as.vector(crossprod(G, nullmod$fit$resid)) # WGPY
     # SKAT test statistic
     Q <- sum(U^2)
 
@@ -121,15 +121,15 @@ testVariantSet <- function( nullmod, G, weights,
 
 ## function for SMMAT and fastSMMAT
 .testVariantSetSMMAT <- function(nullmod, G, weights, neig = 200, ntrace = 500, verbose = FALSE) {
-    # multiply G by weights 
+    # multiply G by weights
     if(is(G, "Matrix")){
-        G <- G %*% Diagonal(x = weights)        
+        G <- G %*% Diagonal(x = weights)
     }else{
         G <- t(t(G) * weights)
     }
 
     # scores
-    U <- as.vector(crossprod(G, nullmod$resid)) # WGPY
+    U <- as.vector(crossprod(G, nullmod$fit$resid)) # WGPY
     U.sum <- sum(U) # 1WGPY
 
     # adjust G for covariates and random effects
@@ -177,10 +177,10 @@ testVariantSet <- function( nullmod, G, weights,
 .regular <- function(Q, V, ncolG) {
     if(ncolG == 1){
         pv <- list(pval = pchisq(as.numeric(Q/V), df=1, lower.tail=FALSE), method = "integration")
-        
+
     }else{
         lambda <- eigen(V, only.values = TRUE, symmetric=TRUE)$values
-        # lambda <- lambda[lambda > 0] 
+        # lambda <- lambda[lambda > 0]
         pv <- .pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda)
         # pv <- tryCatch({
         #             list(pval = .pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, method = "integration"),
@@ -188,8 +188,8 @@ testVariantSet <- function( nullmod, G, weights,
         #         }, warning = function(w){
         #             list(pval = pchisqsum(x = Q, df = rep(1, length(lambda)), a = lambda, method = "saddlepoint"),
         #                  method = "saddlepoint")
-        #         }, error = function(e){ 
-        #             list(pval = NA_real_, 
+        #         }, error = function(e){
+        #             list(pval = NA_real_,
         #                  method = NA_character_)
         #         })
     }
@@ -221,7 +221,7 @@ testVariantSet <- function( nullmod, G, weights,
     pv <- list(pval = NA_real_, method = NA_character_)
     pval.try = 0
     while(is.na(pv$pval) & pval.try < 10){
-        pv <- tryCatch( pchisqsum_rsvd(x = Q, M = as.matrix(G), n = neig, p = 10, q = 3, tr2.sample.size = ntrace), 
+        pv <- tryCatch( pchisqsum_rsvd(x = Q, M = as.matrix(G), n = neig, p = 10, q = 3, tr2.sample.size = ntrace),
                        error = function(e){ list(pval = NA_real_, method = "error") }   )
         pval.try <- pval.try + 1
     }
@@ -284,7 +284,7 @@ testVariantSet <- function( nullmod, G, weights,
     }
 
     df<-round(df)
- 
+
     ## try integration
     f <- suppressWarnings(CompQuadForm::davies(x, a, df, acc = 1e-9))
     if((f$ifault > 0) | (f$Qq < 1e3*.Machine$double.eps) | (f$Qq > 1)){
@@ -302,7 +302,7 @@ testVariantSet <- function( nullmod, G, weights,
 # .calcPval <- function(Q, lambda, pval.method) {
 #     if(!requireNamespace("survey")) stop("package 'survey' must be installed to calculate p-values for SKAT")
 #     if(!requireNamespace("CompQuadForm")) stop("package 'CompQuadForm' must be installed to calculate p-values for SKAT")
-    
+
 #     err <- 0
 #     if(pval.method == "kuonen"){
 #         pval <- survey:::saddle(x = Q, lambda = lambda)
@@ -320,7 +320,7 @@ testVariantSet <- function( nullmod, G, weights,
 #         pval <- CompQuadForm::liu(q = Q, lambda = lambda)
 #         err <- 0
 #     }
-    
+
 #     if(err > 0){
 #         pval <- CompQuadForm::liu(q = Q, lambda = lambda)
 #     }
@@ -333,7 +333,7 @@ testVariantSet <- function( nullmod, G, weights,
 .testVariantSetSKATO <- function(nullmod, G, weights, rho = 0){
 #                                 # return.scores = FALSE, return.scores.cov = FALSE){
     # scores
-    scores <- as.vector(crossprod(G, nullmod$resid))
+    scores <- as.vector(crossprod(G, nullmod$fit$resid))
 
     # adjust G for covariates and random effects
     geno.adj <- calcGtilde(nullmod, G)
@@ -423,7 +423,7 @@ testVariantSet <- function( nullmod, G, weights,
         # calculate tau(rho)
         tau <- ncol(Z)^2*rho*zbarTzbar + (1-rho)*sum(crossprod(zbar, Z)^2)/zbarTzbar
 
-        # find min{(qmin(rho)-rho*chisq_1)/(1-rho)} with integration                            
+        # find min{(qmin(rho)-rho*chisq_1)/(1-rho)} with integration
         otherParams <- c(mu = mua, degf = ldf, varia = sig2a+sig2xi)
         # integrate
         re <- tryCatch({
@@ -431,12 +431,12 @@ testVariantSet <- function( nullmod, G, weights,
         }, error=function(e) NA)
         out2[["pval_SKATO"]] <- 1-re[[1]]
     }
-    
+
     # update results
     out <- c(out, out2)
 
     # return results
-    return(out) 
+    return(out)
 }
 
 
@@ -456,11 +456,11 @@ skatO_qchisqsum <- function(p, lambdas){
     	l <- a^2 - 2*d
     }else{ # s1^2 <= s2
         l <- 1/s2 # in liu et al, this is l=1/s1^2; matches kurtosis instead of skewness to improve tail prob estimates
-    }  	
-    
+    }
+
     qmin <- qchisq(1-p, df=l)
     pval <- (qmin - l)/sqrt(2*l) * sqrt(2*sum.lambda.sq) + mu
-    
+
     return(pval)
 }
 
@@ -470,7 +470,7 @@ skatO_qchisqsum <- function(p, lambdas){
 integrateFxn <- function(x, qmin, otherParams, tau, rho){
     n.r <- length(rho)
     n.x <- length(x)
-    
+
     t1 <- tau %x% t(x)
     tmp <- (qmin - t1)/(1-rho)
     minval <- apply(tmp,2,min)
