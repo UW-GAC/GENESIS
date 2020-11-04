@@ -32,7 +32,7 @@
     # Sample-level data frame.
     fit <- data.frame(
       outcome = as.vector(y),
-      workingY = workingY,
+      workingY = as.vector(workingY),
       fitted.values = unname(fitted.values),
       resid.marginal = unname(resid.marginal)
     )
