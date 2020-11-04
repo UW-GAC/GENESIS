@@ -1,15 +1,18 @@
 context("check using various classes of matrices as inputs")
 
 .compareMats <- function(nm1, nm2) {
-    for (m in c("model.matrix", "cholSigmaInv", "Ytilde", "resid", "CX", "CXCXI")) {
+    for (m in c("model.matrix", "cholSigmaInv", "CX", "CXCXI")) {
         expect_equivalent(as.matrix(nm1[[m]]), as.matrix(nm2[[m]]))
+    }
+    for (m in c("Ytilde", "resid")) {
+        expect_equivalent(as.matrix(nm1$fit[[m]]), as.matrix(nm2$fit[[m]]))
     }
 }
 
 test_that("symmetric matrix", {
     dat <- .testNullInputs()
     cor.mat <- Matrix(dat$cor.mat, sparse=FALSE)
-    
+
     nullmod <- .fitNullModel(dat$y, dat$X, cor.mat, verbose=FALSE)
     nullmod2 <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose=FALSE)
     .compareMats(nullmod, nullmod2)
@@ -19,7 +22,7 @@ test_that("packed matrix", {
     dat <- .testNullInputs()
     cor.mat <- Matrix(dat$cor.mat, sparse=FALSE)
     cor.mat <- pack(cor.mat)
-    
+
     nullmod <- .fitNullModel(dat$y, dat$X, cor.mat, verbose=FALSE)
     nullmod2 <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose=FALSE)
     .compareMats(nullmod, nullmod2)
@@ -29,7 +32,7 @@ test_that("dense matrix", {
     dat <- .testNullInputs()
     cor.mat <- Matrix(dat$cor.mat, sparse=FALSE)
     cor.mat <- as(cor.mat, "dgeMatrix")
-    
+
     nullmod <- .fitNullModel(dat$y, dat$X, cor.mat, verbose=FALSE)
     nullmod2 <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose=FALSE)
     .compareMats(nullmod, nullmod2)
@@ -39,7 +42,7 @@ test_that("sparse matrix", {
     dat <- .testNullInputs()
     dat$cor.mat[dat$cor.mat < 0.01] <- 0
     cor.mat <- Matrix(dat$cor.mat, sparse=TRUE)
-    
+
     nullmod <- .fitNullModel(dat$y, dat$X, cor.mat, verbose=FALSE)
     nullmod2 <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose=FALSE)
     .compareMats(nullmod, nullmod2)
@@ -78,12 +81,12 @@ test_that("multiple matrices", {
     expect_true(all(sapply(.checkMatrixType(covMatList), is.matrix)))
     nullmod <- .fitNullModel(dat$y, dat$X, covMatList, verbose=FALSE)
     expect_true(is.matrix(nullmod$cholSigmaInv))
-    
+
     covMatList <- list(mat1, Matrix(mat2))
     expect_true(all(sapply(.checkMatrixType(covMatList), is, "Matrix")))
     nullmod <- .fitNullModel(dat$y, dat$X, covMatList, verbose=FALSE)
     expect_true(is(nullmod$cholSigmaInv, "Matrix"))
-    
+
     covMatList <- list(Matrix(mat1), Matrix(mat2))
     expect_true(all(sapply(.checkMatrixType(covMatList), is, "Matrix")))
     nullmod <- .fitNullModel(dat$y, dat$X, covMatList, verbose=FALSE)
