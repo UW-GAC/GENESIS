@@ -84,7 +84,7 @@ admixMap <- function(admixDataList,
         res[, "n.obs"] <- n.samp
 
         k <- ncol(null.model$model.matrix)
-        Ytilde <- null.model$fit$Ytilde
+        Ytilde <- null.model$fit$resid.cholesky
         sY2 <- sum(Ytilde^2)
 
         # perform regressions

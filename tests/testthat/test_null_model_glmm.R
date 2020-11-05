@@ -13,7 +13,7 @@ test_that("glmm", {
 
     # Check names of fit data frame.
     expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
-                        "resid", "Ytilde")
+                        "resid", "resid.cholesky")
     expect_true(setequal(names(nullmod$fit), expected_names))
 
     expect_equal(nullmod$family$family, "binomial")

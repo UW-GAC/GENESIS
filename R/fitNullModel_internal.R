@@ -92,7 +92,7 @@
     nullprep <- nullModelTestPrep(out)
     # Add to fit data frame.
     out$fit$resid <- as.vector(nullprep$resid)
-    out$fit$Ytilde <- as.vector(nullprep$Ytilde)
+    out$fit$resid.cholesky <- as.vector(nullprep$resid.cholesky)
     out <- c(out, nullprep$prep_elements)
     if (return.small) {
         out <- nullModelSmall(out)

@@ -31,7 +31,7 @@ nullModelTestPrep <- function(nullmod){
     RSS0 <- as.numeric(crossprod(Ytilde))
 
     #return(list(Ytilde = Ytilde, resid = resid, ))
-    out <- list(Ytilde = Ytilde, resid = resid,
+    out <- list(resid.cholesky = Ytilde, resid = resid,
                 prep_elements = list(CX = CX, CXCXI = CXCXI, RSS0 = RSS0))
     return(out)
 }

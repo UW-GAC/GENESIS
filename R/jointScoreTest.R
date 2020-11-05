@@ -32,7 +32,7 @@ jointScoreTest <- function(null.model, G) {  # # Check rownames/colnames match.
   Gtilde <- calcGtilde(null.model, G)
 
   # Score statistic.
-  GY <- crossprod(Gtilde, null.model$fit$Ytilde)
+  GY <- crossprod(Gtilde, null.model$fit$resid.cholesky)
 
   # GPG.
   GG <- crossprod(Gtilde)

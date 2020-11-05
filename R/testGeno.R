@@ -34,7 +34,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     if(calc.score){
         Gtilde <- calcGtilde(nullmod, G)
         if(is.null(nullmod$RSS0)){
-            nullmod$RSS0 <- as.numeric(crossprod(nullmod$fit$Ytilde))
+            nullmod$RSS0 <- as.numeric(crossprod(nullmod$fitresid.cholesky))
         }
         res <- .testGenoSingleVarScore(Gtilde, G, nullmod$fit$resid, nullmod$RSS0)
     }
@@ -148,9 +148,9 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     E <- as.matrix(E)
     p <- ncol(G)
     v <- ncol(E) + 1
-    n <- length(nullmod$fit$Ytilde)
+    n <- length(nullmod$fit$resid.cholesky)
     k <- ncol(nullmod$model.matrix)
-    sY2 <- as.numeric(crossprod(nullmod$fit$Ytilde))
+    sY2 <- as.numeric(crossprod(nullmod$fit$resid.cholesky))
 
     if (GxE.return.cov.mat) {
         res.Vbetas <- vector(mode = "list", length = p)
@@ -172,7 +172,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
         # check that the error function above hasn't been called (which returns TRUE instead of the inverse matrix)
         if (is.logical(GPGinv)) next
 
-        GPY <- crossprod(Gtilde, nullmod$fit$Ytilde)
+        GPY <- crossprod(Gtilde, nullmod$fit$resid.cholesky)
         betas <- crossprod(GPGinv, GPY)
         res[g, grep("^Est\\.G", colnames(res))] <- as.vector(betas)
 

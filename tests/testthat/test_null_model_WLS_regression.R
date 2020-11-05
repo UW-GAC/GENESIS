@@ -14,7 +14,7 @@ test_that("WLS", {
 
     # Check names of fit data frame.
     expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
-                        "resid.conditional", "resid", "Ytilde")
+                        "resid.conditional", "resid", "resid.cholesky")
     expect_true(setequal(names(nullmod$fit), expected_names))
 
 
