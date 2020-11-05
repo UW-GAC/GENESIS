@@ -99,7 +99,7 @@
     # Sample-level data frame.
     fit <- data.frame(
       outcome = as.vector(y),
-      workingY = workingY,
+      workingY = as.vector(workingY),
       fitted.values = unname(fitted.values),
       resid.marginal = unname(resid.marginal),
       resid.conditional = resid.conditional
@@ -200,8 +200,8 @@
 
     # Sample-level data frame.
     fit <- data.frame(
-      outcome = y,
-      workingY = workingY,
+      outcome = as.vector(y),
+      workingY = as.vector(workingY),
       fitted.values = fitted.values,
       resid.marginal = resid.marginal,
       resid.conditional = resid.conditional

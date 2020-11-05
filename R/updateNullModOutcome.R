@@ -25,9 +25,7 @@ updateNullModOutcome <- function(nullmod,
     }
 
     if(!is.null(covMatList)){
-        if (!is.list(covMatList)){
-            covMatList <- list(A = covMatList)
-        }
+      covMatList <- .setCovMatNames(covMatList)
     }
 
     ## checks that may be put into wrapper:
@@ -84,6 +82,11 @@ updateNullModOutcome <- function(nullmod,
     ## add any extra slots
     extra <- setdiff(names(nullmod), names(new.nullmod))
     new.nullmod <- c(new.nullmod, nullmod[extra])
+    # Update model string (but keep outcome the same?).
+    previous_model <- new.nullmod$model
+    # What happens if covMatList is different than what was passed to the original null model call?
+    new.nullmod$model <- paste(sprintf("rankInvNorm(resid(%s))", new.nullmod$outcome), "~",
+                               strsplit(previous_model, " ~ ")[[1]][2])
     return(new.nullmod)
 }
 

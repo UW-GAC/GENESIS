@@ -10,7 +10,7 @@ updateNullModCond <- function(nullmod, G, covMatList = NULL,  AIREML.tol = 1e-6,
     if (nullmod$hetResid & is.null(nullmod$group.idx)) stop("group indices are required for updating variance components")
     #}
 
-
+    if (is.null(colnames(G))) colnames(G) <- paste0("var_", 1:ncol(G))
     X = cbind(nullmod$model.matrix, G)
 
     if (!nullmod$family$mixedmodel){ ## if it is not a mixed model, re-fit the model. (This includes heterogeneous residuals).
@@ -31,5 +31,10 @@ updateNullModCond <- function(nullmod, G, covMatList = NULL,  AIREML.tol = 1e-6,
     ## add any extra slots
     extra <- setdiff(names(nullmod), names(new.nullmod))
     new.nullmod <- c(new.nullmod, nullmod[extra])
+    # Update the model string.
+    previous_covar_string <- .modelCovarString(new.nullmod$covars)
+    new.nullmod$covars <- c(new.nullmod$covars, colnames(G))
+    new_covar_string <- .modelCovarString(new.nullmod$covars)
+    new.nullmod$model <- sub(previous_covar_string, new_covar_string, new.nullmod$model)
     return(new.nullmod)
 }

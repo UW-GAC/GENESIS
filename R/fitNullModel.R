@@ -26,7 +26,9 @@ setMethod("fitNullModel",
                       ind <- which(rownames(x) %in% rownames(desmat$X))
                       cov.mat <- .covMatSubset(cov.mat, ind)
                   }
+                  cov.mat <-  .setCovMatNames(cov.mat)
               }
+
 
               out <- .fitNullModel(y=desmat$y, X=desmat$X, covMatList=cov.mat,
                             group.idx=desmat$group.idx, family=family,
@@ -36,6 +38,13 @@ setMethod("fitNullModel",
                             return.small=return.small,
                             verbose=verbose)
               rownames(out$fit) <- rownames(desmat$y)
+
+              # Add model string elements here because we need the outcome string.
+              out$model <- .modelString(outcome, covars = covars, random = names(cov.mat),
+                                        group.var = group.var, inverse_normal = FALSE)
+              out$outcome <- .modelOutcomeString(outcome, inverse_normal = FALSE)
+              out$covars <- covars
+              #
               out
 
           })
@@ -196,4 +205,41 @@ nullModelSmall <- function(null.model) {
 
 isNullModelSmall <- function(null.model) {
     is.null(null.model$cholSigmaInv)
+}
+
+
+.modelString <- function(outcome, covars = NULL, random = NULL, group.var = NULL, inverse_normal = FALSE) {
+    model.outcome <- .modelOutcomeString(outcome, inverse_normal = inverse_normal)
+    model.covars <- if (is.null(covars)) NULL else .modelCovarString(covars)
+    model.random <- if (is.null(random)) NULL else paste(paste0("(1|", random, ")"), collapse=" + ")
+    model.var <- if (is.null(group.var)) NULL else paste0("var(", group.var, ")")
+    model.string <- paste(c(model.covars, model.random, model.var), collapse=" + ")
+    paste(model.outcome, model.string, sep=" ~ ")
+}
+
+.modelCovarString <- function(covars) {
+  paste(covars, collapse=" + ")
+}
+
+.modelOutcomeString <- function(outcome, inverse_normal = FALSE) {
+  if (inverse_normal) {
+    return(sprintf("rankInvNorm(resid(%s))", outcome))
+  } else {
+    return(outcome)
+  }
+}
+
+.setCovMatNames <- function(cov.mat) {
+  if (!is.list(cov.mat)) {
+    cov.mat <- list(cov.mat)
+  }
+  # What about the case where one element of the matrix has names, and the others don't?
+  if (is.null(names(cov.mat))) {
+    names(cov.mat) <- LETTERS[1:length(cov.mat)]
+  } else {
+    if (any(names(cov.mat) == "")) {
+      stop("Some names for cov.mat list are missing.")
+    }
+  }
+  cov.mat
 }
