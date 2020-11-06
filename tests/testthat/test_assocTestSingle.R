@@ -65,7 +65,7 @@ test_that("assocTestSingle - reorder samples", {
     # check that we get same assoc results with samples in different order
     samp.sort <- sort(samp)
     nullmod2 <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), cov.mat=grm[samp.sort,samp.sort], verbose=FALSE)
-    expect_equal(nullmod2$sample.id, samp.sort)
+    expect_equal(nullmod2$fit$sample.id, samp.sort)
     resetIterator(iterator, verbose=FALSE)
     assoc2 <- assocTestSingle(iterator, nullmod2, verbose=FALSE)
     # this test may not be reliable - see test_nullModel.R

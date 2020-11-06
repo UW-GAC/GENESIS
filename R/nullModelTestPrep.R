@@ -41,7 +41,6 @@ nullModelTestPrep <- function(nullmod){
 ##  this replaces calcXtilde; changed the name to be less confusing; X is covariates and G is genotypes
 calcGtilde <- function(nullmod, G){
     C <- nullmod$cholSigmaInv
-
     if(length(C) > 1){ # n by n cholSigmaInv (may be Diagonal)
         CG <- crossprod(C, G)
     }else{ # cholSigmaInv is a scalar

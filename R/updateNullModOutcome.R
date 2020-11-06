@@ -82,6 +82,8 @@ updateNullModOutcome <- function(nullmod,
     ## add any extra slots
     extra <- setdiff(names(nullmod), names(new.nullmod))
     new.nullmod <- c(new.nullmod, nullmod[extra])
+    # Add sample id.
+    new.nullmod$fit$sample.id <- nullmod$fit$sample.id
     # Update model string (but keep outcome the same?).
     previous_model <- new.nullmod$model
     # What happens if covMatList is different than what was passed to the original null model call?

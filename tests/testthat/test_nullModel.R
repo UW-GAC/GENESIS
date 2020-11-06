@@ -217,7 +217,7 @@ test_that("change sample order", {
     samp <- rev(dat$sample.id)
     covMat2 <- covMat[samp, samp]
     nm2 <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat2, verbose=FALSE)
-    expect_equal(nm2$sample.id, samp)
+    expect_equal(nm2$fit$sample.id, samp)
     expect_equal(rownames(nm2$model.matrix), samp)
 
     expect_equal(nm$fit$workingY, rev(nm2$fit$workingY))
@@ -238,7 +238,7 @@ test_that("inv norm", {
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, verbose=FALSE)
     inv <- nullModelInvNorm(nm, covMat, verbose=FALSE)
-    expect_equal(nm$fit$sample.id, inv$sample.id)
+    expect_equal(nm$fit$sample.id, inv$fit$sample.id)
     # Check model strings.
     expect_true("outcome" %in% names(nm))
     expect_equal(inv$outcome, "a")
@@ -251,7 +251,7 @@ test_that("inv norm", {
     dimnames(covMat) <- list(rev(dat$sample.id), rev(dat$sample.id))
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, verbose=FALSE)
     inv <- nullModelInvNorm(nm, covMat, verbose=FALSE)
-    expect_equal(nm$fit$sample.id, inv$sample.id)
+    expect_equal(nm$fit$sample.id, inv$fit$sample.id)
 
 })
 

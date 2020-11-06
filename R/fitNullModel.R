@@ -86,7 +86,6 @@ setMethod("fitNullModel",
               nm <- fitNullModel(x, outcome, covars, cov.mat, group.var, ...)
               # XXX: Decide if we should reorder columns in the fit data frame such that sample.id is the first column.
               nm$fit$sample.id <- rownames(nm$model.matrix)
-              nm$sample.id <- rownames(nm$model.matrix)
               nm
           })
 
