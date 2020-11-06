@@ -74,6 +74,8 @@ isNullModelSmall(null.model)
 \details{
     If \code{x} is a data.frame, the rownames of \code{x} must match the row and column names of \code{cov.mat} (if \code{cov.mat} is specified). If \code{x} is an \code{\link{AnnotatedDataFrame}} or other object containing an \code{\link{AnnotatedDataFrame}}, \code{x} will be re-ordered (if necessary) so that \code{sample.id} or \code{scanID} is in the same order as the row and column names of \code{cov.mat}.
 
+    If any covariates have the same value for all samples, they will be dropped from the model with a message. Note that the `model` and `covars` element in the output object will still include that covariate.
+
     The code checks for multicollinearity of covariates by checking that the rank of the design matrix is equal to the number of columns; if the rank is smaller, it fails with an error.
 
     \code{cov.mat} is used to specify the covariance structures of the random effects terms in the model.  For example, to include a polygenic random effect, one matrix in \code{cov.mat} could be a kinship matrix or a genetic relationship matrix (GRM).  As another example, to include household membership as a random effect, one matrix in \code{cov.mat} should be a 0/1 matrix with a 1 in the \code{[i,j]} and \code{[j,i]} entries if individuals \code{i} and \code{j} are in the same household and 0 otherwise; the diagonals of such a matrix should all be 1.
@@ -90,20 +92,17 @@ isNullModelSmall(null.model)
 }
 
 \value{An object of class '\code{GENESIS.nullModel}' or '\code{GENESIS.nullMixedModel}'. A list including:
+\describe{
     \item{family}{A character string specifying the family used in the analysis.}
     \item{hetResid}{A logical indicator of whether heterogeneous residual variance components were used in the model (specified by \code{group.var}).}
     \item{varComp}{The variance component estimates. There is one variance component for each random effect specified in \code{cov.mat}. When \code{family} is gaussian, there are additional residual variance components; one residual variance component when \code{group.var} is \code{NULL}, and as many residual variance components as there are unique values of \code{group.var} when it is specified.}
     \item{varCompCov}{The estimated covariance matrix of the variance component estimates given by \code{varComp}. This can be used for hypothesis tests regarding the variance components.}
     \item{fixef}{A data.frame with effect size estimates (betas), standard errors, chi-squared test statistics, and p-values for each of the fixed effect covariates specified in \code{covars}.}
     \item{betaCov}{The estimated covariance matrix of the effect size estimates (betas) of the fixed effect covariates. This can be used for hypothesis tests regarding the fixed effects.}
-    \item{fitted.values}{The fitted values from the model; i.e. W*beta where W is the design matrix and beta are the effect size estimates for the fixed effects.}
-    \item{resid.marginal}{The marginal residuals from the model; i.e. Y - W*beta where Y is the vector of outcome values.}
-    \item{resid.conditional}{The conditional residuals from the model; i.e. Y - W*beta - Z*u.}
+    \item{fit}{A data frame with the outcome, fitted values, and residuals. See below for explanations of the columns of this data frame.}
     \item{logLik}{The log-likelihood value.}
     \item{logLikR}{The restricted log-likelihood value.}
     \item{AIC}{The Akaike Information Criterion value.}
-    \item{workingY}{The "working" outcome vector. When \code{family} is gaussian, this is just the original outcome vector. When \code{family} is not gaussian, this is the PQL linearization of the outcome vector. This is used by \code{\link{assocTestSingle}} or \code{\link{assocTestAggregate}} for genetic association testing. See 'Details' for more information.}
-    \item{outcome}{The original outcome vector, as a 1-column matrix with column name. When \code{family} is gaussian, this is equal to \code{workingY}.}
     \item{model.matrix}{The design matrix for the fixed effect
       covariates used in the model.}
     \item{group.idx}{If \code{group.var} is not \code{NULL}, a list of
@@ -112,11 +111,25 @@ isNullModelSmall(null.model)
     \item{converged}{A logical indicator of whether the AIREML procedure for estimating the random effects variance components converged.}
     \item{zeroFLAG}{A vector of logicals the same length as \code{varComp} specifying whether the corresponding variance component estimate was set to 0 by the function due to convergence to the boundary in the AIREML procedure.}
     \item{RSS}{The residual sum of squares from the model fit. When \code{family} is gaussian, this will typically be 1 since the residual variance component is estimated separately.}
-    \item{sample.id}{A vector of IDs for the samples used in the
-      analysis.}
+    \item{model}{The model string.}
+    \item{outcome}{The outcome variable name.}
+    \item{covars}{A vector of covariate names}
+}
     %\item{resid}{phenotype values pre-multiplied by the projection matrix that adjusts for covariates and random effects. These projected phenotype values are essentially what are correlated with genotype values for association testing.}
     %\item{Ytilde}{phenotype values adjusted for covariates and random effects. This adjusted phenotype vector approximately follow a distribution with mean 0 and an identity covariance matrix. Linear regression of this adjusted phenotype vector on an equivalently adjusted genotype vector provides the same estimates as fitting the full GLS model (by the Frisch-Waugh-Lovell theorem).}
     %\item{RSS0}{the sum of the `Ytilde` values squared. This is the sum of squared residuals under the null hypothesis of no genetic effect for the covariate and random effect adjusted model using the Frisch-Waugh-Lovell theorem.}
+
+The \code{fit} data frame contains the following columns, depending on which type of model was fit:
+\describe{
+  \item{outcome}{The original outcome vector. When \code{family} is gaussian, this is equal to \code{workingY}.}
+  \item{workingY}{The "working" outcome vector. When \code{family} is gaussian, this is just the original outcome vector. When \code{family} is not gaussian, this is the PQL linearization of the outcome vector. This is used by \code{\link{assocTestSingle}} or \code{\link{assocTestAggregate}} for genetic association testing. See 'Details' for more information.}
+  \item{fitted.values}{The fitted values from the model; i.e. W*beta where W is the design matrix and beta are the effect size estimates for the fixed effects.}
+  \item{resid.marginal}{The marginal residuals from the model; i.e. Y - W*beta where Y is the vector of outcome values.}
+  \item{resid.conditional}{The conditional residuals from the model; i.e. Y - W*beta - Z*u.}
+  \item{resid.cholesky}{The Cholesky residuals from the model; i.e. - XXX}
+  \item{resid}{XXX. These are used in the final score tests for association.}
+  \item{sample.id}{A vector of IDs for the samples used in the analysis, if called with an \code{AnnotatedDataFrame}.}
+}
 }
 
 \references{
