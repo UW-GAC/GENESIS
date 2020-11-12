@@ -6,6 +6,9 @@
 # * list with elements: pve, fixef, covar
 jointScoreTest <- function(null.model, G) {  # # Check rownames/colnames match.
 
+  # Convert old null model format if necessary.
+  null.model <- .updateNullModelFormat(null.model)
+
   # check that null model has required elements
   if (isNullModelSmall(null.model)) {
     stop("small null model cannot be used for a joint score test")
