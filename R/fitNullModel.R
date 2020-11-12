@@ -242,3 +242,46 @@ isNullModelSmall <- function(null.model) {
   }
   cov.mat
 }
+
+# Update a null model from the old format to the new format.
+.updateNullModelFormat <- function(nullmod) {
+
+  # Check if old format or new format.
+  if ("fit" %in% names(nullmod)) {
+    return(nullmod)
+  }
+
+  msg <- paste(
+    "This null model was created with an older version of GENESIS and is being updated to use the current version.",
+    "Please consider re-running fitNullModel with the current GENESIS version."
+  )
+  warning(msg)
+
+  # Update.
+  nullmod$fit <- data.frame(
+    outcome = as.vector(nullmod$outcome),
+    workingY = as.vector(nullmod$workingY),
+    fitted.values = as.vector(nullmod$fitted.values),
+    resid.marginal = as.vector(nullmod$resid.marginal),
+    resid = as.vector(nullmod$resid),
+    resid.cholesky = as.vector(nullmod$Ytilde),
+    stringsAsFactors = FALSE
+  )
+  optional_elements <- c("resid.conditional", "sample.id")
+  for (element in optional_elements) {
+    if (element %in% names(nullmod)) {
+      nullmod$fit[[element]] <- nullmod[[element]]
+      nullmod[[element]] <- NULL
+    }
+  }
+  rownames(nullmod$fit) <- rownames(nullmod$model.matrix)
+
+  nullmod$outcome <- NULL
+  nullmod$workingY <- NULL
+  nullmod$fitted.values <- NULL
+  nullmod$resid.marginal <- NULL
+  nullmod$resid <- NULL
+  nullmod$Ytilde <- NULL
+
+  nullmod
+}
