@@ -32,6 +32,7 @@ updateNullModCond <- function(nullmod, G, covMatList = NULL,  AIREML.tol = 1e-6,
     extra <- setdiff(names(nullmod), names(new.nullmod))
     new.nullmod <- c(new.nullmod, nullmod[extra])
     # Update the model string.
+    # This should eventually be done in the wrapper for this function, once it exists.
     previous_covar_string <- .modelCovarString(new.nullmod$covars)
     new.nullmod$covars <- c(new.nullmod$covars, colnames(G))
     new_covar_string <- .modelCovarString(new.nullmod$covars)
