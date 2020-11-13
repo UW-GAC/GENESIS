@@ -2,6 +2,10 @@
 ### fit a conditional model based on a previously fit model. Default does not re-estimate variance components, but it may.
 updateNullModCond <- function(nullmod, G, covMatList = NULL,  AIREML.tol = 1e-6, max.iter = 100, drop.zeros = TRUE, verbose = TRUE){
 
+    # Update null model format.
+    # This should eventually be done in the wrapper for this function, once it exists.
+    nullmod <- .updateNullModelFormat(nullmod)
+
     ## a few checks that may be transfered to wrapper function:
     if (nullmod$hetResid & is.null(nullmod$group.idx)) stop("group indices are required for updating the null model")
 

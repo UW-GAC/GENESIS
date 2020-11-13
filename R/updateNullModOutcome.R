@@ -10,6 +10,10 @@ updateNullModOutcome <- function(nullmod,
                                 AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0,
                                 verbose = TRUE){
 
+    # Update null model format.
+    # This should eventually be done in the wrapper for this function, once it exists.
+    nullmod <- .updateNullModelFormat(nullmod)
+
     rankNorm.option <- match.arg(rankNorm.option)
     rescale <- match.arg(rescale)
 
