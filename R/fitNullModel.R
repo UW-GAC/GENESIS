@@ -117,10 +117,26 @@ nullModelInvNorm <- function(null.model, cov.mat = NULL,
                              max.iter = 100, EM.iter = 0,
                              verbose = TRUE) {
 
-    updateNullModOutcome(null.model, covMatList=cov.mat, rankNorm.option=norm.option,
+    # Update null model format.
+    null.model <- .updateNullModelFormat(null.model)
+
+    new.nullmod <- updateNullModOutcome(null.model, covMatList=cov.mat, rankNorm.option=norm.option,
                          rescale=rescale, AIREML.tol=AIREML.tol,
                          max.iter=max.iter, EM.iter=EM.iter,
                          verbose=verbose)
+
+    # Add sample id.
+    new.nullmod$fit$sample.id <- null.model$fit$sample.id
+
+    if ("model" %in% names(null.model)) {
+      # Update model string but keep outcome the same.
+      # What happens if covMatList is different than what was passed to the original null model call?
+      previous_model <- new.nullmod$model
+      new.nullmod$model <- paste(sprintf("rankInvNorm(resid(%s))", new.nullmod$outcome), "~",
+                                 strsplit(previous_model, " ~ ")[[1]][2])
+    }
+    new.nullmod
+
 }
 
 

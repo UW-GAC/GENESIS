@@ -10,10 +10,6 @@ updateNullModOutcome <- function(nullmod,
                                 AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0,
                                 verbose = TRUE){
 
-    # Update null model format.
-    # This should eventually be done in the wrapper for this function, once it exists.
-    nullmod <- .updateNullModelFormat(nullmod)
-
     rankNorm.option <- match.arg(rankNorm.option)
     rescale <- match.arg(rescale)
 
@@ -86,14 +82,7 @@ updateNullModOutcome <- function(nullmod,
     ## add any extra slots
     extra <- setdiff(names(nullmod), names(new.nullmod))
     new.nullmod <- c(new.nullmod, nullmod[extra])
-    # Add sample id.
-    new.nullmod$fit$sample.id <- nullmod$fit$sample.id
-    # Update model string (but keep outcome the same?).
-    # This should eventually be done in the wrapper for this function, once it exists.
-    previous_model <- new.nullmod$model
-    # What happens if covMatList is different than what was passed to the original null model call?
-    new.nullmod$model <- paste(sprintf("rankInvNorm(resid(%s))", new.nullmod$outcome), "~",
-                               strsplit(previous_model, " ~ ")[[1]][2])
+
     return(new.nullmod)
 }
 
