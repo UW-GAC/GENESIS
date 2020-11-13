@@ -34,7 +34,8 @@
       outcome = as.vector(y),
       workingY = as.vector(workingY),
       fitted.values = unname(fitted.values),
-      resid.marginal = unname(resid.marginal)
+      resid.marginal = unname(resid.marginal),
+      stringsAsFactors = FALSE
     )
 
     out <- list(family = family, hetResid = hetResid, varComp = varComp,
@@ -102,7 +103,8 @@
       workingY = as.vector(workingY),
       fitted.values = unname(fitted.values),
       resid.marginal = unname(resid.marginal),
-      resid.conditional = resid.conditional
+      resid.conditional = resid.conditional,
+      stringsAsFactors = FALSE
     )
 
     out <- list(family = family, hetResid = hetResid, varComp = varComp, varCompCov = varCompCov,
@@ -204,7 +206,8 @@
       workingY = as.vector(workingY),
       fitted.values = fitted.values,
       resid.marginal = resid.marginal,
-      resid.conditional = resid.conditional
+      resid.conditional = resid.conditional,
+      stringsAsFactors = FALSE
     )
 
     out <- list(family = family, hetResid = hetResid, varComp = varComp,
