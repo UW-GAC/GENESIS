@@ -127,7 +127,7 @@ The \code{fit} data frame contains the following columns, depending on which typ
   \item{resid.marginal}{The marginal residuals from the model; i.e. Y - W*beta where Y is the vector of outcome values.}
   \item{resid.conditional}{The conditional residuals from the model; i.e. Y - W*beta - Z*u.}
   \item{resid.cholesky}{phenotype values adjusted for covariates and random effects. This adjusted phenotype vector approximately follow a distribution with mean 0 and an identity covariance matrix. Linear regression of this adjusted phenotype vector on an equivalently adjusted genotype vector provides the same estimates as fitting the full GLS model (by the Frisch-Waugh-Lovell theorem).}
-  \item{resid}{phenotype values pre-multiplied by the projection matrix that adjusts for covariates and random effects. These projected phenotype values are essentially what are correlated with genotype values for association testing.}
+  \item{resid.PY}{phenotype values pre-multiplied by the projection matrix that adjusts for covariates and random effects. These projected phenotype values are essentially what are correlated with genotype values for association testing.}
   \item{sample.id}{A vector of IDs for the samples used in the analysis, if called with an \code{AnnotatedDataFrame}.}
 }
 }

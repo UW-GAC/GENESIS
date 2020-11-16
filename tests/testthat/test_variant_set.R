@@ -165,7 +165,7 @@ test_that("fastSKAT matches SKAT(regular)", {
 	n <- 500
 	nullmod <- .testNullmod(n, MM=TRUE)
 	G <- .testGenoMatrix(n=n, nsnp=300)
-        U <- as.vector(crossprod(G, nullmod$fit$resid))
+        U <- as.vector(crossprod(G, nullmod$fit$resid.PY))
         Q <- sum(U^2)
         G <- calcGtilde(nullmod, G)
         V <- tcrossprod(G)

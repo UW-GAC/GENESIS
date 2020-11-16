@@ -221,7 +221,7 @@ test_that("change sample order", {
     expect_equal(rownames(nm2$model.matrix), samp)
 
     expect_equal(nm$fit$workingY, rev(nm2$fit$workingY))
-    expect_equal(nm$resid[samp,], nm2$resid[samp,])
+    expect_equal(nm$resid.PY[samp,], nm2$resid.PY[samp,])
     ## why are these not equal? in assocTestSingle, results are the same
     #expect_equal(nm$Ytilde[samp,], nm2$Ytilde[samp,])
     #expect_equivalent(as.matrix(nm$cholSigmaInv)[samp,samp], as.matrix(nm2$cholSigmaInv)[samp,samp])
@@ -458,7 +458,7 @@ test_that(".updateNullModelFormat works with linear models", {
 
   # Check names of fit data frame.
   expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
-                      "resid", "resid.cholesky", "sample.id")
+                      "resid.PY", "resid.cholesky", "sample.id")
   expect_true(setequal(names(nullmod$fit), expected_names))
   expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
 })
@@ -475,7 +475,7 @@ test_that(".updateNullModelFormat works with linear mixed models", {
 
   # Check names of fit data frame.
   expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
-                      "resid.conditional", "resid", "resid.cholesky", "sample.id")
+                      "resid.conditional", "resid.PY", "resid.cholesky", "sample.id")
   expect_true(setequal(names(nullmod$fit), expected_names))
   expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
 
@@ -494,7 +494,7 @@ test_that(".updateNullModelFormat works with logistic models", {
 
   # Check names of fit data frame.
   expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
-                      "resid", "resid.cholesky", "sample.id")
+                      "resid.PY", "resid.cholesky", "sample.id")
   expect_true(setequal(names(nullmod$fit), expected_names))
   expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
 })
@@ -511,7 +511,7 @@ test_that(".updateNullModelFormat works with logistic mixed models", {
 
   # Check names of fit data frame.
   expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
-                      "resid.conditional", "resid", "resid.cholesky", "sample.id")
+                      "resid.conditional", "resid.PY", "resid.cholesky", "sample.id")
   expect_true(setequal(names(nullmod$fit), expected_names))
   expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
 })

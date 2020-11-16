@@ -279,7 +279,7 @@ isNullModelSmall <- function(null.model) {
     workingY = as.vector(nullmod$workingY),
     fitted.values = as.vector(nullmod$fitted.values),
     resid.marginal = as.vector(nullmod$resid.marginal),
-    resid = as.vector(nullmod$resid),
+    resid.PY = as.vector(nullmod$resid),
     resid.cholesky = as.vector(nullmod$Ytilde),
     stringsAsFactors = FALSE
   )

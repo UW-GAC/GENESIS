@@ -14,7 +14,7 @@ test_that("lmm - with group", {
 
     # Check names of fit data frame.
     expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
-                        "resid.conditional", "resid", "resid.cholesky")
+                        "resid.conditional", "resid.PY", "resid.cholesky")
     expect_true(setequal(names(nullmod$fit), expected_names))
 
     expect_equal(nullmod$family$family, "gaussian")

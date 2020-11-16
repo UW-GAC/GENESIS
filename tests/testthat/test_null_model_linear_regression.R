@@ -16,7 +16,7 @@ test_that("linear regression", {
 
     # Check names of fit data frame.
     expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
-                        "resid", "resid.cholesky")
+                        "resid.PY", "resid.cholesky")
     expect_true(setequal(names(nullmod$fit), expected_names))
 
     lm.mod <- lm(dat$y ~ -1 + dat$X)

@@ -4,7 +4,7 @@ context("check using various classes of matrices as inputs")
     for (m in c("model.matrix", "cholSigmaInv", "CX", "CXCXI")) {
         expect_equivalent(as.matrix(nm1[[m]]), as.matrix(nm2[[m]]))
     }
-    for (m in c("resid.cholesky", "resid")) {
+    for (m in c("resid.cholesky", "resid.PY")) {
         expect_equivalent(as.matrix(nm1$fit[[m]]), as.matrix(nm2$fit[[m]]))
     }
 }

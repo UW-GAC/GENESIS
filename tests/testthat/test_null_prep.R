@@ -15,7 +15,7 @@ test_that("nullModelTestPrep", {
     expect_equal(length(nullmod$fit$resid.cholesky), length(dat$y))
 
     # Adds expected columns to fit data frame.
-    expect_true("resid" %in% names(nullmod$fit))
+    expect_true("resid.PY" %in% names(nullmod$fit))
     expect_true("resid.cholesky" %in% names(nullmod$fit))
 
     # with covMatList

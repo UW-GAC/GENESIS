@@ -65,7 +65,7 @@ testVariantSet <- function( nullmod, G, weights,
         if(is.null(nullmod$RSS0)){
             nullmod$RSS0 <- as.numeric(crossprod(nullmod$fit$resid.cholesky))
         }
-        out <- .testGenoSingleVarScore(Gtilde, G = burden, resid = nullmod$fit$resid, RSS0 = nullmod$RSS0)
+        out <- .testGenoSingleVarScore(Gtilde, G = burden, resid = nullmod$fit$resid.PY, RSS0 = nullmod$RSS0)
     }
     # if (burden.test == "Wald"){
     #     out <- .testGenoSingleVarWald(Gtilde, Ytilde = nullmod$Ytilde,
@@ -106,7 +106,7 @@ testVariantSet <- function( nullmod, G, weights,
     }
 
     # scores
-    U <- as.vector(crossprod(G, nullmod$fit$resid)) # WGPY
+    U <- as.vector(crossprod(G, nullmod$fit$resid.PY)) # WGPY
     # SKAT test statistic
     Q <- sum(U^2)
 
@@ -129,7 +129,7 @@ testVariantSet <- function( nullmod, G, weights,
     }
 
     # scores
-    U <- as.vector(crossprod(G, nullmod$fit$resid)) # WGPY
+    U <- as.vector(crossprod(G, nullmod$fit$resid.PY)) # WGPY
     U.sum <- sum(U) # 1WGPY
 
     # adjust G for covariates and random effects
@@ -333,7 +333,7 @@ testVariantSet <- function( nullmod, G, weights,
 .testVariantSetSKATO <- function(nullmod, G, weights, rho = 0){
 #                                 # return.scores = FALSE, return.scores.cov = FALSE){
     # scores
-    scores <- as.vector(crossprod(G, nullmod$fit$resid))
+    scores <- as.vector(crossprod(G, nullmod$fit$resid.PY))
 
     # adjust G for covariates and random effects
     geno.adj <- calcGtilde(nullmod, G)
