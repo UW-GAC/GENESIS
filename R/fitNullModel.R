@@ -270,6 +270,7 @@ isNullModelSmall <- function(null.model) {
 
   msg <- paste(
     "This null model was created with an older version of GENESIS and is being updated to use the current version.",
+    "Model formula strings may not exist.",
     "Please consider re-running fitNullModel with the current GENESIS version."
   )
 
@@ -303,6 +304,16 @@ isNullModelSmall <- function(null.model) {
     nullmod$resid.marginal <- NULL
     nullmod$resid <- NULL
     nullmod$Ytilde <- NULL
+
+    # Add model element. This element was added along with the fit data frame,
+    # so there shouldn't be a case where there is a "fit" element but there is
+    # not a "model" element.
+    nullmod$model <- list(
+      family = nullmod$family,
+      hetResid = nullmod$hetResid
+    )
+    nullmod$family <- NULL
+    nullmod$hetResid <- NULL
   }
 
   # Add RSS0

@@ -469,7 +469,7 @@ test_that(".updateNullModelFormat works with linear models", {
   nm_old <- readRDS("testdata/old_nullmod_lm.rds")
   expect_warning(nullmod <- .updateNullModelFormat(nm_old), "created with an older version")
   # Check for expected names.
-  expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
+  expected_names <- c("model", "varComp", "varCompCov", "fixef",
                       "betaCov", "fit", "logLik",
                       "AIC", "model.matrix",
                       "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
@@ -481,13 +481,19 @@ test_that(".updateNullModelFormat works with linear models", {
                       "resid.PY", "resid.cholesky", "sample.id")
   expect_true(setequal(names(nullmod$fit), expected_names))
   expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
+
+  # Check model element.
+  expected_names <- c("hetResid", "family")
+  expect_true(setequal(names(nullmod$model), expected_names))
+  expect_equal(nullmod$model$family, nm_old$family)
+  expect_equal(nullmod$model$hetResid, nm_old$hetResid)
 })
 
 test_that(".updateNullModelFormat works with linear mixed models", {
   nm_old <- readRDS("testdata/old_nullmod_lmm.rds")
   expect_warning(nullmod <- .updateNullModelFormat(nm_old), "created with an older version")
   # Check for expected names.
-  expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
+  expected_names <- c("model", "varComp", "varCompCov", "fixef",
                       "betaCov", "fit", "logLik", "logLikR", "AIC", "model.matrix",
                       "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
                       "niter", "RSS", "CX", "CXCXI", "RSS0")
@@ -499,13 +505,18 @@ test_that(".updateNullModelFormat works with linear mixed models", {
   expect_true(setequal(names(nullmod$fit), expected_names))
   expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
 
+  # Check model element.
+  expected_names <- c("hetResid", "family")
+  expect_true(setequal(names(nullmod$model), expected_names))
+  expect_equal(nullmod$model$family, nm_old$family)
+  expect_equal(nullmod$model$hetResid, nm_old$hetResid)
 })
 
 test_that(".updateNullModelFormat works with logistic models", {
   nm_old <- readRDS("testdata/old_nullmod_glm.rds")
   expect_warning(nullmod <- .updateNullModelFormat(nm_old), "created with an older version")
   # Check for expected names.
-  expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
+  expected_names <- c("model", "varComp", "varCompCov", "fixef",
                       "betaCov", "fit", "logLik",
                       "AIC", "model.matrix",
                       "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
@@ -517,13 +528,19 @@ test_that(".updateNullModelFormat works with logistic models", {
                       "resid.PY", "resid.cholesky", "sample.id")
   expect_true(setequal(names(nullmod$fit), expected_names))
   expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
+
+  # Check model element.
+  expected_names <- c("hetResid", "family")
+  expect_true(setequal(names(nullmod$model), expected_names))
+  expect_equal(nullmod$model$family, nm_old$family)
+  expect_equal(nullmod$model$hetResid, nm_old$hetResid)
 })
 
 test_that(".updateNullModelFormat works with logistic mixed models", {
   nm_old <- readRDS("testdata/old_nullmod_glmm.rds")
   expect_warning(nullmod <- .updateNullModelFormat(nm_old), "created with an older version")
   # Check for expected names.
-  expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
+  expected_names <- c("model", "varComp", "varCompCov", "fixef",
                       "betaCov", "fit", "logLik", "logLikR", "niter", "AIC", "model.matrix",
                       "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
                       "RSS", "CX", "CXCXI", "RSS0")
@@ -534,6 +551,12 @@ test_that(".updateNullModelFormat works with logistic mixed models", {
                       "resid.conditional", "resid.PY", "resid.cholesky", "sample.id")
   expect_true(setequal(names(nullmod$fit), expected_names))
   expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
+
+  # Check model element.
+  expected_names <- c("hetResid", "family")
+  expect_true(setequal(names(nullmod$model), expected_names))
+  expect_equal(nullmod$model$family, nm_old$family)
+  expect_equal(nullmod$model$hetResid, nm_old$hetResid)
 })
 
 test_that(".updateNullModelFormat adds RSS0", {
