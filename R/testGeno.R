@@ -145,7 +145,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     E <- as.matrix(E)
     p <- ncol(G)
     v <- ncol(E) + 1
-    n <- length(nullmod$fit$resid.cholesky)
+    n <- nrow(nullmod$fit)
     k <- ncol(nullmod$model.matrix)
     sY2 <- as.numeric(crossprod(nullmod$fit$resid.cholesky))
 
