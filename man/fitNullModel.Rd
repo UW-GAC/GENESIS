@@ -78,7 +78,7 @@ isNullModelSmall(null.model)
 
     The code checks for multicollinearity of covariates by checking that the rank of the design matrix is equal to the number of columns; if the rank is smaller, it fails with an error.
 
-    \code{cov.mat} is used to specify the covariance structures of the random effects terms in the model.  For example, to include a polygenic random effect, one matrix in \code{cov.mat} could be a kinship matrix or a genetic relationship matrix (GRM).  As another example, to include household membership as a random effect, one matrix in \code{cov.mat} should be a 0/1 matrix with a 1 in the \code{[i,j]} and \code{[j,i]} entries if individuals \code{i} and \code{j} are in the same household and 0 otherwise; the diagonals of such a matrix should all be 1.
+    \code{cov.mat} is used to specify the covariance structures of the random effects terms in the model.  For example, to include a polygenic random effect, one matrix in \code{cov.mat} could be a kinship matrix or a genetic relationship matrix (GRM).  As another example, to include household membership as a random effect, one matrix in \code{cov.mat} should be a 0/1 matrix with a 1 in the \code{[i,j]} and \code{[j,i]} entries if individuals \code{i} and \code{j} are in the same household and 0 otherwise; the diagonals of such a matrix should all be 1. If \code{cov.mat} is a list without names, the code will assign sequential letters as names. If some elements are named but not others, it will produce an error.
 
     When \code{family} is not gaussian, the penalized quasi-likelihood (PQL) approximation to the generalized linear mixed model (GLMM) is fit following the procedure of GMMAT (Chen et al.).
 
@@ -93,8 +93,7 @@ isNullModelSmall(null.model)
 
 \value{An object of class '\code{GENESIS.nullModel}' or '\code{GENESIS.nullMixedModel}'. A list including:
 \describe{
-    \item{family}{A character string specifying the family used in the analysis.}
-    \item{hetResid}{A logical indicator of whether heterogeneous residual variance components were used in the model (specified by \code{group.var}).}
+    \item{model}{A list with elements describing the model that was fit. See below for explanations of the elements in this list.}
     \item{varComp}{The variance component estimates. There is one variance component for each random effect specified in \code{cov.mat}. When \code{family} is gaussian, there are additional residual variance components; one residual variance component when \code{group.var} is \code{NULL}, and as many residual variance components as there are unique values of \code{group.var} when it is specified.}
     \item{varCompCov}{The estimated covariance matrix of the variance component estimates given by \code{varComp}. This can be used for hypothesis tests regarding the variance components.}
     \item{fixef}{A data.frame with effect size estimates (betas), standard errors, chi-squared test statistics, and p-values for each of the fixed effect covariates specified in \code{covars}.}
@@ -112,9 +111,6 @@ isNullModelSmall(null.model)
     \item{zeroFLAG}{A vector of logicals the same length as \code{varComp} specifying whether the corresponding variance component estimate was set to 0 by the function due to convergence to the boundary in the AIREML procedure.}
     \item{RSS}{The residual sum of squares from the model fit. When \code{family} is gaussian, this will typically be 1 since the residual variance component is estimated separately.}
     \item{RSS0}{the sum of the `Ytilde` values squared. This is the sum of squared residuals under the null hypothesis of no genetic effect for the covariate and random effect adjusted model using the Frisch-Waugh-Lovell theorem.}
-    \item{model}{The model string.}
-    \item{outcome}{The outcome variable name.}
-    \item{covars}{A vector of covariate names}
 }
 
 The \code{fit} data frame contains the following columns, depending on which type of model was fit:
@@ -127,6 +123,15 @@ The \code{fit} data frame contains the following columns, depending on which typ
   \item{resid.cholesky}{The Cholesky residuals from the model; a transformation of the marginal residuals using the estimated model covariance structure such that they are uncorrelated and follow a standard multivariate Normal distribution with mean 0 and identity covariance matrix asymptotically. Linear regression of the Cholesky residual vector on an equivalently transformed genotype vector provides the same estimates as fitting the full GLS model (by the Frisch-Waugh-Lovell theorem).}
   \item{resid.PY}{The outcome vector (Y) pre-multiplied by a projection matrix (P) that adjusts for covariates, random effects, and model covariance structure. These projected outcome values are essentially what are correlated with genotype values for association testing.}
   \item{sample.id}{A vector of IDs for the samples used in the analysis, if called with an \code{AnnotatedDataFrame}.}
+}
+
+The \code{model} list element contains the following elements:
+\describe{
+\item{outcome}{The outcome variable name.}
+\item{covars}{A vector of covariate names}
+\item{formula}{The model string.}
+\item{family}{A character string specifying the family used in the analysis.}
+\item{hetResid}{A logical indicator of whether heterogeneous residual variance components were used in the model (specified by \code{group.var}).}
 }
 }
 
