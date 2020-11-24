@@ -12,9 +12,7 @@
 
     ### checks
     if(!is.null(covMatList)){
-        if (!is.list(covMatList)){
-            covMatList <- list(A = covMatList)
-        }
+        covMatList = .setCovMatNames(covMatList)
         # if any Matrix objects; coerce all to Matrix objects (coerced ones are not sparse)
         covMatList <- .checkMatrixType(covMatList)
     }
