@@ -121,13 +121,13 @@ isNullModelSmall(null.model)
 
 The \code{fit} data frame contains the following columns, depending on which type of model was fit:
 \describe{
-  \item{outcome}{The original outcome vector. When \code{family} is gaussian, this is equal to \code{workingY}.}
+  \item{outcome}{The original outcome vector.}
   \item{workingY}{The "working" outcome vector. When \code{family} is gaussian, this is just the original outcome vector. When \code{family} is not gaussian, this is the PQL linearization of the outcome vector. This is used by \code{\link{assocTestSingle}} or \code{\link{assocTestAggregate}} for genetic association testing. See 'Details' for more information.}
-  \item{fitted.values}{The fitted values from the model; i.e. W*beta where W is the design matrix and beta are the effect size estimates for the fixed effects.}
-  \item{resid.marginal}{The marginal residuals from the model; i.e. Y - W*beta where Y is the vector of outcome values.}
-  \item{resid.conditional}{The conditional residuals from the model; i.e. Y - W*beta - Z*u.}
-  \item{resid.cholesky}{phenotype values adjusted for covariates and random effects. This adjusted phenotype vector approximately follow a distribution with mean 0 and an identity covariance matrix. Linear regression of this adjusted phenotype vector on an equivalently adjusted genotype vector provides the same estimates as fitting the full GLS model (by the Frisch-Waugh-Lovell theorem).}
-  \item{resid.PY}{phenotype values pre-multiplied by the projection matrix that adjusts for covariates and random effects. These projected phenotype values are essentially what are correlated with genotype values for association testing.}
+  \item{fitted.values}{The fitted values from the model; i.e. X*beta where Z is the design matrix and beta are the effect size estimates for the fixed effects. Z*u represents the effects captured by the random effects specified with the cov.mat input.}
+  \item{resid.marginal}{The marginal residuals from the model; i.e. Y - X*beta where Y is the vector of outcome values.}
+  \item{resid.conditional}{The conditional residuals from the model; i.e. Y - X*beta - Z*u.}
+  \item{resid.cholesky}{The Cholesky residuals from the model; a transformation of the marginal residuals using the estimated model covariance structure such that they are uncorrelated and follow a standard multivariate Normal distribution with mean 0 and identity covariance matrix asymptotically. Linear regression of the Cholesky residual vector on an equivalently transformed genotype vector provides the same estimates as fitting the full GLS model (by the Frisch-Waugh-Lovell theorem).}
+  \item{resid.PY}{The outcome vector (Y) pre-multiplied by a projection matrix (P) that adjusts for covariates, random effects, and model covariance structure. These projected outcome values are essentially what are correlated with genotype values for association testing.}
   \item{sample.id}{A vector of IDs for the samples used in the analysis, if called with an \code{AnnotatedDataFrame}.}
 }
 }
