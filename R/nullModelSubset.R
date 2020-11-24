@@ -9,7 +9,7 @@ nullModelSubset <- function(nullmod, idx.exclude){
 
     if (!nullmod$family$mixedmodel & (nullmod$family$family == "gaussian")){  ## a diagonal or scalar cholSigmaInv
 
-        if (nullmod$hetResid)	{  ## cholSigmaInv is diagonal
+        if (nullmod$model$hetResid)	{  ## cholSigmaInv is diagonal
             nullmod$cholSigmaInv <- nullmod$cholSigmaInv[-idx.exclude, -idx.exclude]
         }
     }
