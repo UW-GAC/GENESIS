@@ -307,7 +307,7 @@ isNullModelSmall <- function(null.model) {
 
   # Add RSS0
   if (is.null(nullmod$RSS0)) {
-    warning(msg)
+    # This is a minor update - don't need to print the warning for it.
     nullmod$RSS0 <- as.numeric(crossprod(nullmod$fit$resid.cholesky))
   }
 

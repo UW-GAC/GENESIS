@@ -546,7 +546,7 @@ test_that(".updateNullModelFormat adds RSS0", {
   nullmod <- fitNullModel(dat, outcome="a", covars="b", verbose=FALSE)
   expected_rss0 <- nullmod$RSS0
   nullmod$RSS0 <- NULL
-  expect_warning(nm2 <- .updateNullModelFormat(nullmod), "created with an older version")
+  nm2 <- .updateNullModelFormat(nullmod)
   expect_true("RSS0" %in% names(nm2))
   expect_equal(nm2$RSS0, expected_rss0)
 
