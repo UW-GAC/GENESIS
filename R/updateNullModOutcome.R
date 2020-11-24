@@ -13,7 +13,7 @@ updateNullModOutcome <- function(nullmod,
     rankNorm.option <- match.arg(rankNorm.option)
     rescale <- match.arg(rescale)
 
-    if (nullmod$family$family != "gaussian") stop("Family must be gaussian")
+    if (nullmod$model$family$family != "gaussian") stop("Family must be gaussian")
 
     resid <- nullmod$fit$resid.marginal
 

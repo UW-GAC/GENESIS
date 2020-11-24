@@ -7,11 +7,11 @@ test_that("linear regression", {
     nullmod <- .fitNullModel(dat$y, dat$X, verbose=FALSE)
 
     # Check for expected names.
-    expected_names <- c("family", "varComp", "varCompCov", "fixef",
+    expected_names <- c("model", "varComp", "varCompCov", "fixef",
                         "betaCov", "fit", "logLik",
                         "AIC", "model.matrix",
                         "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
-                        "RSS", "CX", "CXCXI", "RSS0", "model")
+                        "RSS", "CX", "CXCXI", "RSS0")
     expect_true(setequal(names(nullmod), expected_names))
 
     # Check names of fit data frame.
@@ -20,15 +20,15 @@ test_that("linear regression", {
     expect_true(setequal(names(nullmod$fit), expected_names))
 
     # Check names of model element.
-    expected_names <- c("hetResid")
+    expected_names <- c("hetResid", "family")
     expect_true(setequal(names(nullmod$model), expected_names))
     expect_false(nullmod$model$hetResid)
+    expect_equal(nullmod$model$family$family, "gaussian")
+    expect_false(nullmod$model$family$mixedmodel)
 
     lm.mod <- lm(dat$y ~ -1 + dat$X)
 
     expect_equal(nullmod$fit$fitted.values, unname(fitted(lm.mod)))
-    expect_equal(nullmod$family$family, "gaussian")
-    expect_false(nullmod$family$mixedmodel)
     expect_equivalent(nullmod$fit$resid.marginal, lm.mod$resid)
     expect_true(all(nullmod$fixef == summary(lm.mod)$coef))
     expect_equal(nullmod$varComp, summary(lm.mod)$sigma^2)

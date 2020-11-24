@@ -25,7 +25,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
         return(res)
     }
 
-    if(test == "Score.SPA" & nullmod$family$family != "binomial"){
+    if(test == "Score.SPA" & nullmod$model$family$family != "binomial"){
         test <- "Score"
         message("Saddlepoint approximation (SPA) can only be used for binomial family; using Score test instead.")
     }
@@ -42,9 +42,9 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     }
 
     if (test == "BinomiRare"){
-      if (nullmod$family$family != "binomial") stop("BinomiRare can only be used for binomial family.")
+      if (nullmod$model$family$family != "binomial") stop("BinomiRare can only be used for binomial family.")
 
-      if (nullmod$family$mixedmodel) { ## if this is a mixed model, use conditional probabilities $
+      if (nullmod$model$family$mixedmodel) { ## if this is a mixed model, use conditional probabilities $
         phat <- expit(nullmod$fit$workingY - nullmod$fit$resid.conditional)
       } else{ ## not a mixed model
         phat <- nullmod$fit$fitted.values
@@ -55,7 +55,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
 
     if (test == "CMP"){
       score.pval <- if(calc.score) res$Score.pval else NULL
-      if (nullmod$family$mixedmodel) { ## if this is a mixed model, use conditional probabilities.
+      if (nullmod$model$family$mixedmodel) { ## if this is a mixed model, use conditional probabilities.
         phat <- expit(nullmod$fit$workingY - nullmod$fit$resid.conditional)
         res <- .testGenoSingleVarCMP(nullmod$fit$outcome, probs=phat, G, score.pval=score.pval, pval.thresh=recalc.pval.thresh)
       } else{ ## not a mixed model

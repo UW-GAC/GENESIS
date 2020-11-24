@@ -20,7 +20,7 @@ SPA_pval <- function(score.result, nullmod, G, pval.thresh = 1){
 
 		# calculate the fitted values  from the null model;
                 # expit(eta) = expit(X\beta + Zb)
-                if (nullmod$family$mixedmodel) {
+                if (nullmod$model$family$mixedmodel) {
                     mu <- as.vector(expit(nullmod$fit$workingY - nullmod$fit$resid.conditional))
                 } else {
                     mu <- as.vector(expit(nullmod$fit$workingY - nullmod$fit$resid.marginal))

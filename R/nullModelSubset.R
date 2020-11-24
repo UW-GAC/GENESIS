@@ -3,11 +3,11 @@ nullModelSubset <- function(nullmod, idx.exclude){
     nullmod$fit <- nullmod$fit[-idx.exclude, ]
     nullmod$model.matrix <- nullmod$model.matrix[-idx.exclude,]
 
-    if (nullmod$family$mixedmodel){  ## n by n cholSigmaInv {
+    if (nullmod$model$family$mixedmodel){  ## n by n cholSigmaInv {
         nullmod$cholSigmaInv <- subsetCholSigmaInv(nullmod$cholSigmaInv, idx.exclude)
     }
 
-    if (!nullmod$family$mixedmodel & (nullmod$family$family == "gaussian")){  ## a diagonal or scalar cholSigmaInv
+    if (!nullmod$model$family$mixedmodel & (nullmod$model$family$family == "gaussian")){  ## a diagonal or scalar cholSigmaInv
 
         if (nullmod$model$hetResid)	{  ## cholSigmaInv is diagonal
             nullmod$cholSigmaInv <- nullmod$cholSigmaInv[-idx.exclude, -idx.exclude]

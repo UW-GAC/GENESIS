@@ -38,8 +38,8 @@
       stringsAsFactors = FALSE
     )
 
-    model <- list(hetResid = hetResid)
-    out <- list(model = model, family = family, varComp = varComp,
+    model <- list(hetResid = hetResid, family = family)
+    out <- list(model = model, varComp = varComp,
                 varCompCov = varCompCov, fixef = fixef, betaCov = betaCov,
                 fit = fit,
                 logLik = logLik, AIC = AIC,
@@ -108,9 +108,9 @@
       stringsAsFactors = FALSE
     )
 
-    model <- list(hetResid = hetResid)
+    model <- list(hetResid = hetResid, family = family)
 
-    out <- list(model = model, family = family, varComp = varComp, varCompCov = varCompCov,
+    out <- list(model = model, varComp = varComp, varCompCov = varCompCov,
                 fixef = fixef, betaCov = betaCov, fit = fit,
                 logLik = logLik, logLikR  = logLikR, AIC = AIC,
                 model.matrix = X, group.idx = group.idx, cholSigmaInv = cholSigmaInv,
@@ -213,9 +213,9 @@
       stringsAsFactors = FALSE
     )
 
-    model <- list(hetResid = hetResid)
+    model <- list(hetResid = hetResid, family = family)
 
-    out <- list(model = model, family = family, varComp = varComp,
+    out <- list(model = model, varComp = varComp,
                 varCompCov = varCompCov, fixef = fixef, betaCov = betaCov,
                 fit = fit, logLik = logLik,
                 logLikR = logLikR, AIC = AIC,

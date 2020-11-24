@@ -71,7 +71,7 @@ testVariantSet <- function( nullmod, G, weights,
 
     if (burden.test == "BinomiRare"){
         ## if this is a mixed model, used conditional probabilities
-        if (nullmod$family$mixedmodel) {
+        if (nullmod$model$family$mixedmodel) {
             phat <- expit(nullmod$fit$workingY - nullmod$fit$resid.conditional)
         } else {
             phat <- nullmod$fit$fitted.values
@@ -80,7 +80,7 @@ testVariantSet <- function( nullmod, G, weights,
     }
 
     if (burden.test == "CMP"){
-        if (nullmod$family$mixedmodel) {
+        if (nullmod$model$family$mixedmodel) {
 
             phat <- expit(nullmod$fit$workingY - nullmod$fit$resid.conditional)
             out <- .testGenoSingleVarCMP(nullmod$fit$outcome, probs=phat, G=matrix(burden))
