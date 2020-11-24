@@ -256,6 +256,10 @@ isNullModelSmall <- function(null.model) {
       stop("Some names for cov.mat list are missing.")
     }
   }
+  # Check that no names are duplicated.
+  if (any(duplicated(names(cov.mat)))) {
+    stop("Some names for cov.mat list are duplicated.")
+  }
   cov.mat
 }
 

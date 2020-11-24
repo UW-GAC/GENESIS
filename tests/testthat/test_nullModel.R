@@ -320,6 +320,15 @@ test_that("multiple matrices", {
     expect_equal(names(nm2$varComp[1:2]), paste0("V_", names(covMatList)))
     expect_equal(nm2$model, "a ~ b + (1|m1) + (1|m2)")
 
+    # error if only one is named
+    covMatList <- list(m1 = covMat, covMat2)
+    expect_error(fitNullModel(dat, outcome="a", covars="b", cov.mat=covMatList, verbose=FALSE),
+                 "Some names for cov.mat list are missing")
+
+    # error if they have the same names
+    covMatList <- list(m1 = covMat, m1 = covMat2)
+    expect_error(fitNullModel(dat, outcome="a", covars="b", cov.mat=covMatList, verbose=FALSE),
+                 "duplicated")
 })
 
 test_that("code for checking lists identical", {
