@@ -111,13 +111,11 @@ isNullModelSmall(null.model)
     \item{converged}{A logical indicator of whether the AIREML procedure for estimating the random effects variance components converged.}
     \item{zeroFLAG}{A vector of logicals the same length as \code{varComp} specifying whether the corresponding variance component estimate was set to 0 by the function due to convergence to the boundary in the AIREML procedure.}
     \item{RSS}{The residual sum of squares from the model fit. When \code{family} is gaussian, this will typically be 1 since the residual variance component is estimated separately.}
+    \item{RSS0}{the sum of the `Ytilde` values squared. This is the sum of squared residuals under the null hypothesis of no genetic effect for the covariate and random effect adjusted model using the Frisch-Waugh-Lovell theorem.}
     \item{model}{The model string.}
     \item{outcome}{The outcome variable name.}
     \item{covars}{A vector of covariate names}
 }
-    %\item{resid}{phenotype values pre-multiplied by the projection matrix that adjusts for covariates and random effects. These projected phenotype values are essentially what are correlated with genotype values for association testing.}
-    %\item{Ytilde}{phenotype values adjusted for covariates and random effects. This adjusted phenotype vector approximately follow a distribution with mean 0 and an identity covariance matrix. Linear regression of this adjusted phenotype vector on an equivalently adjusted genotype vector provides the same estimates as fitting the full GLS model (by the Frisch-Waugh-Lovell theorem).}
-    %\item{RSS0}{the sum of the `Ytilde` values squared. This is the sum of squared residuals under the null hypothesis of no genetic effect for the covariate and random effect adjusted model using the Frisch-Waugh-Lovell theorem.}
 
 The \code{fit} data frame contains the following columns, depending on which type of model was fit:
 \describe{
