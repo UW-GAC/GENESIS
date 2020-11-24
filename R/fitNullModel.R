@@ -40,13 +40,10 @@ setMethod("fitNullModel",
               rownames(out$fit) <- rownames(desmat$y)
 
               # Add model string elements here because we need the outcome string.
-              model <- list(
-                outcome = .modelOutcomeString(outcome, inverse_normal = FALSE),
-                covars = covars,
-                formula = .modelString(outcome, covars = covars, random = names(cov.mat),
-                                        group.var = group.var, inverse_normal = FALSE)
-              )
-              out$model <- model
+              out$model$outcome <- .modelOutcomeString(outcome, inverse_normal = FALSE)
+              out$model$covars <- covars
+              out$model$formula <- .modelString(outcome, covars = covars, random = names(cov.mat),
+                                                group.var = group.var, inverse_normal = FALSE)
 
               out
 
@@ -133,13 +130,13 @@ nullModelInvNorm <- function(null.model, cov.mat = NULL,
     # new fit data frame.
     new.nullmod$fit$sample.id <- null.model$fit$sample.id
 
-    if ("model" %in% names(null.model)) {
-      # Update model string but keep outcome the same.
-      # What happens if covMatList is different than what was passed to the original null model call?
-      previous_model <- new.nullmod$model$formula
-      new.nullmod$model$formula <- paste(.modelOutcomeString(new.nullmod$model$outcome, inverse_normal=TRUE), "~",
-                                 strsplit(previous_model, " ~ ")[[1]][2])
-    }
+    # Update model strings.
+    previous_model <- null.model$model$formula
+    new.nullmod$model$outcome <- null.model$model$outcome
+    new.nullmod$model$covars <- null.model$model$covars
+    new.nullmod$model$formula <- paste(.modelOutcomeString(null.model$model$outcome, inverse_normal=TRUE), "~",
+                               strsplit(previous_model, " ~ ")[[1]][2])
+
     new.nullmod
 
 }

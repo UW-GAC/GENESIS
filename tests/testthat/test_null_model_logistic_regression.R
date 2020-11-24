@@ -6,7 +6,7 @@ test_that("logistic", {
     nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
 
     # Check for expected names.
-    expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
+    expected_names <- c("model", "family", "varComp", "varCompCov", "fixef",
                         "betaCov", "fit", "logLik",
                         "AIC", "model.matrix",
                         "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
@@ -18,10 +18,14 @@ test_that("logistic", {
                         "resid.PY", "resid.cholesky")
     expect_true(setequal(names(nullmod$fit), expected_names))
 
+    # Check model element
+    expected_names <- c("hetResid")
+    expect_true(setequal(names(nullmod$model), expected_names))
+    expect_false(nullmod$model$hetResid)
+
     glm.mod <- glm(dat$y ~ -1 + dat$X, family = "binomial")
 
     expect_equal(nullmod$family$family, "binomial")
-    expect_false(nullmod$hetResid)
     expect_equivalent(nullmod$fit$fitted.values, fitted(glm.mod))
     expect_false(nullmod$family$mixedmodel)
     expect_equivalent(nullmod$fit$resid.marginal, resid(glm.mod, type = "working"))

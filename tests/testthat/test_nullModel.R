@@ -66,11 +66,12 @@ test_that("null model", {
     expect_equivalent(nm$fit$workingY, dat$a[c(TRUE,FALSE)])
     # Check model strings.
     expect_true("model" %in% names(nm))
-    expected_names <- c("outcome", "covars", "formula")
+    expected_names <- c("outcome", "covars", "formula", "hetResid")
     expect_true(setequal(names(nm$model), expected_names))
     expect_equal(nm$model$outcome, "a")
     expect_equal(nm$model$covars, "b")
     expect_equal(nm$model$formula, "a ~ b")
+    expect_false(nm$model$hetResid)
 
 })
 
@@ -88,7 +89,7 @@ test_that("null model - cov.mat", {
     expect_equivalent(nm$fit$workingY, dat$a)
 
     # Check model strings.
-    expected_names <- c("outcome", "covars", "formula")
+    expected_names <- c("outcome", "covars", "formula", "hetResid")
     expect_true(setequal(names(nm$model), expected_names))
     expect_equal(nm$model$outcome, "a")
     expect_equal(nm$model$covars, "b")
@@ -96,6 +97,7 @@ test_that("null model - cov.mat", {
     covMatList <- list("mymat" = covMat)
     nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMatList, verbose=FALSE)
     expect_equal(nm$model$formula, "a ~ b + (1|mymat)")
+    expect_false(nm$model$hetResid)
 })
 
 test_that("null model from data.frame", {
@@ -109,11 +111,12 @@ test_that("null model from data.frame", {
     expect_equal(rownames(nm$fit), rownames(nm$model.matrix))
     # Check model strings.
     expect_true("model" %in% names(nm))
-    expected_names <- c("outcome", "covars", "formula")
+    expected_names <- c("outcome", "covars", "formula", "hetResid")
     expect_true(setequal(names(nm$model), expected_names))
     expect_equal(nm$model$outcome, "a")
     expect_equal(nm$model$covars, "b")
     expect_equal(nm$model$formula, "a ~ b")
+    expect_false(nm$model$hetResid)
 })
 
 test_that("null model from data.frame with rownames", {
@@ -149,11 +152,12 @@ test_that("group.var", {
     expect_equal(nm$group.idx, list(a=1:3, b=4:5))
     # Check model strings.
     expect_true("model" %in% names(nm))
-    expected_names <- c("outcome", "covars", "formula")
+    expected_names <- c("outcome", "covars", "formula", "hetResid")
     expect_true(setequal(names(nm$model), expected_names))
     expect_equal(nm$model$outcome, "a")
     expect_equal(nm$model$covars, "b")
     expect_equal(nm$model$formula, "a ~ b + var(b)")
+    expect_true(nm$model$hetResid)
 })
 
 test_that("group.var is a factor", {
@@ -246,11 +250,12 @@ test_that("inv norm", {
     expect_equal(nm$fit$sample.id, inv$fit$sample.id)
     # Check model strings.
     expect_true("model" %in% names(nm))
-    expected_names <- c("outcome", "covars", "formula")
+    expected_names <- c("outcome", "covars", "formula", "hetResid")
     expect_true(setequal(names(nm$model), expected_names))
     expect_equal(inv$model$outcome, "a")
     expect_equal(inv$model$covars, "b")
     expect_equal(inv$model$formula, "rankInvNorm(resid(a)) ~ b + (1|A) + var(b)")
+    expect_true(inv$model$hetResid)
 
     # change order of covMat with respect to dat
     dimnames(covMat) <- list(rev(dat$sample.id), rev(dat$sample.id))

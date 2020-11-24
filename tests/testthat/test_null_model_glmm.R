@@ -8,7 +8,7 @@ test_that("glmm", {
     set.seed(2); cov_mat <- crossprod(matrix(rnorm(100*100, sd=0.05), 100, 100))
     nullmod <- .fitNullModel(y, dat$X, covMatList=dat$cor.mat, family="binomial", verbose=FALSE)
 
-    expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
+    expected_names <- c("family", "model", "varComp", "varCompCov", "fixef",
                         "betaCov", "fit", "logLik", "logLikR", "niter", "AIC",
                         "model.matrix", "group.idx", "cholSigmaInv", "converged",
                         "zeroFLAG", "RSS", "CX", "CXCXI", "RSS0")
@@ -19,10 +19,14 @@ test_that("glmm", {
                         "resid.conditional", "resid.PY", "resid.cholesky")
     expect_true(setequal(names(nullmod$fit), expected_names))
 
+    # Check model element
+    expected_names <- c("hetResid")
+    expect_true(setequal(names(nullmod$model), expected_names))
+    expect_false(nullmod$model$hetResid)
+
     expect_equal(nullmod$family$family, "binomial")
     expect_true(nullmod$family$mixedmodel)
     expect_true(is(nullmod, "GENESIS.nullMixedModel"))
-    expect_false(nullmod$hetResid)
     expect_true(nullmod$converged)
     expect_equivalent(nullmod$fit$outcome, y)
     expect_equivalent(nullmod$model.matrix, dat$X)
@@ -35,7 +39,7 @@ test_that("glmm fit as glm", {
     expect_message(nullmod <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial", verbose=FALSE),
                    "using glm")
 
-    expected_names <- c("family", "hetResid", "varComp", "varCompCov", "fixef",
+    expected_names <- c("family", "model", "varComp", "varCompCov", "fixef",
                         "betaCov", "fit", "logLik", "AIC",
                         "model.matrix", "group.idx", "cholSigmaInv", "converged",
                         "zeroFLAG", "RSS", "CX", "CXCXI", "RSS0")
@@ -46,10 +50,14 @@ test_that("glmm fit as glm", {
                         "resid.PY", "resid.cholesky")
     expect_true(setequal(names(nullmod$fit), expected_names))
 
+    # Check model element
+    expected_names <- c("hetResid")
+    expect_true(setequal(names(nullmod$model), expected_names))
+    expect_false(nullmod$model$hetResid)
+
     expect_equal(nullmod$family$family, "binomial")
     expect_false(nullmod$family$mixedmodel)
     expect_true(is(nullmod, "GENESIS.nullModel"))
-    expect_false(nullmod$hetResid)
     expect_true(nullmod$converged)
     expect_equivalent(nullmod$fit$outcome, dat$y)
     expect_equivalent(nullmod$model.matrix, dat$X)

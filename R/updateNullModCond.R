@@ -7,11 +7,11 @@ updateNullModCond <- function(nullmod, G, covMatList = NULL,  AIREML.tol = 1e-6,
     nullmod <- .updateNullModelFormat(nullmod)
 
     ## a few checks that may be transfered to wrapper function:
-    if (nullmod$hetResid & is.null(nullmod$group.idx)) stop("group indices are required for updating the null model")
+    if (nullmod$model$hetResid & is.null(nullmod$group.idx)) stop("group indices are required for updating the null model")
 
     #if (updateVarComp){ ## this check may be pulled out for wrapper function.
     if (is.null(covMatList)) stop("covMatList is needed for udpating variance components")
-    if (nullmod$hetResid & is.null(nullmod$group.idx)) stop("group indices are required for updating variance components")
+    if (nullmod$model$hetResid & is.null(nullmod$group.idx)) stop("group indices are required for updating variance components")
     #}
 
     if (is.null(colnames(G))) colnames(G) <- paste0("var_", 1:ncol(G))
@@ -37,9 +37,9 @@ updateNullModCond <- function(nullmod, G, covMatList = NULL,  AIREML.tol = 1e-6,
     new.nullmod <- c(new.nullmod, nullmod[extra])
     # Update the model string.
     # This should eventually be done in the wrapper for this function, once it exists.
-    previous_covar_string <- .modelCovarString(new.nullmod$model$covars)
-    new.nullmod$model$covars <- c(new.nullmod$model$covars, colnames(G))
+    previous_covar_string <- .modelCovarString(nullmod$model$covars)
+    new.nullmod$model$covars <- c(nullmod$model$covars, colnames(G))
     new_covar_string <- .modelCovarString(new.nullmod$model$covars)
-    new.nullmod$model$formula <- sub(previous_covar_string, new_covar_string, new.nullmod$model$formula)
+    new.nullmod$model$formula <- sub(previous_covar_string, new_covar_string, nullmod$model$formula)
     return(new.nullmod)
 }
