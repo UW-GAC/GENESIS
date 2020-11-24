@@ -5,7 +5,7 @@ varCompCI <- function(null.model, prop=TRUE){
     }
 
     if(prop){
-        if(null.model$hetResid){
+        if(null.model$model$hetResid){
             stop("Estimates of proportional variance are not supported with heterogeneous group residual variances")
         }
         ci <- matrix(NA, nrow=length(null.model$varComp), ncol=2)
