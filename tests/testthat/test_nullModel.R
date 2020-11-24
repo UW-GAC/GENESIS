@@ -515,3 +515,19 @@ test_that(".updateNullModelFormat works with logistic mixed models", {
   expect_true(setequal(names(nullmod$fit), expected_names))
   expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
 })
+
+test_that(".updateNullModelFormat adds RSS0", {
+  set.seed(25); a <- rnorm(100)
+  dat <- data.frame(sample.id=make.unique(rep(letters, length.out = 100), sep = ""),
+                    a=a,
+                    b=c(rep("a",50), rep("b", 50)),
+                    stringsAsFactors=FALSE)
+  dat <- AnnotatedDataFrame(dat)
+  nullmod <- fitNullModel(dat, outcome="a", covars="b", verbose=FALSE)
+  expected_rss0 <- nullmod$RSS0
+  nullmod$RSS0 <- NULL
+  expect_warning(nm2 <- .updateNullModelFormat(nullmod), "created with an older version")
+  expect_true("RSS0" %in% names(nm2))
+  expect_equal(nm2$RSS0, expected_rss0)
+
+})

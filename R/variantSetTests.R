@@ -62,9 +62,6 @@ testVariantSet <- function( nullmod, G, weights,
     # adjust burden for covariates and random effects
     if (burden.test == "Score") {
         Gtilde <- calcGtilde(nullmod, burden)
-        if(is.null(nullmod$RSS0)){
-            nullmod$RSS0 <- as.numeric(crossprod(nullmod$fit$resid.cholesky))
-        }
         out <- .testGenoSingleVarScore(Gtilde, G = burden, resid = nullmod$fit$resid.PY, RSS0 = nullmod$RSS0)
     }
     # if (burden.test == "Wald"){

@@ -33,9 +33,6 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     # run the test
     if(calc.score){
         Gtilde <- calcGtilde(nullmod, G)
-        if(is.null(nullmod$RSS0)){
-            nullmod$RSS0 <- as.numeric(crossprod(nullmod$fitresid.cholesky))
-        }
         res <- .testGenoSingleVarScore(Gtilde, G, nullmod$fit$resid.PY, nullmod$RSS0)
     }
 
