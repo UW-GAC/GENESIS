@@ -125,7 +125,9 @@ nullModelInvNorm <- function(null.model, cov.mat = NULL,
                          max.iter=max.iter, EM.iter=EM.iter,
                          verbose=verbose)
 
-    # Add sample id.
+    # Add sample id. If the fit data frame doesn't have a sample.id column, this step does nothing.
+    # In that case, it's trying to set new.nullmod$fit$sample.id to NULL, so it won't exist in the
+    # new fit data frame.
     new.nullmod$fit$sample.id <- null.model$fit$sample.id
 
     if ("model" %in% names(null.model)) {
