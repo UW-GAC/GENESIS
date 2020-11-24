@@ -40,11 +40,14 @@ setMethod("fitNullModel",
               rownames(out$fit) <- rownames(desmat$y)
 
               # Add model string elements here because we need the outcome string.
-              out$model <- .modelString(outcome, covars = covars, random = names(cov.mat),
+              model <- list(
+                outcome = .modelOutcomeString(outcome, inverse_normal = FALSE),
+                covars = covars,
+                formula = .modelString(outcome, covars = covars, random = names(cov.mat),
                                         group.var = group.var, inverse_normal = FALSE)
-              out$outcome <- .modelOutcomeString(outcome, inverse_normal = FALSE)
-              out$covars <- covars
-              #
+              )
+              out$model <- model
+
               out
 
           })
@@ -133,8 +136,8 @@ nullModelInvNorm <- function(null.model, cov.mat = NULL,
     if ("model" %in% names(null.model)) {
       # Update model string but keep outcome the same.
       # What happens if covMatList is different than what was passed to the original null model call?
-      previous_model <- new.nullmod$model
-      new.nullmod$model <- paste(sprintf("rankInvNorm(resid(%s))", new.nullmod$outcome), "~",
+      previous_model <- new.nullmod$model$formula
+      new.nullmod$model$formula <- paste(.modelOutcomeString(new.nullmod$model$outcome, inverse_normal=TRUE), "~",
                                  strsplit(previous_model, " ~ ")[[1]][2])
     }
     new.nullmod
