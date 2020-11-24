@@ -91,7 +91,7 @@
     out.class <- class(out)
     nullprep <- nullModelTestPrep(out)
     # Add to fit data frame.
-    out$fit$resid.PY <- as.vector(nullprep$resid)
+    out$fit$resid.PY <- as.vector(nullprep$resid.PY)
     out$fit$resid.cholesky <- as.vector(nullprep$resid.cholesky)
     out <- c(out, nullprep$prep_elements)
     if (return.small) {
