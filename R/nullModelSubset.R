@@ -1,6 +1,6 @@
 ## idx.exclude are indices of individuals that should be excluded (e.g. because of missing genotypes)
 nullModelSubset <- function(nullmod, idx.exclude){
-    nullmod$fit <- nullmod$fix[-idx.exclude, ]
+    nullmod$fit <- nullmod$fit[-idx.exclude, ]
     nullmod$model.matrix <- nullmod$model.matrix[-idx.exclude,]
 
     if (nullmod$family$mixedmodel){  ## n by n cholSigmaInv {
