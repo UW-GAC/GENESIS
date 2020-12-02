@@ -1,5 +1,15 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.19.9}{
+  \itemize{
+    \item Updated structure of fitNullModel objects. Null model objects with the previous structure will be automatically updated with a warning, but you may want to consider rerunning `fitNullModel` if you plan to use an older null model with the current version.
+  }
+}
+\section{Version 2.19.8}{
+  \itemize{
+    \item For BionomiRare, always restrict to variants where alt=minor allele.
+  }
+}
 \section{Version 2.19.7}{
     \itemize{
       \item Change default value of small.samp.correct in pcrelate to TRUE.
