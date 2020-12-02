@@ -279,6 +279,8 @@ isNullModelSmall <- function(null.model) {
 
     warning(msg)
 
+    outcome_name <- colnames(nullmod$outcome)
+
     # Update.
     nullmod$fit <- data.frame(
       outcome = as.vector(nullmod$outcome),
@@ -310,7 +312,8 @@ isNullModelSmall <- function(null.model) {
     # not a "model" element.
     nullmod$model <- list(
       family = nullmod$family,
-      hetResid = nullmod$hetResid
+      hetResid = nullmod$hetResid,
+      outcome = outcome_name
     )
     nullmod$family <- NULL
     nullmod$hetResid <- NULL

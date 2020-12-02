@@ -483,10 +483,11 @@ test_that(".updateNullModelFormat works with linear models", {
   expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
 
   # Check model element.
-  expected_names <- c("hetResid", "family")
+  expected_names <- c("hetResid", "family", "outcome")
   expect_true(setequal(names(nullmod$model), expected_names))
   expect_equal(nullmod$model$family, nm_old$family)
   expect_equal(nullmod$model$hetResid, nm_old$hetResid)
+  expect_equal(nullmod$model$outcome, colnames(nm_old$outcome))
 })
 
 test_that(".updateNullModelFormat works with linear mixed models", {
@@ -506,10 +507,11 @@ test_that(".updateNullModelFormat works with linear mixed models", {
   expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
 
   # Check model element.
-  expected_names <- c("hetResid", "family")
+  expected_names <- c("hetResid", "family", "outcome")
   expect_true(setequal(names(nullmod$model), expected_names))
   expect_equal(nullmod$model$family, nm_old$family)
   expect_equal(nullmod$model$hetResid, nm_old$hetResid)
+  expect_equal(nullmod$model$outcome, colnames(nm_old$outcome))
 })
 
 test_that(".updateNullModelFormat works with logistic models", {
@@ -530,10 +532,11 @@ test_that(".updateNullModelFormat works with logistic models", {
   expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
 
   # Check model element.
-  expected_names <- c("hetResid", "family")
+  expected_names <- c("hetResid", "family", "outcome")
   expect_true(setequal(names(nullmod$model), expected_names))
   expect_equal(nullmod$model$family, nm_old$family)
   expect_equal(nullmod$model$hetResid, nm_old$hetResid)
+  expect_equal(nullmod$model$outcome, colnames(nm_old$outcome))
 })
 
 test_that(".updateNullModelFormat works with logistic mixed models", {
@@ -553,10 +556,11 @@ test_that(".updateNullModelFormat works with logistic mixed models", {
   expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
 
   # Check model element.
-  expected_names <- c("hetResid", "family")
+  expected_names <- c("hetResid", "family", "outcome")
   expect_true(setequal(names(nullmod$model), expected_names))
   expect_equal(nullmod$model$family, nm_old$family)
   expect_equal(nullmod$model$hetResid, nm_old$hetResid)
+  expect_equal(nullmod$model$outcome, colnames(nm_old$outcome))
 })
 
 test_that(".updateNullModelFormat adds RSS0", {
