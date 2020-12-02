@@ -110,16 +110,16 @@ isNullModelSmall(null.model)
     \item{converged}{A logical indicator of whether the AIREML procedure for estimating the random effects variance components converged.}
     \item{zeroFLAG}{A vector of logicals the same length as \code{varComp} specifying whether the corresponding variance component estimate was set to 0 by the function due to convergence to the boundary in the AIREML procedure.}
     \item{RSS}{The residual sum of squares from the model fit. When \code{family} is gaussian, this will typically be 1 since the residual variance component is estimated separately.}
-    \item{RSS0}{the sum of the `Ytilde` values squared. This is the sum of squared residuals under the null hypothesis of no genetic effect for the covariate and random effect adjusted model using the Frisch-Waugh-Lovell theorem.}
+    \item{RSS0}{the sum of resid.cholesky squared. This is the sum of squared residuals under the null hypothesis of no genetic effect for the covariate and random effect adjusted model using the Frisch-Waugh-Lovell theorem.}
 }
 
 The \code{fit} data frame contains the following columns, depending on which type of model was fit:
 \describe{
   \item{outcome}{The original outcome vector.}
   \item{workingY}{The "working" outcome vector. When \code{family} is gaussian, this is just the original outcome vector. When \code{family} is not gaussian, this is the PQL linearization of the outcome vector. This is used by \code{\link{assocTestSingle}} or \code{\link{assocTestAggregate}} for genetic association testing. See 'Details' for more information.}
-  \item{fitted.values}{The fitted values from the model; i.e. X*beta where Z is the design matrix and beta are the effect size estimates for the fixed effects. Z*u represents the effects captured by the random effects specified with the cov.mat input.}
+  \item{fitted.values}{The fitted values from the model; i.e. X*beta where X is the design matrix and beta is the vector of effect size estimates for the fixed effects.}
   \item{resid.marginal}{The marginal residuals from the model; i.e. Y - X*beta where Y is the vector of outcome values.}
-  \item{resid.conditional}{The conditional residuals from the model; i.e. Y - X*beta - Z*u.}
+  \item{resid.conditional}{The conditional residuals from the model; i.e. Y - X*beta - Z*u, where Z*u represents the effects captured by the random effects specified with the cov.mat input.}
   \item{resid.cholesky}{The Cholesky residuals from the model; a transformation of the marginal residuals using the estimated model covariance structure such that they are uncorrelated and follow a standard multivariate Normal distribution with mean 0 and identity covariance matrix asymptotically. Linear regression of the Cholesky residual vector on an equivalently transformed genotype vector provides the same estimates as fitting the full GLS model (by the Frisch-Waugh-Lovell theorem).}
   \item{resid.PY}{The outcome vector (Y) pre-multiplied by a projection matrix (P) that adjusts for covariates, random effects, and model covariance structure. These projected outcome values are essentially what are correlated with genotype values for association testing.}
   \item{sample.id}{A vector of IDs for the samples used in the analysis, if called with an \code{AnnotatedDataFrame}.}
