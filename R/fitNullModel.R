@@ -300,6 +300,12 @@ isNullModelSmall <- function(null.model) {
     }
     rownames(nullmod$fit) <- rownames(nullmod$model.matrix)
 
+    # Add linear.predictor for mixed models.
+    if (nullmod$family$mixedmodel) {
+      nullmod$fit$linear.predictor <- nullmod$fit$workingY - nullmod$fit$resid.conditional
+    }
+
+    # Remove elements that were moved into fit.
     nullmod$outcome <- NULL
     nullmod$workingY <- NULL
     nullmod$fitted.values <- NULL

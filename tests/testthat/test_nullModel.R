@@ -502,7 +502,8 @@ test_that(".updateNullModelFormat works with linear mixed models", {
 
   # Check names of fit data frame.
   expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
-                      "resid.conditional", "resid.PY", "resid.cholesky", "sample.id")
+                      "resid.conditional", "resid.PY", "resid.cholesky", "sample.id",
+                      "linear.predictor")
   expect_true(setequal(names(nullmod$fit), expected_names))
   expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
 
@@ -551,7 +552,8 @@ test_that(".updateNullModelFormat works with logistic mixed models", {
 
   # Check names of fit data frame.
   expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
-                      "resid.conditional", "resid.PY", "resid.cholesky", "sample.id")
+                      "resid.conditional", "resid.PY", "resid.cholesky", "sample.id",
+                      "linear.predictor")
   expect_true(setequal(names(nullmod$fit), expected_names))
   expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
 
