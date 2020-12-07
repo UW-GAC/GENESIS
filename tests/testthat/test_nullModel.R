@@ -565,6 +565,30 @@ test_that(".updateNullModelFormat works with logistic mixed models", {
   expect_equal(nullmod$model$outcome, colnames(nm_old$outcome))
 })
 
+test_that(".updateNullModelFormat works with wls mixed models", {
+  nm_old <- readRDS("testdata/old_nullmod_wls.rds")
+  expect_warning(nullmod <- .updateNullModelFormat(nm_old), "created with an older version")
+  # Check for expected names.
+  expected_names <- c("model", "varComp", "varCompCov", "fixef",
+                      "betaCov", "fit", "logLik", "logLikR", "niter", "AIC", "model.matrix",
+                      "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
+                      "RSS", "CX", "CXCXI", "RSS0")
+  expect_true(setequal(names(nullmod), expected_names))
+
+  # Check names of fit data frame.
+  expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
+                      "resid.PY", "resid.cholesky", "sample.id")
+  expect_true(setequal(names(nullmod$fit), expected_names))
+  expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
+
+  # Check model element.
+  expected_names <- c("hetResid", "family", "outcome")
+  expect_true(setequal(names(nullmod$model), expected_names))
+  expect_equal(nullmod$model$family, nm_old$family)
+  expect_equal(nullmod$model$hetResid, nm_old$hetResid)
+  expect_equal(nullmod$model$outcome, colnames(nm_old$outcome))
+})
+
 test_that(".updateNullModelFormat adds RSS0", {
   set.seed(25); a <- rnorm(100)
   dat <- data.frame(sample.id=make.unique(rep(letters, length.out = 100), sep = ""),

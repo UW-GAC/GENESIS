@@ -93,8 +93,6 @@
 
     workingY <- drop(y)
 
-    resid.conditional <- workingY - drop(vc.mod$eta) ### should be the same as resid.marginal
-
     converged <- TRUE
     zeroFLAG <- NULL
 
@@ -104,7 +102,6 @@
       workingY = as.vector(workingY),
       fitted.values = unname(fitted.values),
       resid.marginal = unname(resid.marginal),
-      resid.conditional = resid.conditional,
       stringsAsFactors = FALSE
     )
 

@@ -303,6 +303,10 @@ isNullModelSmall <- function(null.model) {
     # Add linear.predictor for mixed models.
     if (nullmod$family$mixedmodel) {
       nullmod$fit$linear.predictor <- nullmod$fit$workingY - nullmod$fit$resid.conditional
+    } else {
+      # Remove resid.conditional if it exists and the model is not a mixed model.
+      # This happened in the past because resid.conditional was calculated for WLS models, but didn't need to be.
+      nullmod$fit$resid.conditional <- NULL
     }
 
     # Remove elements that were moved into fit.
