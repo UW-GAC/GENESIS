@@ -16,7 +16,8 @@ test_that("glmm", {
 
     # Check names of fit data frame.
     expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
-                        "resid.conditional", "resid.PY", "resid.cholesky")
+                        "resid.conditional", "resid.PY", "resid.cholesky",
+                        "linear.predictor")
     expect_true(setequal(names(nullmod$fit), expected_names))
 
     # Check model element
@@ -30,6 +31,7 @@ test_that("glmm", {
     expect_true(nullmod$converged)
     expect_equivalent(nullmod$fit$outcome, y)
     expect_equivalent(nullmod$model.matrix, dat$X)
+    expect_equivalent(nullmod$fit$linear.predictor, nullmod$fit$workingY - nullmod$fit$resid.conditional)
     expect_equal(nullmod$RSS, 1)
 })
 
