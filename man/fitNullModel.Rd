@@ -121,6 +121,7 @@ The \code{fit} data frame contains the following columns, depending on which typ
   \item{resid.marginal}{The marginal residuals from the model; i.e. Y - X*beta where Y is the vector of outcome values.}
   \item{resid.conditional}{The conditional residuals from the model; i.e. Y - X*beta - Z*u, where Z*u represents the effects captured by the random effects specified with the cov.mat input.}
   \item{resid.cholesky}{The Cholesky residuals from the model; a transformation of the marginal residuals using the estimated model covariance structure such that they are uncorrelated and follow a standard multivariate Normal distribution with mean 0 and identity covariance matrix asymptotically. Linear regression of the Cholesky residual vector on an equivalently transformed genotype vector provides the same estimates as fitting the full GLS model (by the Frisch-Waugh-Lovell theorem).}
+  \item{linear.predictor}{The linear predictor from the model; i.e. X*beta + Z*u, where Z*u represents the effects captured by the random effects specified with the cov.mat input.}
   \item{resid.PY}{The outcome vector (Y) pre-multiplied by a projection matrix (P) that adjusts for covariates, random effects, and model covariance structure. These projected outcome values are essentially what are correlated with genotype values for association testing.}
   \item{sample.id}{A vector of IDs for the samples used in the analysis, if called with an \code{AnnotatedDataFrame}.}
 }
