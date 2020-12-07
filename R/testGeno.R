@@ -45,7 +45,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
       if (nullmod$model$family$family != "binomial") stop("BinomiRare can only be used for binomial family.")
 
       if (nullmod$model$family$mixedmodel) { ## if this is a mixed model, use conditional probabilities $
-        phat <- expit(nullmod$fit$workingY - nullmod$fit$resid.conditional)
+        phat <- expit(nullmod$fit$linear.predictor)
       } else{ ## not a mixed model
         phat <- nullmod$fit$fitted.values
       }
@@ -56,7 +56,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     if (test == "CMP"){
       score.pval <- if(calc.score) res$Score.pval else NULL
       if (nullmod$model$family$mixedmodel) { ## if this is a mixed model, use conditional probabilities.
-        phat <- expit(nullmod$fit$workingY - nullmod$fit$resid.conditional)
+        phat <- expit(nullmod$fit$linear.predictor)
         res <- .testGenoSingleVarCMP(nullmod$fit$outcome, probs=phat, G, score.pval=score.pval, pval.thresh=recalc.pval.thresh)
       } else{ ## not a mixed model
         phat <- nullmod$fit$fitted.values

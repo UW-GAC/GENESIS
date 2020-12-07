@@ -21,9 +21,9 @@ SPA_pval <- function(score.result, nullmod, G, pval.thresh = 1){
 		# calculate the fitted values  from the null model;
                 # expit(eta) = expit(X\beta + Zb)
                 if (nullmod$model$family$mixedmodel) {
-                    mu <- as.vector(expit(nullmod$fit$workingY - nullmod$fit$resid.conditional))
+                    mu <- as.vector(expit(nullmod$fit$linear.predictor))
                 } else {
-                    mu <- as.vector(expit(nullmod$fit$workingY - nullmod$fit$resid.marginal))
+                    mu <- as.vector(expit(nullmod$fit$fitted.values))
                 }
 
 		# W is the diagonal of a matrix
