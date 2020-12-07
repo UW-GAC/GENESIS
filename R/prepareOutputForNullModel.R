@@ -210,6 +210,7 @@
       fitted.values = fitted.values,
       resid.marginal = resid.marginal,
       resid.conditional = resid.conditional,
+      linear.predictor = vc.mod$eta,
       stringsAsFactors = FALSE
     )
 
