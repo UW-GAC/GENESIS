@@ -111,6 +111,8 @@ isNullModelSmall(null.model)
     \item{zeroFLAG}{A vector of logicals the same length as \code{varComp} specifying whether the corresponding variance component estimate was set to 0 by the function due to convergence to the boundary in the AIREML procedure.}
     \item{RSS}{The residual sum of squares from the model fit. When \code{family} is gaussian, this will typically be 1 since the residual variance component is estimated separately.}
     \item{RSS0}{the sum of resid.cholesky squared. This is the sum of squared residuals under the null hypothesis of no genetic effect for the covariate and random effect adjusted model using the Frisch-Waugh-Lovell theorem.}
+    \item{CX}{a matrix needed for calculating association test statistics}
+    \item{CXCXI}{a matrix needed for calculating association test statistics}
 }
 
 The \code{fit} data frame contains the following columns, depending on which type of model was fit:
