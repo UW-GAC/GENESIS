@@ -188,7 +188,7 @@ test_that("missing sample.id in null model", {
     iterator <- SeqVarWindowIterator(svd, windowSize=5e5, windowShift=2.5e5, verbose=FALSE)
     nullmod <- fitNullModel(pData(sampleData(svd)), outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
     expect_false("sample.id" %in% names(nullmod))
-    expect_equal(length(nullmod$outcome), n)
+    expect_equal(nrow(nullmod$fit), n)
     assoc <- assocTestAggregate(iterator, nullmod, verbose=FALSE)
     expect_equal(max(assoc$results$n.sample.alt), n)
     seqClose(svd)

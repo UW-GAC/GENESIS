@@ -60,8 +60,19 @@ test_that("null model", {
     keep <- dat$sample.id[c(TRUE,FALSE)]
     nm <- fitNullModel(dat, outcome="a", covars="b", sample.id=keep, verbose=FALSE)
     expect_equal(rownames(nm$model.matrix), keep)
-    expect_equal(nm$sample.id, keep)
-    expect_equivalent(nm$workingY, dat$a[c(TRUE,FALSE)])
+    # Make sure that sample id was added to the fit data frame.
+    expect_true("sample.id" %in% names(nm$fit))
+    expect_equal(nm$fit$sample.id, keep)
+    expect_equivalent(nm$fit$workingY, dat$a[c(TRUE,FALSE)])
+    # Check model strings.
+    expect_true("model" %in% names(nm))
+    expected_names <- c("outcome", "covars", "formula", "hetResid", "family")
+    expect_true(setequal(names(nm$model), expected_names))
+    expect_equal(nm$model$outcome, "a")
+    expect_equal(nm$model$covars, "b")
+    expect_equal(nm$model$formula, "a ~ b")
+    expect_false(nm$model$hetResid)
+
 })
 
 test_that("null model - cov.mat", {
@@ -74,8 +85,19 @@ test_that("null model - cov.mat", {
     set.seed(24); covMat <- crossprod(matrix(rnorm(100,sd=0.05),10,10))
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
     nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, verbose=FALSE)
-    expect_equal(nm$sample.id, dat$sample.id)
-    expect_equivalent(nm$workingY, dat$a)
+    expect_equal(nm$fit$sample.id, dat$sample.id)
+    expect_equivalent(nm$fit$workingY, dat$a)
+
+    # Check model strings.
+    expected_names <- c("outcome", "covars", "formula", "hetResid", "family")
+    expect_true(setequal(names(nm$model), expected_names))
+    expect_equal(nm$model$outcome, "a")
+    expect_equal(nm$model$covars, "b")
+    expect_equal(nm$model$formula, "a ~ b + (1|A)")
+    covMatList <- list("mymat" = covMat)
+    nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMatList, verbose=FALSE)
+    expect_equal(nm$model$formula, "a ~ b + (1|mymat)")
+    expect_false(nm$model$hetResid)
 })
 
 test_that("null model from data.frame", {
@@ -84,7 +106,30 @@ test_that("null model from data.frame", {
                       b=c(rep("a",5), rep("b", 5)),
                       stringsAsFactors=FALSE)
     nm <- fitNullModel(dat, outcome="a", covars="b", verbose=FALSE)
-    expect_equivalent(nm$workingY, dat$a)
+    expect_equivalent(nm$fit$workingY, dat$a)
+    expect_equal(rownames(nm$model.matrix), as.character(1:nrow(dat)))
+    expect_equal(rownames(nm$fit), rownames(nm$model.matrix))
+    # Check model strings.
+    expect_true("model" %in% names(nm))
+    expected_names <- c("outcome", "covars", "formula", "hetResid", "family")
+    expect_true(setequal(names(nm$model), expected_names))
+    expect_equal(nm$model$outcome, "a")
+    expect_equal(nm$model$covars, "b")
+    expect_equal(nm$model$formula, "a ~ b")
+    expect_false(nm$model$hetResid)
+})
+
+test_that("null model from data.frame with rownames", {
+    set.seed(25); a <- rnorm(10)
+    dat <- data.frame(a=a,
+                      b=c(rep("a",5), rep("b", 5)),
+                      stringsAsFactors=FALSE)
+    keep <- letters[1:10]
+    rownames(dat) <- keep
+    nm <- fitNullModel(dat, outcome="a", covars="b", verbose=FALSE)
+    expect_equivalent(nm$fit$workingY, dat$a)
+    expect_equal(rownames(nm$model.matrix), keep)
+    expect_equal(rownames(nm$fit), keep)
 })
 
 test_that("index list", {
@@ -103,8 +148,16 @@ test_that("group.var", {
     keep <- dat$sample.id[c(TRUE,FALSE)]
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", sample.id=keep, verbose=FALSE)
     expect_equal(rownames(nm$model.matrix), keep)
-    expect_equivalent(nm$workingY, dat$a[c(TRUE,FALSE)])
+    expect_equivalent(nm$fit$workingY, dat$a[c(TRUE,FALSE)])
     expect_equal(nm$group.idx, list(a=1:3, b=4:5))
+    # Check model strings.
+    expect_true("model" %in% names(nm))
+    expected_names <- c("outcome", "covars", "formula", "hetResid", "family")
+    expect_true(setequal(names(nm$model), expected_names))
+    expect_equal(nm$model$outcome, "a")
+    expect_equal(nm$model$covars, "b")
+    expect_equal(nm$model$formula, "a ~ b + var(b)")
+    expect_true(nm$model$hetResid)
 })
 
 test_that("group.var is a factor", {
@@ -116,6 +169,9 @@ test_that("group.var is a factor", {
     dat <- AnnotatedDataFrame(dat)
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", verbose=FALSE)
     expect_equal(nm$group.idx, list(a=1:5, b=6:10))
+    # Check model strings.
+    expect_equal(nm$model$formula, "a ~ b + var(b)")
+
 })
 
 test_that("dimnames for cov.mat", {
@@ -150,7 +206,7 @@ test_that("sample selection", {
 
     keep <- rev(dat$sample.id[c(TRUE,FALSE)])
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, sample.id=keep, verbose=FALSE)
-    expect_equal(nm$sample.id, rev(keep))
+    expect_equal(nm$fit$sample.id, rev(keep))
 })
 
 test_that("change sample order", {
@@ -164,17 +220,17 @@ test_that("change sample order", {
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
 
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, verbose=FALSE)
-    expect_equal(nm$sample.id, dat$sample.id)
+    expect_equal(nm$fit$sample.id, dat$sample.id)
     expect_equal(rownames(nm$model.matrix), dat$sample.id)
 
     samp <- rev(dat$sample.id)
     covMat2 <- covMat[samp, samp]
     nm2 <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat2, verbose=FALSE)
-    expect_equal(nm2$sample.id, samp)
+    expect_equal(nm2$fit$sample.id, samp)
     expect_equal(rownames(nm2$model.matrix), samp)
 
-    expect_equal(nm$workingY, rev(nm2$workingY))
-    expect_equal(nm$resid[samp,], nm2$resid[samp,])
+    expect_equal(nm$fit$workingY, rev(nm2$fit$workingY))
+    expect_equal(nm$resid.PY[samp,], nm2$resid.PY[samp,])
     ## why are these not equal? in assocTestSingle, results are the same
     #expect_equal(nm$Ytilde[samp,], nm2$Ytilde[samp,])
     #expect_equivalent(as.matrix(nm$cholSigmaInv)[samp,samp], as.matrix(nm2$cholSigmaInv)[samp,samp])
@@ -191,30 +247,23 @@ test_that("inv norm", {
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, verbose=FALSE)
     inv <- nullModelInvNorm(nm, covMat, verbose=FALSE)
-    expect_equal(nm$sample.id, inv$sample.id)
+    expect_equal(nm$fit$sample.id, inv$fit$sample.id)
+    # Check model strings.
+    expect_true("model" %in% names(nm))
+    expected_names <- c("outcome", "covars", "formula", "hetResid", "family")
+    expect_true(setequal(names(nm$model), expected_names))
+    expect_equal(inv$model$outcome, "a")
+    expect_equal(inv$model$covars, "b")
+    expect_equal(inv$model$formula, "rankInvNorm(resid(a)) ~ b + (1|A) + var(b)")
+    expect_true(inv$model$hetResid)
+    expect_equal(nm$model$family, inv$model$family)
 
     # change order of covMat with respect to dat
     dimnames(covMat) <- list(rev(dat$sample.id), rev(dat$sample.id))
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, verbose=FALSE)
     inv <- nullModelInvNorm(nm, covMat, verbose=FALSE)
-    expect_equal(nm$sample.id, inv$sample.id)
-})
+    expect_equal(nm$fit$sample.id, inv$fit$sample.id)
 
-test_that("outcome has colnames", {
-    svd <- .testData()
-    adf <- sampleData(svd)
-    df <- pData(adf)
-
-    nullmod <- fitNullModel(df, outcome="outcome", covars="sex", verbose=FALSE)
-    expect_equal(colnames(nullmod$outcome), "outcome")
-
-    nullmod <- fitNullModel(adf, outcome="outcome", covars="sex", verbose=FALSE)
-    expect_equal(colnames(nullmod$outcome), "outcome")
-
-    nullmod <- fitNullModel(svd, outcome="outcome", covars="sex", verbose=FALSE)
-    expect_equal(colnames(nullmod$outcome), "outcome")
-
-    seqClose(svd)
 })
 
 test_that("missing data - data.frame", {
@@ -225,7 +274,7 @@ test_that("missing data - data.frame", {
     set.seed(35); covMat <- crossprod(matrix(rnorm(15*2,sd=0.05),15,15))
     nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, group="b", verbose=FALSE)
     expect_equivalent(rownames(nm$model.matrix), as.character(6:15))
-    expect_equivalent(nm$workingY, dat$a[6:15])
+    expect_equivalent(nm$fit$workingY, dat$a[6:15])
 })
 
 test_that("missing data - AnnotatedDataFrame", {
@@ -238,8 +287,8 @@ test_that("missing data - AnnotatedDataFrame", {
     set.seed(37); covMat <- crossprod(matrix(rnorm(15*2,sd=0.05),15,15))
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
     nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, group="b", verbose=FALSE)
-    expect_equal(nm$sample.id, dat$sample.id[6:15])
-    expect_equivalent(nm$workingY, dat$a[6:15])
+    expect_equal(nm$fit$sample.id, dat$sample.id[6:15])
+    expect_equivalent(nm$fit$workingY, dat$a[6:15])
 })
 
 test_that("ScanAnnotationDataFrame", {
@@ -272,12 +321,25 @@ test_that("multiple matrices", {
     set.seed(42); covMat2 <- crossprod(matrix(rnorm(15*2,sd=0.05),10,10, dimnames=list(samp,samp)))
     covMatList <- list(covMat, covMat2)
     nm1 <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMatList, verbose=FALSE)
+    nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMatList, verbose=FALSE)
+    expect_equal(nm$model$formula, "a ~ b + (1|A) + (1|B)")
 
     # name the matrices
-    covMatList <- list(a=covMat, b=covMat2)
+    covMatList <- list(m1=covMat, m2=covMat2)
     nm2 <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMatList, verbose=FALSE)
     expect_equivalent(nm1$varComp, nm2$varComp)
     expect_equal(names(nm2$varComp[1:2]), paste0("V_", names(covMatList)))
+    expect_equal(nm2$model$formula, "a ~ b + (1|m1) + (1|m2)")
+
+    # error if only one is named
+    covMatList <- list(m1 = covMat, covMat2)
+    expect_error(fitNullModel(dat, outcome="a", covars="b", cov.mat=covMatList, verbose=FALSE),
+                 "Some names for cov.mat list are missing")
+
+    # error if they have the same names
+    covMatList <- list(m1 = covMat, m1 = covMat2)
+    expect_error(fitNullModel(dat, outcome="a", covars="b", cov.mat=covMatList, verbose=FALSE),
+                 "duplicated")
 })
 
 test_that("code for checking lists identical", {
@@ -316,4 +378,229 @@ test_that("data.tables are supported", {
     nm2 <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, verbose=FALSE)
 
     expect_equal(nm1$fixef, nm2$fixef)
+})
+
+
+test_that(".modelString", {
+    outcome <- "x"
+    covars <- c("a", "b")
+    random <- c("r", "s")
+    group_var <- "g"
+    expect_equal("x ~ a + b + (1|r) + (1|s) + var(g)",
+                 .modelString(outcome, covars, random, group_var))
+    expect_equal("x ~ a + (1|r) + var(g)",
+                 .modelString(outcome, covars[1], random[1], group_var))
+    expect_equal("x ~ (1|r) + (1|s) + var(g)",
+                 .modelString(outcome, NULL, random, group_var))
+    expect_equal("x ~ a + b + var(g)",
+                 .modelString(outcome, covars, NULL, group_var))
+    expect_equal("x ~ ",
+                 .modelString(outcome, NULL, NULL, NULL))
+
+    # With inverse_normal = TRUE
+    expect_equal("rankInvNorm(resid(x)) ~ a + b + (1|r) + (1|s) + var(g)",
+                 .modelString(outcome, covars, random, group_var, inverse_normal = TRUE))
+    expect_equal("rankInvNorm(resid(x)) ~ a + (1|r) + var(g)",
+                 .modelString(outcome, covars[1], random[1], group_var, inverse_normal = TRUE))
+    expect_equal("rankInvNorm(resid(x)) ~ (1|r) + (1|s) + var(g)",
+                 .modelString(outcome, NULL, random, group_var, inverse_normal = TRUE))
+    expect_equal("rankInvNorm(resid(x)) ~ a + b + var(g)",
+                 .modelString(outcome, covars, NULL, group_var, inverse_normal = TRUE))
+    expect_equal("rankInvNorm(resid(x)) ~ ",
+                 .modelString(outcome, NULL, NULL, NULL, inverse_normal = TRUE))
+})
+
+test_that(".modelOutcomeString", {
+  outcome <- "x"
+  expect_equal(.modelOutcomeString(outcome), "x")
+  expect_equal(.modelOutcomeString(outcome, inverse_normal = TRUE),  "rankInvNorm(resid(x))")
+})
+
+
+
+#if(FALSE){
+test_that("update conditional model", {
+  set.seed(23); a <- rnorm(100)
+  set.seed(57); G <- matrix(rnorm(100, 100,1))
+  dat <- data.frame(sample.id=make.unique(rep(letters, length.out = 100), sep = ""),
+                    a=a,
+                    b=c(rep("a",50), rep("b", 50)),
+                    var_1=G[,1],
+                    stringsAsFactors=FALSE)
+  dat <- AnnotatedDataFrame(dat)
+  set.seed(24); covMat <- crossprod(matrix(rnorm(10000,sd=0.05),100,100))
+  dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
+  nullmod <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, verbose=FALSE)
+
+  # With genotype.
+  nullmod_geno <- fitNullModel(dat, outcome="a", covars=c("b", "var_1"), cov.mat=covMat, verbose=FALSE)
+  # Updated null model with unnamed genotype.
+  nullmod_update <- updateNullModCond(nullmod, G, covMatList=covMat, verbose=FALSE)
+
+  expect_equivalent(nullmod_update$varComp, nullmod_geno$varComp, tolerance=1e-4)
+  expect_equivalent(nullmod_update$fixef, nullmod_geno$fixef, tolerance=1e-4)
+  expect_equivalent(nullmod_update$cholSigmaInv, nullmod_geno$cholSigmaInv, tolerance=1e-4)
+  expect_equivalent(nullmod_update$varCompCov, nullmod_geno$varCompCov, tolerance=1e-4)
+  expect_equal(nullmod_update$model$formula, nullmod_geno$model$formula)
+  expect_equal(nullmod_update$model$covars, nullmod_geno$model$covars)
+
+  # Genotype matrix with colnames.
+  colnames(G) <- "variant"
+  nullmod_update <- updateNullModCond(nullmod, G, covMatList=covMat, verbose=FALSE)
+  expect_equal(nullmod_update$model$formula, "a ~ b + variant + (1|A)")
+  expect_equal(nullmod_update$model$covars, c("b", "variant"))
+
+})
+#}
+
+test_that(".updateNullModelFormat with current null model format", {
+  set.seed(25); a <- rnorm(100)
+  dat <- data.frame(sample.id=make.unique(rep(letters, length.out = 100), sep = ""),
+                    a=a,
+                    b=c(rep("a",50), rep("b", 50)),
+                    stringsAsFactors=FALSE)
+  dat <- AnnotatedDataFrame(dat)
+  nullmod <- fitNullModel(dat, outcome="a", covars="b", verbose=FALSE)
+  expect_silent(nm2 <- .updateNullModelFormat(nullmod))
+  expect_equal(nm2, nullmod)
+})
+
+test_that(".updateNullModelFormat works with linear models", {
+  nm_old <- readRDS("testdata/old_nullmod_lm.rds")
+  expect_warning(nullmod <- .updateNullModelFormat(nm_old), "created with an older version")
+  # Check for expected names.
+  expected_names <- c("model", "varComp", "varCompCov", "fixef",
+                      "betaCov", "fit", "logLik",
+                      "AIC", "model.matrix",
+                      "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
+                      "RSS", "CX", "CXCXI", "RSS0")
+  expect_true(setequal(names(nullmod), expected_names))
+
+  # Check names of fit data frame.
+  expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
+                      "resid.PY", "resid.cholesky", "sample.id")
+  expect_true(setequal(names(nullmod$fit), expected_names))
+  expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
+
+  # Check model element.
+  expected_names <- c("hetResid", "family", "outcome")
+  expect_true(setequal(names(nullmod$model), expected_names))
+  expect_equal(nullmod$model$family, nm_old$family)
+  expect_equal(nullmod$model$hetResid, nm_old$hetResid)
+  expect_equal(nullmod$model$outcome, colnames(nm_old$outcome))
+})
+
+test_that(".updateNullModelFormat works with linear mixed models", {
+  nm_old <- readRDS("testdata/old_nullmod_lmm.rds")
+  expect_warning(nullmod <- .updateNullModelFormat(nm_old), "created with an older version")
+  # Check for expected names.
+  expected_names <- c("model", "varComp", "varCompCov", "fixef",
+                      "betaCov", "fit", "logLik", "logLikR", "AIC", "model.matrix",
+                      "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
+                      "niter", "RSS", "CX", "CXCXI", "RSS0")
+  expect_true(setequal(names(nullmod), expected_names))
+
+  # Check names of fit data frame.
+  expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
+                      "resid.conditional", "resid.PY", "resid.cholesky", "sample.id",
+                      "linear.predictor")
+  expect_true(setequal(names(nullmod$fit), expected_names))
+  expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
+
+  # Check model element.
+  expected_names <- c("hetResid", "family", "outcome")
+  expect_true(setequal(names(nullmod$model), expected_names))
+  expect_equal(nullmod$model$family, nm_old$family)
+  expect_equal(nullmod$model$hetResid, nm_old$hetResid)
+  expect_equal(nullmod$model$outcome, colnames(nm_old$outcome))
+})
+
+test_that(".updateNullModelFormat works with logistic models", {
+  nm_old <- readRDS("testdata/old_nullmod_glm.rds")
+  expect_warning(nullmod <- .updateNullModelFormat(nm_old), "created with an older version")
+  # Check for expected names.
+  expected_names <- c("model", "varComp", "varCompCov", "fixef",
+                      "betaCov", "fit", "logLik",
+                      "AIC", "model.matrix",
+                      "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
+                      "RSS", "CX", "CXCXI", "RSS0")
+  expect_true(setequal(names(nullmod), expected_names))
+
+  # Check names of fit data frame.
+  expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
+                      "resid.PY", "resid.cholesky", "sample.id")
+  expect_true(setequal(names(nullmod$fit), expected_names))
+  expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
+
+  # Check model element.
+  expected_names <- c("hetResid", "family", "outcome")
+  expect_true(setequal(names(nullmod$model), expected_names))
+  expect_equal(nullmod$model$family, nm_old$family)
+  expect_equal(nullmod$model$hetResid, nm_old$hetResid)
+  expect_equal(nullmod$model$outcome, colnames(nm_old$outcome))
+})
+
+test_that(".updateNullModelFormat works with logistic mixed models", {
+  nm_old <- readRDS("testdata/old_nullmod_glmm.rds")
+  expect_warning(nullmod <- .updateNullModelFormat(nm_old), "created with an older version")
+  # Check for expected names.
+  expected_names <- c("model", "varComp", "varCompCov", "fixef",
+                      "betaCov", "fit", "logLik", "logLikR", "niter", "AIC", "model.matrix",
+                      "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
+                      "RSS", "CX", "CXCXI", "RSS0")
+  expect_true(setequal(names(nullmod), expected_names))
+
+  # Check names of fit data frame.
+  expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
+                      "resid.conditional", "resid.PY", "resid.cholesky", "sample.id",
+                      "linear.predictor")
+  expect_true(setequal(names(nullmod$fit), expected_names))
+  expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
+
+  # Check model element.
+  expected_names <- c("hetResid", "family", "outcome")
+  expect_true(setequal(names(nullmod$model), expected_names))
+  expect_equal(nullmod$model$family, nm_old$family)
+  expect_equal(nullmod$model$hetResid, nm_old$hetResid)
+  expect_equal(nullmod$model$outcome, colnames(nm_old$outcome))
+})
+
+test_that(".updateNullModelFormat works with wls mixed models", {
+  nm_old <- readRDS("testdata/old_nullmod_wls.rds")
+  expect_warning(nullmod <- .updateNullModelFormat(nm_old), "created with an older version")
+  # Check for expected names.
+  expected_names <- c("model", "varComp", "varCompCov", "fixef",
+                      "betaCov", "fit", "logLik", "logLikR", "niter", "AIC", "model.matrix",
+                      "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
+                      "RSS", "CX", "CXCXI", "RSS0")
+  expect_true(setequal(names(nullmod), expected_names))
+
+  # Check names of fit data frame.
+  expected_names <- c("outcome", "workingY", "fitted.values", "resid.marginal",
+                      "resid.PY", "resid.cholesky", "sample.id")
+  expect_true(setequal(names(nullmod$fit), expected_names))
+  expect_equal(rownames(nullmod$fit), rownames(nullmod$model.matrix))
+
+  # Check model element.
+  expected_names <- c("hetResid", "family", "outcome")
+  expect_true(setequal(names(nullmod$model), expected_names))
+  expect_equal(nullmod$model$family, nm_old$family)
+  expect_equal(nullmod$model$hetResid, nm_old$hetResid)
+  expect_equal(nullmod$model$outcome, colnames(nm_old$outcome))
+})
+
+test_that(".updateNullModelFormat adds RSS0", {
+  set.seed(25); a <- rnorm(100)
+  dat <- data.frame(sample.id=make.unique(rep(letters, length.out = 100), sep = ""),
+                    a=a,
+                    b=c(rep("a",50), rep("b", 50)),
+                    stringsAsFactors=FALSE)
+  dat <- AnnotatedDataFrame(dat)
+  nullmod <- fitNullModel(dat, outcome="a", covars="b", verbose=FALSE)
+  expected_rss0 <- nullmod$RSS0
+  nullmod$RSS0 <- NULL
+  nm2 <- .updateNullModelFormat(nullmod)
+  expect_true("RSS0" %in% names(nm2))
+  expect_equal(nm2$RSS0, expected_rss0)
+
 })

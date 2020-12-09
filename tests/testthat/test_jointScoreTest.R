@@ -104,7 +104,7 @@ test_that("works without sample.id element in null model", {
   dat <- .testJointInputs(nsamp=100, nsnp=10)
   nm <- dat$nullmod
   expected_output <- jointScoreTest(dat$nullmod, dat$geno)
-  nm$sample.id <- NULL
+  nm$fit$sample.id <- NULL
   jointmod <- jointScoreTest(nm, dat$geno)
   expect_equal(jointmod, expected_output)
 })

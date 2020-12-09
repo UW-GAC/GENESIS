@@ -17,9 +17,8 @@ setMethod("fitNullModel",
                    verbose = TRUE) {
 
               if (is.data.table(x)) x <- as.data.frame(x)
-              
-              desmat <- createDesignMatrix(x, outcome, covars, group.var)
 
+              desmat <- createDesignMatrix(x, outcome, covars, group.var)
               # if there was missing data, need to subset cov.mat
               if (!is.null(cov.mat)) {
                   .checkRownames(cov.mat, x)
@@ -27,15 +26,27 @@ setMethod("fitNullModel",
                       ind <- which(rownames(x) %in% rownames(desmat$X))
                       cov.mat <- .covMatSubset(cov.mat, ind)
                   }
+                  cov.mat <-  .setCovMatNames(cov.mat)
               }
-              
-              .fitNullModel(y=desmat$y, X=desmat$X, covMatList=cov.mat,
+
+
+              out <- .fitNullModel(y=desmat$y, X=desmat$X, covMatList=cov.mat,
                             group.idx=desmat$group.idx, family=family,
                             start=start, AIREML.tol=AIREML.tol,
                             max.iter=max.iter, EM.iter=EM.iter,
                             drop.zeros=drop.zeros,
                             return.small=return.small,
                             verbose=verbose)
+              rownames(out$fit) <- rownames(desmat$y)
+
+              # Add model string elements here because we need the outcome string.
+              out$model$outcome <- .modelOutcomeString(outcome, inverse_normal = FALSE)
+              out$model$covars <- covars
+              out$model$formula <- .modelString(outcome, covars = covars, random = names(cov.mat),
+                                                group.var = group.var, inverse_normal = FALSE)
+
+              out
+
           })
 
 setMethod("fitNullModel",
@@ -46,7 +57,7 @@ setMethod("fitNullModel",
                    group.var = NULL,
                    sample.id = NULL,
                    ...) {
-              
+
               x <- pData(x)
               if (is(x, "tbl")) x <- as.data.frame(x)
               rownames(x) <- x$sample.id
@@ -54,7 +65,7 @@ setMethod("fitNullModel",
               if (!is.null(cov.mat)) {
                   .checkSampleId(cov.mat, x)
               }
-              
+
               ## subset data.frame and cov.mat for selected samples
               if (!is.null(sample.id)) {
                   stopifnot(all(sample.id %in% x$sample.id))
@@ -71,9 +82,10 @@ setMethod("fitNullModel",
                   ind <- match(.covMatNames(cov.mat), rownames(x))
                   x <- x[ind,]
               }
-              
+
               nm <- fitNullModel(x, outcome, covars, cov.mat, group.var, ...)
-              nm$sample.id <- rownames(nm$model.matrix)
+              # XXX: Decide if we should reorder columns in the fit data frame such that sample.id is the first column.
+              nm$fit$sample.id <- rownames(nm$model.matrix)
               nm
           })
 
@@ -101,14 +113,32 @@ setMethod("fitNullModel",
 nullModelInvNorm <- function(null.model, cov.mat = NULL,
                              norm.option = c("by.group", "all"),
                              rescale = c("none", "model", "residSD"),
-                             AIREML.tol = 1e-4, 
+                             AIREML.tol = 1e-4,
                              max.iter = 100, EM.iter = 0,
                              verbose = TRUE) {
 
-    updateNullModOutcome(null.model, covMatList=cov.mat, rankNorm.option=norm.option,
-                         rescale=rescale, AIREML.tol=AIREML.tol, 
+    # Update null model format.
+    null.model <- .updateNullModelFormat(null.model)
+
+    new.nullmod <- updateNullModOutcome(null.model, covMatList=cov.mat, rankNorm.option=norm.option,
+                         rescale=rescale, AIREML.tol=AIREML.tol,
                          max.iter=max.iter, EM.iter=EM.iter,
                          verbose=verbose)
+
+    # Add sample id. If the fit data frame doesn't have a sample.id column, this step does nothing.
+    # In that case, it's trying to set new.nullmod$fit$sample.id to NULL, so it won't exist in the
+    # new fit data frame.
+    new.nullmod$fit$sample.id <- null.model$fit$sample.id
+
+    # Update model strings.
+    previous_model <- null.model$model$formula
+    new.nullmod$model$outcome <- null.model$model$outcome
+    new.nullmod$model$covars <- null.model$model$covars
+    new.nullmod$model$formula <- paste(.modelOutcomeString(null.model$model$outcome, inverse_normal=TRUE), "~",
+                               strsplit(previous_model, " ~ ")[[1]][2])
+
+    new.nullmod
+
 }
 
 
@@ -192,4 +222,118 @@ nullModelSmall <- function(null.model) {
 
 isNullModelSmall <- function(null.model) {
     is.null(null.model$cholSigmaInv)
+}
+
+
+.modelString <- function(outcome, covars = NULL, random = NULL, group.var = NULL, inverse_normal = FALSE) {
+    model.outcome <- .modelOutcomeString(outcome, inverse_normal = inverse_normal)
+    model.covars <- if (is.null(covars)) NULL else .modelCovarString(covars)
+    model.random <- if (is.null(random)) NULL else paste(paste0("(1|", random, ")"), collapse=" + ")
+    model.var <- if (is.null(group.var)) NULL else paste0("var(", group.var, ")")
+    model.string <- paste(c(model.covars, model.random, model.var), collapse=" + ")
+    paste(model.outcome, model.string, sep=" ~ ")
+}
+
+.modelCovarString <- function(covars) {
+  paste(covars, collapse=" + ")
+}
+
+.modelOutcomeString <- function(outcome, inverse_normal = FALSE) {
+  if (inverse_normal) {
+    return(sprintf("rankInvNorm(resid(%s))", outcome))
+  } else {
+    return(outcome)
+  }
+}
+
+.setCovMatNames <- function(cov.mat) {
+  if (!is.list(cov.mat)) {
+    cov.mat <- list(cov.mat)
+  }
+  # What about the case where one element of the matrix has names, and the others don't?
+  if (is.null(names(cov.mat))) {
+    names(cov.mat) <- LETTERS[1:length(cov.mat)]
+  } else {
+    if (any(names(cov.mat) == "")) {
+      stop("Some names for cov.mat list are missing.")
+    }
+  }
+  # Check that no names are duplicated.
+  if (any(duplicated(names(cov.mat)))) {
+    stop("Some names for cov.mat list are duplicated.")
+  }
+  cov.mat
+}
+
+# Update a null model from the old format to the new format.
+.updateNullModelFormat <- function(nullmod) {
+
+  msg <- paste(
+    "This null model was created with an older version of GENESIS and is being updated to use the current version.",
+    "Model formula strings may not exist.",
+    "Please consider re-running fitNullModel with the current GENESIS version."
+  )
+
+  # Check if old format or new format.
+  if (!("fit" %in% names(nullmod))) {
+
+    warning(msg)
+
+    outcome_name <- colnames(nullmod$outcome)
+
+    # Update.
+    nullmod$fit <- data.frame(
+      outcome = as.vector(nullmod$outcome),
+      workingY = as.vector(nullmod$workingY),
+      fitted.values = as.vector(nullmod$fitted.values),
+      resid.marginal = as.vector(nullmod$resid.marginal),
+      resid.PY = as.vector(nullmod$resid),
+      resid.cholesky = as.vector(nullmod$Ytilde),
+      stringsAsFactors = FALSE
+    )
+    optional_elements <- c("resid.conditional", "sample.id")
+    for (element in optional_elements) {
+      if (element %in% names(nullmod)) {
+        nullmod$fit[[element]] <- nullmod[[element]]
+        nullmod[[element]] <- NULL
+      }
+    }
+    rownames(nullmod$fit) <- rownames(nullmod$model.matrix)
+
+    # Add linear.predictor for mixed models.
+    if (nullmod$family$mixedmodel) {
+      nullmod$fit$linear.predictor <- nullmod$fit$workingY - nullmod$fit$resid.conditional
+    } else {
+      # Remove resid.conditional if it exists and the model is not a mixed model.
+      # This happened in the past because resid.conditional was calculated for WLS models, but didn't need to be.
+      nullmod$fit$resid.conditional <- NULL
+    }
+
+    # Remove elements that were moved into fit.
+    nullmod$outcome <- NULL
+    nullmod$workingY <- NULL
+    nullmod$fitted.values <- NULL
+    nullmod$resid.marginal <- NULL
+    nullmod$resid <- NULL
+    nullmod$Ytilde <- NULL
+
+    # Add model element. This element was added along with the fit data frame,
+    # so there shouldn't be a case where there is a "fit" element but there is
+    # not a "model" element.
+    nullmod$model <- list(
+      family = nullmod$family,
+      hetResid = nullmod$hetResid,
+      outcome = outcome_name
+    )
+    nullmod$family <- NULL
+    nullmod$hetResid <- NULL
+  }
+
+  # Add RSS0
+  if (is.null(nullmod$RSS0)) {
+    # This is a minor update - don't need to print the warning for it.
+    nullmod$RSS0 <- as.numeric(crossprod(nullmod$fit$resid.cholesky))
+  }
+
+  nullmod
 }

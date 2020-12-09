@@ -18,12 +18,12 @@ SPA_pval <- function(score.result, nullmod, G, pval.thresh = 1){
 
 	if(length(idx) > 0 ){
 
-		# calculate the fitted values  from the null model; 
+		# calculate the fitted values  from the null model;
                 # expit(eta) = expit(X\beta + Zb)
-                if (nullmod$family$mixedmodel) {
-                    mu <- as.vector(expit(nullmod$workingY - nullmod$resid.conditional))
+                if (nullmod$model$family$mixedmodel) {
+                    mu <- as.vector(expit(nullmod$fit$linear.predictor))
                 } else {
-                    mu <- as.vector(expit(nullmod$workingY - nullmod$resid.marginal))
+                    mu <- as.vector(expit(nullmod$fit$fitted.values))
                 }
 
 		# W is the diagonal of a matrix
@@ -41,8 +41,8 @@ SPA_pval <- function(score.result, nullmod, G, pval.thresh = 1){
 			s <- score.result$Score[i]
 
 			# "flip" g and s if the minor allele is the reference allele
-			if(mean(g) > 1){ 
-				g <- 2-g 
+			if(mean(g) > 1){
+				g <- 2-g
 				s <- -s
 			}
 			# identify which elements in g are hom ref
@@ -66,7 +66,7 @@ SPA_pval <- function(score.result, nullmod, G, pval.thresh = 1){
 	        	tmp <- SPAtest::Saddle_Prob(q = qtilde, mu = mu, g = g, alpha=5e-8, output = "P")
 	        }else{
 	        	tmp <- SPAtest::Saddle_Prob_fast(	q = qtilde, mu = mu, g = g, alpha = 5e-8, output = "P",
-	        										gNA = g[homRefSet], gNB = g[-homRefSet], 
+	        										gNA = g[homRefSet], gNB = g[-homRefSet],
 	        										muNA = mu[homRefSet], muNB = mu[-homRefSet])
 	        }
 
@@ -81,7 +81,7 @@ SPA_pval <- function(score.result, nullmod, G, pval.thresh = 1){
 	return(score.result)
 }
 
-### some code for vectorized version of for loop above	
+### some code for vectorized version of for loop above
 # Gadj <- G[,idx] - tcrossprod(nullmod$model.matrix, crossprod(crossprod(WX, G[,idx]), XWX.inv))
 
 # # compute variance ratio (similar to SAIGE estimator)
@@ -92,8 +92,3 @@ SPA_pval <- function(score.result, nullmod, G, pval.thresh = 1){
 # # compute inputs to SPAtest function
 # Gadj <- t(t(Gadj)*sqrt(r))
 # qtilde <- score.result$Score[idx] + crossprod(Gadj, mu)
-
-
-
-	
-

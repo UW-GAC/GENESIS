@@ -43,7 +43,7 @@
   rownames(dat$X) <- sample.ids
   rownames(dat$cor.mat) <- colnames(dat$cor.mat) <- sample.ids
   nm <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose=FALSE)
-  nm$sample.id <- sample.ids
+  nm$fit$sample.id <- sample.ids
 
   geno <- .testGenoMatrix(nsamp, nsnp=nsnp)
   rownames(geno) <- sample.ids
