@@ -196,10 +196,6 @@
 
     resid.conditional <- workingY - drop(vc.mod$eta)
 
-    converged <- vc.mod$converged
-    zeroFLAG <- vc.mod$zeroFLAG
-    niter <- vc.mod$niter
-
     # Sample-level data frame.
     fit <- data.frame(
       outcome = as.vector(y),
@@ -218,7 +214,8 @@
                 logLik = logLik, logLikR = logLikR, AIC = AIC,
                 model.matrix = X, group.idx = group.idx, 
                 cholSigmaInv = cholSigmaInv, W = vc.mod$W, 
-                converged = vc.mod$converged, zeroFLAG = vc.mod$zeroFLAG, niter = vc.mod$niter, RSS = RSS)
+                converged = vc.mod$converged, zeroFLAG = vc.mod$zeroFLAG, 
+                niter = vc.mod$niter, RSS = RSS)
     class(out) <- "GENESIS.nullMixedModel"
     return(out)
 }

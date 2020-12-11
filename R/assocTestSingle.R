@@ -7,7 +7,6 @@ setMethod("assocTestSingle",
           function(gdsobj, null.model, test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
                    recalc.pval.thresh=0.05, score.var.approx=FALSE, GxE=NULL,
                    sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), verbose=TRUE) {
-
               test <- match.arg(test)
 
               # don't use sparse matrices for imputed dosages
@@ -106,7 +105,6 @@ setMethod("assocTestSingle",
           function(gdsobj, null.model, test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
                    recalc.pval.thresh=0.05, score.var.approx=FALSE, GxE=NULL,
                    male.diploid=TRUE, verbose=TRUE) {
-
               test <- match.arg(test)
 
               # Convert old null model format if necessary.
