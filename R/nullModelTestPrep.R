@@ -1,7 +1,7 @@
 
 ## takes a null model and prepare specific arguments to streamline the testing
 nullModelTestPrep <- function(nullmod){
-    Y <- nullmod$workingY
+    Y <- nullmod$fit$workingY
     X <- nullmod$model.matrix
     C <- nullmod$cholSigmaInv
 
@@ -13,7 +13,7 @@ nullModelTestPrep <- function(nullmod){
         # Ytilde <- base::qr.resid(qrmod, as.matrix(crossprod(C, Y)))
         CY <- crossprod(C, Y)
         Ytilde <- CY - tcrossprod(CXCXI, crossprod(CY, CX))
-        resid <- C %*% Ytilde
+        resid.PY <- C %*% Ytilde
         # resid <- tcrossprod(C, crossprod(nullmod$resid.marginal, C))
 
     } else { ## cholSigmaInv is a scalar
@@ -23,22 +23,23 @@ nullModelTestPrep <- function(nullmod){
         # Ytilde <- base::qr.resid(qrmod, as.matrix(C*Y))
         CY <- C*Y
         Ytilde <- CY - tcrossprod(CXCXI, crossprod(CY, CX))
-        resid <- C*Ytilde
+        resid.PY <- C*Ytilde
         # resid <- nullmod$resid.marginal*C^2
     }
 
     # compute residual sum of squares under the null model
     RSS0 <- as.numeric(crossprod(Ytilde))
 
-    return(list(Ytilde = Ytilde, resid = resid, CX = CX, CXCXI = CXCXI, RSS0 = RSS0))
-    # return(list(Ytilde = Ytilde, resid = resid, CX = CX, CXCXI = CXCXI, qr = qrmod))
+    #return(list(Ytilde = Ytilde, resid = resid, ))
+    out <- list(resid.cholesky = Ytilde, resid.PY = resid.PY,
+                prep_elements = list(CX = CX, CXCXI = CXCXI, RSS0 = RSS0))
+    return(out)
 }
 
 
 ##  adjust genotypes for correlation structure and fixed effects
 calcGtilde <- function(nullmod, G){
     C <- nullmod$cholSigmaInv
-
     if(length(C) > 1){ # n by n cholSigmaInv (may be Diagonal)
         CG <- crossprod(C, G)
     }else{ # cholSigmaInv is a scalar

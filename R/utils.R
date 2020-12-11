@@ -147,9 +147,9 @@ setMethod("variantFilter",
 # set a sample filter, and return the index to put filtered samples
 # in the same order as the null model
 .setFilterNullModel <- function(gdsobj, null.model, verbose=TRUE) {
-    if (!is.null(null.model$sample.id)) {
-        seqSetFilter(gdsobj, sample.id=null.model$sample.id, verbose=verbose)
-        sample.index <- match(null.model$sample.id, seqGetData(gdsobj, "sample.id"))
+    if (!is.null(null.model$fit$sample.id)) {
+        seqSetFilter(gdsobj, sample.id=null.model$fit$sample.id, verbose=verbose)
+        sample.index <- match(null.model$fit$sample.id, seqGetData(gdsobj, "sample.id"))
     } else {
         sample.index <- seq_along(seqGetData(gdsobj, "sample.id"))
     }
@@ -158,8 +158,8 @@ setMethod("variantFilter",
 
 # return sample.index to match GenotypeData object to a null model
 .sampleIndexNullModel <- function(gdsobj, null.model) {
-    if (!is.null(null.model$sample.id)) {
-        sample.index <- match(null.model$sample.id, getScanID(gdsobj))
+    if (!is.null(null.model$fit$sample.id)) {
+        sample.index <- match(null.model$fit$sample.id, getScanID(gdsobj))
     } else {
         sample.index <- match(rownames(null.model$model.matrix),
                               sampleNames(getScanAnnotation(gdsobj)))
@@ -173,14 +173,16 @@ setMethod("variantFilter",
 }
 
 .matchAlleles <- function(gdsobj, var.info) {
+    seqnames <- NULL
     if (nrow(var.info) == 0) return(integer(0))
     var.info$n <- 1:nrow(var.info)
-    var.sel <- as.data.frame(currentRanges(gdsobj))
-    var.sel$seqnames <- as.character(var.sel$seqnames)
-    match.cols <- c("chr"="seqnames", "pos"="start")
-    if ("ref" %in% names(var.sel)) match.cols <- c(match.cols, "ref"="ref")
-    if ("alt" %in% names(var.sel)) match.cols <- c(match.cols, "alt"="alt")
-    var.match <- inner_join(var.info, var.sel, by=match.cols)
+    var.sel <- as.data.table(currentRanges(gdsobj))
+    var.sel <- var.sel[,`:=`(seqnames=as.character(seqnames))]
+    setnames(var.sel, c("seqnames", "start"), c("chr", "pos"))
+    match.cols <- c("chr", "pos")
+    if ("ref" %in% names(var.sel)) match.cols <- c(match.cols, "ref")
+    if ("alt" %in% names(var.sel)) match.cols <- c(match.cols, "alt")
+    var.match <- merge(as.data.table(var.info), var.sel, by=match.cols)
     unique(var.match$n)
 }
 

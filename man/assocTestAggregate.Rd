@@ -10,7 +10,8 @@
 \usage{
 \S4method{assocTestAggregate}{SeqVarIterator}(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
-                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO"),
+                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO",
+		          "BinomiRare", "CMP"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
                    sparse=TRUE, imputed=FALSE,
@@ -18,7 +19,8 @@
                    verbose=TRUE)
 \S4method{assocTestAggregate}{GenotypeIterator}(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
-                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO"),
+                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO",
+		          "BinomiRare", "CMP"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
                    male.diploid=TRUE, verbose=TRUE)
@@ -30,7 +32,7 @@
     \item{AF.max}{A numeric value specifying the upper bound on the alternate allele frequency for variants to be included in the analysis.}
     \item{weight.beta}{A numeric vector of length two specifying the two parameters of the Beta distribution used to determine variant weights; weights are given by \code{dbeta(MAF, a, b)}, where MAF is the minor allele frequency, and a and b are the two parameters specified here. \code{weight.beta = c(1,25)} gives the Wu weights; \code{weight.beta = c(0.5, 0.5)} is proportional to the Madsen-Browning weights; and \code{weight.beta = c(1,1)} gives a weight of 1 to all variants. This input is ignored when \code{weight.user} is not \code{NULL}.}
     \item{weight.user}{A character string specifying the name of a variable to be used as variant weights. This variable can be in either 1) the variantData slot of \code{gdsobj} or 2) the \code{\link{mcols}} of the \code{\link{GRanges}} or \code{\link{GRangesList}} object used to create \code{gdsobj} (when \code{gdsobj} is a \code{link{SeqVarRangeIterator}} or \code{link{SeqVarListIterator}}).  When left \code{NULL} (the default), the weights specified by \code{weight.beta} will be used.}
-    \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Burden"} (default), \code{"SKAT"}, \code{"fastSKAT"}, \code{"SMMAT"}, or \code{"SKATO"}.}
+    \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Burden"} (default), \code{"SKAT"}, \code{"fastSKAT"}, \code{"SMMAT"}, \code{"BinomiRare"}, or \code{"CMP"}.}
     % \item{burden.test}{A character string specifying the type of Burden test to perform when \code{test = "Burden"}.  Currently, the only option is \code{"Score"}.}
     % \item{burden.test}{A character string specifying the type of Burden test to perform when \code{test = "Burden"}.  The possibilities are \code{"Score"} and \code{"Wald"}. \code{"Score"} can be used for any \code{null.model}. \code{"Wald"} can not be used when the \code{null.model} is from a mixed model with a binary outcome variable.}
     %\item{burden.test}{A character string specifying the type of Burden test to perform when \code{test} = "Burden".  The possibilities are "Score", "Wald", and "Firth". "Score" can be used for any \code{null.model}. "Wald" can not be used when the \code{null.model} is from a mixed model with a binary outcome variable. "Firth" can only be used when the \code{null.model} is from a logistic regression with a binary outcome variable.}
@@ -64,6 +66,8 @@
     SKAT and SMMAT will attempt to use Davies' method (i.e. integration) to calculate p-values; if an error occurs in integration or the reported p-values are too small that they are unreliable (i.e. near machine epsilon), then the saddlepoint approximation will instead be used to calculate the p-values.
 
     The fastSKAT method of Lumley et al. (2018) uses random matrix theory to speed up the computation of SKAT p-values. When \code{test = "fastSKAT"}, the function attempts to inteligently determine which p-value calculation approach to use for each aggregation unit: (1) if min(number samples, number variants) is small enough, then the standard SKAT p-value calculation is used; (2) if min(number samples, number variants) is too large for standard SKAT, but small enough to explicitly compute the genotype covariance matrix, random projections are used to approximate the eigenvalues of the covariance matrix, and the fastSKAT p-value calculation is used; (3) if min(number samples, number variants) is too big to explicitly compute the genotype covariance matrix, random projections are used to approximate both the eigenvalues and the trace of the covariance matrix, and the fastSKAT p-value calculation is used.)
+    
+    The BinomiRare test, run by using \code{test = "BinomiRare"}, and the CMP test, run by using \code{test = "CMP"} are carrier-only, robust tests. Only variants where the alternate allele is minor will be tested. Both tests focuse on carriers of the rare variant allele ("carriers"), and use the estimated probabilities of the binary outcome within the carriers, estimated under the null of not association, and the actual number of observed outcomes, to compute p-values. BinomiRare uses the Poisson-Binomial distribution, and the CMP uses the Conway-Maxwell-Poisson distribution, and is specifically designed for mixed models. (If \code{test = "CMP"} but \code{null.model$family$mixedmodel = FALSE}, the BinomiRare test will be run instead.) These tests provide both a traditional p-value (\code{"pval"}) and a mid-p-value (\code{"midp"}), which is less conservative/more liberal, with the difference being more pronounced for small number of carriers. The BinomiRare test is described in Sofer (2017) and compared to the Score and SPA in various settings in Sofer and Guo (2020).
 }
 
 \value{A list with the following items:
@@ -117,6 +121,12 @@
     \item{min.pval}{The minimum p-value among the p-values calculated for each choice of rho.}
     \item{opt.rho}{The optimal rho value; i.e. the rho value that gave the minimum p-value.}
     \item{pval_SKATO}{The SKAT-O p-value after adjustment for searching across multiple rho values.}
+
+    If \code{test} is \code{"BinomiRare" or "CMP"}:
+    \item{n.carrier}{Number of individuals with at least one copy of the alternate allele}
+    \item{n.D.carrier}{Number of cases with at least one copy of the alternate allele}
+    \item{pval}{p-value}
+    \item{mid.pval}{mid-p-value}
 
     \item{variantInfo}{A list with as many elements as aggregate tests performed. Each element of the list is a data.frame providing information on the variants used in the aggregate test with results presented in the corresponding row of \code{results}. Each of these data.frames has the following information:}
     \item{variant.id}{The variant ID}

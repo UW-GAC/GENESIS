@@ -188,7 +188,7 @@ test_that("missing sample.id in null model", {
     iterator <- SeqVarWindowIterator(svd, windowSize=5e5, windowShift=2.5e5, verbose=FALSE)
     nullmod <- fitNullModel(pData(sampleData(svd)), outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
     expect_false("sample.id" %in% names(nullmod))
-    expect_equal(length(nullmod$outcome), n)
+    expect_equal(nrow(nullmod$fit), n)
     assoc <- assocTestAggregate(iterator, nullmod, verbose=FALSE)
     expect_equal(max(assoc$results$n.sample.alt), n)
     seqClose(svd)
@@ -224,5 +224,14 @@ test_that("user weights in variantData with list iterator", {
     assoc <- assocTestAggregate(iterator, nullmod, weight.user="weights", verbose=FALSE)
     expect_equal(assoc$variantInfo[[1]]$weight, rep(0.5, 7))
     expect_equal(assoc$variantInfo[[2]]$weight, rep(0.5, 8))
+    seqClose(svd)
+})
+
+test_that("BinomiRare", {
+    svd <- .testData()
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="status", family="binomial", verbose=FALSE)
+    assoc <- assocTestAggregate(iterator, nullmod, test="BinomiRare", verbose=FALSE)
+    expect_true(all(assoc$variantInfo[[1]]$freq <= 0.5))
     seqClose(svd)
 })

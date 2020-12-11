@@ -11,8 +11,6 @@ import(gdsfmt)
 import(Matrix)
 import(data.table)
 import(foreach)
-importFrom(dplyr, "%>%")
-importFrom(rlang, ".data")
 
 importFrom(GWASTools,
            GdsGenotypeReader,
@@ -55,18 +53,6 @@ importFrom(GenomicRanges, GRanges)
 importFrom(IRanges, IRanges, findOverlaps)
 importFrom(S4Vectors, mcols, queryHits, subjectHits)
 
-importFrom(dplyr, bind_rows, inner_join)
-
-# deprecated/defunct
-export(admixMapMM,
-       assocTestMM,
-       fitNullMM,
-       fitNullReg,
-       king2mat,
-       pcrelateMakeGRM,
-       pcrelateReadInbreed,
-       pcrelateReadKinship)
-
 exportMethods(assocTestSingle,
               assocTestAggregate,
               effectAllele,
@@ -82,10 +68,12 @@ export(admixMap,
        correctKin,
        correctK0,
        correctK2,
+       isNullModelSmall,
        jointScoreTest,
        kin2gds,
        mat2gds,
        nullModelInvNorm,
+       nullModelSmall,
        pcairPartition,
        pcrelateSampBlock,
        samplesGdsOrder,

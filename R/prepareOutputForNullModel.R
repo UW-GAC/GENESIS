@@ -29,10 +29,20 @@
     zeroFLAG <- NULL
     RSS <- ifelse(family$family == "gaussian", sum(resid.marginal^2)/varComp/(nrow(X) - ncol(X)), 1)
 
-    out <- list(family = family, hetResid = hetResid, varComp = varComp,
+    # Sample-level data frame.
+    fit <- data.frame(
+      outcome = as.vector(y),
+      workingY = as.vector(workingY),
+      fitted.values = unname(fitted.values),
+      resid.marginal = unname(resid.marginal),
+      stringsAsFactors = FALSE
+    )
+
+    model <- list(hetResid = hetResid, family = family)
+    out <- list(model = model, varComp = varComp,
                 varCompCov = varCompCov, fixef = fixef, betaCov = betaCov,
-                fitted.values = fitted.values, resid.marginal = resid.marginal,
-                logLik = logLik, AIC = AIC, workingY = workingY, outcome = y,
+                fit = fit,
+                logLik = logLik, AIC = AIC,
                 model.matrix = X, group.idx = group.idx, cholSigmaInv = cholSigmaInv,
                 converged = converged, zeroFLAG = zeroFLAG, RSS = RSS)
     class(out) <- "GENESIS.nullModel"
@@ -51,9 +61,10 @@
     }
 
     varComp <- vc.mod$varComp
-    names(varComp) <- group.names
+    vc.names <- paste0("V_", group.names)
+    names(varComp) <- vc.names
     varCompCov <- solve(vc.mod$AI)
-    dimnames(varCompCov) <- list(group.names, group.names)
+    dimnames(varCompCov) <- list(vc.names, vc.names)
 
     hetResid <- TRUE
     varNames <- colnames(X)
@@ -82,16 +93,24 @@
 
     workingY <- drop(y)
 
-    resid.conditional <- workingY - drop(vc.mod$eta) ### should be the same as resid.marginal
-
     converged <- TRUE
     zeroFLAG <- NULL
 
-    out <- list(family = family, hetResid = hetResid, varComp = varComp, varCompCov = varCompCov,
-                fixef = fixef, betaCov = betaCov, fitted.values = fitted.values,
-                resid.marginal = resid.marginal, resid.conditional = resid.conditional,
-                logLik = logLik, logLikR  = logLikR, AIC = AIC, workingY = workingY,
-                outcome = y, model.matrix = X, group.idx = group.idx, cholSigmaInv = cholSigmaInv,
+    # Sample-level data frame.
+    fit <- data.frame(
+      outcome = as.vector(y),
+      workingY = as.vector(workingY),
+      fitted.values = unname(fitted.values),
+      resid.marginal = unname(resid.marginal),
+      stringsAsFactors = FALSE
+    )
+
+    model <- list(hetResid = hetResid, family = family)
+
+    out <- list(model = model, varComp = varComp, varCompCov = varCompCov,
+                fixef = fixef, betaCov = betaCov, fit = fit,
+                logLik = logLik, logLikR  = logLikR, AIC = AIC,
+                model.matrix = X, group.idx = group.idx, cholSigmaInv = cholSigmaInv,
                 converged = converged, zeroFLAG = zeroFLAG, niter = vc.mod$niter, RSS = RSS)
     class(out) <- "GENESIS.nullModel"
     return(out)
@@ -132,11 +151,10 @@
     varComp <- vc.mod$varComp
     hetResid <- (length(group.idx) > 1)
 
-
-    names(varComp) <- paste("V_",c(names(covMatList),group.names),sep="")
+    vc.names <- paste0("V_", c(names(covMatList), group.names))
+    names(varComp) <- vc.names
     varCompCov <- matrix(NA, nrow=(m+g), ncol=(m+g))
-    colnames(varCompCov) <- paste("V_",c(names(covMatList),group.names),sep="")
-    rownames(varCompCov) <- paste("V_",c(names(covMatList),group.names),sep="")
+    dimnames(varCompCov) <- list(vc.names, vc.names)
 
 
     if(drop.zeros){
@@ -178,14 +196,29 @@
 
     resid.conditional <- workingY - drop(vc.mod$eta)
 
-    out <- list(family = family, hetResid = hetResid, varComp = varComp,
-                varCompCov = varCompCov, fixef = fixef, betaCov = betaCov,
-                fitted.values = fitted.values, resid.marginal =resid.marginal,
-                resid.conditional = resid.conditional, logLik = logLik,
-                logLikR = logLikR, AIC = AIC, workingY = workingY, outcome = y,
-                model.matrix = X, group.idx = group.idx, cholSigmaInv = cholSigmaInv,
-                W = vc.mod$W, converged = vc.mod$converged, zeroFLAG = vc.mod$zeroFLAG, 
-                niter = vc.mod$niter, RSS = RSS)
+    converged <- vc.mod$converged
+    zeroFLAG <- vc.mod$zeroFLAG
+    niter <- vc.mod$niter
+
+    # Sample-level data frame.
+    fit <- data.frame(
+      outcome = as.vector(y),
+      workingY = as.vector(workingY),
+      fitted.values = fitted.values,
+      resid.marginal = resid.marginal,
+      resid.conditional = resid.conditional,
+      linear.predictor = vc.mod$eta,
+      stringsAsFactors = FALSE
+    )
+
+    model <- list(hetResid = hetResid, family = family)
+
+    out <- list(model = model, varComp = varComp, varCompCov = varCompCov, 
+                fixef = fixef, betaCov = betaCov, fit = fit, 
+                logLik = logLik, logLikR = logLikR, AIC = AIC,
+                model.matrix = X, group.idx = group.idx, 
+                cholSigmaInv = cholSigmaInv, W = vc.mod$W, 
+                converged = vc.mod$converged, zeroFLAG = vc.mod$zeroFLAG, niter = vc.mod$niter, RSS = RSS)
     class(out) <- "GENESIS.nullMixedModel"
     return(out)
 }

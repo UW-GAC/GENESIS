@@ -5,7 +5,8 @@
 \title{Convert KING text output to an R Matrix}
 \description{\code{kingToMatrix} is used to extract the pairwise kinship coefficient estimates from the output text files of KING --ibdseg, KING --kinship, or KING --related and put them into an R object of class \code{Matrix}. One use of this matrix is that it can be read by the functions \code{\link{pcair}} and \code{\link{pcairPartition}}.}
 \usage{
-\S4method{kingToMatrix}{character}(king, estimator = c("PropIBD", "Kinship"), sample.include = NULL, thresh = NULL, verbose = TRUE)
+\S4method{kingToMatrix}{character}(king, estimator = c("PropIBD", "Kinship"), sample.include = NULL,
+    thresh = NULL, verbose = TRUE)
 \S4method{kingToMatrix}{snpgdsIBDClass}(king, sample.include = NULL, thresh = 2^(-11/2), verbose = TRUE)
 }
 \arguments{

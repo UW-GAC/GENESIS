@@ -1,5 +1,37 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.21.1}{
+  \itemize{
+    \item Updated structure of fitNullModel objects. Null model objects with the previous structure will be automatically updated with a warning, but you may want to consider rerunning `fitNullModel` if you plan to use an older null model with the current version.
+  }
+}
+\section{Version 2.19.8}{
+  \itemize{
+    \item For BionomiRare, always restrict to variants where alt=minor allele.
+  }
+}
+\section{Version 2.19.7}{
+    \itemize{
+      \item Change default value of small.samp.correct in pcrelate to TRUE.
+      \item Add options to remove NxN matrices from a null model (function nullModelSmall and fitNullModel argument return.small).
+      \item Add check for collinearity in covariates.
+    }
+}
+\section{Version 2.19.6}{
+    \itemize{
+      \item Add test options "BinomiRare" and "CMP" to assocTestSingle and assocTestAggregate.
+    }
+}
+\section{Version 2.19.5}{
+    \itemize{
+      \item Add function jointScoreTest to perform a joint score test of a set of variants using a null model and a matrix of genotype dosages.
+    }
+}
+\section{Version 2.19.4}{
+    \itemize{
+      \item Add function effectAllele to return the effect allele for association tests.
+    }
+}
 \section{Version 2.19.1}{
     \itemize{
       \item Force design matrices to be non-sparse.

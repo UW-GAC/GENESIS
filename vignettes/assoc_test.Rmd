@@ -2,7 +2,7 @@
 title: "Genetic Association Testing using the GENESIS Package"
 author: "Matthew P. Conomos"
 date: "`r Sys.Date()`"
-output: 
+output:
     BiocStyle::html_document
 vignette: >
   %\VignetteIndexEntry{Genetic Association Testing using the GENESIS Package}
@@ -38,14 +38,14 @@ HapMap_genoData <- GenotypeData(HapMap_geno)
 data("HapMap_ASW_MXL_KINGmat")
 
 # run PC-AiR
-mypcair <- pcair(HapMap_genoData, 
-                 kinobj = HapMap_ASW_MXL_KINGmat, 
+mypcair <- pcair(HapMap_genoData,
+                 kinobj = HapMap_ASW_MXL_KINGmat,
                  divobj = HapMap_ASW_MXL_KINGmat,
                  verbose = FALSE)
 mypcs <- mypcair$vectors[,1,drop=FALSE]
 
 # create a GenotypeBlockIterator object
-HapMap_genoData <- GenotypeBlockIterator(HapMap_genoData) 
+HapMap_genoData <- GenotypeBlockIterator(HapMap_genoData)
 # run PC-Relate
 mypcrel <- pcrelate(HapMap_genoData, pcs = mypcs,
                     training.set = mypcair$unrels,
@@ -60,7 +60,7 @@ pheno <- 0.2*mypcs + rnorm(mypcair$nsamp, mean = 0, sd = 1)
 # pheno is a vector of Phenotype values
 
 # make a data.frame
-mydat <- data.frame(scanID = mypcair$sample.id, pc1 = mypcair$vectors[,1], 
+mydat <- data.frame(scanID = mypcair$sample.id, pc1 = mypcair$vectors[,1],
                     pheno = pheno)
 head(mydat)
 
@@ -82,8 +82,8 @@ Example R code for creating a `GenotypeData` object is presented below.  Much mo
 ### R Matrix
 
 ```{r, eval=FALSE}
-geno <- MatrixGenotypeReader(genotype = genotype, snpID = snpID, 
-                             chromosome = chromosome, position = position, 
+geno <- MatrixGenotypeReader(genotype = genotype, snpID = snpID,
+                             chromosome = chromosome, position = position,
                              scanID = scanID)
 genoData <- GenotypeData(geno)
 ```
@@ -106,9 +106,9 @@ genoData <- GenotypeData(geno)
 The `r Biocpkg("SNPRelate")` package provides the `snpgdsBED2GDS` function to convert binary PLINK files into a GDS file.
 
 ```{r, eval=FALSE}
-snpgdsBED2GDS(bed.fn = "genotype.bed", 
-              bim.fn = "genotype.bim", 
-              fam.fn = "genotype.fam", 
+snpgdsBED2GDS(bed.fn = "genotype.bed",
+              bim.fn = "genotype.bim",
+              fam.fn = "genotype.fam",
               out.gdsfn = "genotype.gds")
 ```
 * `bed.fn` is the file path to the PLINK .bed file
@@ -120,7 +120,7 @@ Once the PLINK files have been converted to a GDS file, then a `GenotypeData` ob
 
 ## HapMap Data
 
-To demonstrate association testing with the `r Biocpkg("GENESIS")` package, we analyze SNP data from the Mexican Americans in Los Angeles, California (MXL) and African American individuals in the southwestern USA (ASW) population samples of HapMap 3.  Mexican Americans and African Americans have a diverse ancestral background, and familial relatives are present in these data. Genotype data at a subset of 20K autosomal SNPs for 173 individuals are provided as a GDS file. 
+To demonstrate association testing with the `r Biocpkg("GENESIS")` package, we analyze SNP data from the Mexican Americans in Los Angeles, California (MXL) and African American individuals in the southwestern USA (ASW) population samples of HapMap 3.  Mexican Americans and African Americans have a diverse ancestral background, and familial relatives are present in these data. Genotype data at a subset of 20K autosomal SNPs for 173 individuals are provided as a GDS file.
 
 ```{r, eval=FALSE}
 # read in GDS data
@@ -159,7 +159,7 @@ Using the `fitNullModel` function, random effects in the null model are specifie
 A linear mixed model (LMM) should be fit when analyzing a quantitative phenotype. The example R code below fits a basic null mixed model.
 ```{r}
 # fit the null mixed model
-nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1", 
+nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1",
                         cov.mat = myGRM, family = gaussian)
 ```
 * the first argument is the class `ScanAnnotationDataFrame` or `data.frame` object containing the sample data
@@ -173,8 +173,8 @@ The Average Information REML (AIREML) procedure is used to estimate the variance
 #### Multiple Fixed Effect Covariates
 The model can be fit with multiple fixed effect covariates by setting `covars` equal to vector of covariate names. For example, if we wanted to include the variables "pc1", "pc2", "sex", and "age" all as covariates in the model:
 ```{r, eval=FALSE}
-nullmod <- fitNullModel(scanAnnot, outcome = "pheno", 
-                        covars = c("pc1","pc2","sex","age"), 
+nullmod <- fitNullModel(scanAnnot, outcome = "pheno",
+                        covars = c("pc1","pc2","sex","age"),
                         cov.mat = myGRM, family = gaussian)
 ```
 
@@ -182,10 +182,10 @@ nullmod <- fitNullModel(scanAnnot, outcome = "pheno",
 The model also can be fit with multiple random effects. This is done by setting `cov.mat` equal to a list of matrices. For example, if we wanted to include a polygenic random effect with covariance structure given by the matrix "myGRM" and a household random effect with covariance structure specified by the matrix "H":
 ```{r, eval=FALSE}
 nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1",
-                        cov.mat = list("GRM" = myGRM, "House" = H), 
+                        cov.mat = list("GRM" = myGRM, "House" = H),
                         family = gaussian)
 ```
-The names of the matrices in `cov.mat` determine the names of the variance component parameters. Therefore, in this example, the output printed to the R console will include `Sigma^2_GRM` for the random effect specified by "myGRM", `Sigma^2_House` for the random effect specified by "H", and `Sigma^2_E` for the residual variance component.  
+The names of the matrices in `cov.mat` determine the names of the variance component parameters. Therefore, in this example, the output printed to the R console will include `Sigma^2_GRM` for the random effect specified by "myGRM", `Sigma^2_House` for the random effect specified by "H", and `Sigma^2_E` for the residual variance component.
 
 Note: the row and column names of each matrix used to specify the covariance structure of a random effect in the mixed model must be the unique scanIDs for each sample in the analysis.
 
@@ -193,8 +193,8 @@ Note: the row and column names of each matrix used to specify the covariance str
 
 LMMs are typically fit under an assumption of constant (homogeneous) residual variance for all observations. However, for some outcomes, there may be evidence that different groups of observations have different residual variances, in which case the assumption of homoscedasticity is violated. `group.var` can be used in order to fit separate (heterogeneous) residual variance components by some grouping variable. For example, if we have a categorical variable "study" in our `scanAnnot`, then we can estimate a different residual variance component for each unique value of "study" by using the following code:
 ```{r, eval=FALSE}
-nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1", 
-                        cov.mat = myGRM, family = gaussian, 
+nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1",
+                        cov.mat = myGRM, family = gaussian,
                         group.var = "study")
 ```
 In this example, the residual variance component `Sigma^2_E` is replaced with group specific residual variance components `Sigma^2_study1`, `Sigma^2_study2`, ..., where "study1", "study2", ... are the unique values of the "study" variable.
@@ -203,7 +203,7 @@ In this example, the residual variance component `Sigma^2_E` is replaced with gr
 
 Ideally, a generalized linear mixed model (GLMM) would be fit for a binary phenotype; however, fitting a GLMM is much more computationally demanding than fitting an LMM. To provide a compuationally efficient approach to fitting such a model, `fitNullModel` uses the penalized quasi-likelihood (PQL) approximation to the GLMM (Breslow and Clayton). The implementation of this procedure in `r Biocpkg("GENESIS")` is the same as in GMMAT (Chen et al.), and more details can be found in that manuscript.  If our outcome variable, "pheno", were binary, then the same R code could be used to fit the null model, but with `family = binomial`.
 ```{r, eval=FALSE}
-nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1", 
+nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1",
                         cov.mat = myGRM, family = binomial)
 ```
 Multiple fixed effect covariates and multiple random effects can be specified for binary phenotypes in the same way as they are for quantitative phenotypes. `group.var` does not apply here.
@@ -242,8 +242,7 @@ The `fitNullModel` function will return a list with a large amount of data. Some
 
 * `varComp`: the variance component estimates for the random effects
 * `fixef`: a `data.frame` with point estimates, standard errors, test statistics, and p-values for each of the fixed effect covariates
-* `fitted.values`: the fitted values from the model
-* `resid.marginal` and `resid.conditional`: the marginal and conditional residuals from the model
+* `fit`: a `data.frame` with the outcome, the fitted values, and various residuals from the model
 
 There are also metrics assessing model fit such as the log-likelihood (`logLik`), restricted log-likelihood (`logLikR`), and the Akaike information criterion (`AIC`).  Additionally, there are some objects such as the working outcome vector (`workingY`) and the Cholesky decomposition of the inverse of the estimated phenotype covariance matrix (`cholSigmaInv`) that are used by the `assocTestSingle` function for association testing. Further details describing all of the output can be found with the command `help(fitNullModel)`.
 
@@ -260,7 +259,7 @@ head(assoc)
 * `freq`: the frequency of the tested ("A") allele
 * `MAC`: the minor allele count
 * `Score`: the value of the score function
-* `Score.SE`: the estimated standard error of the score 
+* `Score.SE`: the estimated standard error of the score
 * `Score.Stat`: the score Z test statistic
 * `Score.pval`: the p-value based on the score test statistic
 * `Est`: an approximation of the effect size estimate (beta) for that SNP

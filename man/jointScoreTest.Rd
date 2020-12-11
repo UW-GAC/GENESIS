@@ -3,10 +3,10 @@
 \title{Perform a joint score test}
 \description{\code{jointScoreTest} is used to perform a joint score test of a set of variants using a null model and a matrix of genotype dosages.}
 \usage{
-jointScoreTest(nullmod, G)
+jointScoreTest(null.model, G)
 }
 \arguments{
-  \item{nullmod}{A null model object returned by \code{\link{fitNullModel}}.}
+  \item{null.model}{A null model object returned by \code{\link{fitNullModel}}.}
   \item{G}{A matrix of genotype dosages, where samples are the rows and variants are the columns.}
 }
 \details{
@@ -15,7 +15,7 @@ jointScoreTest(nullmod, G)
 
   The \code{G} matrix must be formatted such that the rows are samples and the columns are variants, and the entries are the dosage for that sample and variant.
   The matrix must have \code{sample.id} as rownames; this is used to match the genotypes to the null model.
-  Therefore, the same sample identifiers must be used in both \code{nullmod} and \code{G}.
+  Therefore, the same sample identifiers must be used in both \code{null.model} and \code{G}.
   \code{G} can contain additional samples and ordering is unimportant as long as all samples from the null model are present; it will be subset and reordered to match the set of samples in the null model.
 
   Colnames for \code{G} are not required.
@@ -25,10 +25,10 @@ jointScoreTest(nullmod, G)
   Missing data in \code{G} are not allowed.
 }
 \value{\code{jointScoreTest} returns a list with the following elements:
-  \item{Stat.joint}{Squared joint score test statistic for all variants in \code{G}.}
-  \item{pval.joint}{p-value associated with the joint score test statistic drawn from a \deqn{\chi^2} distribution with \eqn{n_\mathrm{variants}} degrees of freedom.}
-  \item{pve.joint}{Estimate of the proportion of variance explained jointly by the variants in \code{G}.}
-  \item{fixef}{A data.frame with joint effect size estimates (Est), standard errors (SE), chi-squared test statistics (Stat), p-values (pval), and estimated proportion of variance explained (pve) for each of the variants specified in \code{G}.}
+  \item{Joint.Stat}{Squared joint score test statistic for all variants in \code{G}.}
+  \item{Joint.pval}{p-value associated with the joint score test statistic drawn from a \deqn{\chi^2} distribution with \eqn{n_\mathrm{variants}} degrees of freedom.}
+  \item{Joint.PVE}{Estimate of the proportion of variance explained jointly by the variants in \code{G}.}
+  \item{fixef}{A data.frame with joint effect size estimates (Est), standard errors (SE), chi-squared test statistics (Stat), p-values (pval), and estimated proportion of variance explained (PVE) for each of the variants specified in \code{G}.}
   \item{betaCov}{Estimated covariance matrix for the variants in \code{G}.}
 }
 %\references{

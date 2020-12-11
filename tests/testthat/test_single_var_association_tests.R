@@ -84,6 +84,44 @@ test_that("singleVarTest - logistic - score", {
 })
 
 
+### BR and CMP unit tests -- no equivalent built-in functions available
+test_that("singleVarTest - logistic - BR", {
+    n <- 100
+    nullmod <- .testNullmod(n, MM=FALSE, binary=TRUE)
+    geno <- .testGenoMatrix(n)
+    test.br <- testGenoSingleVar(nullmod, G = geno, test = "BinomiRare")
+    expect_true(all(colSums(geno) >= test.br$n.carrier))
+    expect_true(all(test.br$n.carrier >= test.br$n.D.carrier))
+    expect_true(all(test.br$pval > test.br$mid.pval))
+
+    test.score <- testGenoSingleVar(nullmod, G = geno, test = "Score")
+    test.br <- testGenoSingleVar(nullmod, G = geno, test = "BinomiRare", recalc.pval.thresh = 0)
+    expect_equal(test.score$Score.pval, test.br$pval)
+    expect_equal(test.score$Score.pval, test.br$mid.pval)
+})
+
+test_that("singleVarTest - logistic - CMP", {
+    n <- 100
+    nullmod <- .testNullmod(n, MM=TRUE, binary=TRUE)
+    geno <- .testGenoMatrix(n)
+    test.cmp <- testGenoSingleVar(nullmod, G = geno, test = "CMP")
+    expect_true(all(colSums(geno) >= test.cmp$n.carrier))
+    expect_true(all(test.cmp$n.carrier >= test.cmp$n.D.carrier))
+    expect_true(all(test.cmp$pval > test.cmp$mid.pval))
+
+    test.score <- testGenoSingleVar(nullmod, G = geno, test = "Score")
+    test.cmp <- testGenoSingleVar(nullmod, G = geno, test = "CMP", recalc.pval.thresh = 0)
+    expect_equal(test.score$Score.pval, test.cmp$pval)
+    expect_equal(test.score$Score.pval, test.cmp$mid.pval)
+
+    # CMP switches to BinomiRare if not a mixed model
+    nullmod <- .testNullmod(n, MM=FALSE, binary=TRUE)
+    test.cmp <- testGenoSingleVar(nullmod, G = geno, test = "CMP")
+    test.br <- testGenoSingleVar(nullmod, G = geno, test = "BinomiRare")
+    expect_equal(test.br$pval, test.cmp$pval)
+})
+
+
 test_that("GxE", {
     n <- 100
     dat <- .testNullInputs(n)
@@ -132,4 +170,40 @@ test_that("SPA_pval works with empty input", {
     empty.G <- matrix(nrow=n, ncol=0)
     test.spa <- SPA_pval(score.result=empty, nullmod=nullmod, G=empty.G)
     expect_equal(nrow(test.spa), 0)
+})
+
+
+test_that("small null model", {
+    n <- 100
+    dat <- .testNullInputs(n, binary=TRUE)
+    nullmod.big <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial",
+                                 return.small=FALSE, verbose=FALSE)
+    geno <- .testGenoMatrix(n)
+    test.br.big <- testGenoSingleVar(nullmod.big, G = geno, test = "BinomiRare")
+    test.cmp.big <- testGenoSingleVar(nullmod.big, G = geno, test = "CMP")
+    
+    nullmod.small1 <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial",
+                                    return.small=TRUE, verbose=FALSE)
+    expect_equal(setdiff(names(nullmod.big), names(nullmod.small1)),
+                 c("cholSigmaInv", "CX", "CXCXI"))
+    
+    test.br.small1 <- testGenoSingleVar(nullmod.small1, G = geno, test = "BinomiRare")
+    expect_equal(test.br.big, test.br.small1)
+    test.cmp.small1 <- testGenoSingleVar(nullmod.small1, G = geno, test = "CMP")
+    expect_equal(test.cmp.big, test.cmp.small1)
+
+    nullmod.small2 <- nullModelSmall(nullmod.big)
+    expect_equal(setdiff(names(nullmod.big), names(nullmod.small2)),
+                 c("cholSigmaInv", "CX", "CXCXI"))
+
+    test.br.small2 <- testGenoSingleVar(nullmod.small2, G = geno, test = "BinomiRare")
+    expect_equal(test.br.big, test.br.small2)
+    test.cmp.small2 <- testGenoSingleVar(nullmod.small2, G = geno, test = "CMP")
+    expect_equal(test.cmp.big, test.cmp.small2)
+
+    expect_error(testGenoSingleVar(nullmod.small2, G = geno, test = "BinomiRare",
+                                   recalc.pval.thresh=0.5),
+                 "small null model cannot be used")
+    expect_error(testGenoSingleVar(nullmod.small2, G = geno, test = "Score"),
+                 "small null model cannot be used")
 })
