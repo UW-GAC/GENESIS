@@ -1,5 +1,5 @@
 ## function that estimates the ratio (r) of the true Var(score) to the approximated Var(score)
-## this needs to be run before using the score.var.approx option in assocTestSingle
+## this needs to be run before using the approx.score.var option in assocTestSingle
 ## this is based off of the SAIGE variance approximation
 
 setGeneric("scoreVarRatio", function(gdsobj, ...) standardGeneric("scoreVarRatio"))
@@ -11,6 +11,9 @@ setMethod("scoreVarRatio",
 
           	# don't use sparse matrices for imputed dosages
           	if (imputed) sparse <- FALSE
+
+               # Convert old null model format if necessary.
+               null.model <- .updateNullModelFormat(null.model)
 
           	# coerce null.model if necessary
           	if (sparse) null.model <- .nullModelAsMatrix(null.model)
@@ -59,7 +62,7 @@ setMethod("scoreVarRatio",
           	GPG <- colSums(Gtilde^2)
 
           	# approx variance
-          	Gtilde <- calcGtildeWithW(nullmod, geno, r = 1)
+          	Gtilde <- calcGtildeApprox(nullmod, geno, r = 1)
           	GWG <- colSums(Gtilde^2)
 
           	# results

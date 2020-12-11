@@ -5,7 +5,7 @@ setGeneric("assocTestSingle", function(gdsobj, ...) standardGeneric("assocTestSi
 setMethod("assocTestSingle",
           "SeqVarIterator",
           function(gdsobj, null.model, test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
-                   recalc.pval.thresh=0.05, score.var.approx=FALSE, GxE=NULL,
+                   recalc.pval.thresh=0.05, approx.score.var=FALSE, GxE=NULL,
                    sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), verbose=TRUE) {
               test <- match.arg(test)
 
@@ -17,10 +17,10 @@ setMethod("assocTestSingle",
 
               # check null.model for needed components
               if(test %in% c('Score', 'Score.SPA')){
-                if(score.var.approx){
-                  if(is.null(null.model$r)) stop("null.model must have element `r` to use score.var.approx")
+                if(approx.score.var){
+                  if(is.null(null.model$score.var.ratio)) stop("null.model must have element score.var.ratio when approx.score.var = TRUE")
                 }else{
-                  if(is.null(null.model$cholSigmaInv)) stop("null.model must have element `cholSigmaInv`")
+                  if(is.null(null.model$cholSigmaInv)) stop("null.model must have element cholSigmaInv when approx.score.var = FALSE")
                 }
               }
               
@@ -83,7 +83,7 @@ setMethod("assocTestSingle",
                   } else {
                       assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test,
                                                  recalc.pval.thresh=recalc.pval.thresh,
-                                                 score.var.approx=score.var.approx)
+                                                 approx.score.var=approx.score.var)
 
                       res[[i]] <- cbind(var.info, n.obs, freq, assoc)
                   }
@@ -103,7 +103,7 @@ setMethod("assocTestSingle",
 setMethod("assocTestSingle",
           "GenotypeIterator",
           function(gdsobj, null.model, test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
-                   recalc.pval.thresh=0.05, score.var.approx=FALSE, GxE=NULL,
+                   recalc.pval.thresh=0.05, approx.score.var=FALSE, GxE=NULL,
                    male.diploid=TRUE, verbose=TRUE) {
               test <- match.arg(test)
 
@@ -112,10 +112,10 @@ setMethod("assocTestSingle",
 
               # check null.model for needed components
               if(test %in% c('Score', 'Score.SPA')){
-                if(score.var.approx){
-                  if(is.null(null.model$r)) stop("null.model must have element `r` to use score.var.approx")
+                if(approx.score.var){
+                  if(is.null(null.model$score.var.ratio)) stop("null.model must have element score.var.ratio when approx.score.var = TRUE")
                 }else{
-                  if(is.null(null.model$cholSigmaInv)) stop("null.model must have element `cholSigmaInv`")
+                  if(is.null(null.model$cholSigmaInv)) stop("null.model must have element cholSigmaInv when approx.score.var = FALSE")
                 }
               }
 
@@ -170,7 +170,7 @@ setMethod("assocTestSingle",
                   } else {
                       assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test,
                                                  recalc.pval.thresh=recalc.pval.thresh,
-                                                 score.var.approx=score.var.approx)
+                                                 approx.score.var=approx.score.var)
 
                       res[[i]] <- cbind(var.info, n.obs, freq, assoc)
                   }
