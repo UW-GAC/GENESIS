@@ -33,7 +33,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     # run the test
     if(calc.score){
         if(approx.score.SE){
-            Gtilde <- calcGtildeApprox(nullmod, G, r = nullmod$score.var.ratio)
+            Gtilde <- calcGtildeApprox(nullmod, G, r = nullmod$score.se.ratio)
         }else{
             Gtilde <- calcGtilde(nullmod, G)
         }
