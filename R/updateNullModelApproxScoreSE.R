@@ -17,10 +17,10 @@ setMethod("updateNullModelApproxScoreSE",
 
                # samples in null model
                sampid <- null.model$fit$sample.id
-               if(verbose) message(paste('Using', length(sampid), 'samples in null.model'))
+               if(verbose) message(paste('null.model has', length(sampid), 'samples'))
 
                # select a random set of variants meeting min.mac in the sample set
-               varid <- .selectRandomVars(gdsobj, sample.id = sampid, nvar = nvar, min.mac = min.mac, verbose = verbose)
+               varid <- .selectRandomVars(gdsobj, sample.id = sampid, nvar = nvar, min.mac = min.mac)
                if(verbose) message(paste('Selected', length(varid), 'variants with MAC >=', min.mac))
 
                # calculate Score.SE using both approaches
@@ -50,7 +50,7 @@ setGeneric(".selectRandomVars", function(gdsobj, ...) standardGeneric(".selectRa
 
 setMethod(".selectRandomVars",
           "SeqVarData",
-          function(gdsobj, sample.id = NULL, nvar = 100, min.mac = 20, verbose = TRUE){
+          function(gdsobj, sample.id = NULL, nvar = 100, min.mac = 20){
 
                # number of variants in the GDS object
                nvar.gdsobj <- SeqArray::seqSummary(gdsobj, verbose = FALSE)$num.variant
@@ -59,13 +59,13 @@ setMethod(".selectRandomVars",
                out <- NULL
                while(length(out) < nvar){
                     # reset filters
-                    SeqArray::seqSetFilter(gdsobj, sample.id = sample.id, verbose = verbose)
+                    SeqArray::seqSetFilter(gdsobj, sample.id = sample.id, verbose = FALSE)
                     # sample variants
                     var.rand <- sort(sample.int(nvar.gdsobj, size = nvar, replace = FALSE))
                     # filter to random sample
-                    SeqArray::seqSetFilter(gdsobj, variant.sel = var.rand, verbose = verbose)
+                    SeqArray::seqSetFilter(gdsobj, variant.sel = var.rand, verbose = FALSE)
                     # filter to MAC threshold
-                    if(min.mac > 0) SeqArray::seqSetFilterCond(gdsobj, mac = min.mac, verbose = verbose)
+                    if(min.mac > 0) SeqArray::seqSetFilterCond(gdsobj, mac = min.mac, verbose = FALSE)
                     # collect selected variants
                     out <- sort(unique(c(out, seqGetData(gdsobj, 'variant.id'))))
                }

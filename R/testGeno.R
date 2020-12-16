@@ -12,9 +12,9 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     test <- match.arg(test)
     calc.score <- test %in% c("Score", "Score.SPA") | (recalc.pval.thresh < 1)
 
-    if (isNullModelSmall(nullmod) && (calc.score || !is.null(E))) {
-        stop("small null model cannot be used with options provided")
-    }
+    # if (isNullModelSmall(nullmod) && (calc.score || !is.null(E))) {
+    #     stop("small null model cannot be used with options provided")
+    # }
 
     G <- .genoAsMatrix(nullmod, G)
 
