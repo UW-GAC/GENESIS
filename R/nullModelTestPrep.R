@@ -77,8 +77,8 @@ calcGtildeApprox <- function(nullmod, G, r = 1){
     XWX.inv <- solve(crossprod(X,WX))
     # G - X(X'WX)^{-1}(X'WG) (formula from SAIGE)
     Gtilde <- G - tcrossprod(X, crossprod(crossprod(WX, G), XWX.inv))
-    # multiply by sqrt(r*W) so that Gtilde'Gtilde = variance
-    Gtilde <- sqrt(r*W)*Gtilde
+    # multiply by r*sqrt(W) so that Gtilde'Gtilde = variance
+    Gtilde <- r*sqrt(W)*Gtilde
 
     return(Gtilde)
 }
