@@ -114,12 +114,15 @@ setMethod("assocTestSingle",
               null.model <- .updateNullModelFormat(null.model)
 
               # check null.model for needed components
-              if(test %in% c('Score', 'Score.SPA')){
-                if(approx.score.SE){
-                  if(is.null(null.model$score.se.ratio)) stop("null.model must have element score.se.ratio when approx.score.SE = TRUE")
-                }else{
-                  if(is.null(null.model$cholSigmaInv)) stop("null.model must have element cholSigmaInv when approx.score.SE = FALSE")
-                }
+              calc.score <- test %in% c("Score", "Score.SPA") | (recalc.pval.thresh < 1)
+              if(calc.score && approx.score.SE && is.null(null.model$score.se.ratio)){
+              	stop("null.model must have score.se.ratio when approx.score.SE = TRUE")
+              } 
+              if(calc.score && !(approx.score.SE) && isNullModelSmall(null.model)){
+              	stop("small null.model cannot be used when approx.score.SE = FALSE")
+              }
+              if(!is.null(GxE) && isNullModelSmall(nullmod)){
+              	stop("small null.model cannot be used with GxE")
               }
 
               # filter samples to match null model

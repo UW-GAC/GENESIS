@@ -3,45 +3,33 @@
 ## this needs to be run before using the approx.score.se option in assocTestSingle
 ## this is based off of the SAIGE variance approximation
 
-setGeneric("updateNullModelApproxScoreSE", function(gdsobj, ...) standardGeneric("updateNullModelApproxScoreSE"))
+updateNullModelApproxScoreSE <- function(gdsobj, null.model, nvar = 100, min.mac = 20, 
+     sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), verbose=TRUE){
 
-setMethod("updateNullModelApproxScoreSE",
-          "SeqVarData",
-          function(gdsobj, null.model, nvar = 100, min.mac = 20, 
-                    sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), 
-                    verbose=TRUE){
+     # check for W matrix
+     if (is.null(null.model$W)) stop('This null model was created with an older version of GENESIS and is not compatible with this analysis; 
+          please re-run your null model with the latest version.')
 
-               # check for W matrix
-               if (is.null(null.model$W)) stop('This null model was created with an older version of GENESIS and is not compatible with this analysis; 
-                    please re-run your null model with the latest version.')
+     # samples in null model
+     sampid <- null.model$fit$sample.id
+     if(verbose) message(paste('null.model has', length(sampid), 'samples'))
 
-               # samples in null model
-               sampid <- null.model$fit$sample.id
-               if(verbose) message(paste('null.model has', length(sampid), 'samples'))
+     # select a random set of variants meeting min.mac in the sample set
+     varid <- .selectRandomVars(gdsobj, sample.id = sampid, nvar = nvar, min.mac = min.mac, verbose = verbose)
+     if(verbose) message(paste('Selected', length(varid), 'variants with MAC >=', min.mac))
 
-               # select a random set of variants meeting min.mac in the sample set
-               varid <- .selectRandomVars(gdsobj, sample.id = sampid, nvar = nvar, min.mac = min.mac)
-               if(verbose) message(paste('Selected', length(varid), 'variants with MAC >=', min.mac))
+     # calculate Score.SE using both approaches
+     tab <- .scoreSEtable(gdsobj, null.model, variant.id = varid, 
+                         sparse = sparse, imputed = imputed, male.diploid = male.diploid, genome.build = genome.build, verbose = verbose)
+	
+     # calculate the score.se.ratio estimate
+     score.se.ratio <- .scoreSEratio(tab)
 
-               # calculate Score.SE using both approaches
-               tab <- .scoreSEtable(gdsobj, null.model, variant.id = varid, 
-                                   sparse = sparse, imputed = imputed, male.diploid = male.diploid, genome.build = genome.build, verbose = verbose)
-          	
-               # calculate the score.se.ratio estimate
-               score.se.ratio <- .scoreSEratio(tab)
-
-               # update the null model
-               null.model <- nullModelSmall(null.model)
-               null.model$score.se.ratio <- score.se.ratio
-               return(null.model)
-          })
-
-setMethod("updateNullModelApproxScoreSE",
-          "GenotypeIterator",
-          function(gdsobj){
-
-          })
-
+     # update the null model
+     null.model <- nullModelSmall(null.model)
+     null.model$score.se.ratio <- score.se.ratio
+     return(null.model)
+}
 
 
 ## function to get a random sample of variants with a minimum MAC
@@ -50,16 +38,17 @@ setGeneric(".selectRandomVars", function(gdsobj, ...) standardGeneric(".selectRa
 
 setMethod(".selectRandomVars",
           "SeqVarData",
-          function(gdsobj, sample.id = NULL, nvar = 100, min.mac = 20){
+          function(gdsobj, sample.id = NULL, nvar = 100, min.mac = 20, verbose = TRUE){
 
                # number of variants in the GDS object
                nvar.gdsobj <- SeqArray::seqSummary(gdsobj, verbose = FALSE)$num.variant
                if(nvar.gdsobj < nvar) stop('requested more variants than available in gdsobj')
 
+               # filter to sample set in null.model
+               SeqArray::seqSetFilter(gdsobj, sample.id = sample.id, verbose = verbose)
+
                out <- NULL
                while(length(out) < nvar){
-                    # reset filters
-                    SeqArray::seqSetFilter(gdsobj, sample.id = sample.id, verbose = FALSE)
                     # sample variants
                     var.rand <- sort(sample.int(nvar.gdsobj, size = nvar, replace = FALSE))
                     # filter to random sample
@@ -76,8 +65,37 @@ setMethod(".selectRandomVars",
                })
 
 setMethod(".selectRandomVars",
-          "GenotypeIterator",
-          function(gdsobj){
+          "GenotypeData",
+          function(gdsobj, sample.id = NULL, nvar = 100, min.mac = 20, verbose = TRUE){
+
+               stop("function not yet implemented for GenotypeData objects")
+
+               # # number of variants in the GDS object
+               # nvar.gdsobj <- GWASTools::nsnp(gdsobj)
+               # if(nvar.gdsobj < nvar) stop('requested more variants than available in gdsobj')
+
+               # # filter to sample set in null.model
+               # sample.index <- .sampleIndexNullModel(gdsobj, null.model)
+
+               # out <- NULL
+               # while(length(out) < nvar){
+               #      # sample variants
+               #      var.rand <- sort(sample.int(nvar.gdsobj, size = nvar, replace = FALSE))
+               #      # get genotypes for random sample
+               #      geno <- GWASTools::getGenotypeSelection(gdsobj, scan=sample.index, snp=var.rand, order="selection", 
+               #                                    transpose=TRUE, use.names=FALSE, drop=FALSE)
+               #      # compute MAC
+               #      freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index, male.diploid=male.diploid)
+
+               #      # filter to MAC threshold
+               #      if(min.mac > 0) SeqArray::seqSetFilterCond(gdsobj, mac = min.mac, verbose = FALSE) ### UPDATE
+               #      # collect selected variants
+               #      out <- sort(unique(c(out, seqGetData(gdsobj, 'variant.id')))) ### UPDATE
+               # }
+
+               # # sample down to number requested
+               # out <- sample(out, size = nvar, replace = FALSE)
+               # return(out)
 
           })
 
@@ -151,6 +169,61 @@ setMethod(".scoreSEtable",
                # results
                tab <- cbind(var.info, n.obs, freq, score.SE.true = se.true, score.SE.approx = se.approx, score.SE.ratio = se.true/se.approx)
                return(tab)
+
+          })
+
+setMethod(".scoreSEtable",
+          "GenotypeData",
+          function(gdsobj, null.model, variant.id, male.diploid=TRUE, verbose = TRUE){
+
+               stop("function not implemented for GenotypeData objects")
+
+               # # filter samples to match null model
+               # sample.index <- .sampleIndexNullModel(gdsobj, null.model)
+
+               # # filter variants
+               # seqSetFilter(gdsobj, variant.id = variant.id, verbose = verbose) ### UPDATE
+
+               # # variant info
+               # var.info <- variantInfo(gdsobj)
+
+               # # read in genotype data
+               # geno <- getGenotypeSelection(gdsobj, scan=sample.index, order="selection",
+               #                                 transpose=TRUE, use.names=FALSE, drop=FALSE)
+
+               # # take note of number of non-missing samples
+               # n.obs <- .countNonMissing(geno, MARGIN = 2)
+
+               # # allele frequency
+               # freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index, male.diploid=male.diploid)
+
+               # # filter monomorphic variants
+               # keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq)
+               # if (!all(keep)) {
+               #      var.info <- var.info[keep,,drop=FALSE]
+               #      geno <- geno[,keep,drop=FALSE]
+               #      n.obs <- n.obs[keep]
+               #      freq <- freq[keep,,drop=FALSE]
+               # }
+
+               # # mean impute missing values
+               # if (any(n.obs < nrow(geno))) {
+               #      geno <- .meanImpute(geno, freq$freq)
+               # }
+
+               # geno <- .genoAsMatrix(null.model, geno)
+
+               # # true variance
+               # Gtilde <- calcGtilde(null.model, geno)
+               # se.true <- sqrt(colSums(Gtilde^2)) # sqrt(GPG)
+
+               # # approx variance
+               # Gtilde <- calcGtildeApprox(null.model, geno, r = 1)
+               # se.approx <- sqrt(colSums(Gtilde^2)) #sqrt(GWG)
+
+               # # results
+               # tab <- cbind(var.info, n.obs, freq, score.SE.true = se.true, score.SE.approx = se.approx, score.SE.ratio = se.true/se.approx)
+               # return(tab)
 
           })
 
