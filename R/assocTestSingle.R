@@ -15,17 +15,9 @@ setMethod("assocTestSingle",
               # Convert old null model format if necessary.
               null.model <- .updateNullModelFormat(null.model)
 
-              # check null.model for needed components
-              calc.score <- test %in% c("Score", "Score.SPA") | (recalc.pval.thresh < 1)
-              if(calc.score && approx.score.SE && is.null(null.model$score.se.ratio)){
-              	stop("null.model must have score.se.ratio when approx.score.SE = TRUE")
-              } 
-              if(calc.score && !(approx.score.SE) && isNullModelSmall(null.model)){
-              	stop("small null.model cannot be used when approx.score.SE = FALSE")
-              }
-              if(!is.null(GxE) && isNullModelSmall(nullmod)){
-              	stop("small null.model cannot be used with GxE")
-              }
+              # check that the provided null model is compatible with the requested test
+              .checkNullModelTestSingle(null.model = null.model, test = test, 
+              	recalc.pval.thresh = recalc.pval.thresh, approx.score.SE = approx.score.SE, GxE = GxE)
               
               # coerce null.model if necessary
               if (sparse) null.model <- .nullModelAsMatrix(null.model)
@@ -106,24 +98,15 @@ setMethod("assocTestSingle",
 setMethod("assocTestSingle",
           "GenotypeIterator",
           function(gdsobj, null.model, test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
-                   recalc.pval.thresh=0.05, approx.score.SE=FALSE, GxE=NULL,
-                   male.diploid=TRUE, verbose=TRUE) {
+                   recalc.pval.thresh=0.05, GxE=NULL, male.diploid=TRUE, verbose=TRUE) {
               test <- match.arg(test)
 
               # Convert old null model format if necessary.
               null.model <- .updateNullModelFormat(null.model)
 
-              # check null.model for needed components
-              calc.score <- test %in% c("Score", "Score.SPA") | (recalc.pval.thresh < 1)
-              if(calc.score && approx.score.SE && is.null(null.model$score.se.ratio)){
-              	stop("null.model must have score.se.ratio when approx.score.SE = TRUE")
-              } 
-              if(calc.score && !(approx.score.SE) && isNullModelSmall(null.model)){
-              	stop("small null.model cannot be used when approx.score.SE = FALSE")
-              }
-              if(!is.null(GxE) && isNullModelSmall(nullmod)){
-              	stop("small null.model cannot be used with GxE")
-              }
+              # check that the provided null model is compatible with the requested test
+              .checkNullModelTestSingle(null.model = null.model, test = test, 
+              	recalc.pval.thresh = recalc.pval.thresh, approx.score.SE = FALSE, GxE = GxE)
 
               # filter samples to match null model
               sample.index <- .sampleIndexNullModel(gdsobj, null.model)
@@ -190,3 +173,23 @@ setMethod("assocTestSingle",
 
               as.data.frame(rbindlist(res))
           })
+
+
+# check that the provided null model is compatible with the requested test
+.checkNullModelTestSingle <- function(null.model, test, recalc.pval.thresh, approx.score.SE, GxE){
+	calc.score <- test %in% c("Score", "Score.SPA") | (recalc.pval.thresh < 1)
+
+	if(calc.score && approx.score.SE && is.null(null.model$se.correction)){
+		stop("null.model must have se.correction when approx.score.SE = TRUE")
+	}
+
+	if(calc.score && !(approx.score.SE) && isNullModelSmall(null.model)){
+		stop("small null.model cannot be used with test options provided")
+	}
+
+	if(!is.null(GxE) && isNullModelSmall(nullmod)){
+		stop("small null.model cannot be used with GxE")
+	}
+}
+
+              
