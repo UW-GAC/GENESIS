@@ -33,23 +33,23 @@ setMethod("fitNullModelApproxSE",
                # fit the null model
                null.model <- fitNullModel(sampleData(x), ...)
                # calculate score.SE and the fast approximation
-               tab <- calcScoreSE(gdsobj, null.model, ...)
+               tab <- calcScore(gdsobj, null.model, ...)
                # update the null model with the se.correction factor
                null.model <- updateNullModApproxSE(null.model, tab)
                return(null.model)
           })
 
 
-calcScoreSE <- function(gdsobj, 
-                        null.model, 
-                        nvar = 100, 
-                        min.mac = 20, 
-                        variant.id = NULL,
-                        sparse=TRUE, 
-                        imputed=FALSE, 
-                        male.diploid=TRUE, 
-                        genome.build=c("hg19", "hg38"), 
-                        verbose=TRUE){
+calcScore <- function(gdsobj,
+                      null.model, 
+                      nvar = 100, 
+                      min.mac = 20, 
+                      variant.id = NULL,
+                      sparse=TRUE, 
+                      imputed=FALSE, 
+                      male.diploid=TRUE, 
+                      genome.build=c("hg19", "hg38"), 
+                      verbose=TRUE){
 
      # check for W matrix
      if (is.null(null.model$W)) stop('This null model was created with an older version of GENESIS and is not compatible with this analysis; 
@@ -68,7 +68,7 @@ calcScoreSE <- function(gdsobj,
      }
      
      # calculate Score.SE using both approaches
-     tab <- .calcScoreSE(gdsobj, null.model, variant.id = variant.id, sparse = sparse, imputed = imputed, 
+     tab <- .calcScore(gdsobj, null.model, variant.id = variant.id, sparse = sparse, imputed = imputed, 
                          male.diploid = male.diploid, genome.build = genome.build, verbose = verbose)
      return(tab)
 }
@@ -138,9 +138,9 @@ setMethod(".selectRandomVars",
 ## function to calculate both the true and fast Score.SE for a specified set of variants
 ## computes the ratio of the two Score.SE estimates for calculating the correction factor
 ## this is called by updateNullModelApproxScoreSE
-setGeneric(".calcScoreSE", function(gdsobj, ...) standardGeneric(".calcScoreSE"))
+setGeneric(".calcScore", function(gdsobj, ...) standardGeneric(".calcScore"))
 
-setMethod(".calcScoreSE",
+setMethod(".calcScore",
           "SeqVarData",
           function(gdsobj, 
                    null.model, 
@@ -199,6 +199,9 @@ setMethod(".calcScoreSE",
 
                geno <- .genoAsMatrix(null.model, geno)
 
+               # score
+               score <- as.vector(crossprod(geno, null.model$fit$resid.PY))
+
                # true variance
                Gtilde <- calcGtilde(null.model, geno)
                se.true <- sqrt(colSums(Gtilde^2)) # sqrt(GPG)
@@ -208,7 +211,7 @@ setMethod(".calcScoreSE",
                se.approx <- sqrt(colSums(Gtilde^2)) #sqrt(GWG)
 
                # results
-               tab <- cbind(var.info, n.obs, freq, score.SE.true = se.true, score.SE.fast = se.approx, se.ratio = se.true/se.approx)
+               tab <- cbind(var.info, n.obs, freq, Score = score, Score.SE = se.true, Score.SE.fast = se.approx, se.ratio = se.true/se.approx)
                return(tab)
 
           })
