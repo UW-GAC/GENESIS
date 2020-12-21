@@ -30,9 +30,11 @@ setMethod("fitNullModelApproxSE",
                    genome.build=c("hg19", "hg38"), 
                    verbose=TRUE) {
 
+               # check if this is a mixed model
+               if(is.null(cov.mat)) stop('SE approximation only applies to mixed models; use fitNullModel for the specified model')
                # fit the null model
                null.model <- fitNullModel(sampleData(x), ...)
-               # calculate score.SE and the fast approximation
+               # calculate true score SE and the fast approximation
                tab <- calcScore(gdsobj, null.model, ...)
                # update the null model with the se.correction factor
                null.model <- updateNullModApproxSE(null.model, tab)
@@ -42,18 +44,23 @@ setMethod("fitNullModelApproxSE",
 
 calcScore <- function(gdsobj,
                       null.model, 
+                      variant.id = NULL,
                       nvar = 100, 
                       min.mac = 20, 
-                      variant.id = NULL,
                       sparse=TRUE, 
                       imputed=FALSE, 
                       male.diploid=TRUE, 
                       genome.build=c("hg19", "hg38"), 
                       verbose=TRUE){
 
+     # Update null model format
+     null.model <- .updateNullModelFormat(null.model)
+
      # check for W matrix
-     if (is.null(null.model$W)) stop('This null model was created with an older version of GENESIS and is not compatible with this analysis; 
-          please re-run your null model with the latest version.')
+     if (null.model$model$family$mixedmodel & is.null(null.model$W)){
+          stop('This null model was created with an older version of GENESIS and is not compatible with this function; 
+                please re-run your null model with the latest version.')
+     } 
 
      # samples in null model
      sampid <- null.model$fit$sample.id
@@ -206,15 +213,21 @@ setMethod(".calcScore",
                Gtilde <- calcGtilde(null.model, geno)
                se.true <- sqrt(colSums(Gtilde^2)) # sqrt(GPG)
 
-               # approx variance
-               Gtilde <- calcGtildeApprox(null.model, geno, r = 1)
-               se.approx <- sqrt(colSums(Gtilde^2)) #sqrt(GWG)
-
                # results
-               tab <- cbind(var.info, n.obs, freq, Score = score, Score.SE = se.true, Score.SE.fast = se.approx, se.ratio = se.true/se.approx)
-               return(tab)
+               tab <- cbind(var.info, n.obs, freq, Score = score, Score.SE = se.true)
 
+               if(null.model$model$family$mixedmodel){
+                    # approx variance
+                    Gtilde <- calcGtildeApprox(null.model, geno, r = 1)
+                    se.approx <- sqrt(colSums(Gtilde^2)) #sqrt(GWG)
+
+                    # results
+                    tab <- cbind(tab, Score.SE.fast = se.approx, se.ratio = se.true/se.approx)
+               }
+               
+               return(tab)
           })
+
 
 
 
