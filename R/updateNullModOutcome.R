@@ -71,7 +71,7 @@ nullModelInvNorm <- function(null.model,
     }
 
     # re-fit the null model
-    new.nullmod <- .fitNullModel(y = resid, X = null.model$model.matrix, cov.mat = cov.mat,
+    new.nullmod <- .fitNullModel(y = resid, X = null.model$model.matrix, covMatList = cov.mat,
                                  group.idx = group.idx, family = "gaussian", start = null.model$varComp,
                                  AIREML.tol = AIREML.tol, max.iter = max.iter, EM.iter = EM.iter,
                                  drop.zeros = drop.zeros, return.small = return.small, verbose = verbose)
