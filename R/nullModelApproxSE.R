@@ -36,15 +36,26 @@ setMethod("fitNullModelApproxSE",
               }
 
               # fit the null model
-              null.model <- fitNullModel(sampleData(x), ...)
+              null.model <- fitNullModel(sampleData(x), outcome = outcome, covars = covars, cov.mat = cov.mat,
+                                         group.var = group.var, family = family, two.stage = two.stage,
+                                         norm.option = norm.option, rescale = rescale, start = start,
+                                         AIREML.tol = AIREML.tol, max.iter = max.iter, EM.iter = EM.iter,
+                                         drop.zeros = drop.zeros, return.small = FALSE, verbose = verbose)
 
               if(two.stage){
                   # fit the second stage model
-                  null.model <- nullModelInvNorm(null.model, ...)
+                  null.model <- nullModelInvNorm(null.model, cov.mat = cov.mat,
+                                                 norm.option = norm.option, rescale = rescale, start = start,
+                                                 AIREML.tol = AIREML.tol, max.iter = max.iter, EM.iter = EM.iter,
+                                                 drop.zeros = drop.zeros, return.small = FALSE, verbose = verbose)
               }
 
               # calculate true score SE and the fast approximation
-              tab <- calcScore(gdsobj = x, null.model = null.model, ...)
+              tab <- calcScore(gdsobj = x, null.model = null.model,
+                               variant.id = variant.id, nvar = nvar, min.mac = min.mac,
+                               sparse = sparse, imputed = imputed, male.diploid = male.diploid,
+                               genome.build = genome.build, verbose = verbose)
+              
               # update the null model with the se.correction factor
               null.model <- nullModelApproxSE(null.model = null.model, tab = tab, return.small = return.small)
 
