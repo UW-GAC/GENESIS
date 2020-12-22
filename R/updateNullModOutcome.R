@@ -71,14 +71,14 @@ nullModelInvNorm <- function(null.model,
     }
 
     # re-fit the null model
-    new.nullmod <- .fitNullModel(y = resid, X = null.model$model.matrix, covMatList = cov.mat,
+    new.null.model <- .fitNullModel(y = resid, X = null.model$model.matrix, covMatList = cov.mat,
                                  group.idx = group.idx, family = "gaussian", start = null.model$varComp,
                                  AIREML.tol = AIREML.tol, max.iter = max.iter, EM.iter = EM.iter,
                                  drop.zeros = drop.zeros, return.small = return.small, verbose = verbose)
 
     # add any extra slots
-    extra <- setdiff(names(null.model), names(new.nullmod))
-    new.nullmod <- c(new.nullmod, null.model[extra])
+    extra <- setdiff(names(null.model), names(new.null.model))
+    new.null.model <- c(new.null.model, null.model[extra])
 
     # Add sample id. If the fit data frame doesn't have a sample.id column, this step does nothing.
     # In that case, it's trying to set new.null.model$fit$sample.id to NULL, so it won't exist in the
@@ -92,7 +92,7 @@ nullModelInvNorm <- function(null.model,
     new.null.model$model$formula <- paste(.modelOutcomeString(null.model$model$outcome, inverse_normal=TRUE), "~",
                                strsplit(previous_model, " ~ ")[[1]][2])
 
-    new.nullmod
+    new.null.model
 
 }
 
