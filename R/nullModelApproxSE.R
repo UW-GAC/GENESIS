@@ -7,7 +7,7 @@ setGeneric("fitNullModelApproxSE", function(x, ...) standardGeneric("fitNullMode
 
 setMethod("fitNullModelApproxSE",
           "SeqVarData",
-          function(x, gdsobj, outcome,
+          function(x, outcome,
                    covars = NULL,
                    cov.mat = NULL,
                    group.var = NULL,
@@ -44,9 +44,9 @@ setMethod("fitNullModelApproxSE",
               }
 
               # calculate true score SE and the fast approximation
-              tab <- calcScore(gdsobj, null.model, ...)
+              tab <- calcScore(gdsobj = x, null.model = null.model, ...)
               # update the null model with the se.correction factor
-              null.model <- nullModelApproxSE(null.model, tab, return.small = return.small)
+              null.model <- nullModelApproxSE(null.model = null.model, tab = tab, return.small = return.small)
 
               null.model
           })
