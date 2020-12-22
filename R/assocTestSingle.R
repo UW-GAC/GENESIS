@@ -191,5 +191,4 @@ setMethod("assocTestSingle",
 		stop("small null.model cannot be used with GxE")
 	}
 }
-
-              
+          

@@ -8,6 +8,9 @@ setMethod("fitNullModel",
                    cov.mat = NULL,
                    group.var = NULL,
                    family = "gaussian",
+                   two.stage = FALSE,
+                   norm.option = c("by.group", "all"),
+                   rescale = c("none", "model", "residSD"),
                    start = NULL,
                    AIREML.tol = 1e-4,
                    max.iter = 100,
@@ -15,6 +18,11 @@ setMethod("fitNullModel",
                    drop.zeros = TRUE,
                    return.small = FALSE,
                    verbose = TRUE) {
+
+              # check 
+              if((two.stage) & (family != "gaussian")){
+                  stop('two stage model only applies when family is "gaussian"')
+              }
 
               if (is.data.table(x)) x <- as.data.frame(x)
 
@@ -30,23 +38,27 @@ setMethod("fitNullModel",
               }
 
 
-              out <- .fitNullModel(y=desmat$y, X=desmat$X, covMatList=cov.mat,
-                            group.idx=desmat$group.idx, family=family,
-                            start=start, AIREML.tol=AIREML.tol,
-                            max.iter=max.iter, EM.iter=EM.iter,
-                            drop.zeros=drop.zeros,
-                            return.small=return.small,
-                            verbose=verbose)
-              rownames(out$fit) <- rownames(desmat$y)
+              null.model <- .fitNullModel(y=desmat$y, X=desmat$X, covMatList=cov.mat,
+                                          group.idx=desmat$group.idx, family=family,
+                                          start=start, AIREML.tol=AIREML.tol,
+                                          max.iter=max.iter, EM.iter=EM.iter,
+                                          drop.zeros=drop.zeros,
+                                          return.small=return.small,
+                                          verbose=verbose)
+              rownames(null.model$fit) <- rownames(desmat$y)
 
               # Add model string elements here because we need the outcome string.
-              out$model$outcome <- .modelOutcomeString(outcome, inverse_normal = FALSE)
-              out$model$covars <- covars
-              out$model$formula <- .modelString(outcome, covars = covars, random = names(cov.mat),
+              null.model$model$outcome <- .modelOutcomeString(outcome, inverse_normal = FALSE)
+              null.model$model$covars <- covars
+              null.model$model$formula <- .modelString(outcome, covars = covars, random = names(cov.mat),
                                                 group.var = group.var, inverse_normal = FALSE)
 
-              out
+              if(two.stage){
+                  # fit the second stage model
+                  null.model <- nullModelInvNorm(null.model, ...)
+              }
 
+              null.model
           })
 
 setMethod("fitNullModel",
@@ -108,39 +120,6 @@ setMethod("fitNullModel",
           function(x, ...) {
               fitNullModel(getScanAnnotation(x), ...)
           })
-
-
-nullModelInvNorm <- function(null.model, cov.mat = NULL,
-                             norm.option = c("by.group", "all"),
-                             rescale = c("none", "model", "residSD"),
-                             AIREML.tol = 1e-4,
-                             max.iter = 100, EM.iter = 0,
-                             verbose = TRUE) {
-
-    # Update null model format.
-    null.model <- .updateNullModelFormat(null.model)
-
-    new.nullmod <- updateNullModOutcome(null.model, covMatList=cov.mat, rankNorm.option=norm.option,
-                         rescale=rescale, AIREML.tol=AIREML.tol,
-                         max.iter=max.iter, EM.iter=EM.iter,
-                         verbose=verbose)
-
-    # Add sample id. If the fit data frame doesn't have a sample.id column, this step does nothing.
-    # In that case, it's trying to set new.nullmod$fit$sample.id to NULL, so it won't exist in the
-    # new fit data frame.
-    new.nullmod$fit$sample.id <- null.model$fit$sample.id
-
-    # Update model strings.
-    previous_model <- null.model$model$formula
-    new.nullmod$model$outcome <- null.model$model$outcome
-    new.nullmod$model$covars <- null.model$model$covars
-    new.nullmod$model$formula <- paste(.modelOutcomeString(null.model$model$outcome, inverse_normal=TRUE), "~",
-                               strsplit(previous_model, " ~ ")[[1]][2])
-
-    new.nullmod
-
-}
-
 
 
 ## function to get sample.ids from cov.mat rownames and/or column names

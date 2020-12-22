@@ -1,9 +1,8 @@
+## fit the null model
 ## estimate the ratio (se.ratio) of the true SE(score) to the fast SE(score)
 ## update the null model to contain this parameter
 ## this needs to be run before using the approx.score.se option in assocTestSingle
 ## this is based off of the SAIGE variance approximation
-
-
 setGeneric("fitNullModelApproxSE", function(x, ...) standardGeneric("fitNullModelApproxSE"))
 
 setMethod("fitNullModelApproxSE",
@@ -15,33 +14,52 @@ setMethod("fitNullModelApproxSE",
                    cov.mat = NULL,
                    group.var = NULL,
                    family = "gaussian",
+                   two.stage = FALSE,
+                   norm.option = c("by.group", "all"),
+                   rescale = c("none", "model", "residSD"),
                    start = NULL,
                    AIREML.tol = 1e-4,
                    max.iter = 100,
                    EM.iter = 0,
                    drop.zeros = TRUE,
-                   return.small = FALSE,
+                   variant.id = NULL,
                    nvar = 100, 
                    min.mac = 20, 
-                   variant.id = NULL, 
                    sparse = TRUE, 
                    imputed = FALSE, 
-                   male.diploid=TRUE, 
-                   genome.build=c("hg19", "hg38"), 
+                   male.diploid = TRUE, 
+                   genome.build = c("hg19", "hg38"), 
                    verbose=TRUE) {
 
-               # check if this is a mixed model
-               if(is.null(cov.mat)) stop('SE approximation only applies to mixed models; use fitNullModel for the specified model')
-               # fit the null model
-               null.model <- fitNullModel(sampleData(x), ...)
-               # calculate true score SE and the fast approximation
-               tab <- calcScore(gdsobj, null.model, ...)
-               # update the null model with the se.correction factor
-               null.model <- updateNullModApproxSE(null.model, tab)
-               return(null.model)
+              # check if this is a mixed model
+              if(is.null(cov.mat)){
+                  stop('SE approximation only applies to mixed models (cov.mat not NULL); use fitNullModel for the specified model')
+              }
+
+              # check 
+              if((two.stage) & (family != "gaussian")){
+                  stop('two stage model only applies when family is "gaussian"')
+              }
+
+              # fit the null model
+              null.model <- fitNullModel(sampleData(x), ...)
+
+              if(two.stage){
+                  # fit the second stage model
+                  null.model <- nullModelInvNorm(null.model, ...)
+              }
+
+              # calculate true score SE and the fast approximation
+              tab <- calcScore(gdsobj, null.model, ...)
+              # update the null model with the se.correction factor
+              null.model <- nullModelApproxSE(null.model, tab)
+
+              null.model
           })
 
 
+## calculate the Score and Score.SE for a specified or random set of variants
+## when a mixed model, also calculates the approx Score.SE and the ratio to the true Score.SE
 calcScore <- function(gdsobj,
                       null.model, 
                       variant.id = NULL,
@@ -79,9 +97,10 @@ calcScore <- function(gdsobj,
                          male.diploid = male.diploid, genome.build = genome.build, verbose = verbose)
      return(tab)
 }
-	
 
-updateNullModApproxSE <- function(null.model, tab){
+
+## updates the null model object with the parameter needed for approx.score.se	
+nullModelApproxSE <- function(null.model, tab){
      # rbind a list of tables
      if(class(tab) == 'list') tab <- data.table::rbindlist(tab)
 
@@ -106,7 +125,7 @@ updateNullModApproxSE <- function(null.model, tab){
 
 
 ## function to get a random sample of variants with a minimum MAC
-## this is called by updateNullModelApproxScoreSE
+## this is called by calcScore
 setGeneric(".selectRandomVars", function(gdsobj, ...) standardGeneric(".selectRandomVars"))
 
 setMethod(".selectRandomVars",
@@ -144,7 +163,7 @@ setMethod(".selectRandomVars",
 
 ## function to calculate both the true and fast Score.SE for a specified set of variants
 ## computes the ratio of the two Score.SE estimates for calculating the correction factor
-## this is called by updateNullModelApproxScoreSE
+## this is called by calcScore
 setGeneric(".calcScore", function(gdsobj, ...) standardGeneric(".calcScore"))
 
 setMethod(".calcScore",
@@ -227,7 +246,4 @@ setMethod(".calcScore",
                
                return(tab)
           })
-
-
-
 
