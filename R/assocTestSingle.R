@@ -158,8 +158,7 @@ setMethod("assocTestSingle",
                       res[[i]] <- NULL
                   } else {
                       assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test,
-                                                 recalc.pval.thresh=recalc.pval.thresh,
-                                                 approx.score.SE=approx.score.SE)
+                                                 recalc.pval.thresh=recalc.pval.thresh)
 
                       res[[i]] <- cbind(var.info, n.obs, freq, assoc)
                   }
@@ -191,4 +190,3 @@ setMethod("assocTestSingle",
 		stop("small null.model cannot be used with GxE")
 	}
 }
-          

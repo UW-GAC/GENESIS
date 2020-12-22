@@ -1,3 +1,4 @@
+## will update this file name to nullModelInvNorm.R
 ## takes an existing null model (family has to be "gaussian"!), rank-normalize residuals and scale, and re-fit null model. 
 ## If group.idx are provided, optional scale by group.idx.
 ## the names of items in the list group.idx have to match the names of the corresponding variance components!
