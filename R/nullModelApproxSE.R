@@ -7,21 +7,20 @@ setGeneric("fitNullModelApproxSE", function(x, ...) standardGeneric("fitNullMode
 
 setMethod("fitNullModelApproxSE",
           "SeqVarData",
-          function(x, 
-                   gdsobj,
-                   outcome,
+          function(x, gdsobj, outcome,
                    covars = NULL,
                    cov.mat = NULL,
                    group.var = NULL,
                    family = "gaussian",
                    two.stage = FALSE,
-                   norm.option = c("by.group", "all"),
+                   norm.option = c("all", "by.group"),
                    rescale = c("none", "model", "residSD"),
                    start = NULL,
                    AIREML.tol = 1e-4,
                    max.iter = 100,
                    EM.iter = 0,
                    drop.zeros = TRUE,
+                   return.small = TRUE,
                    variant.id = NULL,
                    nvar = 100, 
                    min.mac = 20, 
@@ -36,11 +35,6 @@ setMethod("fitNullModelApproxSE",
                   stop('SE approximation only applies to mixed models (cov.mat not NULL); use fitNullModel for the specified model')
               }
 
-              # check 
-              if((two.stage) & (family != "gaussian")){
-                  stop('two stage model only applies when family is "gaussian"')
-              }
-
               # fit the null model
               null.model <- fitNullModel(sampleData(x), ...)
 
@@ -52,7 +46,7 @@ setMethod("fitNullModelApproxSE",
               # calculate true score SE and the fast approximation
               tab <- calcScore(gdsobj, null.model, ...)
               # update the null model with the se.correction factor
-              null.model <- nullModelApproxSE(null.model, tab)
+              null.model <- nullModelApproxSE(null.model, tab, return.small = return.small)
 
               null.model
           })
@@ -100,27 +94,30 @@ calcScore <- function(gdsobj,
 
 
 ## updates the null model object with the parameter needed for approx.score.se	
-nullModelApproxSE <- function(null.model, tab){
-     # rbind a list of tables
-     if(class(tab) == 'list') tab <- data.table::rbindlist(tab)
+nullModelApproxSE <- function(null.model, tab, return.small = TRUE){
+    # rbind a list of tables
+    if(class(tab) == 'list') tab <- data.table::rbindlist(tab)
 
-     # compute the mean of se.ratio
-     r <- mean(tab$se.ratio)
+    # compute the mean of se.ratio
+    r <- mean(tab$se.ratio)
 
-     # compute SE(r) and check if enough variants were included
-     r.se <- sd(tab$se.ratio)/sqrt(nrow(tab))
-     val <- r.se/r
-     message(paste('mean se.ratio: r = ', r))
-     message(paste('SE(r)/r = ', val))
-     if(val > 0.0025) warning(paste('It is recommended that SE(r)/r be < 0.0025. It is suggested to increase the number of variants in tab; try at least', 
+    # compute SE(r) and check if enough variants were included
+    r.se <- sd(tab$se.ratio)/sqrt(nrow(tab))
+    val <- r.se/r
+    message(paste('mean se.ratio: r = ', r))
+    message(paste('SE(r)/r = ', val))
+    if(val > 0.0025){
+        warning(paste('It is recommended that SE(r)/r be < 0.0025. It is suggested to increase the number of variants in tab; try at least', 
           round(nrow(tab)*(val/0.0025)^2, 0), 'variants'))
+    }
 
-     # update the null model
-     null.model <- nullModelSmall(null.model)
-
-     null.model$se.correction <- r
-     null.model$se.table <- tab
-     return(null.model)
+    # update the null model
+    if(return.small){
+        null.model <- nullModelSmall(null.model)
+    }
+    null.model$se.correction <- r
+    null.model$se.table <- tab
+    return(null.model)
 }
 
 

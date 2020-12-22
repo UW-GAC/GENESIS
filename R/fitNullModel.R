@@ -9,7 +9,7 @@ setMethod("fitNullModel",
                    group.var = NULL,
                    family = "gaussian",
                    two.stage = FALSE,
-                   norm.option = c("by.group", "all"),
+                   norm.option = c("all", "by.group"),
                    rescale = c("none", "model", "residSD"),
                    start = NULL,
                    AIREML.tol = 1e-4,
@@ -43,19 +43,22 @@ setMethod("fitNullModel",
                                           start=start, AIREML.tol=AIREML.tol,
                                           max.iter=max.iter, EM.iter=EM.iter,
                                           drop.zeros=drop.zeros,
-                                          return.small=return.small,
-                                          verbose=verbose)
+                                          return.small=return.small, verbose=verbose)
               rownames(null.model$fit) <- rownames(desmat$y)
 
               # Add model string elements here because we need the outcome string.
               null.model$model$outcome <- .modelOutcomeString(outcome, inverse_normal = FALSE)
               null.model$model$covars <- covars
               null.model$model$formula <- .modelString(outcome, covars = covars, random = names(cov.mat),
-                                                group.var = group.var, inverse_normal = FALSE)
+                                                       group.var = group.var, inverse_normal = FALSE)
 
               if(two.stage){
                   # fit the second stage model
-                  null.model <- nullModelInvNorm(null.model, ...)
+                  null.model <- nullModelInvNorm(null.model, cov.mat=cov.mat, 
+                                                 norm.option=norm.option, rescale=rescale, 
+                                                 AIREML.tol=AIREML.tol, max.iter=max.iter,
+                                                 EM.iter=EM.iter, drop.zeros=drop.zeros, 
+                                                 return.small=return.small, verbose=verbose)
               }
 
               null.model
