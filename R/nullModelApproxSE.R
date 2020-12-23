@@ -42,14 +42,6 @@ setMethod("fitNullModelApproxSE",
                                          AIREML.tol = AIREML.tol, max.iter = max.iter, EM.iter = EM.iter,
                                          drop.zeros = drop.zeros, return.small = FALSE, verbose = verbose)
 
-              if(two.stage){
-                  # fit the second stage model
-                  null.model <- nullModelInvNorm(null.model, cov.mat = cov.mat,
-                                                 norm.option = norm.option, rescale = rescale,
-                                                 AIREML.tol = AIREML.tol, max.iter = max.iter, EM.iter = EM.iter,
-                                                 drop.zeros = drop.zeros, return.small = FALSE, verbose = verbose)
-              }
-
               # calculate true score SE and the fast approximation
               tab <- calcScore(gdsobj = x, null.model = null.model,
                                variant.id = variant.id, nvar = nvar, min.mac = min.mac,
