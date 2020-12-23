@@ -317,5 +317,30 @@ isNullModelSmall <- function(null.model) {
     nullmod$RSS0 <- as.numeric(crossprod(nullmod$fit$resid.cholesky))
   }
 
+  # Add W matrix for mixed models
+  if(nullmod$model$family$mixedmodel){
+    if(nullmod$model$family$family == "gaussian"){
+      n <- nrow(nullmod$fit)
+      m <- length(nullmod$varComp) - length(nullmod$group.idx)
+      if(is.null(nullmod$group.idx)){
+        diagV <- rep(nullmod$varComp[m+1], n)
+      }else{
+        g <- length(nullmod$group.idx)
+        diagV <- rep(NA, n)
+        for(i in 1:g){
+          diagV[nullmod$group.idx[[i]]] <- nullmod$varComp[m+i]
+        }
+      }
+      nullmod$W <- 1/diagV
+    }else{
+      eta <- nullmod$fit$linear.predictor
+      mu <- nullmod$model$family$linkinv(eta)
+      vmu <- nullmod$model$family$variance(mu)
+      gmuinv <- nullmod$model$family$mu.eta(eta)
+      diagV <- as.vector(vmu)/as.vector(gmuinv)^2
+      nullmod$W <- 1/diagV
+    }
+  }
+
   nullmod
 }

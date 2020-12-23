@@ -71,12 +71,6 @@ calcScore <- function(gdsobj,
      # Update null model format
      null.model <- .updateNullModelFormat(null.model)
 
-     # check for W matrix
-     if (null.model$model$family$mixedmodel & is.null(null.model$W)){
-          stop('This null model was created with an older version of GENESIS and is not compatible with this function; 
-                please re-run your null model with the latest version.')
-     } 
-
      # samples in null model
      sampid <- null.model$fit$sample.id
      if(verbose) message(paste('null.model has', length(sampid), 'samples'))
