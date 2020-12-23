@@ -18,9 +18,8 @@ nullModelInvNorm <- function(null.model,
     rescale <- match.arg(rescale)
 
     # checks
-    if(null.model$model$family$family != "gaussian"){
-        stop("family must be gaussian")
-    }
+    if(null.model$model$family$family != "gaussian") stop("family must be gaussian")
+    
     if(rescale == "model" & norm.option == "all"){
         stop("Rescaling using model variance components when rank normalizing all samples together is not implemented")
     }
