@@ -92,6 +92,9 @@ calcScore <- function(gdsobj,
 
 ## updates the null model object with the parameter needed for approx.score.se	
 nullModelApproxSE <- function(null.model, tab, return.small = TRUE){
+    # Update null model format
+     null.model <- .updateNullModelFormat(null.model)
+
     # rbind a list of tables
     if(class(tab) == 'list') tab <- data.table::rbindlist(tab)
 
