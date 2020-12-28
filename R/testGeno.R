@@ -8,7 +8,7 @@
 
 # E an environmental variable for optional GxE interaction analysis.
 testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA", "BinomiRare", "CMP"),
-                              recalc.pval.thresh = 1, approx.score.SE = FALSE, GxE.return.cov = FALSE){
+                              recalc.pval.thresh = 1, fast.score.SE = FALSE, GxE.return.cov = FALSE){
     test <- match.arg(test)
     calc.score <- test %in% c("Score", "Score.SPA") | (recalc.pval.thresh < 1)
 
@@ -28,8 +28,8 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
 
     # run the test
     if(calc.score){
-        if(approx.score.SE){
-            Gtilde <- calcGtildeApprox(nullmod, G, r = nullmod$se.correction)
+        if(fast.score.SE){
+            Gtilde <- calcGtildeFast(nullmod, G, r = nullmod$se.correction)
         }else{
             Gtilde <- calcGtilde(nullmod, G)
         }

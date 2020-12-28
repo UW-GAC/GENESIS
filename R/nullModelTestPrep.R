@@ -69,7 +69,7 @@ calcGtilde <- function(nullmod, G){
 
 ## adjust genotypes for correlation structure and fixed effects using fast approximation from SAIGE
 ## replace C = sqrt(Sigma^{-1}) with W^{1/2} (diagonal matrix)
-calcGtildeApprox <- function(nullmod, G, r = 1){    
+calcGtildeFast <- function(nullmod, G, r = 1){    
     X <- nullmod$model.matrix
     W <- nullmod$W
     # W is the diagonal of a matrix

@@ -1,11 +1,11 @@
 ## fit the null model
 ## estimate the ratio (se.ratio) of the true SE(score) to the fast SE(score)
 ## update the null model to contain this parameter
-## this needs to be run before using the approx.score.se option in assocTestSingle
+## this needs to be run before using the fast.score.se option in assocTestSingle
 ## this is based off of the SAIGE variance approximation
-setGeneric("fitNullModelApproxSE", function(x, ...) standardGeneric("fitNullModelApproxSE"))
+setGeneric("fitNullModelFastScore", function(x, ...) standardGeneric("fitNullModelFastScore"))
 
-setMethod("fitNullModelApproxSE",
+setMethod("fitNullModelFastScore",
           "SeqVarData",
           function(x, outcome,
                    covars = NULL,
@@ -32,7 +32,7 @@ setMethod("fitNullModelApproxSE",
 
               # check if this is a mixed model
               if(is.null(cov.mat)){
-                  stop('SE approximation only applies to mixed models (cov.mat not NULL); use fitNullModel for the specified model')
+                  stop('Fast Score.SE approximation only applies to mixed models (cov.mat not NULL); use fitNullModel for the specified model')
               }
 
               # fit the null model
@@ -49,14 +49,14 @@ setMethod("fitNullModelApproxSE",
                                genome.build = genome.build, verbose = verbose)
 
               # update the null model with the se.correction factor
-              null.model <- nullModelApproxSE(null.model = null.model, tab = tab, return.small = return.small)
+              null.model <- nullModelFastScore(null.model = null.model, tab = tab, return.small = return.small)
 
               null.model
           })
 
 
 ## calculate the Score and Score.SE for a specified or random set of variants
-## when a mixed model, also calculates the approx Score.SE and the ratio to the true Score.SE
+## when a mixed model, also calculates the fast Score.SE approximation and the ratio to the true Score.SE
 calcScore <- function(gdsobj,
                       null.model, 
                       variant.id = NULL,
@@ -90,8 +90,8 @@ calcScore <- function(gdsobj,
 }
 
 
-## updates the null model object with the parameter needed for approx.score.se	
-nullModelApproxSE <- function(null.model, tab, return.small = TRUE){
+## updates the null model object with the parameter needed for fast.score.se	
+nullModelFastScore <- function(null.model, tab, return.small = TRUE){
     # Update null model format
      null.model <- .updateNullModelFormat(null.model)
 
@@ -233,12 +233,12 @@ setMethod(".calcScore",
                tab <- cbind(var.info, n.obs, freq, Score = score, Score.SE = se.true)
 
                if(null.model$model$family$mixedmodel){
-                    # approx variance
-                    Gtilde <- calcGtildeApprox(null.model, geno, r = 1)
-                    se.approx <- sqrt(colSums(Gtilde^2)) #sqrt(GWG)
+                    # approx SE
+                    Gtilde <- calcGtildeFast(null.model, geno, r = 1)
+                    se.fast <- sqrt(colSums(Gtilde^2)) #sqrt(GWG)
 
                     # results
-                    tab <- cbind(tab, Score.SE.fast = se.approx, se.ratio = se.true/se.approx)
+                    tab <- cbind(tab, Score.SE.fast = se.fast, se.ratio = se.true/se.fast)
                }
                
                return(tab)

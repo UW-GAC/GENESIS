@@ -5,8 +5,9 @@ setGeneric("assocTestSingle", function(gdsobj, ...) standardGeneric("assocTestSi
 setMethod("assocTestSingle",
           "SeqVarIterator",
           function(gdsobj, null.model, test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
-                   recalc.pval.thresh=0.05, approx.score.SE=FALSE, GxE=NULL,
-                   sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), verbose=TRUE) {
+                   recalc.pval.thresh=0.05, fast.score.SE=FALSE, GxE=NULL,
+                   sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), 
+                   verbose=TRUE) {
               test <- match.arg(test)
 
               # don't use sparse matrices for imputed dosages
@@ -17,7 +18,7 @@ setMethod("assocTestSingle",
 
               # check that the provided null model is compatible with the requested test
               .checkNullModelTestSingle(null.model = null.model, test = test, 
-              	recalc.pval.thresh = recalc.pval.thresh, approx.score.SE = approx.score.SE, GxE = GxE)
+              	recalc.pval.thresh = recalc.pval.thresh, fast.score.SE = fast.score.SE, GxE = GxE)
               
               # coerce null.model if necessary
               if (sparse) null.model <- .nullModelAsMatrix(null.model)
@@ -78,7 +79,7 @@ setMethod("assocTestSingle",
                   } else {
                       assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test,
                                                  recalc.pval.thresh=recalc.pval.thresh,
-                                                 approx.score.SE=approx.score.SE)
+                                                 fast.score.SE=fast.score.SE)
 
                       res[[i]] <- cbind(var.info, n.obs, freq, assoc)
                   }
@@ -98,7 +99,8 @@ setMethod("assocTestSingle",
 setMethod("assocTestSingle",
           "GenotypeIterator",
           function(gdsobj, null.model, test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
-                   recalc.pval.thresh=0.05, GxE=NULL, male.diploid=TRUE, verbose=TRUE) {
+                   recalc.pval.thresh=0.05, GxE=NULL, 
+                   male.diploid=TRUE, verbose=TRUE) {
               test <- match.arg(test)
 
               # Convert old null model format if necessary.
@@ -106,7 +108,7 @@ setMethod("assocTestSingle",
 
               # check that the provided null model is compatible with the requested test
               .checkNullModelTestSingle(null.model = null.model, test = test, 
-              	recalc.pval.thresh = recalc.pval.thresh, approx.score.SE = FALSE, GxE = GxE)
+              	recalc.pval.thresh = recalc.pval.thresh, fast.score.SE = FALSE, GxE = GxE)
 
               # filter samples to match null model
               sample.index <- .sampleIndexNullModel(gdsobj, null.model)
@@ -175,14 +177,16 @@ setMethod("assocTestSingle",
 
 
 # check that the provided null model is compatible with the requested test
-.checkNullModelTestSingle <- function(null.model, test, recalc.pval.thresh, approx.score.SE, GxE){
+.checkNullModelTestSingle <- function(null.model, test, recalc.pval.thresh, fast.score.SE, GxE){
 	calc.score <- test %in% c("Score", "Score.SPA") | (recalc.pval.thresh < 1)
 
-	if(calc.score && approx.score.SE && is.null(null.model$se.correction)){
-		stop("null.model must have se.correction when approx.score.SE = TRUE")
+	if(calc.score && fast.score.SE && is.null(null.model$se.correction)){
+		stop("null.model must have se.correction when fast.score.SE = TRUE; 
+			re-fit your null.model using `fitNullModelFastScore` or
+			update your null.model using `nullModelFastScore`.")
 	}
 
-	if(calc.score && !(approx.score.SE) && isNullModelSmall(null.model)){
+	if(calc.score && !(fast.score.SE) && isNullModelSmall(null.model)){
 		stop("small null.model cannot be used with test options provided")
 	}
 
