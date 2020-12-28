@@ -133,29 +133,33 @@ setMethod(".selectRandomVars",
                    min.mac = 20, 
                    verbose = TRUE){
 
-               # number of variants in the GDS object
-               nvar.gdsobj <- SeqArray::seqSummary(gdsobj, verbose = FALSE)$num.variant
-               if(nvar.gdsobj < nvar) stop('requested more variants than available in gdsobj')
+            # filter to sample set in null.model
+            SeqArray::seqSetFilter(gdsobj, sample.id = sample.id, verbose = verbose)
 
-               # filter to sample set in null.model
-               SeqArray::seqSetFilter(gdsobj, sample.id = sample.id, verbose = verbose)
+            # get the initial set of filtered variants 
+            # (accounts for any pre-filtering; e.g. by PASS status)
+            var.filt <- which(SeqArray::seqGetFilter(gdsobj)$variant.sel)
 
-               out <- NULL
-               while(length(out) < nvar){
-                    # sample variants
-                    var.rand <- sort(sample.int(nvar.gdsobj, size = nvar, replace = FALSE))
-                    # filter to random sample
-                    SeqArray::seqSetFilter(gdsobj, variant.sel = var.rand, verbose = verbose)
-                    # filter to MAC threshold
-                    if(min.mac > 0) SeqArray::seqSetFilterCond(gdsobj, mac = min.mac, verbose = verbose)
-                    # collect selected variants
-                    out <- sort(unique(c(out, seqGetData(gdsobj, 'variant.id'))))
-               }
+            # number of variants in the GDS object
+            nvar.gds <- length(var.filt)
+            if(nvar.gds < nvar) stop('requested more variants than available in gdsobj')
 
-               # sample down to number requested
-               out <- sample(out, size = nvar, replace = FALSE)
-               return(out)
-               })
+            out <- NULL
+            while(length(out) < nvar){
+              # sample variants
+              var.rand <- sort(sample(var.filt, size = nvar, replace = FALSE))
+              # filter to random sample
+              SeqArray::seqSetFilter(gdsobj, variant.sel = var.rand, verbose = verbose)
+              # filter to MAC threshold
+              if(min.mac > 0) SeqArray::seqSetFilterCond(gdsobj, mac = min.mac, verbose = verbose)
+              # collect selected variants
+              out <- sort(unique(c(out, seqGetData(gdsobj, 'variant.id'))))
+            }
+
+            # sample down to number requested
+            out <- sample(out, size = nvar, replace = FALSE)
+            return(out)
+          })
 
 
 ## function to calculate both the true and fast Score.SE for a specified set of variants
