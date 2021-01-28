@@ -160,7 +160,7 @@ A linear mixed model (LMM) should be fit when analyzing a quantitative phenotype
 ```{r}
 # fit the null mixed model
 nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1",
-                        cov.mat = myGRM, family = gaussian)
+                        cov.mat = myGRM, family = "gaussian")
 ```
 * the first argument is the class `ScanAnnotationDataFrame` or `data.frame` object containing the sample data
 * `outcome` specifies the name of the outcome variable in `scanAnnot`
@@ -175,7 +175,7 @@ The model can be fit with multiple fixed effect covariates by setting `covars` e
 ```{r, eval=FALSE}
 nullmod <- fitNullModel(scanAnnot, outcome = "pheno",
                         covars = c("pc1","pc2","sex","age"),
-                        cov.mat = myGRM, family = gaussian)
+                        cov.mat = myGRM, family = "gaussian")
 ```
 
 #### Multiple Random Effects
@@ -183,7 +183,7 @@ The model also can be fit with multiple random effects. This is done by setting 
 ```{r, eval=FALSE}
 nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1",
                         cov.mat = list("GRM" = myGRM, "House" = H),
-                        family = gaussian)
+                        family = "gaussian")
 ```
 The names of the matrices in `cov.mat` determine the names of the variance component parameters. Therefore, in this example, the output printed to the R console will include `Sigma^2_GRM` for the random effect specified by "myGRM", `Sigma^2_House` for the random effect specified by "H", and `Sigma^2_E` for the residual variance component.
 
@@ -194,7 +194,7 @@ Note: the row and column names of each matrix used to specify the covariance str
 LMMs are typically fit under an assumption of constant (homogeneous) residual variance for all observations. However, for some outcomes, there may be evidence that different groups of observations have different residual variances, in which case the assumption of homoscedasticity is violated. `group.var` can be used in order to fit separate (heterogeneous) residual variance components by some grouping variable. For example, if we have a categorical variable "study" in our `scanAnnot`, then we can estimate a different residual variance component for each unique value of "study" by using the following code:
 ```{r, eval=FALSE}
 nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1",
-                        cov.mat = myGRM, family = gaussian,
+                        cov.mat = myGRM, family = "gaussian",
                         group.var = "study")
 ```
 In this example, the residual variance component `Sigma^2_E` is replaced with group specific residual variance components `Sigma^2_study1`, `Sigma^2_study2`, ..., where "study1", "study2", ... are the unique values of the "study" variable.
@@ -204,7 +204,7 @@ In this example, the residual variance component `Sigma^2_E` is replaced with gr
 Ideally, a generalized linear mixed model (GLMM) would be fit for a binary phenotype; however, fitting a GLMM is much more computationally demanding than fitting an LMM. To provide a compuationally efficient approach to fitting such a model, `fitNullModel` uses the penalized quasi-likelihood (PQL) approximation to the GLMM (Breslow and Clayton). The implementation of this procedure in `r Biocpkg("GENESIS")` is the same as in GMMAT (Chen et al.), and more details can be found in that manuscript.  If our outcome variable, "pheno", were binary, then the same R code could be used to fit the null model, but with `family = binomial`.
 ```{r, eval=FALSE}
 nullmod <- fitNullModel(scanAnnot, outcome = "pheno", covars = "pc1",
-                        cov.mat = myGRM, family = binomial)
+                        cov.mat = myGRM, family = "binomial")
 ```
 Multiple fixed effect covariates and multiple random effects can be specified for binary phenotypes in the same way as they are for quantitative phenotypes. `group.var` does not apply here.
 
