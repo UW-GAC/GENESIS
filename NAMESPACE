@@ -65,6 +65,8 @@ exportMethods(assocTestSingle,
 
 export(admixMap,
        calcISAFBeta,
+       computeVSIF,
+       computeVSIFnullmod,
        correctKin,
        correctK0,
        correctK2,
