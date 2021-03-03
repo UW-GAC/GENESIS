@@ -2,7 +2,7 @@
 
 # compute variant-specific inflation-factor for multiple variants
 # variants are provided as a matrix, each row provides the allele frequencies 
-computeVSIF <- function(eafs, ns, sigmas_sqs){
+computeVSIF <- function(eafs, ns, sigma_sqs){
   
   
   # if eafs is a vector, turn it into a matrix
@@ -15,9 +15,9 @@ computeVSIF <- function(eafs, ns, sigmas_sqs){
   k <- ncol(eafs)
   
   # checks
-  stopifnot((length(ns) == k ) & (length(sigmas_sqs) ==k) ) 
+  stopifnot((length(ns) == k ) & (length(sigma_sqs) ==k) ) 
   stopifnot(all(colnames(eafs) == names(ns)) )
-  stopifnot(all(colnames(eafs) == names(sigmas_sqs)))
+  stopifnot(all(colnames(eafs) == names(sigma_sqs)))
   
   ## compute sample proportions -- relevant for all variants
   sample_proportion <- ns/sum(ns)
@@ -43,13 +43,13 @@ computeVSIF <- function(eafs, ns, sigmas_sqs){
     props <- pr.x*pr.z
     
     Bmat <- t(xmat) %*% diag(props) %*% xmat
-    Amat <- t(xmat) %*% diag(props) %*% diag( sigmas_sqs[rep(1:k, each=3)] ) %*% xmat
+    Amat <- t(xmat) %*% diag(props) %*% diag( sigma_sqs[rep(1:k, each=3)] ) %*% xmat
     
     # sandwich formula for computing the SE of effect size allowing for heterogeneous variances:
     SE_true <- sqrt( (solve(Bmat) %*% Amat %*% solve(Bmat))[2,2] )
     
     # standard SE formula:
-    SE_naive <- sqrt( solve(Bmat)[2,2] * sum(props*(sigmas_sqs[rep(1:k, each=3)]) ) )
+    SE_naive <- sqrt( solve(Bmat)[2,2] * sum(props*(sigma_sqs[rep(1:k, each=3)]) ) )
     
     # return a vector of large-sample true, naive SE, and inflation factor
     res[i,c("SE_true", "SE_naive", "Inflation_factor")] <- 
@@ -95,8 +95,8 @@ computeVSIFnullmod <- function(nullmod, eafs, group_var_vec){
   group_var_vec <- group_var_vec[nullmod_sample.id]
   
   ## prepare input for function computeVSIF
-  ns <- sigmas_sqs <- rep(NA, length(groups))
-  names(ns) <- names(sigmas_sqs) <- groups
+  ns <- sigma_sqs <- rep(NA, length(groups))
+  names(ns) <- names(sigma_sqs) <- groups
   
   # extract marginal residuals from the nullmod object:
   if (!is.null(nullmod$resid.marginal)){
@@ -107,10 +107,10 @@ computeVSIFnullmod <- function(nullmod, eafs, group_var_vec){
   
   for (i in 1:length(groups)){
     ns[[groups[i]]] <- sum(group_var_vec == groups[i])
-    sigmas_sqs[[groups[i]]] <- mean(resid[which(group_var_vec == groups[i])]^2)
+    sigma_sqs[[groups[i]]] <- mean(resid[which(group_var_vec == groups[i])]^2)
   }
   
-  return(computeVSIF(eafs, ns, sigmas_sqs))
+  return(computeVSIF(eafs, ns, sigma_sqs))
   
   
   
