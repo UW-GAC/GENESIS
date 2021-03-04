@@ -72,7 +72,7 @@ Tamar Sofer, Kenneth Rice
                     b=c(rep("g1", n*0.28), rep("g2", n*0.7), rep("g3", n*0.02)),
                     stringsAsFactors=FALSE)
   dat <- AnnotatedDataFrame(dat)
-  nm <- fitNullModel(dat, outcome="outcome", covars="b", sample.id=keep, verbose=FALSE)
+  nm <- fitNullModel(dat, outcome="outcome", covars="b", verbose=FALSE)
   eaf_vec <- c(0.1, 0.2, 0.5)
   names(eaf_vec) <- c("g1", "g2", "g3") 
   group_var_vec <- dat$b
