@@ -32,5 +32,5 @@
     Sigma.inv <- chol2inv(cholSigma)
 
     return(list(Sigma.inv = Sigma.inv, Vre = Vre, W = 1/diagV, cholSigma.diag = diag(cholSigma)))
-    # W is the diagonal matrix needed for approx.score.SE
+    # W is the diagonal matrix needed for fast.score.SE
 }

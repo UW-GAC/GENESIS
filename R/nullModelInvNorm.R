@@ -6,7 +6,7 @@
 nullModelInvNorm <- function(null.model, 
                              cov.mat = NULL,
                              norm.option = c("all", "by.group"),
-                             rescale = c("none", "model", "residSD"),
+                             rescale = c("residSD", "none", "model"),
                              AIREML.tol = 1e-4,
                              max.iter = 100, 
                              EM.iter = 0,
