@@ -1,6 +1,6 @@
 \name{computeVSIF}
 \alias{computeVSIF}
-\alias{computeVSIFnullmod}
+\alias{computeVSIFNullModel}
 \title{
 Computes variant-specific inflation factors
 }
@@ -10,14 +10,14 @@ in variances and allele frequencies across groups pooled together in analysis.
 }
 \usage{
 computeVSIF(eafs, ns, sigma_sqs)
-computeVSIFnullmod(nullmod, eafs, group_var_vec)
+computeVSIFNullModel(null.model, eafs, group_var_vec)
 }
 \arguments{
   \item{eafs}{A named vector of a matrix of effect allele frequencies across
   groups. Vector/column names are group names.}
   \item{ns}{A named vector of group sample sizes.}
   \item{sigma_sqs}{A named vector of residual variances across groups.}
-  \item{nullmod}{ A null model constructed with \code{\link{fitNullModel}}.}
+  \item{null.model}{ A null model constructed with \code{\link{fitNullModel}}.}
   \item{group_var_vec}{A named vector of group membership. Names are sample.ids,
   values are group names.}
 }
@@ -28,7 +28,7 @@ in residual variances across groups that are aggregated together (e.g.
 individuals with different genetic ancestry patterns). The inflation/deflation 
 is especially expected if a homogeneous variance model is used.
 
-\code{computeVSIFnullmod} uses the null model and vector of group membership to extract 
+\code{computeVSIFNullModel} uses the null model and vector of group membership to extract 
 sample sizes and residual variances for each group. It then calls function
 \code{computeVSIF} to compute the inflation factors. The null model 
 should be fit under a homogeneous variance model.
@@ -78,10 +78,10 @@ Tamar Sofer, Kenneth Rice
   group_var_vec <- dat$b
   names(group_var_vec) <- dat$sample.id
   
-  res <- computeVSIFnullmod(nm, eaf_vec, group_var_vec)
+  res <- computeVSIFNullModel(nm, eaf_vec, group_var_vec)
   
   eafs_mat <- matrix(c(0.1, 0.2, 0.5, 0.1, 0.01, 0.5), nrow = 2, byrow = TRUE)
   colnames(eafs_mat) <- c("g1", "g2", "g3")
-  res <- computeVSIFnullmod(nm, eafs_mat, group_var_vec)
+  res <- computeVSIFNullModel(nm, eafs_mat, group_var_vec)
 }
 

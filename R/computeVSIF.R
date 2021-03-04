@@ -64,7 +64,7 @@ computeVSIF <- function(eafs, ns, sigma_sqs){
 # a function that gets a null model and extract information from the null model
 # group_var_vec is a named vector. Names are sample.ids. Values define groups.
 # groups need to correspond to eafs. 
-computeVSIFnullmod <- function(nullmod, eafs, group_var_vec){
+computeVSIFNullModel <- function(null.model, eafs, group_var_vec){
   
   # if eafs is a vector, turn it into a matrix
   if (is.null(dim(eafs))){
@@ -81,11 +81,11 @@ computeVSIFnullmod <- function(nullmod, eafs, group_var_vec){
   stopifnot(all(is.element(group_var_vec, groups)))
   
   
-  # subset group_var_vec (if needed) to match sample.ids in nullmod 
-  if (!is.null(nullmod$sample.id)){
-    nullmod_sample.id <- nullmod$sample.id
+  # subset group_var_vec (if needed) to match sample.ids in null.model 
+  if (!is.null(null.model$sample.id)){
+    nullmod_sample.id <- null.model$sample.id
   } else{ # there is not sample.id entry
-    nullmod_sample.id <- rownames(nullmod$model.matrix)
+    nullmod_sample.id <- rownames(null.model$model.matrix)
   }
   
   # check that all nullmod_sample.id are in names of group_var_vec
@@ -98,11 +98,11 @@ computeVSIFnullmod <- function(nullmod, eafs, group_var_vec){
   ns <- sigma_sqs <- rep(NA, length(groups))
   names(ns) <- names(sigma_sqs) <- groups
   
-  # extract marginal residuals from the nullmod object:
-  if (!is.null(nullmod$resid.marginal)){
-    resid <- nullmod$resid.marginal
+  # extract marginal residuals from the null.model object:
+  if (!is.null(null.model$resid.marginal)){
+    resid <- null.model$resid.marginal
     } else{
-    resid <- nullmod$fit$resid.marginal
+    resid <- null.model$fit$resid.marginal
   }
   
   for (i in 1:length(groups)){
