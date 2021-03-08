@@ -247,3 +247,7 @@ setMethod(".calcScore",
                return(tab)
           })
 
+isNullModelFastScore <- function(null.model) {
+    !is.null(null.model$se.correction)
+}
+

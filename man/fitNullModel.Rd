@@ -13,6 +13,7 @@
 \alias{fitNullModelFastScore,SeqVarData-method}
 \alias{calcScore}
 \alias{nullModelFastScore}
+\alias{isNullModelFastScore}
 
 \title{Fit a Model Under the Null Hypothesis}
 
@@ -32,11 +33,13 @@
 
   \code{isNullModelSmall} returns TRUE if a null model is small; FALSE otherwise.
 
-  \code{fitNullModelFastScore} fits a null model that can be used for association testing with the fast approximation to the score standard error (SE) 
+  \code{fitNullModelFastScore} fits a null model that can be used for association testing with the fast approximation to the score standard error (SE). 
 
-  \code{calcScore} calculates the score, its true SE, and the fast SE for a set of variants; used to compute the SE correction factor used for the fast approximation
+  \code{calcScore} calculates the score, its true SE, and the fast SE for a set of variants; used to compute the SE correction factor used for the fast approximation.
 
-  \code{nullModelFastScore} updates a previously fit null model so that it can be used for association testing with the fast approximation to the score SE
+  \code{nullModelFastScore} updates a previously fit null model so that it can be used for association testing with the fast approximation to the score SE.
+
+  \code{isNullModelFastScore} returns TRUE if a null model can be used for association testing with the fast approximation to the score SE; FALSE otherwise.
 }
 
 \usage{
@@ -73,6 +76,8 @@ calcScore(x, null.model, variant.id = NULL, nvar = 100, min.mac = 20, sparse = T
           verbose = TRUE)
 
 nullModelFastScore(null.model, score.table, return.small = TRUE)
+
+isNullModelFastScore(null.model)
 }
 
 \arguments{
