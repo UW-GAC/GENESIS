@@ -115,7 +115,7 @@ nullModelFastScore <- function(null.model, score.table, return.small = TRUE){
         null.model <- nullModelSmall(null.model)
     }
     null.model$se.correction <- r
-    null.model$score.tablele <- score.table
+    null.model$score.table <- score.table
     return(null.model)
 }
 
