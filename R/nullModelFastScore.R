@@ -43,13 +43,13 @@ setMethod("fitNullModelFastScore",
                                          drop.zeros = drop.zeros, return.small = FALSE, verbose = verbose)
 
               # calculate true score SE and the fast approximation
-              tab <- calcScore(gdsobj = x, null.model = null.model,
+              tab <- calcScore(x, null.model = null.model,
                                variant.id = variant.id, nvar = nvar, min.mac = min.mac,
                                sparse = sparse, imputed = imputed, male.diploid = male.diploid,
                                genome.build = genome.build, verbose = verbose)
 
               # update the null model with the se.correction factor
-              null.model <- nullModelFastScore(null.model = null.model, tab = tab, return.small = return.small)
+              null.model <- nullModelFastScore(null.model = null.model, score.table = tab, return.small = return.small)
 
               null.model
           })
@@ -57,8 +57,7 @@ setMethod("fitNullModelFastScore",
 
 ## calculate the Score and Score.SE for a specified or random set of variants
 ## when a mixed model, also calculates the fast Score.SE approximation and the ratio to the true Score.SE
-calcScore <- function(gdsobj,
-                      null.model, 
+calcScore <- function(x, null.model,
                       variant.id = NULL,
                       nvar = 100, 
                       min.mac = 20, 
@@ -77,38 +76,38 @@ calcScore <- function(gdsobj,
 
      if(is.null(variant.id)){
           # select a random set of variants meeting min.mac in the sample set
-          variant.id <- .selectRandomVars(gdsobj, sample.id = sampid, nvar = nvar, min.mac = min.mac, verbose = verbose)
+          variant.id <- .selectRandomVars(x, sample.id = sampid, nvar = nvar, min.mac = min.mac, verbose = verbose)
           if(verbose) message(paste('Selected', length(variant.id), 'random variants with MAC >=', min.mac))
      }else{
           if(verbose) message(paste('User provided', length(variant.id), 'variants in variant.id'))
      }
      
      # calculate Score.SE using both approaches
-     tab <- .calcScore(gdsobj, null.model, variant.id = variant.id, sparse = sparse, imputed = imputed, 
+     tab <- .calcScore(x, null.model, variant.id = variant.id, sparse = sparse, imputed = imputed, 
                          male.diploid = male.diploid, genome.build = genome.build, verbose = verbose)
      return(tab)
 }
 
 
 ## updates the null model object with the parameter needed for fast.score.se	
-nullModelFastScore <- function(null.model, tab, return.small = TRUE){
+nullModelFastScore <- function(null.model, score.table, return.small = TRUE){
     # Update null model format
      null.model <- .updateNullModelFormat(null.model)
 
     # rbind a list of tables
-    if(class(tab) == 'list') tab <- data.table::rbindlist(tab)
+    if(class(score.table) == 'list') score.table <- data.table::rbindlist(score.table)
 
     # compute the mean of se.ratio
-    r <- mean(tab$se.ratio)
+    r <- mean(score.table$se.ratio)
 
     # compute SE(r) and check if enough variants were included
-    r.se <- sd(tab$se.ratio)/sqrt(nrow(tab))
+    r.se <- sd(score.table$se.ratio)/sqrt(nrow(score.table))
     val <- r.se/r
     message(paste('mean se.ratio: r = ', r))
     message(paste('SE(r)/r = ', val))
     if(val > 0.0025){
-        warning(paste('It is recommended that SE(r)/r be < 0.0025. It is suggested to increase the number of variants in tab; try at least', 
-          round(nrow(tab)*(val/0.0025)^2, 0), 'variants'))
+        warning(paste('It is recommended that SE(r)/r be < 0.0025. It is suggested to increase the number of variants in score.table; try at least', 
+          round(nrow(score.table)*(val/0.0025)^2, 0), 'variants'))
     }
 
     # update the null model
@@ -116,7 +115,7 @@ nullModelFastScore <- function(null.model, tab, return.small = TRUE){
         null.model <- nullModelSmall(null.model)
     }
     null.model$se.correction <- r
-    null.model$se.table <- tab
+    null.model$score.tablele <- score.table
     return(null.model)
 }
 

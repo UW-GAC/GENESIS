@@ -12,8 +12,8 @@
 \usage{
 \S4method{assocTestSingle}{SeqVarIterator}(gdsobj, null.model,
                 test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
-                recalc.pval.thresh=0.05, GxE=NULL,
-                sparse=TRUE, imputed=FALSE,
+                recalc.pval.thresh=0.05, fast.score.SE=FALSE,
+                GxE=NULL, sparse=TRUE, imputed=FALSE,
                 male.diploid=TRUE, genome.build=c("hg19", "hg38"),
                 verbose=TRUE)
 \S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model,
@@ -25,9 +25,10 @@
 \arguments{
     \item{gdsobj}{An object of class \code{\link{SeqVarIterator}} from the package \pkg{\link{SeqVarTools}}, or an object of class \code{\link{GenotypeIterator}} from the package \pkg{\link{GWASTools}}, containing the genotype data for the variants and samples to be used for the analysis.}
     \item{null.model}{A null model object returned by \code{\link{fitNullModel}}.}
-    \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Score"} (default), \code{"Score.SPA"}, \code{"BinomiRare"}, or \code{"CMP"}; \code{"Score.SPA"} can only be used when the family of the null model fit with \code{\link{fitNullModel}} is binomial.}
+    \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Score"} (default), \code{"Score.SPA"}, \code{"BinomiRare"}, or \code{"CMP"}; \code{"Score.SPA"}, \code{"BinomiRare"}, and \code{"CMP"} can only be used when the family of the null model fit with \code{\link{fitNullModel}} is binomial.}
     %\item{impute.geno}{A logical indicator of whether sporadic missing genotype values should be mean imputed. The default is TRUE. See 'Details' for further information.}
-    \item{recalc.pval.thresh}{If test is not "Score",  recalculate p-values using the specified `test` for variants with a Score p-value below this threshold; return the score p-value for all other variants.}
+    \item{recalc.pval.thresh}{If test is not "Score", recalculate p-values using the specified `test` for variants with a Score p-value below this threshold; return the score p-value for all other variants.}
+    \item{fast.score.SE}{Logical indicator of whether to use the fast approximation of the score standard error for testing variant association. When \code{FALSE} (default), the true score SE is calculated. When \code{TRUE}, the fast score SE approximation from SAIGE is used. This option can only be used with a null model fit with \code{\link{fitNullModelFastScore}} or updated with \code{\link{nullModelFastScore}}. See 'Details' for further information.}
     \item{GxE}{A vector of character strings specifying the names of the variables for which a genotype interaction term should be included.If \code{GxE} is not \code{NULL}, \code{test} is ignored and Wald tests of interaction are performed. If \code{GxE} is \code{NULL} (default) no genotype interactions are included. See 'Details' for further information.}
     %\item{ivar.return.betaCov}{Logical indicator of whether the estimated covariance matrix of the effect size estimates (betas) for the genotype and genotype interaction terms should be returned; the default is FALSE.}
     \item{sparse}{Logical indicator of whether to read genotypes as sparse Matrix objects; the default is \code{TRUE}. Set this to \code{FALSE} if the alternate allele dosage of the genotypes in the test are not expected to be mostly 0.}
@@ -50,6 +51,8 @@
     The input \code{GxE} can be used to perform GxE tests.  Multiple interaction variables may be specified, but all interaction variables specified must have been included as covariates in fitting the null model with \code{fitNullModel}.  When performing GxE analyses, \code{assocTestSingle} will report two tests:  (1) the joint Wald test of all genotype interaction terms in the model (this is the test for any genotype interaction effect), and (2) the joint Wald test of the genotype term along with all of the genotype interaction terms (this is the test for any genetic effect). Individual genotype interaction terms can be tested by creating test statistics from the reported effect size estimates and their standard errors (Note: when \code{GxE} contains a single continuous or binary covariate, this test is the same as the test for any genotype interaction effect mentioned above).  %In order to test more complex hypotheses regarding subsets of multiple genotype interaction terms, \code{ivar.return.betaCov} can be used to retrieve the estimated covariance matrix of the effect size estimates.
 
     The saddle point approximation (SPA), run by using \code{test = "Score.SPA"}, implements the method described by Dey et al. (2017), which was extended to mixed models by Zhou et al. (2018) in their SAIGE software. SPA provides better calibration of p-values when fitting mixed models with a binomial family for a sample with an imbalanced case to control ratio.
+
+    The fast approximation to the score standard error for testing variant association used by Zhou et al. (2018) in their SAIGE software is available by setting the \code{fast.score.SE} parameter to \code{TRUE}. This approximation may be much faster than computing the true score SE in large samples, as it replaces the full covariance matrix in the calculation with the product of a diagonal matrix and a scalar correction factor. This scalar correction factor must be computed beforehand and stored in the input \code{null.model} as \code{se.correction}, either by fitting the \code{null.model} with \code{\link{fitNullModelFastScore}}, or by updating a \code{null.model} previously fit with \code{\link{fitNullModel}} using the \code{\link{nullModelFastScore}} function. This approach assumes a constant scalar SE correction factor across all variants. This method is only available when \code{gdsobj} is a \code{\link{SeqVarIterator}} object.
 
     The BinomiRare test, run by using \code{test = "BinomiRare"}, and the CMP test, run by using \code{test = "CMP"} are carrier-only, robust tests. Only variants where the alternate allele is minor will be tested. Both tests focuse on carriers of the rare variant allele ("carriers"), and use the estimated probabilities of the binary outcome within the carriers, estimated under the null of not association, and the actual number of observed outcomes, to compute p-values. BinomiRare uses the Poisson-Binomial distribution, and the CMP uses the Conway-Maxwell-Poisson distribution, and is specifically designed for mixed models. (If \code{test = "CMP"} but \code{null.model$family$mixedmodel = FALSE}, the BinomiRare test will be run instead.) These tests provide both a traditional p-value (\code{"pval"}) and a mid-p-value (\code{"midp"}), which is less conservative/more liberal, with the difference being more pronounced for small number of carriers. The BinomiRare test is described in Sofer (2017) and compared to the Score and SPA in various settings in Sofer and Guo (2020).
     %A reference to the CMP test and the BinomiRare for mixed models will be provided once a preprint is available.
@@ -101,8 +104,11 @@
 
 \references{
     Dey, R., Schmidt, E. M., Abecasis, G. R., & Lee, S. (2017). A fast and accurate algorithm to test for binary phenotypes and its application to PheWAS. The American Journal of Human Genetics, 101(1), 37-49.
+
     Sofer, T. (2017). BinomiRare: A robust test of the association of a rare variant with a disease for pooled analysis and meta-analysis, with application to the HCHS/SOL. Genetic Epidemiology, 41(5), 388-395.
+
     Sofer, T. & Guo, N. (2020). Rare variants association testing for a binary outcome when pooling individual level data from heterogeneous studies. \url{https://www.biorxiv.org/content/10.1101/2020.04.17.047530v1}.
+    
     Zhou, W., Nielsen, J. B., Fritsche, L. G., Dey, R., Gabrielsen, M. E., Wolford, B. N., ... & Bastarache, L. A. (2018). Efficiently controlling for case-control imbalance and sample relatedness in large-scale genetic association studies. Nature genetics, 50(9), 1335.
 }
 
