@@ -34,7 +34,7 @@
 
   \code{fitNullModelFastScore} fits a null model that can be used for association testing with the fast approximation to the score standard error (SE) 
 
-  \code{calcScore} calculates the score, its true SE, and the fast SE for a set of variants used to compute the SE correction factor used for the fast approximation
+  \code{calcScore} calculates the score, its true SE, and the fast SE for a set of variants; used to compute the SE correction factor used for the fast approximation
 
   \code{nullModelFastScore} updates a previously fit null model so that it can be used for association testing with the fast approximation to the score SE
 }
@@ -83,9 +83,9 @@ nullModelFastScore(null.model, score.table, return.small = TRUE)
   \item{group.var}{This variable can only be used when \code{family = "gaussian"}. A character string specifying the name of a categorical variable in \code{x} that is used to fit heterogeneous residual error variances. If \code{NULL} (default), then a standard LMM with constant residual variance for all samples is fit. See 'Details' for more information.}
   \item{sample.id}{A vector of IDs for samples to include in the analysis.  If \code{NULL}, all samples in \code{x} are included. This argument is ignored if \code{x} is a data.frame; see 'Details'.}
   \item{family}{A description of the error distribution to be used in the model. The default \code{"gaussian"} fits a linear model; \code{"binomial"} and \code{"poisson"} are also supported. See 'Details' for more information.}
-  \item{two.stage}{Logical indicator of whether to fit a fully-adjusted two-stage rank normalization model. Can only be used when \code{family = "gaussian"}. See 'Details' for more information.}
+  \item{two.stage}{Logical indicator of whether to use a fully-adjusted two-stage rank normalization procedure for fitting the model. Can only be used when \code{family = "gaussian"}. See 'Details' for more information.}
   \item{norm.option}{Specifies whether the rank normalization should be done separately within each value of \code{group.var} (\code{"by.group"}) or with all samples together (\code{"all"}) when using \code{two.stage} or \code{nullModelInvNorm.}}
-  \item{rescale}{Specifies how to rescale the residuals after rank normalization when using \code{two.stage} or \code{nullModelInvNorm.}: \code{"none"} for no rescaling of the residuals; \code{"model"} to rescale by the model-based variance components, and \code{"residSD"} (default) to rescale by the standard deviation of the original marginal residuals. Rescaling is done with the same grouping as the rank normalization, specified by \code{norm.option}.}
+  \item{rescale}{Specifies how to rescale the residuals after rank normalization when using \code{two.stage} or \code{nullModelInvNorm.}: \code{"none"} for no rescaling of the residuals; \code{"model"} to rescale by the model-based variance components, and \code{"residSD"} (default) to rescale by the standard deviation of the original marginal residuals. Rescaling is done with the same grouping as the rank normalization, as specified by \code{norm.option}.}
   \item{start}{A vector of starting values for the variance component estimation procedure. The function will pick reasonable starting values when left \code{NULL} (default). See 'Details' for more information.}
   \item{AIREML.tol}{The convergence threshold for the Average Information REML (AIREML) procedure used to estimate the variance components of the random effects. See 'Details' for more information.}
   \item{max.iter}{The maximum number of iterations allowed to reach convergence.}
@@ -149,6 +149,8 @@ nullModelFastScore(null.model, score.table, return.small = TRUE)
     \item{RSS0}{the sum of resid.cholesky squared. This is the sum of squared residuals under the null hypothesis of no genetic effect for the covariate and random effect adjusted model using the Frisch-Waugh-Lovell theorem.}
     \item{CX}{a matrix needed for calculating association test statistics}
     \item{CXCXI}{a matrix needed for calculating association test statistics}
+    \item{se.correction}{The scalar correction factor for the fast approximation to the score SE; the average of the \code{se.ratio} values in \code{score.table}.}
+    \item{score.table}{A data frame with information about the variants used to compute the \code{se.correction} factor.}
 }
 
 The \code{fit} data frame contains the following columns, depending on which type of model was fit:
@@ -171,6 +173,21 @@ The \code{model} list element contains the following elements:
   \item{formula}{The model string.}
   \item{family}{A character string specifying the family used in the analysis.}
   \item{hetResid}{A logical indicator of whether heterogeneous residual variance components were used in the model (specified by \code{group.var}).}
+}
+
+The \code{score.table} data frame contains the following columns:
+\describe{
+  \item{variant.id}{The variant ID}
+  \item{chr}{The chromosome value}
+  \item{pos}{The base pair position}
+  \item{allele.index}{The index of the alternate allele. For biallelic variants, this will always be 1.}
+  \item{n.obs}{The number of samples with non-missing genotypes}
+  \item{freq}{The estimated alternate allele frequency}
+  \item{MAC}{The minor allele count. For multiallelic variants, "minor" is determined by comparing the count of the alternate allele specified by \code{allele.index} with the sum of all other alleles.}
+  \item{Score}{The value of the score function}
+  \item{Score.SE}{The estimated true standard error of the Score}
+  \item{Score.SE.fast}{The estimated fast standard error of the Score (before scalar correction)}
+  \item{se.ratio}{The ratio of Score.SE to Score.SE.fast; these values are averaged across varaints to estimate \code{se.correction} in \code{nullModelFastScore}.}
 }
 }
 
