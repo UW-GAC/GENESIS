@@ -180,17 +180,15 @@ setMethod("assocTestSingle",
 .checkNullModelTestSingle <- function(null.model, test, recalc.pval.thresh, fast.score.SE, GxE){
 	calc.score <- test %in% c("Score", "Score.SPA") | (recalc.pval.thresh < 1)
 
-	if(calc.score && fast.score.SE && !isNullModelFastScore(null.model)){
-		stop("null.model must have se.correction when fast.score.SE = TRUE; 
-			re-fit your null.model using `fitNullModelFastScore` or
-			update your null.model using `nullModelFastScore`.")
+	if(fast.score.SE && !isNullModelFastScore(null.model)){
+		stop("null.model must have se.correction when fast.score.SE = TRUE; re-fit your null.model using `fitNullModelFastScore` or update your null.model using `nullModelFastScore`")
 	}
 
 	if(calc.score && !(fast.score.SE) && isNullModelSmall(null.model)){
 		stop("small null.model cannot be used with test options provided")
 	}
 
-	if(!is.null(GxE) && isNullModelSmall(nullmod)){
+	if(!is.null(GxE) && isNullModelSmall(null.model)){
 		stop("small null.model cannot be used with GxE")
 	}
 }

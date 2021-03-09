@@ -201,9 +201,22 @@ test_that("small null model", {
     test.cmp.small2 <- testGenoSingleVar(nullmod.small2, G = geno, test = "CMP")
     expect_equal(test.cmp.big, test.cmp.small2)
 
-    expect_error(testGenoSingleVar(nullmod.small2, G = geno, test = "BinomiRare",
-                                   recalc.pval.thresh=0.5),
-                 "small null model cannot be used")
-    expect_error(testGenoSingleVar(nullmod.small2, G = geno, test = "Score"),
-                 "small null model cannot be used")
+    # expect_error(testGenoSingleVar(nullmod.small2, G = geno, test = "BinomiRare",
+    #                                recalc.pval.thresh=0.5),
+    #              "small null.model cannot be used with test options provided")
+    # expect_error(testGenoSingleVar(nullmod.small2, G = geno, test = "Score"),
+    #              "small null.model cannot be used with test options provided")
+
+    expect_error(.checkNullModelTestSingle(nullmod.small2, test = "BinomiRare", 
+        recalc.pval.thresh = 0.5, fast.score.SE = FALSE, GxE = NULL), 
+        "small null.model cannot be used with test options provided")
+    expect_error(.checkNullModelTestSingle(nullmod.small2, test = "Score", 
+        recalc.pval.thresh = 1, fast.score.SE = FALSE, GxE = NULL), 
+        "small null.model cannot be used with test options provided")
+    expect_error(.checkNullModelTestSingle(nullmod.small2, test = "Score.SPA", 
+        recalc.pval.thresh = 1, fast.score.SE = FALSE, GxE = NULL), 
+        "small null.model cannot be used with test options provided")
+    expect_error(.checkNullModelTestSingle(nullmod.small2, test = "Score", 
+        recalc.pval.thresh = 1, fast.score.SE = TRUE, GxE = NULL), 
+        "null.model must have se.correction when fast.score.SE = TRUE; re-fit your null.model using `fitNullModelFastScore` or update your null.model using `nullModelFastScore`")
 })
