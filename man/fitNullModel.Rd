@@ -9,6 +9,7 @@
 \alias{nullModelInvNorm}
 \alias{nullModelSmall}
 \alias{isNullModelSmall}
+\alias{fitNullModelFastScore}
 \alias{fitNullModelFastScore-methods}
 \alias{fitNullModelFastScore,SeqVarData-method}
 \alias{calcScore}
