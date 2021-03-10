@@ -99,7 +99,7 @@ isNullModelFastScore(null.model)
   \item{return.small}{Logical for whether to return a small version of the null model without NxN matrices. Default for \code{fitNullModel} is \code{FALSE}; only set to TRUE for use in association tests with \code{test = "BinomiRare"} or \code{test = "CMP"} and \code{recalc.pval.thresh = 1}. Default for \code{fitNullModelFastScore} is \code{TRUE}, as NxN matrices are not needed for the fast score SE approximation.}
   \item{null.model}{The output of \code{fitNullModel}.}
   \item{variant.id}{Optional list of variant.ids in \code{x} specifying which variants to use for computing the SE correction factor; if \code{NULL}, a random selection of \code{nvar} variants with minor allele count at least \code{min.mac} is used.}
-  \item{nvar}{The number of random variants to select from \code{x} for computing the SE correction factor; ignored if \code{variant.id} is specified.
+  \item{nvar}{The number of random variants to select from \code{x} for computing the SE correction factor; ignored if \code{variant.id} is specified.}
   \item{min.mac}{The minimum minor allele count allowed for the random variants selected from \code{x} for computing the SE correction factor; ignored if \code{variant.id} is specified.}
   \item{sparse}{Logical indicator of whether to read genotypes as sparse Matrix objects; the default is \code{TRUE}. Set this to \code{FALSE} if the alternate allele dosage of the genotypes in the test are not expected to be mostly 0.}
   \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles.}
