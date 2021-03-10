@@ -204,7 +204,7 @@ The \code{score.table} data frame contains the following columns:
     Relatedness for Binary Traits in Genetic Association Studies Using
     Logistic Mixed Models. American Journal of Human Genetics, 98(4):653-66.
 
-    Sofer, T., Zheng, X., Gogarten, S. M., Laurie, C. A., Grinde, K., Shaffer, J. R., ... & Rice, K. M. (2019). A fully adjusted two‐stage procedure for rank‐normalization in genetic association studies. Genetic epidemiology, 43(3), 263-275.
+    Sofer, T., Zheng, X., Gogarten, S. M., Laurie, C. A., Grinde, K., Shaffer, J. R., ... & Rice, K. M. (2019). A fully adjusted two-stage procedure for rank-normalization in genetic association studies. Genetic epidemiology, 43(3), 263-275.
 
     Zhou, W., Nielsen, J. B., Fritsche, L. G., Dey, R., Gabrielsen, M. E., Wolford, B. N., ... & Bastarache, L. A. (2018). Efficiently controlling for case-control imbalance and sample relatedness in large-scale genetic association studies. Nature genetics, 50(9), 1335.
 
