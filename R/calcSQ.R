@@ -16,11 +16,6 @@
             for(i in 1:g){
                 diagV[group.idx[[i]]] <- varComp[m+i]
             }
-            # mylevels <- rep(NA, n)
-            # for(i in 1:g){
-            #     mylevels[group.idx[[i]]] <- i # setting up vector of indicators; who is in which group
-            # }
-            # diagV <- (varComp[(m+1):(m+g)])[mylevels]
         }
 
     } else {
@@ -36,6 +31,6 @@
     # inverse
     Sigma.inv <- chol2inv(cholSigma)
 
-    return(list(Sigma.inv = Sigma.inv, Vre = Vre, diagV = diagV, cholSigma.diag = diag(cholSigma)))
-
+    return(list(Sigma.inv = Sigma.inv, Vre = Vre, W = 1/diagV, cholSigma.diag = diag(cholSigma)))
+    # W is the diagonal matrix needed for fast.score.SE
 }

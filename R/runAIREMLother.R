@@ -110,7 +110,8 @@
     eta <- as.numeric(lq$fits + crossprod(sq$Vre, lq$PY)) # X\beta + Zb
     
     return(list(allZero = FALSE, varComp = sigma2.k, AI = AI, converged = converged, zeroFLAG = zeroFLAG, niter = reps,
-                Sigma.inv = sq$Sigma.inv, beta = lq$beta, residM = lq$residM, fits = lq$fits, eta = eta, 
+                Sigma.inv = sq$Sigma.inv, W = sq$W,
+                beta = lq$beta, residM = lq$residM, fits = lq$fits, eta = eta, 
                 logLikR = lq$logLikR, logLik = lq$logLik, RSS = lq$RSS))
 }
 

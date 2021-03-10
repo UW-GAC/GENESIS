@@ -177,6 +177,9 @@ setMethod("assocTestAggregate",
                   AF.max  <-  0.5
               }
 
+              # Convert old null model format if necessary.
+              null.model <- .updateNullModelFormat(null.model)
+
               # filter samples to match null model
               sample.index <- .sampleIndexNullModel(gdsobj, null.model)
 

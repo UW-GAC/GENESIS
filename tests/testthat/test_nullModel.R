@@ -496,7 +496,7 @@ test_that(".updateNullModelFormat works with linear mixed models", {
   # Check for expected names.
   expected_names <- c("model", "varComp", "varCompCov", "fixef",
                       "betaCov", "fit", "logLik", "logLikR", "AIC", "model.matrix",
-                      "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
+                      "group.idx", "W", "cholSigmaInv", "converged", "zeroFLAG",
                       "niter", "RSS", "CX", "CXCXI", "RSS0")
   expect_true(setequal(names(nullmod), expected_names))
 
@@ -546,7 +546,7 @@ test_that(".updateNullModelFormat works with logistic mixed models", {
   # Check for expected names.
   expected_names <- c("model", "varComp", "varCompCov", "fixef",
                       "betaCov", "fit", "logLik", "logLikR", "niter", "AIC", "model.matrix",
-                      "group.idx", "cholSigmaInv", "converged", "zeroFLAG",
+                      "group.idx", "W", "cholSigmaInv", "converged", "zeroFLAG",
                       "RSS", "CX", "CXCXI", "RSS0")
   expect_true(setequal(names(nullmod), expected_names))
 
