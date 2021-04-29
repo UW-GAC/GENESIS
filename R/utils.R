@@ -60,7 +60,8 @@ setMethod("variantFilter",
 
 # index is in case we had to subset geno so it no longer matches the variant filter
 # (in the case of allele matching)
-.alleleFreq <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL, male.diploid=TRUE, genome.build=c("hg19", "hg38")) {
+.alleleFreq <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL, male.diploid=TRUE, genome.build=c("hg19", "hg38"),
+                        geno.test=c('additive','recessive','dominant')) {
 
     # check sex
     sex <- validateSex(gdsobj)
@@ -68,10 +69,17 @@ setMethod("variantFilter",
     if (is.null(sex)) {
         #freq <- 0.5*colMeans(geno, na.rm=TRUE)
         count <- colSums(geno, na.rm=TRUE)
-        # nsamp <- colSums(!is.na(geno))
+        ## nsamp <- colSums(!is.na(geno))
         nsamp <- .countNonMissing(geno, MARGIN = 2)
-        freq <- count/(2*nsamp)
-        mac <- round(pmin(count, 2*nsamp - count))
+        
+        if(genoTest=='additive'){
+            freq <- count/(2*nsamp)
+            mac <- round(pmin(count, 2*nsamp - count))
+        }else{ # recessive or dominant
+            freq <- count/nsamp
+            mac <- count
+        }
+        
         return(data.frame(freq=freq, MAC=mac))
     }
 
