@@ -2,21 +2,21 @@
 
 # compute variant-specific inflation-factor for multiple variants
 # variants are provided as a matrix, each row provides the allele frequencies 
-computeVSIF <- function(eafs, ns, sigma_sqs){
+computeVSIF <- function(freq, ns, sigma_sqs){
   
-  # if eafs is a vector, turn it into a matrix
-  if (is.null(dim(eafs))){
-    names_eafs <- names(eafs)
-    eafs <- matrix(eafs, nrow = 1)
-    colnames(eafs) <- names_eafs
+  # if freq is a vector, turn it into a matrix
+  if (is.null(dim(freq))){
+    names_freq <- names(freq)
+    freq <- matrix(freq, nrow = 1)
+    colnames(freq) <- names_freq
   }
   
-  k <- ncol(eafs)
+  k <- ncol(freq)
   
   # checks
   stopifnot((length(ns) == k ) & (length(sigma_sqs) ==k) ) 
-  stopifnot(all(colnames(eafs) == names(ns)) )
-  stopifnot(all(colnames(eafs) == names(sigma_sqs)))
+  stopifnot(all(colnames(freq) == names(ns)) )
+  stopifnot(all(colnames(freq) == names(sigma_sqs)))
   
   ## compute sample proportions -- relevant for all variants
   sample_proportion <- ns/sum(ns)
@@ -34,11 +34,11 @@ computeVSIF <- function(eafs, ns, sigma_sqs){
   # repeat for each variant:
   res <- data.frame(SE_true = NA, 
                     SE_naive = NA, 
-                    Inflation_factor = rep(NA, nrow(eafs)))
-  rownames(res) <- rownames(eafs)
+                    Inflation_factor = rep(NA, nrow(freq)))
+  rownames(res) <- rownames(freq)
   
-  for (i in 1:nrow(eafs)){
-    pr.x <- dbinom(xmat[,2], 2, rep(eafs[i,], each=3))
+  for (i in 1:nrow(freq)){
+    pr.x <- dbinom(xmat[,2], 2, rep(freq[i,], each=3))
     props <- pr.x*pr.z
     
     Bmat <- t(xmat) %*% diag(props) %*% xmat
@@ -62,21 +62,21 @@ computeVSIF <- function(eafs, ns, sigma_sqs){
 
 # a function that gets a null model and extract information from the null model
 # group_var_vec is a named vector. Names are sample.ids. Values define groups.
-# groups need to correspond to eafs. 
-computeVSIFNullModel <- function(null.model, eafs, group_var_vec){
+# groups need to correspond to freq. 
+computeVSIFNullModel <- function(null.model, freq, group_var_vec){
     
   # Convert old null model format if necessary.
   null.model <- .updateNullModelFormat(null.model)
   
-  # if eafs is a vector, turn it into a matrix
-  if (is.null(dim(eafs))){
-    names_eafs <- names(eafs)
-    eafs <- matrix(eafs, nrow = 1)
-    colnames(eafs) <- names_eafs
+  # if freq is a vector, turn it into a matrix
+  if (is.null(dim(freq))){
+    names_freq <- names(freq)
+    freq <- matrix(freq, nrow = 1)
+    colnames(freq) <- names_freq
   }
   
   # define groups
-  groups <- colnames(eafs)
+  groups <- colnames(freq)
   
   # check that groups specificied by allele frequencies match
   # the groups specified by group_var_vec
@@ -108,6 +108,6 @@ computeVSIFNullModel <- function(null.model, eafs, group_var_vec){
     sigma_sqs[[groups[i]]] <- mean(resid[which(group_var_vec == groups[i])]^2)
   }
   
-  return(computeVSIF(eafs, ns, sigma_sqs))
+  return(computeVSIF(freq, ns, sigma_sqs))
   
 }

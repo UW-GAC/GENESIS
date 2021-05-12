@@ -9,11 +9,11 @@ Computes variant-specific inflation factors resulting from differences
 in variances and allele frequencies across groups pooled together in analysis.
 }
 \usage{
-computeVSIF(eafs, ns, sigma_sqs)
-computeVSIFNullModel(null.model, eafs, group_var_vec)
+computeVSIF(freq, ns, sigma_sqs)
+computeVSIFNullModel(null.model, freq, group_var_vec)
 }
 \arguments{
-  \item{eafs}{A named vector of a matrix of effect allele frequencies across
+  \item{freq}{A named vector of a matrix of effect allele frequencies across
   groups. Vector/column names are group names.}
   \item{ns}{A named vector of group sample sizes.}
   \item{sigma_sqs}{A named vector of residual variances across groups.}
@@ -54,13 +54,13 @@ Tamar Sofer, Kenneth Rice
 \examples{
   ns <- c(2000, 5000, 100)
   sigma_sqs <- c(1, 1, 2)
-  eaf_vec <- c(0.1, 0.2, 0.5)
-  names(eaf_vec) <- names(ns) <- names(sigma_sqs) <- c("g1", "g2", "g3") 
-  res <- computeVSIF(eafs = eaf_vec, ns, sigma_sqs)
+  freq_vec <- c(0.1, 0.2, 0.5)
+  names(freq_vec) <- names(ns) <- names(sigma_sqs) <- c("g1", "g2", "g3") 
+  res <- computeVSIF(freq = freq_vec, ns, sigma_sqs)
   
-  eafs_mat <- matrix(c(0.1, 0.2, 0.5, 0.1, 0.01, 0.5), nrow = 2, byrow = TRUE)
-  colnames(eafs_mat) <- names(sigma_sqs)
-  res <- computeVSIF(eafs = eafs_mat, ns, sigma_sqs)
+  freq_mat <- matrix(c(0.1, 0.2, 0.5, 0.1, 0.01, 0.5), nrow = 2, byrow = TRUE)
+  colnames(freq_mat) <- names(sigma_sqs)
+  res <- computeVSIF(freq = freq_mat, ns, sigma_sqs)
 
 
   library(GWASTools)
@@ -73,15 +73,15 @@ Tamar Sofer, Kenneth Rice
                     stringsAsFactors=FALSE)
   dat <- AnnotatedDataFrame(dat)
   nm <- fitNullModel(dat, outcome="outcome", covars="b", verbose=FALSE)
-  eaf_vec <- c(0.1, 0.2, 0.5)
-  names(eaf_vec) <- c("g1", "g2", "g3") 
+  freq_vec <- c(0.1, 0.2, 0.5)
+  names(freq_vec) <- c("g1", "g2", "g3") 
   group_var_vec <- dat$b
   names(group_var_vec) <- dat$sample.id
   
-  res <- computeVSIFNullModel(nm, eaf_vec, group_var_vec)
+  res <- computeVSIFNullModel(nm, freq_vec, group_var_vec)
   
-  eafs_mat <- matrix(c(0.1, 0.2, 0.5, 0.1, 0.01, 0.5), nrow = 2, byrow = TRUE)
-  colnames(eafs_mat) <- c("g1", "g2", "g3")
-  res <- computeVSIFNullModel(nm, eafs_mat, group_var_vec)
+  freq_mat <- matrix(c(0.1, 0.2, 0.5, 0.1, 0.01, 0.5), nrow = 2, byrow = TRUE)
+  colnames(freq_mat) <- c("g1", "g2", "g3")
+  res <- computeVSIFNullModel(nm, freq_mat, group_var_vec)
 }
 
