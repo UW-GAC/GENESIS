@@ -1,8 +1,13 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
-\section{Version 2.21.4}{
+\section{Version 2.21.5}{
   \itemize{
     \item Added functions to compute variant-specific inflation factors.
+    }
+}
+\section{Version 2.21.4}{
+  \itemize{
+    \item Added the option to perform a fast approximation to the score standard error in assocTestSingle. New function nullModelFastScore prepares a null model to be used with this option.
   }
 }
 \section{Version 2.21.1}{
