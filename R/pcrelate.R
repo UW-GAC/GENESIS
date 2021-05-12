@@ -24,7 +24,7 @@ setMethod("pcrelate",
                    maf.thresh = 0.01,
                    maf.bound.method = c('filter', 'truncate'),
                    small.samp.correct = TRUE,
-                   num.cores = 1,
+                   BPPARAM = bpparam(),
                    verbose = TRUE) {
               .pcrelate(gdsobj, 
                         pcs = pcs,
@@ -36,7 +36,7 @@ setMethod("pcrelate",
                         maf.thresh = maf.thresh,
                         maf.bound.method = maf.bound.method,
                         small.samp.correct = small.samp.correct,
-                        num.cores = num.cores,
+                        BPPARAM = bpparam(),
                         verbose = verbose)
           })
 
@@ -52,7 +52,7 @@ setMethod("pcrelate",
                    maf.thresh = 0.01,
                    maf.bound.method = c('filter', 'truncate'),
                    small.samp.correct = TRUE,
-                   num.cores = 1,
+                   BPPARAM = bpparam(),
                    verbose = TRUE) {
               filt <- seqGetFilter(gdsobj)
               out <- .pcrelate(gdsobj, 
@@ -65,7 +65,7 @@ setMethod("pcrelate",
                                maf.thresh = maf.thresh,
                                maf.bound.method = maf.bound.method,
                                small.samp.correct = small.samp.correct,
-                               num.cores = num.cores,
+                               BPPARAM = BPPARAM,
                                verbose = verbose)
               seqSetFilter(gdsobj,
                            sample.sel=filt$sample.sel,
@@ -84,7 +84,7 @@ setMethod("pcrelate",
                       maf.thresh = 0.01,
                       maf.bound.method = c('filter', 'truncate'),
                       small.samp.correct = TRUE,
-                      num.cores = 1,
+                      BPPARAM = bpparam(),
                       verbose = TRUE){
 
     # checks
@@ -94,17 +94,7 @@ setMethod("pcrelate",
     .pcrelateChecks(pcs = pcs, scale = scale, ibd.probs = ibd.probs, sample.include = sample.include, training.set = training.set, 
                     maf.thresh = maf.thresh)
     
-    # set up number of cores
-    if (num.cores > 1) {
-        sys.cores <- parallel::detectCores(logical = TRUE)
-        bp <- MulticoreParam(workers=min(c(num.cores, sys.cores)))
-        ## doMC::registerDoMC(cores = min(c(num.cores, sys.cores)))
-        ## if(verbose) message('Using ', min(c(num.cores, sys.cores)), ' CPU cores')
-        if(verbose) message('Using ', bpworkers(bp), ' CPU cores')
-    } else {
-        bp <- SerialParam()
-        if(verbose) message('Using 1 CPU core')
-    }
+    if(verbose) message('Using ', bpworkers(), ' CPU cores')
 
     # number of sample blocks
     nsampblock <- ceiling(length(sample.include)/sample.block.size)
@@ -703,18 +693,10 @@ setMethod("meltMatrix",
 
 
 ### exported function for computing PC betas for individual specific allele frequency calculations ###
-calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, num.cores = 1, verbose = TRUE){
+calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, BPPARAM = bpparam(), verbose = TRUE){
     # checks - add some
     
-    # set up number of cores
-    if (num.cores > 1) {
-        sys.cores <- parallel::detectCores(logical = TRUE)
-        bp <- MulticoreParam(workers=min(c(num.cores, sys.cores)))
-        if(verbose) message('Using ', bpworkers(bp), ' CPU cores')
-    } else {
-        bp <- SerialParam()
-        if(verbose) message('Using 1 CPU core')
-    }
+    if(verbose) message('Using ', bpworkers(), ' CPU cores')
     
     # create matrix of PCs
     V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
@@ -756,20 +738,12 @@ calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, num.c
 pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sample.include.block2,
                               scale = c('overall', 'variant', 'none'), ibd.probs = TRUE,
                               maf.thresh = 0.01, maf.bound.method = c('filter', 'truncate'),
-                              num.cores = 1, verbose = TRUE){
+                              BPPARAM = bpparam(), verbose = TRUE){
 
     scale <- match.arg(scale)
     maf.bound.method <- match.arg(maf.bound.method)
     
-    # set up number of cores
-    if (num.cores > 1) {
-        sys.cores <- parallel::detectCores(logical = TRUE)
-        bp <- MulticoreParam(workers=min(c(num.cores, sys.cores)))
-        if(verbose) message('Using ', bpworkers(bp), ' CPU cores')
-    } else {
-        bp <- SerialParam()
-        if(verbose) message('Using 1 CPU core')
-    }
+    if(verbose) message('Using ', bpworkers(), ' CPU cores')
     
     # create (joint) PC matrix and indices
     sample.include <- unique(c(sample.include.block1, sample.include.block2))

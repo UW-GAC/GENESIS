@@ -13,9 +13,8 @@ import(data.table)
 #import(foreach)
 
 importFrom(BiocParallel,
-           MulticoreParam,
-           SerialParam,
            bpiterate,
+           bpparam,
            bpworkers)
 
 importFrom(GWASTools,
