@@ -4,7 +4,6 @@
 # variants are provided as a matrix, each row provides the allele frequencies 
 computeVSIF <- function(eafs, ns, sigma_sqs){
   
-  
   # if eafs is a vector, turn it into a matrix
   if (is.null(dim(eafs))){
     names_eafs <- names(eafs)
@@ -65,6 +64,9 @@ computeVSIF <- function(eafs, ns, sigma_sqs){
 # group_var_vec is a named vector. Names are sample.ids. Values define groups.
 # groups need to correspond to eafs. 
 computeVSIFNullModel <- function(null.model, eafs, group_var_vec){
+    
+  # Convert old null model format if necessary.
+  null.model <- .updateNullModelFormat(null.model)
   
   # if eafs is a vector, turn it into a matrix
   if (is.null(dim(eafs))){
@@ -99,11 +101,7 @@ computeVSIFNullModel <- function(null.model, eafs, group_var_vec){
   names(ns) <- names(sigma_sqs) <- groups
   
   # extract marginal residuals from the null.model object:
-  if (!is.null(null.model$resid.marginal)){
-    resid <- null.model$resid.marginal
-    } else{
-    resid <- null.model$fit$resid.marginal
-  }
+  resid <- null.model$fit$resid.marginal
   
   for (i in 1:length(groups)){
     ns[[groups[i]]] <- sum(group_var_vec == groups[i])
@@ -111,7 +109,5 @@ computeVSIFNullModel <- function(null.model, eafs, group_var_vec){
   }
   
   return(computeVSIF(eafs, ns, sigma_sqs))
-  
-  
   
 }
