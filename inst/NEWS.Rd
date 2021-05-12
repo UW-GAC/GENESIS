@@ -1,5 +1,10 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.21.4}{
+  \itemize{
+    \item Added the option to perform a fast approximation to the score standard error in assocTestSingle. New function nullModelFastScore prepares a null model to be used with this option.
+  }
+}
 \section{Version 2.21.1}{
   \itemize{
     \item Updated structure of fitNullModel objects. Null model objects with the previous structure will be automatically updated with a warning, but you may want to consider rerunning `fitNullModel` if you plan to use an older null model with the current version.

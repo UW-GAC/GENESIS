@@ -10,7 +10,7 @@ test_that("glmm", {
 
     expected_names <- c("model", "varComp", "varCompCov", "fixef",
                         "betaCov", "fit", "logLik", "logLikR", "niter", "AIC",
-                        "model.matrix", "group.idx", "cholSigmaInv", "converged",
+                        "model.matrix", "group.idx", "W", "cholSigmaInv", "converged",
                         "zeroFLAG", "RSS", "CX", "CXCXI", "RSS0")
     expect_true(setequal(names(nullmod), expected_names))
 

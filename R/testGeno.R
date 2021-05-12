@@ -8,13 +8,9 @@
 
 # E an environmental variable for optional GxE interaction analysis.
 testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA", "BinomiRare", "CMP"),
-                              recalc.pval.thresh = 1, GxE.return.cov = FALSE){
+                              recalc.pval.thresh = 1, fast.score.SE = FALSE, GxE.return.cov = FALSE){
     test <- match.arg(test)
     calc.score <- test %in% c("Score", "Score.SPA") | (recalc.pval.thresh < 1)
-
-    if (isNullModelSmall(nullmod) && (calc.score || !is.null(E))) {
-        stop("small null model cannot be used with options provided")
-    }
 
     G <- .genoAsMatrix(nullmod, G)
 
@@ -32,7 +28,11 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
 
     # run the test
     if(calc.score){
-        Gtilde <- calcGtilde(nullmod, G)
+        if(fast.score.SE){
+            Gtilde <- calcGtildeFast(nullmod, G, r = nullmod$se.correction)
+        }else{
+            Gtilde <- calcGtilde(nullmod, G)
+        }
         res <- .testGenoSingleVarScore(Gtilde, G, nullmod$fit$resid.PY, nullmod$RSS0)
     }
 

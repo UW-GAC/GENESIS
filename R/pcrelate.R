@@ -354,7 +354,7 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
 
     # compute number of observed snps by pair
     nonmiss <- !(is.na(G) | is.na(mu))
-    nsnp <- tcrossprod(nonmiss)
+    nsnp <- tcrossprod(nonmiss[idx,,drop=F], nonmiss[jdx,,drop=F])
 
     # index of missing values
     filt.idx <- which(!nonmiss)
@@ -437,7 +437,7 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
 
     # compute number of observed snps by pair
     nonmiss <- !(is.na(G) | is.na(mu))
-    nsnp <- tcrossprod(nonmiss)
+    nsnp <- tcrossprod(nonmiss[idx,,drop=F], nonmiss[jdx,,drop=F])
 
     # index of missing values
     filt.idx <- which(!nonmiss)
@@ -508,7 +508,7 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
 .pcrCalcNone <- function(G, mu, idx, jdx){
     # compute number of observed snps by pair
     nonmiss <- !(is.na(G) | is.na(mu))
-    nsnp <- tcrossprod(nonmiss)
+    nsnp <- tcrossprod(nonmiss[idx,,drop=F], nonmiss[jdx,,drop=F])
 
     # index of missing values
     filt.idx <- which(!nonmiss)

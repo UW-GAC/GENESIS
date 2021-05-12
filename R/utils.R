@@ -11,7 +11,7 @@ setMethod("validateSex",
               sex <- suppressWarnings(getSex(x))
               if (!is.null(sex)) {
                   if (all(sex %in% c(1,2,NA))) {
-                      sex <- c("M", "F")[sex]
+                      sex <- c("M", "F")[as.integer(sex)]
                   }
                   if (!all(sex %in% c("M", "F", NA))) {
                       sex <- NULL
