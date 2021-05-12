@@ -9,16 +9,16 @@ Computes variant-specific inflation factors resulting from differences
 in variances and allele frequencies across groups pooled together in analysis.
 }
 \usage{
-computeVSIF(freq, ns, sigma_sqs)
-computeVSIFNullModel(null.model, freq, group_var_vec)
+computeVSIF(freq, n, sigma.sq)
+computeVSIFNullModel(null.model, freq, group.var.vec)
 }
 \arguments{
-  \item{freq}{A named vector of a matrix of effect allele frequencies across
-  groups. Vector/column names are group names.}
-  \item{ns}{A named vector of group sample sizes.}
-  \item{sigma_sqs}{A named vector of residual variances across groups.}
+  \item{freq}{A named vector or a matrix of effect allele frequencies across
+  groups. Vector/column names are group names; rows (for a matrix) are variants.}
+  \item{n}{A named vector of group sample sizes.}
+  \item{sigma.sq}{A named vector of residual variances across groups.}
   \item{null.model}{ A null model constructed with \code{\link{fitNullModel}}.}
-  \item{group_var_vec}{A named vector of group membership. Names are sample.ids,
+  \item{group.var.vec}{A named vector of group membership. Names are sample.ids,
   values are group names.}
 }
 \details{
@@ -52,15 +52,15 @@ Whole Genome Sequencing Data from Multiple Studies. BioRxiv.
 Tamar Sofer, Kenneth Rice
 }
 \examples{
-  ns <- c(2000, 5000, 100)
-  sigma_sqs <- c(1, 1, 2)
-  freq_vec <- c(0.1, 0.2, 0.5)
-  names(freq_vec) <- names(ns) <- names(sigma_sqs) <- c("g1", "g2", "g3") 
-  res <- computeVSIF(freq = freq_vec, ns, sigma_sqs)
+  n <- c(2000, 5000, 100)
+  sigma.sq <- c(1, 1, 2)
+  freq.vec <- c(0.1, 0.2, 0.5)
+  names(freq.vec) <- names(n) <- names(sigma.sq) <- c("g1", "g2", "g3") 
+  res <- computeVSIF(freq = freq.vec, n, sigma.sq)
   
-  freq_mat <- matrix(c(0.1, 0.2, 0.5, 0.1, 0.01, 0.5), nrow = 2, byrow = TRUE)
-  colnames(freq_mat) <- names(sigma_sqs)
-  res <- computeVSIF(freq = freq_mat, ns, sigma_sqs)
+  freq.mat <- matrix(c(0.1, 0.2, 0.5, 0.1, 0.01, 0.5), nrow = 2, byrow = TRUE)
+  colnames(freq.mat) <- names(sigma.sq)
+  res <- computeVSIF(freq = freq.mat, n, sigma.sq)
 
 
   library(GWASTools)
@@ -73,15 +73,15 @@ Tamar Sofer, Kenneth Rice
                     stringsAsFactors=FALSE)
   dat <- AnnotatedDataFrame(dat)
   nm <- fitNullModel(dat, outcome="outcome", covars="b", verbose=FALSE)
-  freq_vec <- c(0.1, 0.2, 0.5)
-  names(freq_vec) <- c("g1", "g2", "g3") 
-  group_var_vec <- dat$b
-  names(group_var_vec) <- dat$sample.id
+  freq.vec <- c(0.1, 0.2, 0.5)
+  names(freq.vec) <- c("g1", "g2", "g3") 
+  group.var.vec <- dat$b
+  names(group.var.vec) <- dat$sample.id
   
-  res <- computeVSIFNullModel(nm, freq_vec, group_var_vec)
+  res <- computeVSIFNullModel(nm, freq.vec, group.var.vec)
   
-  freq_mat <- matrix(c(0.1, 0.2, 0.5, 0.1, 0.01, 0.5), nrow = 2, byrow = TRUE)
-  colnames(freq_mat) <- c("g1", "g2", "g3")
-  res <- computeVSIFNullModel(nm, freq_mat, group_var_vec)
+  freq.mat <- matrix(c(0.1, 0.2, 0.5, 0.1, 0.01, 0.5), nrow = 2, byrow = TRUE)
+  colnames(freq.mat) <- c("g1", "g2", "g3")
+  res <- computeVSIFNullModel(nm, freq.mat, group.var.vec)
 }
 

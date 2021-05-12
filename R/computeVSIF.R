@@ -2,7 +2,7 @@
 
 # compute variant-specific inflation-factor for multiple variants
 # variants are provided as a matrix, each row provides the allele frequencies 
-computeVSIF <- function(freq, ns, sigma_sqs){
+computeVSIF <- function(freq, n, sigma.sq){
   
   # if freq is a vector, turn it into a matrix
   if (is.null(dim(freq))){
@@ -14,12 +14,12 @@ computeVSIF <- function(freq, ns, sigma_sqs){
   k <- ncol(freq)
   
   # checks
-  stopifnot((length(ns) == k ) & (length(sigma_sqs) ==k) ) 
-  stopifnot(all(colnames(freq) == names(ns)) )
-  stopifnot(all(colnames(freq) == names(sigma_sqs)))
+  stopifnot((length(n) == k ) & (length(sigma.sq) ==k) ) 
+  stopifnot(all(colnames(freq) == names(n)) )
+  stopifnot(all(colnames(freq) == names(sigma.sq)))
   
   ## compute sample proportions -- relevant for all variants
-  sample_proportion <- ns/sum(ns)
+  sample_proportion <- n/sum(n)
   
   xmat <- data.frame(
     intercept <- rep(1, 3*k),
@@ -42,13 +42,13 @@ computeVSIF <- function(freq, ns, sigma_sqs){
     props <- pr.x*pr.z
     
     Bmat <- t(xmat) %*% diag(props) %*% xmat
-    Amat <- t(xmat) %*% diag(props) %*% diag( sigma_sqs[rep(1:k, each=3)] ) %*% xmat
+    Amat <- t(xmat) %*% diag(props) %*% diag( sigma.sq[rep(1:k, each=3)] ) %*% xmat
     
     # sandwich formula for computing the SE of effect size allowing for heterogeneous variances:
     SE_true <- sqrt( (solve(Bmat) %*% Amat %*% solve(Bmat))[2,2] )
     
     # standard SE formula:
-    SE_naive <- sqrt( solve(Bmat)[2,2] * sum(props*(sigma_sqs[rep(1:k, each=3)]) ) )
+    SE_naive <- sqrt( solve(Bmat)[2,2] * sum(props*(sigma.sq[rep(1:k, each=3)]) ) )
     
     # return a vector of large-sample true, naive SE, and inflation factor
     res[i,c("SE_true", "SE_naive", "Inflation_factor")] <- 
@@ -61,9 +61,9 @@ computeVSIF <- function(freq, ns, sigma_sqs){
 
 
 # a function that gets a null model and extract information from the null model
-# group_var_vec is a named vector. Names are sample.ids. Values define groups.
+# group.var.vec is a named vector. Names are sample.ids. Values define groups.
 # groups need to correspond to freq. 
-computeVSIFNullModel <- function(null.model, freq, group_var_vec){
+computeVSIFNullModel <- function(null.model, freq, group.var.vec){
     
   # Convert old null model format if necessary.
   null.model <- .updateNullModelFormat(null.model)
@@ -79,35 +79,35 @@ computeVSIFNullModel <- function(null.model, freq, group_var_vec){
   groups <- colnames(freq)
   
   # check that groups specificied by allele frequencies match
-  # the groups specified by group_var_vec
-  stopifnot(all(is.element(group_var_vec, groups)))
+  # the groups specified by group.var.vec
+  stopifnot(all(is.element(group.var.vec, groups)))
   
   
-  # subset group_var_vec (if needed) to match sample.ids in null.model 
+  # subset group.var.vec (if needed) to match sample.ids in null.model 
   if (!is.null(null.model$sample.id)){
-    nullmod_sample.id <- null.model$sample.id
+    nullmod_sample.id <- null.model$fit$sample.id
   } else{ # there is not sample.id entry
     nullmod_sample.id <- rownames(null.model$model.matrix)
   }
   
-  # check that all nullmod_sample.id are in names of group_var_vec
-  stopifnot(all(is.element(nullmod_sample.id, names(group_var_vec))))
+  # check that all nullmod_sample.id are in names of group.var.vec
+  stopifnot(all(is.element(nullmod_sample.id, names(group.var.vec))))
 
   # make sure that are ordered appropriately
-  group_var_vec <- group_var_vec[nullmod_sample.id]
+  group.var.vec <- group.var.vec[nullmod_sample.id]
   
   ## prepare input for function computeVSIF
-  ns <- sigma_sqs <- rep(NA, length(groups))
-  names(ns) <- names(sigma_sqs) <- groups
+  n <- sigma.sq <- rep(NA, length(groups))
+  names(n) <- names(sigma.sq) <- groups
   
   # extract marginal residuals from the null.model object:
   resid <- null.model$fit$resid.marginal
   
   for (i in 1:length(groups)){
-    ns[[groups[i]]] <- sum(group_var_vec == groups[i])
-    sigma_sqs[[groups[i]]] <- mean(resid[which(group_var_vec == groups[i])]^2)
+    n[[groups[i]]] <- sum(group.var.vec == groups[i])
+    sigma.sq[[groups[i]]] <- mean(resid[which(group.var.vec == groups[i])]^2)
   }
   
-  return(computeVSIF(freq, ns, sigma_sqs))
+  return(computeVSIF(freq, n, sigma.sq))
   
 }
