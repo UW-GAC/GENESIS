@@ -148,7 +148,7 @@ setMethod("pcrelate",
             .pcrelateVarBlock(G = G, beta = beta, V = V, idx = 1:nrow(V), jdx = 1:nrow(V), scale = scale, ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
         }
         
-        matList <- bpiterate(Giter, snpBlock, REDUCE = .matListCombine, reduce.in.order = FALSE)
+        matList <- bpiterate(Giter, snpBlock, REDUCE = .matListCombine, reduce.in.order = FALSE, BPPARAM = BPPARAM)
 
         # take ratios to compute final estimates
         estList <- .pcrelateCalcRatio(matList = matList, scale = scale, ibd.probs = ibd.probs)
@@ -728,7 +728,7 @@ calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, BPPAR
     # }
     ### rather than returning and rbinding here, we may want to be writing the output to something
     
-    beta <- bpiterate(Giter, .calcISAFBeta, VVtVi = VVtVi, REDUCE = rbindlist, reduce.in.order = FALSE)
+    beta <- bpiterate(Giter, .calcISAFBeta, VVtVi = VVtVi, REDUCE = rbindlist, reduce.in.order = FALSE, BPPARAM = BPPARAM)
     
     return(beta)
 }
@@ -782,7 +782,7 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
         .pcrelateVarBlock(	G = G, beta = beta.block, V = V, idx = idx, jdx = jdx, scale = scale, ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
     }
     
-    matList <- bpiterate(Giter, snpBlock, REDUCE = .matListCombine, reduce.in.order = FALSE)
+    matList <- bpiterate(Giter, snpBlock, REDUCE = .matListCombine, reduce.in.order = FALSE, BPPARAM = BPPARAM)
 
     # take ratios to compute final estimates
     estList <- .pcrelateCalcRatio(matList = matList, scale = scale, ibd.probs = ibd.probs)
