@@ -1,9 +1,9 @@
 # GenotypeData methods for SeqVarTools generics
-setMethod("chromWithPAR",
-          "GenotypeData",
-          function(gdsobj, ...) {
-              getChromosome(gdsobj, char=TRUE)
-          })
+# setMethod("chromWithPAR",
+#           "GenotypeData",
+#           function(gdsobj, ...) {
+#               getChromosome(gdsobj, char=TRUE)
+#           })
 
 setMethod("validateSex",
           "GenotypeData",
@@ -60,11 +60,10 @@ setMethod("variantFilter",
 
 # index is in case we had to subset geno so it no longer matches the variant filter
 # (in the case of allele matching)
-.alleleFreq <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL, male.diploid=TRUE, genome.build=c("hg19", "hg38")) {
+#.alleleFreq <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL, male.diploid=TRUE, genome.build=c("hg19", "hg38")) {
+.alleleFreq <- function(geno, chr, sex=NULL, male.diploid=TRUE) {
 
     # check sex
-    sex <- validateSex(gdsobj)
-    if (!is.null(sample.index)) sex <- sex[sample.index]
     if (is.null(sex)) {
         #freq <- 0.5*colMeans(geno, na.rm=TRUE)
         count <- colSums(geno, na.rm=TRUE)
@@ -76,8 +75,6 @@ setMethod("variantFilter",
     }
 
     # check chromosome
-    chr <- chromWithPAR(gdsobj, genome.build=genome.build)
-    if (!is.null(variant.index)) chr <- chr[variant.index]
     X <- chr %in% "X"
     Y <- chr %in% "Y"
     auto <- !X & !Y
