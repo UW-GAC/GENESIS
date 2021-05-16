@@ -29,6 +29,9 @@ admixMap <- function(admixDataList,
         stop("admixDataList must contain GenotypeIterator or SeqVarIterator objects")
     }
     n.samp <- length(sample.index)
+    
+    # get sex for calculating allele freq
+    sex <- validateSex(admixDataList[[1]])[sample.index]
 
     # get variant information
     var.info <- lapply(admixDataList, variantInfo, alleles=FALSE)
@@ -69,13 +72,15 @@ admixMap <- function(admixDataList,
             }
         }
         if (any(is.na(local))) warning("missing values in local ancestry will produce NA output for this block")
-
+        
+        # chromosome indicator is needed to calculate allele frequency for sex chroms
+        chr <- chromWithPAR(admixDataList[[i]], genome.build=genome.build)
+        
         # ancestral frequency
         # matrix:  rows are SNPs, columns are ancestries
         freq <- matrix(NA, nrow=n.var, ncol=v)
         for(i in 1:v){
-            freq[,i] <- .alleleFreq(admixDataList[[i]], local[,,i], sample.index=sample.index,
-                                    male.diploid=male.diploid, genome.build=genome.build)$freq
+            freq[,i] <- .alleleFreq(local[,,i], chr, sex, male.diploid=male.diploid)$freq
         }
         col <- if (v > 1) paste(names(admixDataList),".freq", sep="") else "freq"
         res[,col] <- freq
