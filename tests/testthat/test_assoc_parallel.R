@@ -8,17 +8,44 @@ test_that("assocTestSingle - SeqVarIterator", {
     SeqVarTools::resetIterator(iterator, verbose=FALSE)
     assoc2 <- assocTestSingle(iterator, nullmod, BPPARAM=BiocParallel::MulticoreParam(), verbose=FALSE)
     expect_equal(assoc, assoc2)
+    seqSetFilter(svd, verbose=FALSE)
+    iterator <- SeqVarTools::SeqVarBlockIterator(svd, variantBlock=50, verbose=FALSE)
+    assoc2 <- assocTestSingle(iterator, nullmod, BPPARAM=BiocParallel::MulticoreParam(), verbose=FALSE)
+    expect_equal(assoc, assoc2)
     seqClose(svd)
 })
 
 
-test_that("assocTestSingle", {
+test_that("assocTestSingle - GenotypeIterator", {
     genoData <- .testGenoData()
     iterator <- GenotypeBlockIterator(genoData, snpBlock=1000)
     nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", verbose=FALSE)
     assoc <- assocTestSingle(iterator, nullmod, BPPARAM=BiocParallel::SerialParam(), verbose=FALSE)
     GWASTools::resetIterator(iterator)
     assoc2 <- assocTestSingle(iterator, nullmod, BPPARAM=BiocParallel::MulticoreParam(), verbose=FALSE)
+    expect_equal(assoc, assoc2)
+    close(genoData)
+})
+
+test_that("assocTestAggreagate - SeqVarIterator", {
+    svd <- .testData()
+    seqSetFilterChrom(svd, include=1, verbose=FALSE)
+    iterator <- SeqVarWindowIterator(svd, windowSize=5e5, windowShift=2.5e5, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+    assoc <- assocTestAggregate(iterator, nullmod, BPPARAM=BiocParallel::SerialParam(), verbose=FALSE)
+    SeqVarTools::resetIterator(iterator, verbose=FALSE)
+    assoc2 <- assocTestAggregate(iterator, nullmod, BPPARAM=BiocParallel::MulticoreParam(), verbose=FALSE)
+    expect_equal(assoc, assoc2)
+    seqClose(svd)
+})
+
+test_that("assocTestAggregate - GenotypeIterator", {
+    genoData <- .testGenoData()
+    iterator <- GenotypeIterator(genoData, snpFilter=.testSnpFilter(genoData))
+    nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", verbose=FALSE)
+    assoc <- assocTestAggregate(iterator, nullmod, BPPARAM=SerialParam(), verbose=FALSE)
+    GWASTools::resetIterator(iterator)
+    assoc2 <- assocTestAggregate(iterator, nullmod, BPPARAM=MulticoreParam(), verbose=FALSE)
     expect_equal(assoc, assoc2)
     close(genoData)
 })
