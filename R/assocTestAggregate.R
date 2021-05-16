@@ -154,15 +154,13 @@ setMethod("assocTestAggregate",
                   geno <- getGenotypeSelection(gdsobj, scan=sample.index, order="selection",
                                                transpose=TRUE, use.names=FALSE, drop=FALSE)
                   
-                  chr <- getChromosome(gdsobj, char=TRUE)
-                  
                   if (!is.null(weight.user)) {
                       weight <- getSnpVariable(gdsobj, weight.user)
                   } else {
                       weight <- NULL
                   }
                   
-                  return(list(var.info=var.info, geno=geno, chr=chr, weight=weight))
+                  return(list(var.info=var.info, geno=geno, chr=var.info$chr, weight=weight))
               }
               
               

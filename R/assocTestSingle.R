@@ -115,9 +115,7 @@ setMethod("assocTestSingle",
                   geno <- getGenotypeSelection(gdsobj, scan=sample.index, order="selection",
                                                transpose=TRUE, use.names=FALSE, drop=FALSE)
                   
-                  chr <- getChromosome(gdsobj, char=TRUE)
-                  
-                  return(list(var.info=var.info, geno=geno, chr=chr))
+                  return(list(var.info=var.info, geno=geno, chr=var.info$chr))
               }
               
               res <- bpiterate(ITER, .testGenoBlockSingle, BPPARAM=BPPARAM,
