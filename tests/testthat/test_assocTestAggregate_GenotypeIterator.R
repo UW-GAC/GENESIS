@@ -2,6 +2,7 @@ context("aggregate variant tests on GenotypeIterator objects")
 library(GWASTools)
 
 BPPARAM <- BiocParallel::SerialParam()
+#BPPARAM <- BiocParallel::MulticoreParam()
 
 .testSnpFilter <- function(gdsobj, breaks=100, n=10) {
     snp.index <- 1:nsnp(gdsobj)

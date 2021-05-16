@@ -2,6 +2,7 @@ context("pcrelate tests")
 library(SeqVarTools)
 
 BPPARAM <- BiocParallel::SerialParam()
+#BPPARAM <- BiocParallel::MulticoreParam()
 
 test_that("pcrelate2 - variant blocks", {
     param <- BiocParallel::SerialParam()

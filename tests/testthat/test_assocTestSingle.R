@@ -2,6 +2,7 @@ context("single variant tests")
 library(SeqVarTools)
 
 BPPARAM <- BiocParallel::SerialParam()
+#BPPARAM <- BiocParallel::MulticoreParam()
 
 test_that("assocTestSingle", {
     svd <- .testData()

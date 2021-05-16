@@ -2,6 +2,7 @@ context("single variant tests on GenotypeIterator objects")
 library(GWASTools)
 
 BPPARAM <- BiocParallel::SerialParam()
+#BPPARAM <- BiocParallel::MulticoreParam()
 
 test_that("assocTestSingle", {
     genoData <- .testGenoData()
