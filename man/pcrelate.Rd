@@ -128,7 +128,8 @@ mypcair <- pcair(HapMap_genoData, kinobj = HapMap_ASW_MXL_KINGmat,
 HapMap_genoData <- GenotypeBlockIterator(HapMap_genoData)
 # run PC-Relate
 mypcrel <- pcrelate(HapMap_genoData, pcs = mypcair$vectors[,1,drop=FALSE],
-				training.set = mypcair$unrels)
+				training.set = mypcair$unrels,
+				BPPARAM=BiocParallel::SerialParam())
 head(mypcrel$kinBwtn)
 head(mypcrel$kinSelf)
 
