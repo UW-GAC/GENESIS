@@ -49,6 +49,7 @@ HapMap_genoData <- GenotypeBlockIterator(HapMap_genoData)
 # run PC-Relate
 mypcrel <- pcrelate(HapMap_genoData, pcs = mypcs,
                     training.set = mypcair$unrels,
+                    BPPARAM = BiocParallel::SerialParam(),
                     verbose = FALSE)
 
 # generate a phenotype
@@ -221,7 +222,8 @@ genoIterator <- GenotypeBlockIterator(HapMap_genoData, snpBlock=5000)
 
 The example R code below runs the association analyses using the null model we fit using `fitNullModel` in the previous section.
 ```{r}
-assoc <- assocTestSingle(genoIterator, null.model = nullmod)
+assoc <- assocTestSingle(genoIterator, null.model = nullmod,
+                         BPPARAM = BiocParallel::SerialParam())
 ```
 * `genoData` is a `GenotypeData` class object
 * `null.model` is the output from `fitNullModel`

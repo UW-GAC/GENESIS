@@ -131,7 +131,8 @@ The first 2 PCs separate populations, so we use them to compute kinship estimate
 ```{r pcrelate}
 seqSetFilter(seqData, variant.id=pruned)
 iterator <- SeqVarBlockIterator(seqData, variantBlock=20000, verbose=FALSE)
-pcrel <- pcrelate(iterator, pcs=pcs$vectors[,1:2], training.set=pcs$unrels)
+pcrel <- pcrelate(iterator, pcs=pcs$vectors[,1:2], training.set=pcs$unrels,
+                  BPPARAM=BiocParallel::SerialParam())
 seqResetFilter(seqData, verbose=FALSE)
 ```
 
@@ -182,7 +183,8 @@ For example purposes, we restrict our analysis to chromosome 1. The `seqSetFilte
 seqSetFilterChrom(seqData, include=1)
 
 iterator <- SeqVarBlockIterator(seqData, verbose=FALSE)
-assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE,
+                         BPPARAM=BiocParallel::SerialParam())
 head(assoc)
 ```
 
@@ -243,7 +245,7 @@ iterator <- SeqVarRangeIterator(seqData, variantRanges=genes, verbose=FALSE)
 
 # do a burden test on the rare variants in each gene
 assoc <- assocTestAggregate(iterator, nullmod, AF.max=0.05, test="Burden",
-                            verbose=FALSE)
+                            BPPARAM=BiocParallel::SerialParam(), verbose=FALSE)
 ```
 
 The output of an aggregate test is a list with two elements: 1) a data.frame with the test results for each aggregate unit, and 2) a list of data.frames containing the variants in each aggregate unit.
