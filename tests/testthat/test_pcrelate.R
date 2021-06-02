@@ -87,6 +87,24 @@ test_that("pcrelate2 - GenotypeData - sample include", {
     GWASTools::close(gd)
 })
 
+test_that("pcrelate2 - GenotypeData - MatrixGenotypeReader", {
+    genoData <- .testGenoData()
+    mypcs <- .testGenoPCs(genoData)
+    geno <- GWASTools::getGenotype(genoData)
+    matRdr <- GWASTools::MatrixGenotypeReader(geno,
+                                    snpID=GWASTools::getSnpID(genoData),
+                                    chromosome=GWASTools::getChromosome(genoData),
+                                    position=GWASTools::getPosition(genoData),
+                                    scanID=GWASTools::getScanID(genoData))
+    matData <- GenotypeData(matRdr, scanAnnot=GWASTools::getScanAnnotation(genoData))
+    GWASTools::close(genoData)
+
+    set.seed(91); samp.incl <- sample(GWASTools::getScanID(matData), 50)
+    iterator <- GWASTools::GenotypeBlockIterator(matData, snpBlock=1000)
+    myrel <- pcrelate(iterator, pcs = mypcs, sample.include=samp.incl, verbose=FALSE)
+    expect_true(setequal(myrel$kinSelf$ID, as.character(samp.incl)))
+})
+
 test_that("pcrelate2 - small sample correction", {
     svd <- .testData()
     mypcs <- .testPCs(svd)

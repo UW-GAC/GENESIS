@@ -157,6 +157,13 @@ setMethod(".readGeno",
           })
 
 setMethod(".readGeno",
+          "MatrixGenotypeReader",
+          function(gdsobj, sample.include=NULL, snp.index=NULL){
+              getGenotypeSelection(gdsobj, scanID=sample.include, snp=snp.index,
+                                   transpose=TRUE, drop=FALSE)
+          })
+
+setMethod(".readGeno",
           "GenotypeData",
           function(gdsobj, ...){
               .readGeno(gdsobj@data, ...)
