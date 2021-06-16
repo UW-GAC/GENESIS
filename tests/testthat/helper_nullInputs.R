@@ -36,9 +36,9 @@
     dat <- .testNullInputs(n=n, binary=binary)
     
     if (!binary) {
-        family <- "gaussian"
+        family <- gaussian()
     }  else {
-        family <- "binomial"
+        family <- binomial()
     }
     
     if (MM) {

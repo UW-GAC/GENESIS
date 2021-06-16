@@ -3,7 +3,7 @@ context("check null model logistic regression")
 test_that("logistic", {
     dat <- .testNullInputs(binary=TRUE)
 
-    nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, family=binomial(), verbose=FALSE)
 
     # Check for expected names.
     expected_names <- c("model", "varComp", "varCompCov", "fixef",
@@ -25,7 +25,7 @@ test_that("logistic", {
     expect_equal(nullmod$model$family$family, "binomial")
     expect_false(nullmod$model$family$mixedmodel)
 
-    glm.mod <- glm(dat$y ~ -1 + dat$X, family = "binomial")
+    glm.mod <- glm(dat$y ~ -1 + dat$X, family = binomial())
 
     expect_equivalent(nullmod$fit$fitted.values, fitted(glm.mod))
     expect_equivalent(nullmod$fit$resid.marginal, resid(glm.mod, type = "working"))

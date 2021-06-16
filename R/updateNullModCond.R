@@ -20,7 +20,7 @@ updateNullModCond <- function(nullmod, G, covMatList = NULL,  AIREML.tol = 1e-6,
     if (!nullmod$model$family$mixedmodel){ ## if it is not a mixed model, re-fit the model. (This includes heterogeneous residuals).
 
         return(.fitNullModel(nullmod$fit$outcome, X, covMatList = NULL,
-                             group.idx = nullmod$group.idx, family = nullmod$model$family$family))
+                             group.idx = nullmod$group.idx, family = nullmod$model$family))
     }
 
 
@@ -29,7 +29,7 @@ updateNullModCond <- function(nullmod, G, covMatList = NULL,  AIREML.tol = 1e-6,
     ## from the provided nullmod object.
 
     new.nullmod <- .fitNullModel(nullmod$fit$outcome, X, covMatList = covMatList,
-                                 group.idx = nullmod$group.idx, family = nullmod$model$family$family, start = nullmod$varComp,
+                                 group.idx = nullmod$group.idx, family = nullmod$model$family, start = nullmod$varComp,
                                  AIREML.tol = AIREML.tol, max.iter= max.iter, drop.zeros = drop.zeros, verbose = verbose)
 
     ## add any extra slots
