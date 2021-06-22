@@ -132,7 +132,7 @@ setMethod("variantFilter",
 }
 
 
-.meanImpute <- function(geno, freq) {
+.meanImputeFn <- function(geno, freq) {
     miss.idx <- which(is.na(geno))
     miss.var.idx <- ceiling(miss.idx/nrow(geno))
     geno[miss.idx] <- 2*freq[miss.var.idx]
