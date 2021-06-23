@@ -134,4 +134,31 @@ test_that("MAC - sex chrs", {
     seqClose(gds)
 }
 
-
+test_that("meanImpute", {
+    n <- 1000
+    #m <- 100000 takes too long
+    m <- 1000
+    geno <- matrix(rbinom(n*m, size = 2, prob = 0.1), nrow = n, ncol = m)
+    
+    miss <- sample(n*m, size = 0.1*n*m, replace = FALSE)
+    geno[miss] <- NA
+    
+    freq <- 0.5*colMeans(geno, na.rm = TRUE)
+    
+    # original function
+    x <- .meanImputeFn(geno, freq)
+    
+    # new function with matrix
+    y <- .meanImpute(geno, freq)
+    expect_equal(x, y)
+    
+    # new function with Matrix (one block)
+    Geno <- Matrix(geno)
+    y <- .meanImpute(Geno, freq)
+    expect_equivalent(x, as.matrix(y))
+    
+    # new function with Matrix (multiple blocks)
+    #n*m/2^25 # 3 blocks if m=100000
+    y <- .meanImpute(Geno, freq, maxelem = 4e5)
+    expect_equivalent(x, as.matrix(y))
+})
