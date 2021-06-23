@@ -1,5 +1,10 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.23.3}{
+  \itemize{
+    \item Mean imputation works for very large matrices (>2^31 elements).
+    }
+}
 \section{Version 2.21.5}{
   \itemize{
     \item Added functions to compute variant-specific inflation factors.
