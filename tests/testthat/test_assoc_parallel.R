@@ -1,5 +1,45 @@
 context("BiocParallel tests")
 
+test_that("stopOnError", {
+    FUN <- function(x) {
+        if (x < 5) {
+            return(x)
+        } else {
+            stop("x too big")
+        }
+    }
+    x <- 1:10
+    i <- 1
+    ITER <- function() {
+        if (i <= length(x)) {
+            res <- x[i]
+        } else {
+            res <- NULL
+        }
+        i <<- i + 1
+        return(res)
+    }
+    chk <- bpiterate(ITER, FUN, BPPARAM=BiocParallel::SerialParam())
+    expect_error(as.integer(unlist(chk)))
+    expect_message(
+        expect_error(.stopOnError(chk), "x too big"), 
+        "Error detected in iteration 5"
+        )
+    
+    i <- 1
+    chk <- bpiterate(ITER, FUN, BPPARAM=BiocParallel::MulticoreParam())
+    expect_message(
+        expect_error(.stopOnError(chk), "x too big"), 
+        "Error detected in iteration 5"
+    )
+    
+    x <- 1:4
+    i <- 1
+    chk <- bpiterate(ITER, FUN, BPPARAM=BiocParallel::SerialParam())
+    expect_equal(unlist(chk), 1:4)
+})
+
+
 test_that("assocTestSingle - SeqVarIterator", {
     svd <- .testData()
     iterator <- SeqVarTools::SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)

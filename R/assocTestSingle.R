@@ -68,6 +68,7 @@ setMethod("assocTestSingle",
                                fast.score.SE=fast.score.SE, GxE=GxE,
                                sparse=sparse, imputed=imputed,
                                male.diploid=male.diploid)
+              .stopOnError(res)
               as.data.frame(rbindlist(res))
           })
 
@@ -124,6 +125,7 @@ setMethod("assocTestSingle",
                                fast.score.SE=FALSE, GxE=GxE,
                                sparse=FALSE, imputed=FALSE,
                                male.diploid=male.diploid)
+              .stopOnError(res)
               as.data.frame(rbindlist(res))
           })
 

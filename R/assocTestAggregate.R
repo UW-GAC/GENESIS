@@ -96,6 +96,7 @@ setMethod("assocTestAggregate",
                                neig=neig, ntrace=ntrace, rho=rho,
                                sparse=sparse, imputed=imputed,
                                male.diploid=male.diploid)
+              .stopOnError(res)
               
               res1 <- lapply(res, function(x) x[[1]])
               res.var <- lapply(res, function(x) x[[2]])
@@ -170,6 +171,7 @@ setMethod("assocTestAggregate",
                                neig=neig, ntrace=ntrace, rho=rho,
                                sparse=FALSE, imputed=FALSE,
                                male.diploid=male.diploid)
+              .stopOnError(res)
 
               res1 <- lapply(res, function(x) x[[1]])
               res.var <- lapply(res, function(x) x[[2]])

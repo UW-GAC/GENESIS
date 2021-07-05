@@ -178,5 +178,6 @@ admixMap <- function(admixDataList,
     }
     
     res.list <- bpiterate(ITER, FUN, BPPARAM=BPPARAM)
+    .stopOnError(res.list)
     as.data.frame(rbindlist(res.list))
 }

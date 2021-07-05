@@ -237,3 +237,12 @@ setMethod(".annotateAssoc",
 .listIdentical <- function(x) {
     all(sapply(x[-1], FUN = identical, x[[1]]))
 }
+
+.stopOnError <- function(x) {
+    err.chk <- sapply(x, is, "error")
+    if (any(err.chk)) {
+        ind <- which(err.chk)[1]
+        message("Error detected in iteration ", ind)
+        stop(x[[ind]])
+    }
+}
