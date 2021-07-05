@@ -6,7 +6,7 @@
 
 ## y - outcome vector
 ## X - data.frame or model.matrix
-.fitNullModel <- function(y, X, covMatList = NULL, group.idx = NULL, family = "gaussian", start = NULL,
+.fitNullModel <- function(y, X, covMatList = NULL, group.idx = NULL, family = gaussian(), start = NULL,
                           AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0,
                           drop.zeros = TRUE, return.small = FALSE, verbose = TRUE){
 
@@ -19,19 +19,6 @@
 
     if (is.null(colnames(X))){
         colnames(X) <- paste0("X", 1:ncol(X))
-    }
-
-    if(is.character(family)){
-        family <- get(family)
-    }
-    if(is.function(family)){
-        family <- family()
-    }
-    if(is.null(family$family)){
-        stop("'family' not recognized")
-    }
-    if (!is.element(family$family, c("gaussian", "binomial", "poisson"))){
-        stop("family must be one of gaussian, binomial, or poisson")
     }
 
     ### Gaussian family

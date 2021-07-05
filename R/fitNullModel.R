@@ -18,12 +18,9 @@ setMethod("fitNullModel",
                    drop.zeros = TRUE,
                    return.small = FALSE,
                    verbose = TRUE) {
-
-              # check 
-              if((two.stage) & (family != "gaussian")){
-                  stop('two stage model only applies when family is "gaussian"')
-              }
-
+              
+              family <- .checkFamily(family, two.stage)
+              
               if (is.data.table(x)) x <- as.data.frame(x)
 
               desmat <- createDesignMatrix(x, outcome, covars, group.var)
@@ -123,6 +120,30 @@ setMethod("fitNullModel",
           function(x, ...) {
               fitNullModel(getScanAnnotation(x), ...)
           })
+
+
+## function to check 'family' input
+.checkFamily <- function(family, two.stage=FALSE) {
+    
+    if(is.character(family)){
+        family <- get(family)
+    }
+    if(is.function(family)){
+        family <- family()
+    }
+    if(is.null(family$family)){
+        stop("'family' not recognized")
+    }
+    if (!is.element(family$family, c("gaussian", "binomial", "poisson"))){
+        stop("family must be one of gaussian, binomial, or poisson")
+    }
+    
+    if((two.stage) & (family$family != "gaussian")){
+        stop('two stage model only applies when family is "gaussian"')
+    }
+    
+    return(family)
+}
 
 
 ## function to get sample.ids from cov.mat rownames and/or column names

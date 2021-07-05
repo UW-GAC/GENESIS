@@ -604,3 +604,15 @@ test_that(".updateNullModelFormat adds RSS0", {
   expect_equal(nm2$RSS0, expected_rss0)
 
 })
+
+test_that("two.stage works", {
+    set.seed(26); a <- rnorm(10)
+    dat <- data.frame(sample.id=letters[1:10],
+                      a=a,
+                      b=c(rep("a",5), rep("b", 5)),
+                      stringsAsFactors=FALSE)
+    dat <- AnnotatedDataFrame(dat)
+    nm <- fitNullModel(dat, outcome="a", covars="b", two.stage=TRUE, verbose=FALSE)
+    expect_equal(nm$model$formula, "rankInvNorm(resid(a)) ~ b")
+    expect_error(fitNullModel(dat, outcome="a", covars="b", two.stage=TRUE, family=binomial, verbose=FALSE), 'two stage model only applies when family is "gaussian"')
+})

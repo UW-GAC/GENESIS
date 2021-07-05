@@ -77,7 +77,7 @@ test_that("gaussian, covMat - Matrix, group", {
 test_that("binary, no covMat", {
     dat <- .testNullInputs(binary=TRUE)
 
-    nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, family=binomial(), verbose=FALSE)
     expect_true(isDiagonal(nullmod$cholSigmaInv))
     #expect_true(is(nullmod$Ytilde, "Matrix"))
     expect_true(is(nullmod$CX, "Matrix"))
@@ -89,7 +89,7 @@ test_that("binary, no covMat", {
 test_that("binary, covMat - matrix", {
     dat <- .testNullInputs(binary=TRUE)
 
-    nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, family="binomial", verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, dat$cor.mat, family=binomial(), verbose=FALSE)
     if (nullmod$zeroFLAG) {
         expect_true(isDiagonal(nullmod$cholSigmaInv))
         #expect_true(is(nullmod$Ytilde, "Matrix"))
@@ -109,7 +109,7 @@ test_that("binary, covMat - matrix", {
 test_that("binary, covMat - Matrix", {
     dat <- .testNullInputs(binary=TRUE)
 
-    nullmod <- .fitNullModel(dat$y, dat$X, Matrix(dat$cor.mat), family="binomial", verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, Matrix(dat$cor.mat), family=binomial(), verbose=FALSE)
     expect_true(is(nullmod$cholSigmaInv, "Matrix"))
     #expect_true(is(nullmod$Ytilde, "Matrix"))
     expect_true(is(nullmod$CX, "Matrix"))

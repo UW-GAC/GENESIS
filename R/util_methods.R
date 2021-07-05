@@ -96,6 +96,38 @@ setMethod(".countNonMissing",
             })
 
 
+setGeneric(".meanImpute", function(geno, freq, ...) standardGeneric(".meanImpute"))
+
+setMethod(".meanImpute",
+          "matrix",
+          function(geno, freq){
+              .meanImputeFn(geno, freq)
+          })
+
+setMethod(".meanImpute",
+          "Matrix",
+          function(geno, freq, maxelem = 2^30){
+              
+              # determine the number of blocks needed
+              nr <- as.numeric(nrow(geno))
+              nc <- as.numeric(ncol(geno))
+              nblock <- ceiling(nr*nc/maxelem)
+              
+              if(nblock > 1){
+                  blocks <- unname(split(1:nc, cut(1:nc, nblock)))
+                  # apply to each block
+                  ans <- lapply(blocks, function(b) {
+                      .meanImputeFn(geno[,b], freq[b])
+                  })
+                  # recombine blocks
+                  ans <- do.call(cbind, ans)
+                  ans
+              }else{
+                  .meanImputeFn(geno, freq)
+              }
+          })
+
+
 setGeneric(".readSampleId", function(x) standardGeneric(".readSampleId"))
 setMethod(".readSampleId",
           "matrix",
@@ -151,6 +183,13 @@ setMethod(".readGeno",
 
 setMethod(".readGeno",
           "GdsGenotypeReader",
+          function(gdsobj, sample.include=NULL, snp.index=NULL){
+              getGenotypeSelection(gdsobj, scanID=sample.include, snp=snp.index,
+                                   transpose=TRUE, drop=FALSE)
+          })
+
+setMethod(".readGeno",
+          "MatrixGenotypeReader",
           function(gdsobj, sample.include=NULL, snp.index=NULL){
               getGenotypeSelection(gdsobj, scanID=sample.include, snp=snp.index,
                                    transpose=TRUE, drop=FALSE)

@@ -6,7 +6,7 @@ test_that("glmm", {
     # Create test data where that doesn't happen to test the glmm models.
     set.seed(1); y <- sample(c(0,1), 100, replace = T)
     set.seed(2); cov_mat <- crossprod(matrix(rnorm(100*100, sd=0.05), 100, 100))
-    nullmod <- .fitNullModel(y, dat$X, covMatList=dat$cor.mat, family="binomial", verbose=FALSE)
+    nullmod <- .fitNullModel(y, dat$X, covMatList=dat$cor.mat, family=binomial(), verbose=FALSE)
 
     expected_names <- c("model", "varComp", "varCompCov", "fixef",
                         "betaCov", "fit", "logLik", "logLikR", "niter", "AIC",
@@ -38,7 +38,7 @@ test_that("glmm", {
 test_that("glmm fit as glm", {
     dat <- .testNullInputs(binary=TRUE)
     # Note that when running with test data, variance components go to zero.
-    expect_message(nullmod <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial", verbose=FALSE),
+    expect_message(nullmod <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family=binomial(), verbose=FALSE),
                    "using glm")
 
     expected_names <- c("model", "varComp", "varCompCov", "fixef",

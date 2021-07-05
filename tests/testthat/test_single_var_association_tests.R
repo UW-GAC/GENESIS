@@ -48,16 +48,16 @@ test_that("singleVarTest - logistic - wald", {
     res.glm <- test.wald	
     
     for (i in 1:ncol(geno)){
-        nullmod <- .fitNullModel(dat$y, cbind(dat$X, geno[,i]), family="binomial", verbose=FALSE)
+        nullmod <- .fitNullModel(dat$y, cbind(dat$X, geno[,i]), family=binomial(), verbose=FALSE)
         test.wald[i,] <- nullmod$fixef[4,]
-        glm.temp <-  glm(dat$y ~ -1 + dat$X + geno[,i], family="binomial")
+        glm.temp <-  glm(dat$y ~ -1 + dat$X + geno[,i], family=binomial())
         res.glm[i,] <- summary(glm.temp)$coef[4,]
     }
 
     expect_equal(res.glm, test.wald)
     
     ## check that we get appropriate error when using the wald test instead of score with binomial outcomes:
-    nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, family=binomial(), verbose=FALSE)
     test.score <- testGenoSingleVar(nullmod, G = geno)
 
     expect_equal(test.score$Score.pval, test.wald$Wald.pval, tolerance = 0.01)
@@ -69,13 +69,13 @@ test_that("singleVarTest - logistic - score", {
     dat <- .testNullInputs(n, binary=TRUE)
     geno <- .testGenoMatrix(n)
     
-    nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, family=binomial(), verbose=FALSE)
     test.score <- testGenoSingleVar(nullmod, G = geno, test = "Score")
 
     res.glm <- rep(NA, ncol(geno))	
     for (i in 1:ncol(geno)){
         g <- geno[,i]
-        glm.temp <-  glm(dat$y ~ -1 + dat$X + g, family="binomial")
+        glm.temp <-  glm(dat$y ~ -1 + dat$X + g, family=binomial())
         rao <- anova(glm.temp, test="Rao")
         res.glm[i] <- rao["g", "Pr(>Chi)"]
     }
@@ -154,7 +154,7 @@ test_that("singleVarTest - SPA", {
     dat <- .testNullInputs(n, binary=TRUE)
     geno <- .testGenoMatrix(n)
     
-    nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, family=binomial(), verbose=FALSE)
     test.score <- testGenoSingleVar(nullmod, G = geno, test = "Score")
     test.spa <- testGenoSingleVar(nullmod, G = geno, test = "Score.SPA")
     expect_true(max(test.score$Score.pval - test.spa$SPA.pval) < 0.01)
@@ -165,7 +165,7 @@ test_that("SPA_pval works with empty input", {
     dat <- .testNullInputs(n, binary=TRUE)
     geno <- .testGenoMatrix(n)
     
-    nullmod <- .fitNullModel(dat$y, dat$X, family="binomial", verbose=FALSE)
+    nullmod <- .fitNullModel(dat$y, dat$X, family=binomial(), verbose=FALSE)
     empty <- data.frame(Score=numeric(), Score.SE=numeric(), Score.Stat=numeric(), Score.pval=numeric())
     empty.G <- matrix(nrow=n, ncol=0)
     test.spa <- SPA_pval(score.result=empty, nullmod=nullmod, G=empty.G)
@@ -176,13 +176,13 @@ test_that("SPA_pval works with empty input", {
 test_that("small null model", {
     n <- 100
     dat <- .testNullInputs(n, binary=TRUE)
-    nullmod.big <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial",
+    nullmod.big <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family=binomial(),
                                  return.small=FALSE, verbose=FALSE)
     geno <- .testGenoMatrix(n)
     test.br.big <- testGenoSingleVar(nullmod.big, G = geno, test = "BinomiRare")
     test.cmp.big <- testGenoSingleVar(nullmod.big, G = geno, test = "CMP")
     
-    nullmod.small1 <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family="binomial",
+    nullmod.small1 <- .fitNullModel(dat$y, dat$X, covMatList=dat$cor.mat, family=binomial(),
                                     return.small=TRUE, verbose=FALSE)
     expect_equal(setdiff(names(nullmod.big), names(nullmod.small1)),
                  c("cholSigmaInv", "CX", "CXCXI"))
