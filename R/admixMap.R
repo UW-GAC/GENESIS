@@ -52,6 +52,8 @@ admixMap <- function(admixDataList,
 
     # n.iter <- length(variantFilter(admixDataList[[1]]))
     # set.messages <- ceiling(n.iter / 100) # max messages = 100
+                  
+    if(verbose) message('Using ', bpnworkers(BPPARAM), ' CPU cores')
     
     b <- 1
     ITER <- function() {

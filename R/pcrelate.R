@@ -94,7 +94,7 @@ setMethod("pcrelate",
     .pcrelateChecks(pcs = pcs, scale = scale, ibd.probs = ibd.probs, sample.include = sample.include, training.set = training.set, 
                     maf.thresh = maf.thresh)
     
-    if(verbose) message('Using ', bpworkers(), ' CPU cores')
+    if(verbose) message('Using ', bpnworkers(BPPARAM), ' CPU cores')
 
     # number of sample blocks
     nsampblock <- ceiling(length(sample.include)/sample.block.size)

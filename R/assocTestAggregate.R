@@ -48,6 +48,8 @@ setMethod("assocTestAggregate",
               # results
               # n.iter <- length(variantFilter(gdsobj))
               # set.messages <- ceiling(n.iter / 100) # max messages = 100
+                  
+              if(verbose) message('Using ', bpnworkers(BPPARAM), ' CPU cores')
               
               i <- 1
               ITER <- function() {
@@ -138,6 +140,8 @@ setMethod("assocTestAggregate",
               # results
               # n.iter <- length(variantFilter(gdsobj))
               # set.messages <- ceiling(n.iter / 100) # max messages = 100
+                  
+              if(verbose) message('Using ', bpnworkers(BPPARAM), ' CPU cores')
               
               i <- 1
               ITER <- function() {
