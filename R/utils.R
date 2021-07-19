@@ -58,14 +58,9 @@ setMethod("variantFilter",
 }
 
 
-# index is in case we had to subset geno so it no longer matches the variant filter
-# (in the case of allele matching)
-.alleleFreq <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL, male.diploid=TRUE, genome.build=c("hg19", "hg38")) {
+.alleleFreq <- function(geno, chr=NULL, sex=NULL, male.diploid=TRUE) {
 
-    # check sex
-    sex <- validateSex(gdsobj)
-    if (!is.null(sample.index)) sex <- sex[sample.index]
-    if (is.null(sex)) {
+    if (is.null(sex) | is.null(chr)) {
         #freq <- 0.5*colMeans(geno, na.rm=TRUE)
         count <- colSums(geno, na.rm=TRUE)
         # nsamp <- colSums(!is.na(geno))
@@ -76,8 +71,6 @@ setMethod("variantFilter",
     }
 
     # check chromosome
-    chr <- chromWithPAR(gdsobj, genome.build=genome.build)
-    if (!is.null(variant.index)) chr <- chr[variant.index]
     X <- chr %in% "X"
     Y <- chr %in% "Y"
     auto <- !X & !Y
@@ -243,4 +236,13 @@ setMethod(".annotateAssoc",
 
 .listIdentical <- function(x) {
     all(sapply(x[-1], FUN = identical, x[[1]]))
+}
+
+.stopOnError <- function(x) {
+    err.chk <- sapply(x, is, "error")
+    if (any(err.chk)) {
+        ind <- which(err.chk)[1]
+        message("Error detected in iteration ", ind)
+        stop(x[[ind]])
+    }
 }

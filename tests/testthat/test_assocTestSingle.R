@@ -1,11 +1,14 @@
 context("single variant tests")
 library(SeqVarTools)
 
+BPPARAM <- BiocParallel::SerialParam()
+#BPPARAM <- BiocParallel::MulticoreParam()
+
 test_that("assocTestSingle", {
     svd <- .testData()
     iterator <- SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
     nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
-    assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
     seqResetFilter(svd, verbose=FALSE)
     freq <- alleleFrequency(svd)
     keep <- freq > 0 & freq < 1
@@ -17,7 +20,7 @@ test_that("assocTestSingle - binary", {
     svd <- .testData()
     iterator <- SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
     nullmod <- fitNullModel(iterator, outcome="status", covars=c("sex", "age"), family="binomial", verbose=FALSE)
-    assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
     seqResetFilter(svd, verbose=FALSE)
     freq <- alleleFrequency(svd)
     keep <- freq > 0 & freq < 1
@@ -30,9 +33,9 @@ test_that("assocTestSingle - SPA", {
     grm <- .testGRM(svd)
     iterator <- SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
     nullmod <- fitNullModel(iterator, outcome="status", covars=c("sex", "age"), cov.mat=grm, family="binomial", verbose=FALSE)
-    assoc <- assocTestSingle(iterator, nullmod, test="Score", verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, test="Score", BPPARAM=BPPARAM, verbose=FALSE)
     resetIterator(iterator, verbose=FALSE)
-    assoc2 <- assocTestSingle(iterator, nullmod, test="Score.SPA", verbose=FALSE)
+    assoc2 <- assocTestSingle(iterator, nullmod, test="Score.SPA", BPPARAM=BPPARAM, verbose=FALSE)
     nospa <- is.na(assoc2$SPA.converged)
     expect_equal(assoc$Score.pval[nospa], assoc2$SPA.pval[nospa])
     expect_true(max(assoc$Score.pval - assoc2$SPA.pval) < 0.02)
@@ -46,7 +49,7 @@ test_that("assocTestSingle - sample selection", {
     iterator <- SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
     nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), cov.mat=grm, sample.id=samp, verbose=FALSE)
     expect_equal(nrow(nullmod$model.matrix), 50)
-    assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
     expect_equal(max(assoc$n.obs), 50)
     seqClose(svd)
 })
@@ -59,7 +62,7 @@ test_that("assocTestSingle - reorder samples", {
     nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), cov.mat=grm[samp,samp], verbose=FALSE)
     expect_equal(nrow(nullmod$model.matrix), 50)
     expect_equal(nullmod$fit$sample.id, samp)
-    assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
     expect_equal(max(assoc$n.obs), 50)
 
     # check that we get same assoc results with samples in different order
@@ -67,7 +70,7 @@ test_that("assocTestSingle - reorder samples", {
     nullmod2 <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), cov.mat=grm[samp.sort,samp.sort], verbose=FALSE)
     expect_equal(nullmod2$fit$sample.id, samp.sort)
     resetIterator(iterator, verbose=FALSE)
-    assoc2 <- assocTestSingle(iterator, nullmod2, verbose=FALSE)
+    assoc2 <- assocTestSingle(iterator, nullmod2, BPPARAM=BPPARAM, verbose=FALSE)
     # this test may not be reliable - see test_nullModel.R
     expect_equal(assoc, assoc2)
     #expect_equal(assoc[,1:6], assoc2[,1:6])
@@ -101,7 +104,7 @@ test_that("assocTestSingle matches regression", {
 
     nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
-    assoc2 <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+    assoc2 <- assocTestSingle(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
     expect_equal(nrow(assoc1), nrow(assoc2))
     expect_equal(assoc1$variant.id, assoc2$variant.id)
     expect_equal(assoc1$n, assoc2$n.obs)
@@ -123,12 +126,12 @@ test_that("assocTestSingle - GxE", {
     sampleData(svd) <- tmp
     iterator <- SeqVarBlockIterator(svd, variantBlock=1000, verbose=FALSE)
     nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age", "env"), verbose=FALSE)
-    assoc <- assocTestSingle(iterator, nullmod, GxE="env", verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, GxE="env", BPPARAM=BPPARAM, verbose=FALSE)
     expect_true(all(c("Est.G:envb", "SE.G:envb", "GxE.Stat") %in% names(assoc)))
 
     # multiple E vars
     resetIterator(iterator, verbose=FALSE)
-    assoc <- assocTestSingle(iterator, nullmod, GxE=c("env", "sex"), verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, GxE=c("env", "sex"), BPPARAM=BPPARAM, verbose=FALSE)
     expect_true(all(c("Est.G:sexM", "SE.G:sexM", "Est.G:envb", "SE.G:envb", "GxE.Stat") %in% names(assoc)))
     seqClose(svd)
 })
@@ -142,7 +145,7 @@ test_that("missing sample.id in null model", {
     nullmod <- fitNullModel(pData(sampleData(svd)), outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
     expect_false("sample.id" %in% names(nullmod))
     expect_equal(length(nullmod$fit$outcome), n)
-    assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
     expect_equal(max(assoc$n.obs), n)
     seqClose(svd)
 })
@@ -151,7 +154,7 @@ test_that("BinomiRare", {
     svd <- .testData()
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
     nullmod <- fitNullModel(iterator, outcome="status", family="binomial", verbose=FALSE)
-    assoc <- assocTestSingle(iterator, nullmod, test="BinomiRare", verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, test="BinomiRare", BPPARAM=BPPARAM, verbose=FALSE)
     expect_true(all(assoc$freq <= 0.5))
     seqClose(svd)
 })

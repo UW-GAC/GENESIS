@@ -15,11 +15,11 @@
                 recalc.pval.thresh=0.05, fast.score.SE=FALSE,
                 GxE=NULL, sparse=TRUE, imputed=FALSE,
                 male.diploid=TRUE, genome.build=c("hg19", "hg38"),
-                verbose=TRUE)
+                BPPARAM=bpparam(), verbose=TRUE)
 \S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model,
                 test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
                 recalc.pval.thresh=0.05, GxE=NULL,
-                male.diploid=TRUE, verbose=TRUE)
+                male.diploid=TRUE, BPPARAM=bpparam(), verbose=TRUE)
 }
 
 \arguments{
@@ -35,6 +35,7 @@
     \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles.}
     \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid.}
     \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes.}
+    \item{BPPARAM}{A \code{\link{BiocParallelParam}} object to process blocks of variants in parallel.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is \code{TRUE}.}
 }
 
@@ -144,7 +145,8 @@ iterator <- SeqVarBlockIterator(seqData)
 nullmod <- fitNullModel(iterator, outcome="outcome", covars="sex")
 
 # run the association test
-assoc <- assocTestSingle(iterator, nullmod)
+assoc <- assocTestSingle(iterator, nullmod,
+                         BPPARAM=BiocParallel::SerialParam())
 
 seqClose(iterator)
 
@@ -168,7 +170,8 @@ iterator <- GenotypeBlockIterator(genoData)
 nullmod <- fitNullModel(iterator, outcome="outcome")
 
 # run the association test
-assoc <- assocTestSingle(iterator, nullmod)
+assoc <- assocTestSingle(iterator, nullmod,
+                         BPPARAM=BiocParallel::SerialParam())
 
 close(iterator)
 }

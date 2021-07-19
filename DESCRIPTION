@@ -27,8 +27,8 @@ Description: The GENESIS package provides methodology for estimating,
 License: GPL-3
 URL: https://github.com/UW-GAC/GENESIS
 Depends:
-Imports: Biobase, BiocGenerics, GWASTools, gdsfmt, GenomicRanges, IRanges, S4Vectors, SeqArray, SeqVarTools, SNPRelate,
-	 data.table, foreach, graphics, grDevices, igraph, Matrix, methods, reshape2, stats, utils
+Imports: Biobase, BiocGenerics, BiocParallel, GWASTools, gdsfmt, GenomicRanges, IRanges, S4Vectors, SeqArray, SeqVarTools, SNPRelate,
+	 data.table, graphics, grDevices, igraph, Matrix, methods, reshape2, stats, utils
 Suggests: CompQuadForm, COMPoissonReg, poibin, SPAtest, survey,
     testthat, BiocStyle, knitr, rmarkdown,
     GWASdata, dplyr, ggplot2, GGally, RColorBrewer, TxDb.Hsapiens.UCSC.hg19.knownGene

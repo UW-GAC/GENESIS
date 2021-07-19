@@ -1,6 +1,9 @@
 context("aggregate variant tests on GenotypeIterator objects")
 library(GWASTools)
 
+BPPARAM <- BiocParallel::SerialParam()
+#BPPARAM <- BiocParallel::MulticoreParam()
+
 .testSnpFilter <- function(gdsobj, breaks=100, n=10) {
     snp.index <- 1:nsnp(gdsobj)
     ind <- cut(snp.index, breaks=breaks)
@@ -15,7 +18,7 @@ test_that("assocTestAggregate", {
     iterator <- GenotypeIterator(genoData, snpFilter=.testSnpFilter(genoData))
     
     nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", cov.mat=covMat, verbose=FALSE)
-    assoc <- assocTestAggregate(iterator, nullmod, verbose=FALSE)
+    assoc <- assocTestAggregate(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
     nwin <- length(snpFilter(iterator))
     expect_equal(nrow(assoc$results), nwin)
     expect_equal(length(assoc$variantInfo), nwin)
@@ -36,7 +39,7 @@ test_that("user weights", {
     iterator <- GenotypeIterator(genoData, snpFilter=.testSnpFilter(genoData))
     
     nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", verbose=FALSE)
-    assoc <- assocTestAggregate(iterator, nullmod, weight.user="weights", verbose=FALSE)
+    assoc <- assocTestAggregate(iterator, nullmod, weight.user="weights", BPPARAM=BPPARAM, verbose=FALSE)
     tmp <- do.call(rbind, assoc$variantInfo)
     annot <- getSnpAnnotation(genoData)
     expect_equal(tmp$weight, annot$weight[annot$snpID %in% tmp$variant.id & annot$weight > 0])

@@ -1,7 +1,7 @@
 admixMap <- function(admixDataList,
                      null.model,
                      male.diploid=TRUE, genome.build=c("hg19", "hg38"),
-                     verbose = TRUE){
+                     BPPARAM=bpparam(), verbose=TRUE){
 
     # if admixDataList is one file, convert to a list
     if(!is.list(admixDataList)){
@@ -29,6 +29,9 @@ admixMap <- function(admixDataList,
         stop("admixDataList must contain GenotypeIterator or SeqVarIterator objects")
     }
     n.samp <- length(sample.index)
+    
+    # get sex for calculating allele freq
+    sex <- validateSex(admixDataList[[1]])[sample.index]
 
     # get variant information
     var.info <- lapply(admixDataList, variantInfo, alleles=FALSE)
@@ -37,7 +40,6 @@ admixMap <- function(admixDataList,
 
     # set up results matrix
     # add in frequency of each ancestry at the SNP
-    res.list <- list()
     nv <- c("n.obs")
     if(v > 1){
         for(i in 1:v){
@@ -48,16 +50,30 @@ admixMap <- function(admixDataList,
         nv <- append(nv, c("freq", "Est", "SE", "Stat", "pval"))
     }
 
-
-    n.iter <- length(variantFilter(admixDataList[[1]]))
-    set.messages <- ceiling(n.iter / 100) # max messages = 100
+    # n.iter <- length(variantFilter(admixDataList[[1]]))
+    # set.messages <- ceiling(n.iter / 100) # max messages = 100
+                  
+    if(verbose) message('Using ', bpnworkers(BPPARAM), ' CPU cores')
+    
     b <- 1
-    iterate <- TRUE
-    while (iterate) {
+    ITER <- function() {
+        iterate <- TRUE
+        if (b > 1) {
+            for (i in 1:v) {
+                if (is(admixDataList[[i]], "GenotypeIterator")) {
+                    iterate <- GWASTools::iterateFilter(admixDataList[[i]])
+                } else {
+                    iterate <- SeqVarTools::iterateFilter(admixDataList[[i]], verbose=FALSE)
+                }
+            }
+        }
+        b <<- b + 1
+        if (!iterate) {
+            return(NULL)
+        }
+        
         var.info <- variantInfo(admixDataList[[1]], alleles=FALSE)
         n.var <- nrow(var.info)
-
-        res <- matrix(NA, nrow=n.var, ncol=length(nv), dimnames=list(NULL, nv))
 
         # get local ancestry for the block
         local <- array(NA, dim=c(n.samp,n.var,v)) # indices: scan, snp, ancestry
@@ -69,13 +85,27 @@ admixMap <- function(admixDataList,
             }
         }
         if (any(is.na(local))) warning("missing values in local ancestry will produce NA output for this block")
-
+        
+        # chromosome indicator is needed to calculate allele frequency for sex chroms
+        chr <- chromWithPAR(admixDataList[[i]], genome.build=genome.build)
+        
+        return(list(var.info=var.info, local=local, chr=chr))
+    }
+    
+    FUN <- function(x) {
+        var.info <- x$var.info
+        local <- x$local
+        chr <- x$chr
+        rm(x)
+        
+        n.var <- nrow(var.info)
+        res <- matrix(NA, nrow=n.var, ncol=length(nv), dimnames=list(NULL, nv))
+    
         # ancestral frequency
         # matrix:  rows are SNPs, columns are ancestries
         freq <- matrix(NA, nrow=n.var, ncol=v)
         for(i in 1:v){
-            freq[,i] <- .alleleFreq(admixDataList[[i]], local[,,i], sample.index=sample.index,
-                                    male.diploid=male.diploid, genome.build=genome.build)$freq
+            freq[,i] <- .alleleFreq(local[,,i], chr, sex, male.diploid=male.diploid)$freq
         }
         col <- if (v > 1) paste(names(admixDataList),".freq", sep="") else "freq"
         res[,col] <- freq
@@ -143,20 +173,13 @@ admixMap <- function(admixDataList,
         # results data frame
         res <- cbind(var.info, res)
 
-        res.list[[b]] <- res
-
-        if (verbose & n.iter > 1 & b %% set.messages == 0) {
-            message(paste("Iteration", b , "of", n.iter, "completed"))
-        }
-        b <- b + 1
-        for (i in 1:v) {
-            if (is(admixDataList[[i]], "GenotypeIterator")) {
-                iterate <- GWASTools::iterateFilter(admixDataList[[i]])
-            } else {
-                iterate <- SeqVarTools::iterateFilter(admixDataList[[i]], verbose=verbose)
-            }
-        }
+        # if (verbose & n.iter > 1 & b %% set.messages == 0) {
+        #     message(paste("Iteration", b , "of", n.iter, "completed"))
+        # }
+        return(res)
     }
-
+    
+    res.list <- bpiterate(ITER, FUN, BPPARAM=BPPARAM)
+    .stopOnError(res.list)
     as.data.frame(rbindlist(res.list))
 }

@@ -7,7 +7,8 @@ Run admixture analyses
 }
 \usage{
 admixMap(admixDataList, null.model, male.diploid=TRUE,
-         genome.build=c("hg19", "hg38"), verbose=TRUE)
+         genome.build=c("hg19", "hg38"), 
+         BPPARAM=bpparam(), verbose=TRUE)
 }
 
 \arguments{
@@ -15,6 +16,7 @@ admixMap(admixDataList, null.model, male.diploid=TRUE,
     \item{null.model}{A null model object returned by \code{\link{fitNullModel}}.}
   \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid.}
   \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes.}
+  \item{BPPARAM}{A \code{\link{BiocParallelParam}} object to process blocks of variants in parallel.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is TRUE.}
 }
 
@@ -73,7 +75,8 @@ genoIterators <- lapply(genoDataList[1:2], GenotypeBlockIterator)
 null.model <- fitNullModel(scanAnnot, outcome="pheno", covars="covar")
 
 # run the association test
-myassoc <- admixMap(genoIterators, null.model)
+myassoc <- admixMap(genoIterators, null.model, 
+                    BPPARAM=BiocParallel::SerialParam())
 head(myassoc)
 
 lapply(genoDataList, close)
@@ -115,7 +118,8 @@ for (anc in c("afr", "amer", "eur")){
 genoIterators <- lapply(genoDataList[1:2], GenotypeBlockIterator)
 
 # run the association test
-myassoc <- admixMap(genoIterators, null.model)
+myassoc <- admixMap(genoIterators, null.model,
+                    BPPARAM=BiocParallel::SerialParam())
 
 close(genoDataList[[1]])
 unlink(tmpfile)

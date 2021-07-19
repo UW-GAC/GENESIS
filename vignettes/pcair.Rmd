@@ -238,7 +238,8 @@ In order to run PC-Relate, we first need to create an iterator object to read SN
 # run PC-Relate
 HapMap_genoData <- GenotypeBlockIterator(HapMap_genoData, snpInclude=pruned)
 mypcrelate <- pcrelate(HapMap_genoData, pcs = mypcair$vectors[,1:2], 
-                       training.set = mypcair$unrels)
+                       training.set = mypcair$unrels,
+			 	       BPPARAM = BiocParallel::SerialParam())
 ```
 * `genoData` is a `GenotypeIterator` class object
 * `pcs` is a matrix whose columns are the PCs used for the ancestry adjustment

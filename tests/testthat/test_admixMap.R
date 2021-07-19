@@ -1,5 +1,8 @@
 context("admixMap tests")
 
+BPPARAM <- BiocParallel::SerialParam()
+#BPPARAM <- BiocParallel::MulticoreParam()
+
 test_that("admixMap", {
     gdsfmt::showfile.gds(closeall=TRUE, verbose=FALSE)
     gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
@@ -51,8 +54,8 @@ test_that("admixMap", {
     })
     
     null.model <- fitNullModel(annot, outcome = "pheno", covars = "covar")
-    myassoc <- admixMap(genoIterators, null.model, verbose=FALSE)
-    myassoc2 <- admixMap(seqIterators, null.model, verbose=FALSE)
+    myassoc <- admixMap(genoIterators, null.model, BPPARAM=BPPARAM, verbose=FALSE)
+    myassoc2 <- admixMap(seqIterators, null.model, BPPARAM=BPPARAM, verbose=FALSE)
     expect_equal(myassoc, myassoc2)
 
     # make sure we're reading variant info correctly
@@ -60,7 +63,7 @@ test_that("admixMap", {
 
     # check running with only one ancestry
     GWASTools::resetIterator(genoIterators[[1]])
-    myassoc3 <- admixMap(genoIterators[[1]], null.model, verbose=FALSE)
+    myassoc3 <- admixMap(genoIterators[[1]], null.model, BPPARAM=BPPARAM, verbose=FALSE)
 
     lapply(genoIterators, GWASTools::close)
     lapply(seqIterators, seqClose)

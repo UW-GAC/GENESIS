@@ -206,8 +206,9 @@ setMethod(".calcScore",
                n.obs <- .countNonMissing(geno, MARGIN = 2)
 
                # allele frequency
-               freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index,
-                                        male.diploid=male.diploid, genome.build=genome.build)
+               chr <- chromWithPAR(gdsobj, genome.build=genome.build)
+               sex <- validateSex(gdsobj)[sample.index]
+               freq <- .alleleFreq(geno, chr, sex, male.diploid=male.diploid)
 
                # filter monomorphic variants
                keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq, imputed=imputed)

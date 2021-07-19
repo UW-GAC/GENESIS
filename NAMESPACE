@@ -10,7 +10,12 @@ import(Biobase)
 import(gdsfmt)
 import(Matrix)
 import(data.table)
-import(foreach)
+#import(foreach)
+
+importFrom(BiocParallel,
+           bpiterate,
+           bpparam,
+           bpnworkers)
 
 importFrom(GWASTools,
            GdsGenotypeReader,
