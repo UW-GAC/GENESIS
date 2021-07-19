@@ -696,7 +696,7 @@ setMethod("meltMatrix",
 calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, BPPARAM = bpparam(), verbose = TRUE){
     # checks - add some
     
-    if(verbose) message('Using ', bpworkers(), ' CPU cores')
+    if(verbose) message('Using ', bpnworkers(BPPARAM), ' CPU cores')
     
     # create matrix of PCs
     V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
@@ -743,7 +743,7 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
     scale <- match.arg(scale)
     maf.bound.method <- match.arg(maf.bound.method)
     
-    if(verbose) message('Using ', bpworkers(), ' CPU cores')
+    if(verbose) message('Using ', bpnworkers(BPPARAM), ' CPU cores')
     
     # create (joint) PC matrix and indices
     sample.include <- unique(c(sample.include.block1, sample.include.block2))
