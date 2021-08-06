@@ -134,10 +134,40 @@ setMethod("assocTestSingle",
           })
 
 
+
 # function to process a block of genotype data
 .testGenoBlockSingle <- function(x, sex, null.model, test,
                                  recalc.pval.thresh, fast.score.SE, GxE,
                                  sparse, imputed, male.diploid, ...) {
+
+    x <- .prepGenoBlock(x, sex=sex, test=test, imputed=imputed, male.diploid=male.diploid)
+    var.info <- x$var.info
+    n.obs <- x$n.obs
+    freq <- x$freq
+    geno <- x$geno
+    rm(x)
+    
+    # do the test
+    if (ncol(geno) == 0){
+        res.i <- NULL
+    } else {
+        assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test,
+                                   recalc.pval.thresh=recalc.pval.thresh,
+                                   fast.score.SE=fast.score.SE)
+        
+        res.i <- cbind(var.info, n.obs, freq, assoc)
+    }
+    
+    #if (verbose & n.iter > 1 & i %% set.messages == 0) {
+    #    message(paste("Iteration", i , "of", n.iter, "completed"))
+    #}
+    return(res.i)
+}
+
+
+# function to pre-process genotype data before testing
+.prepGenoBlock <- function(x, sex, test, imputed, male.diploid) {
+    
     var.info <- x$var.info
     geno <- x$geno
     chr <- x$chr
@@ -170,23 +200,8 @@ setMethod("assocTestSingle",
         geno <- .meanImpute(geno, freq$freq)
     }
     
-    # do the test
-    if (ncol(geno) == 0){
-        res.i <- NULL
-    } else {
-        assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test,
-                                   recalc.pval.thresh=recalc.pval.thresh,
-                                   fast.score.SE=fast.score.SE)
-        
-        res.i <- cbind(var.info, n.obs, freq, assoc)
-    }
-    
-    #if (verbose & n.iter > 1 & i %% set.messages == 0) {
-    #    message(paste("Iteration", i , "of", n.iter, "completed"))
-    #}
-    return(res.i)
+    return(list(var.info=var.info, n.obs=n.obs, freq=freq, geno=geno))
 }
-
 
 # check that the provided null model is compatible with the requested test
 .checkNullModelTestSingle <- function(null.model, test, recalc.pval.thresh, fast.score.SE, GxE){

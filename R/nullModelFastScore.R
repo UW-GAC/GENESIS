@@ -202,27 +202,17 @@ setMethod(".calcScore",
                     geno <- imputedDosage(gdsobj, use.names=FALSE)[sample.index,,drop=FALSE]
                }
 
-               # take note of number of non-missing samples
-               n.obs <- .countNonMissing(geno, MARGIN = 2)
-
-               # allele frequency
                chr <- chromWithPAR(gdsobj, genome.build=genome.build)
                sex <- validateSex(gdsobj)[sample.index]
-               freq <- .alleleFreq(geno, chr, sex, male.diploid=male.diploid)
 
-               # filter monomorphic variants
-               keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq, imputed=imputed)
-               if (!all(keep)) {
-                    var.info <- var.info[keep,,drop=FALSE]
-                    geno <- geno[,keep,drop=FALSE]
-                    n.obs <- n.obs[keep]
-                    freq <- freq[keep,,drop=FALSE]
-               }
-
-               # mean impute missing values
-               if (any(n.obs < nrow(geno))) {
-                    geno <- .meanImpute(geno, freq$freq)
-               }
+               x <- .prepGenoBlock(list(var.info=var.info, geno=geno, chr=chr),
+                                   sex=sex, imputed=imputed, male.diploid=male.diploid)
+               
+               var.info <- x$var.info
+               n.obs <- x$n.obs
+               freq <- x$freq
+               geno <- x$geno
+               rm(x)
 
                geno <- .genoAsMatrix(null.model, geno)
 
