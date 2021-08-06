@@ -1,14 +1,17 @@
-setGeneric(".apply", function(x, MARGIN, FUN, selection, ...) standardGeneric(".apply"))
+setGeneric(".apply", function(x, MARGIN, FUN, ...) standardGeneric(".apply"))
 setMethod(".apply",
           "matrix",
-          function(x, MARGIN, FUN, selection) {
-              apply(x[selection[[1]], selection[[2]]], MARGIN = MARGIN, FUN = FUN)
+          function(x, MARGIN, FUN, selection = NULL) {
+              if (!is.null(selection)) {
+                  x <- x[selection[[1]], selection[[2]]]
+              }
+              apply(x, MARGIN = MARGIN, FUN = FUN)
           })
 
 
 setMethod(".apply",
           "gds.class",
-          function(x, MARGIN, FUN, selection) {
+          function(x, MARGIN, FUN, selection = NULL) {
               apply.gdsn(index.gdsn(x, 'kinship'), margin = MARGIN, FUN = FUN,
                          selection = selection)
           })
@@ -18,10 +21,12 @@ setMethod(".apply",
 ## with > 2^31 - 1 elements
 setMethod(".apply",
           "Matrix",
-          function (x, MARGIN, FUN, selection, maxelem = 2^30){
+          function (x, MARGIN, FUN, selection = NULL, maxelem = 2^30){
               
               # subset to selection
-              x <- x[selection[[1]], selection[[2]]]
+              if (!is.null(selection)) {
+                x <- x[selection[[1]], selection[[2]]]
+              }
               
               # determine number of blocks needed
               nr <- as.numeric(nrow(x))
