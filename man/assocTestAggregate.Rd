@@ -53,7 +53,9 @@
     used for \code{gdsobj}. Options include sliding windows, specific
     ranges of variants or selection of individual variants (ranges with
     width 1). See \code{\link{SeqVarIterator}} for more details.
-  
+    
+    \code{assocTestAggregate} uses the \code{\link{BiocParallel}} package to process iterator chunks in parallel. See the \code{\link{BiocParallel}} documentation for more information on the default behaviour of \code{\link{bpparam}} and how to register different parallel backends. If serial execution is desired, set \code{BPPARAM=BiocParallel::SerialParam()}. Note that parallel execution requires more RAM than serial execution.
+    
   All samples included in \code{null model} will be included in the
   association test, even if a different set of samples is present in the
   current filter for \code{gdsobj}.

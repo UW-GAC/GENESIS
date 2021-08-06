@@ -26,6 +26,8 @@ This function is used with local ancestry results such as those obtained from RF
 \code{admixDataList} should have one value for each ancestry to be included in the test. The sum of all local ancestries at a particular locus must add up to 2, so if there are K ancestry groups, then only K-1 genotypes can be included since one local ancestry count can be written as a linear combination of all of the other local ancestry counts, resulting in collinearity and a matrix that won't be invertible.
 
 See the example for how one might set up the \code{admixDataList} object. List names will propagate to the output file.
+
+    \code{admixMap} uses the \code{\link{BiocParallel}} package to process iterator chunks in parallel. See the \code{\link{BiocParallel}} documentation for more information on the default behaviour of \code{\link{bpparam}} and how to register different parallel backends. If serial execution is desired, set \code{BPPARAM=BiocParallel::SerialParam()}. Note that parallel execution requires more RAM than serial execution.
 }
 
 \value{A data.frame where each row refers to a different variant with the columns:

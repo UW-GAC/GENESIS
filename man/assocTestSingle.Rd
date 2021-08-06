@@ -40,6 +40,8 @@
 }
 
 \details{
+    \code{assocTestSingle} uses the \code{\link{BiocParallel}} package to process iterator chunks in parallel. See the \code{\link{BiocParallel}} documentation for more information on the default behaviour of \code{\link{bpparam}} and how to register different parallel backends. If serial execution is desired, set \code{BPPARAM=BiocParallel::SerialParam()}. Note that parallel execution requires more RAM than serial execution.
+
   All samples included in \code{null model} will be included in the association test, even if a different set of samples is present in the current filter for \code{gdsobj}.
   
     The effect size estimate is for each copy of the alternate allele (when \code{gdsobj} is a \code{\link{SeqVarIterator}} object) or the "A" allele (when \code{gdsobj} is a \code{\link{GenotypeIterator}} object). For multiallelic variants, each alternate (or "A") allele is tested separately.
