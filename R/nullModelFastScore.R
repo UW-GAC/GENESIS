@@ -205,7 +205,7 @@ setMethod(".calcScore",
                chr <- chromWithPAR(gdsobj, genome.build=genome.build)
                sex <- validateSex(gdsobj)[sample.index]
 
-               x <- .prepGenoBlock(list(var.info=var.info, geno=geno, chr=chr),
+               x <- .prepGenoBlock(list(var.info=var.info, geno=geno, chr=chr), AF.max=1,
                                    sex=sex, imputed=imputed, male.diploid=male.diploid)
                
                var.info <- x$var.info
