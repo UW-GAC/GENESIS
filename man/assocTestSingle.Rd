@@ -149,6 +149,15 @@ nullmod <- fitNullModel(iterator, outcome="outcome", covars="sex")
 # run the association test
 assoc <- assocTestSingle(iterator, nullmod,
                          BPPARAM=BiocParallel::SerialParam())
+                
+# use fast score SE for a null model with a covariance matrix
+seqResetFilter(seqData)
+grm <- SNPRelate::snpgdsGRM(seqData, verbose=FALSE)
+covmat <- grm$grm; dimnames(covmat) <- list(grm$sample.id, grm$sample.id)
+set.seed(5)
+nullmod <- fitNullModelFastScore(iterator, outcome="outcome", covars="sex", cov.mat=covmat)
+assoc.se <- assocTestSingle(iterator, nullmod, fast.score.SE=TRUE,
+                            BPPARAM=BiocParallel::SerialParam())
 
 seqClose(iterator)
 
