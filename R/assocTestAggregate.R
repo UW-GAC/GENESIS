@@ -21,7 +21,7 @@ setMethod("assocTestAggregate",
 
               # for BinomiRare and CMP, restrict to variants where the alternate allele is minor
               if (test %in% c("BinomiRare", "CMP") && AF.max > 0.5) {
-                  AF.max  <-  0.5
+                  AF.max <- 0.5
               }
 
               # don't use sparse matrices for imputed dosages
@@ -190,30 +190,14 @@ setMethod("assocTestAggregate",
                                     weight.beta, test, 
                                     neig, ntrace, rho,
                                     sparse, imputed, male.diploid, ...) {
+    
+    x <- .prepGenoBlock(x, AF.max=AF.max, sex=sex, imputed=imputed, male.diploid=male.diploid)
     var.info <- x$var.info
+    n.obs <- x$n.obs
+    freq <- x$freq
     geno <- x$geno
-    chr <- x$chr
     weight <- x$weight
     rm(x)
-    
-    # number of non-missing samples
-    # n.obs <- colSums(!is.na(geno))
-    n.obs <- .countNonMissing(geno, MARGIN = 2)
-    
-    # allele frequency
-    freq <- .alleleFreq(geno, chr, sex, male.diploid=male.diploid)
-    
-    # filter monomorphic variants
-    keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq, imputed=imputed)
-    
-    # exclude variants with freq > max
-    keep <-  keep & freq$freq <= AF.max
-    if (!all(keep)) {
-        var.info <- var.info[keep,,drop=FALSE]
-        geno <- geno[,keep,drop=FALSE]
-        n.obs <- n.obs[keep]
-        freq <- freq[keep,,drop=FALSE]
-    }
     
     # weights
     if (is.null(weight)) {
@@ -225,8 +209,6 @@ setMethod("assocTestAggregate",
         }
     } else {
         # user supplied weights
-        weight <- weight[keep]
-        
         weight0 <- is.na(weight) | weight == 0
         if (any(weight0)) {
             keep <- !weight0
@@ -251,11 +233,6 @@ setMethod("assocTestAggregate",
     res.var.i <- cbind(var.info, n.obs, freq, weight)
     
     if (n.site > 0) {
-        # mean impute missing values
-        if (any(n.obs < nrow(geno))) {
-            geno <- .meanImpute(geno, freq$freq)
-        }
-        
         # do the test
         assoc <- testVariantSet(null.model, G=geno, weights=weight,
                                 test=test,

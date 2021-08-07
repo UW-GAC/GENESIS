@@ -134,41 +134,25 @@ setMethod("assocTestSingle",
           })
 
 
+
 # function to process a block of genotype data
 .testGenoBlockSingle <- function(x, sex, null.model, test,
                                  recalc.pval.thresh, fast.score.SE, GxE,
                                  sparse, imputed, male.diploid, ...) {
-    var.info <- x$var.info
-    geno <- x$geno
-    chr <- x$chr
-    rm(x)
-    
-    # take note of number of non-missing samples
-    #n.obs <- colSums(!is.na(geno))
-    n.obs <- .countNonMissing(geno, MARGIN = 2)
-    
-    # allele frequency
-    freq <- .alleleFreq(geno, chr, sex, male.diploid=male.diploid)
-    
-    # filter monomorphic variants
-    keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq, imputed=imputed)
     
     # for BinomiRare and CMP, restrict to variants where the alternate allele is minor
     if (test %in% c("BinomiRare", "CMP")) {
-        keep <- keep & (freq$freq <= 0.5)
+        AF.max <- 0.5
+    } else {
+        AF.max <- 1
     }
     
-    if (!all(keep)) {
-        var.info <- var.info[keep,,drop=FALSE]
-        geno <- geno[,keep,drop=FALSE]
-        n.obs <- n.obs[keep]
-        freq <- freq[keep,,drop=FALSE]
-    }
-    
-    # mean impute missing values
-    if (any(n.obs < nrow(geno))) {
-        geno <- .meanImpute(geno, freq$freq)
-    }
+    x <- .prepGenoBlock(x, AF.max=AF.max, sex=sex, imputed=imputed, male.diploid=male.diploid)
+    var.info <- x$var.info
+    n.obs <- x$n.obs
+    freq <- x$freq
+    geno <- x$geno
+    rm(x)
     
     # do the test
     if (ncol(geno) == 0){
