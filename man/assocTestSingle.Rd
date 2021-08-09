@@ -15,11 +15,11 @@
                 recalc.pval.thresh=0.05, fast.score.SE=FALSE,
                 GxE=NULL, sparse=TRUE, imputed=FALSE,
                 male.diploid=TRUE, genome.build=c("hg19", "hg38"),
-                verbose=TRUE)
+                BPPARAM=bpparam(), verbose=TRUE)
 \S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model,
                 test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
                 recalc.pval.thresh=0.05, GxE=NULL,
-                male.diploid=TRUE, verbose=TRUE)
+                male.diploid=TRUE, BPPARAM=bpparam(), verbose=TRUE)
 }
 
 \arguments{
@@ -35,10 +35,13 @@
     \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles.}
     \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid.}
     \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes.}
+    \item{BPPARAM}{A \code{\link{BiocParallelParam}} object to process blocks of variants in parallel. If not provided, the default back-end returned by \code{\link{bpparam}} will be used.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is \code{TRUE}.}
 }
 
 \details{
+    \code{assocTestSingle} uses the \code{\link{BiocParallel}} package to process iterator chunks in parallel. See the \code{\link{BiocParallel}} documentation for more information on the default behaviour of \code{\link{bpparam}} and how to register different parallel backends. If serial execution is desired, set \code{BPPARAM=BiocParallel::SerialParam()}. Note that parallel execution requires more RAM than serial execution.
+
   All samples included in \code{null model} will be included in the association test, even if a different set of samples is present in the current filter for \code{gdsobj}.
   
     The effect size estimate is for each copy of the alternate allele (when \code{gdsobj} is a \code{\link{SeqVarIterator}} object) or the "A" allele (when \code{gdsobj} is a \code{\link{GenotypeIterator}} object). For multiallelic variants, each alternate (or "A") allele is tested separately.
@@ -144,7 +147,17 @@ iterator <- SeqVarBlockIterator(seqData)
 nullmod <- fitNullModel(iterator, outcome="outcome", covars="sex")
 
 # run the association test
-assoc <- assocTestSingle(iterator, nullmod)
+assoc <- assocTestSingle(iterator, nullmod,
+                         BPPARAM=BiocParallel::SerialParam())
+                
+# use fast score SE for a null model with a covariance matrix
+seqResetFilter(seqData)
+grm <- SNPRelate::snpgdsGRM(seqData, verbose=FALSE)
+covmat <- grm$grm; dimnames(covmat) <- list(grm$sample.id, grm$sample.id)
+set.seed(5)
+nullmod <- fitNullModelFastScore(iterator, outcome="outcome", covars="sex", cov.mat=covmat)
+assoc.se <- assocTestSingle(iterator, nullmod, fast.score.SE=TRUE,
+                            BPPARAM=BiocParallel::SerialParam())
 
 seqClose(iterator)
 
@@ -168,7 +181,8 @@ iterator <- GenotypeBlockIterator(genoData)
 nullmod <- fitNullModel(iterator, outcome="outcome")
 
 # run the association test
-assoc <- assocTestSingle(iterator, nullmod)
+assoc <- assocTestSingle(iterator, nullmod,
+                         BPPARAM=BiocParallel::SerialParam())
 
 close(iterator)
 }

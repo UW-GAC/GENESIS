@@ -16,14 +16,14 @@
                    rho = seq(from = 0, to = 1, by = 0.1),
                    sparse=TRUE, imputed=FALSE,
                    male.diploid=TRUE, genome.build=c("hg19", "hg38"),
-                   verbose=TRUE)
+                   BPPARAM=bpparam(), verbose=TRUE)
 \S4method{assocTestAggregate}{GenotypeIterator}(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
                    test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO",
 		          "BinomiRare", "CMP"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
-                   male.diploid=TRUE, verbose=TRUE)
+                   male.diploid=TRUE, BPPARAM=bpparam(), verbose=TRUE)
 }
 
 \arguments{
@@ -44,6 +44,7 @@
     \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles.}
   \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid.}
   \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes.}
+    \item{BPPARAM}{A \code{\link{BiocParallelParam}} object to process blocks of variants in parallel. If not provided, the default back-end returned by \code{\link{bpparam}} will be used.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is \code{TRUE}.}
 }
 
@@ -52,7 +53,9 @@
     used for \code{gdsobj}. Options include sliding windows, specific
     ranges of variants or selection of individual variants (ranges with
     width 1). See \code{\link{SeqVarIterator}} for more details.
-  
+    
+    \code{assocTestAggregate} uses the \code{\link{BiocParallel}} package to process iterator chunks in parallel. See the \code{\link{BiocParallel}} documentation for more information on the default behaviour of \code{\link{bpparam}} and how to register different parallel backends. If serial execution is desired, set \code{BPPARAM=BiocParallel::SerialParam()}. Note that parallel execution requires more RAM than serial execution.
+    
   All samples included in \code{null model} will be included in the
   association test, even if a different set of samples is present in the
   current filter for \code{gdsobj}.
@@ -179,14 +182,16 @@ nullmod <- fitNullModel(seqData, outcome="outcome", covars="sex")
 # burden test - Range Iterator
 gr <- GRanges(seqnames=rep(1,3), ranges=IRanges(start=c(1e6, 2e6, 3e6), width=1e6))
 iterator <- SeqVarRangeIterator(seqData, variantRanges=gr)
-assoc <- assocTestAggregate(iterator, nullmod, test="Burden")
+assoc <- assocTestAggregate(iterator, nullmod, test="Burden",
+                            BPPARAM=BiocParallel::SerialParam())
 assoc$results
 lapply(assoc$variantInfo, head)
 
 # SKAT test - Window Iterator
 seqSetFilterChrom(seqData, include="22")
 iterator <- SeqVarWindowIterator(seqData)
-assoc <- assocTestAggregate(iterator, nullmod, test="SKAT")
+assoc <- assocTestAggregate(iterator, nullmod, test="SKAT",
+                            BPPARAM=BiocParallel::SerialParam())
 head(assoc$results)
 head(assoc$variantInfo)
 
@@ -196,7 +201,8 @@ gr <- GRangesList(
   GRanges(seqnames=rep(22,2), ranges=IRanges(start=c(16e6, 17e6), width=1e6)),
   GRanges(seqnames=rep(22,2), ranges=IRanges(start=c(18e6, 20e6), width=1e6)))
 iterator <- SeqVarListIterator(seqData, variantRanges=gr)
-assoc <- assocTestAggregate(iterator, nullmod, test="SKAT", rho=seq(0, 1, 0.25))
+assoc <- assocTestAggregate(iterator, nullmod, test="SKAT", rho=seq(0, 1, 0.25),
+                            BPPARAM=BiocParallel::SerialParam())
 assoc$results
 assoc$variantInfo
 
@@ -206,7 +212,8 @@ variant.id <- seqGetData(gds, "variant.id")
 weights <- data.frame(variant.id, weight=runif(length(variant.id)))
 variantData(seqData) <- AnnotatedDataFrame(weights)
 iterator <- SeqVarListIterator(seqData, variantRanges=gr)
-assoc <- assocTestAggregate(iterator, nullmod, test="Burden", weight.user="weight")
+assoc <- assocTestAggregate(iterator, nullmod, test="Burden", weight.user="weight",
+                            BPPARAM=BiocParallel::SerialParam())
 assoc$results
 assoc$variantInfo
 
@@ -217,7 +224,8 @@ gr <- GRangesList(
   GRanges(seqnames=rep(22,2), ranges=IRanges(start=c(16e6, 17e6), width=1e6), weight=runif(2)),
   GRanges(seqnames=rep(22,2), ranges=IRanges(start=c(18e6, 20e6), width=1e6), weight=runif(2)))
 iterator <- SeqVarListIterator(seqData, variantRanges=gr)
-assoc <- assocTestAggregate(iterator, nullmod, test="Burden", weight.user="weight")
+assoc <- assocTestAggregate(iterator, nullmod, test="Burden", weight.user="weight",
+                            BPPARAM=BiocParallel::SerialParam())
 assoc$results
 assoc$variantInfo
 

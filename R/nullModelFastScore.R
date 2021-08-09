@@ -49,7 +49,8 @@ setMethod("fitNullModelFastScore",
                                genome.build = genome.build, verbose = verbose)
 
               # update the null model with the se.correction factor
-              null.model <- nullModelFastScore(null.model = null.model, score.table = tab, return.small = return.small)
+              null.model <- nullModelFastScore(null.model = null.model, score.table = tab, return.small = return.small,
+                                               verbose = FALSE)
 
               null.model
           })
@@ -90,7 +91,7 @@ calcScore <- function(x, null.model,
 
 
 ## updates the null model object with the parameter needed for fast.score.se	
-nullModelFastScore <- function(null.model, score.table, return.small = TRUE){
+nullModelFastScore <- function(null.model, score.table, return.small = TRUE, verbose = TRUE){
     # Update null model format
      null.model <- .updateNullModelFormat(null.model)
 
@@ -103,8 +104,8 @@ nullModelFastScore <- function(null.model, score.table, return.small = TRUE){
     # compute SE(r) and check if enough variants were included
     r.se <- sd(score.table$se.ratio)/sqrt(nrow(score.table))
     val <- r.se/r
-    message(paste('mean se.ratio: r = ', r))
-    message(paste('SE(r)/r = ', val))
+    if (verbose) message(paste('mean se.ratio: r = ', r))
+    if (verbose) message(paste('SE(r)/r = ', val))
     if(val > 0.0025){
         warning(paste('It is recommended that SE(r)/r be < 0.0025. It is suggested to increase the number of variants in score.table; try at least', 
           round(nrow(score.table)*(val/0.0025)^2, 0), 'variants'))
@@ -202,27 +203,23 @@ setMethod(".calcScore",
                     geno <- imputedDosage(gdsobj, use.names=FALSE)[sample.index,,drop=FALSE]
                }
 
-               # take note of number of non-missing samples
-               n.obs <- .countNonMissing(geno, MARGIN = 2)
+               chr <- chromWithPAR(gdsobj, genome.build=genome.build)
+               sex <- validateSex(gdsobj)[sample.index]
 
-               # allele frequency
-               freq <- .alleleFreq(gdsobj, geno, sample.index=sample.index,
-                                        male.diploid=male.diploid, genome.build=genome.build)
-
-               # filter monomorphic variants
-               keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq, imputed=imputed)
-               if (!all(keep)) {
-                    var.info <- var.info[keep,,drop=FALSE]
-                    geno <- geno[,keep,drop=FALSE]
-                    n.obs <- n.obs[keep]
-                    freq <- freq[keep,,drop=FALSE]
-               }
-
+               x <- .prepGenoBlock(list(var.info=var.info, geno=geno, chr=chr), AF.max=1,
+                                   sex=sex, imputed=imputed, male.diploid=male.diploid)
+               
+               var.info <- x$var.info
+               n.obs <- x$n.obs
+               freq <- x$freq
+               geno <- x$geno
+               rm(x)
+               
                # mean impute missing values
                if (any(n.obs < nrow(geno))) {
-                    geno <- .meanImpute(geno, freq$freq)
+                   geno <- .meanImpute(geno, freq$freq)
                }
-
+               
                geno <- .genoAsMatrix(null.model, geno)
 
                # score

@@ -36,6 +36,48 @@ setMethod("variantFilter",
           })
 
 
+# function to pre-process genotype data before testing
+.prepGenoBlock <- function(x, AF.max, sex, imputed, male.diploid) {
+    
+    var.info <- x$var.info
+    geno <- x$geno
+    chr <- x$chr
+    weight <- x$weight # only applies to aggregate tests, NULL otherwise
+    rm(x)
+    
+    # take note of number of non-missing samples
+    #n.obs <- colSums(!is.na(geno))
+    n.obs <- .countNonMissing(geno, MARGIN = 2)
+    
+    # allele frequency
+    freq <- .alleleFreq(geno, chr, sex, male.diploid=male.diploid)
+    
+    # filter monomorphic variants
+    keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq, imputed=imputed)
+    
+    # exclude variants with freq > max
+    keep <-  keep & freq$freq <= AF.max
+    
+    # exclude variants with weight 0
+    if (!is.null(weight)) {
+        weight0 <- is.na(weight) | weight == 0
+        if (any(weight0)) {
+            keep <- keep & !weight0
+        }
+    }
+    
+    if (!all(keep)) {
+        var.info <- var.info[keep,,drop=FALSE]
+        geno <- geno[,keep,drop=FALSE]
+        n.obs <- n.obs[keep]
+        freq <- freq[keep,,drop=FALSE]
+        weight <- weight[keep]
+    }
+    
+    return(list(var.info=var.info, n.obs=n.obs, freq=freq, geno=geno, weight=weight))
+}
+
+
 # check for all genotypes identical (including all hets)
 # allow a tolerance in case we have imputed dosage values rather than integer
 # return an index for subsetting rather than modifying geno
@@ -58,14 +100,9 @@ setMethod("variantFilter",
 }
 
 
-# index is in case we had to subset geno so it no longer matches the variant filter
-# (in the case of allele matching)
-.alleleFreq <- function(gdsobj, geno, variant.index=NULL, sample.index=NULL, male.diploid=TRUE, genome.build=c("hg19", "hg38")) {
+.alleleFreq <- function(geno, chr=NULL, sex=NULL, male.diploid=TRUE) {
 
-    # check sex
-    sex <- validateSex(gdsobj)
-    if (!is.null(sample.index)) sex <- sex[sample.index]
-    if (is.null(sex)) {
+    if (is.null(sex) | is.null(chr)) {
         #freq <- 0.5*colMeans(geno, na.rm=TRUE)
         count <- colSums(geno, na.rm=TRUE)
         # nsamp <- colSums(!is.na(geno))
@@ -76,8 +113,6 @@ setMethod("variantFilter",
     }
 
     # check chromosome
-    chr <- chromWithPAR(gdsobj, genome.build=genome.build)
-    if (!is.null(variant.index)) chr <- chr[variant.index]
     X <- chr %in% "X"
     Y <- chr %in% "Y"
     auto <- !X & !Y
@@ -139,10 +174,12 @@ setMethod("variantFilter",
     geno
 }
 
+
 .weightFromFreq <- function(freq, weight.beta) {
     freq <- pmin(freq, 1-freq)
     dbeta(freq, weight.beta[1], weight.beta[2])
 }
+
 
 # set a sample filter, and return the index to put filtered samples
 # in the same order as the null model
@@ -156,6 +193,7 @@ setMethod("variantFilter",
     sample.index
 }
 
+
 # return sample.index to match GenotypeData object to a null model
 .sampleIndexNullModel <- function(gdsobj, null.model) {
     if (!is.null(null.model$fit$sample.id)) {
@@ -167,10 +205,12 @@ setMethod("variantFilter",
     sample.index
 }
 
+
 .modelMatrixColumns <- function(null.model, col.name) {
     cols <- unlist(lapply(col.name, function(x) grep(paste0("^", x), colnames(null.model$model.matrix))))
     null.model$model.matrix[,cols,drop=FALSE]
 }
+
 
 .matchAlleles <- function(gdsobj, var.info) {
     seqnames <- NULL
@@ -194,6 +234,7 @@ setMethod("variantFilter",
     x
 }
 
+
 .addWindows <- function(iterator, x) {
     windows <- variantRanges(iterator)
     win.df <- data.frame(chr=as.character(GenomicRanges::seqnames(windows)),
@@ -203,6 +244,7 @@ setMethod("variantFilter",
     x$results <- cbind(win.df, x$results)
     x
 }
+
 
 setGeneric(".annotateAssoc", function(gdsobj, x) standardGeneric(".annotateAssoc"))
 
@@ -243,4 +285,14 @@ setMethod(".annotateAssoc",
 
 .listIdentical <- function(x) {
     all(sapply(x[-1], FUN = identical, x[[1]]))
+}
+
+.stopOnError <- function(x) {
+    err.chk <- sapply(x, is, "error")
+    if (any(err.chk)) {
+        ind <- which(err.chk)[1]
+        # only in serial execution is ind guaranteed to be the right index in an error state
+        #message("Error detected in iteration ", ind)
+        stop(x[[ind]])
+    }
 }

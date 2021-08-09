@@ -21,6 +21,7 @@
 	maf.thresh = 0.01,
 	maf.bound.method = c('filter', 'truncate'),
 	small.samp.correct = TRUE,
+	BPPARAM = bpparam(),
 	verbose = TRUE)
 \S4method{pcrelate}{SeqVarIterator}(gdsobj,
 	pcs,
@@ -32,12 +33,14 @@
 	maf.thresh = 0.01,
 	maf.bound.method = c('filter', 'truncate'),
 	small.samp.correct = TRUE,
+	BPPARAM = bpparam(),
 	verbose = TRUE)
 samplesGdsOrder(gdsobj, sample.include)
 calcISAFBeta(gdsobj,
         pcs,
         sample.include,
         training.set = NULL,
+	    BPPARAM = bpparam(),
         verbose = TRUE)
 pcrelateSampBlock(gdsobj,
         betaobj,
@@ -48,6 +51,7 @@ pcrelateSampBlock(gdsobj,
 	ibd.probs = TRUE,
 	maf.thresh = 0.01,
 	maf.bound.method = c('filter', 'truncate'),
+	BPPARAM = bpparam(),
 	verbose = TRUE)
 correctKin(kinBtwn, kinSelf,
         pcs,
@@ -69,7 +73,7 @@ correctK0(kinBtwn)
   \item{maf.thresh}{Minor allele frequency threshold; if an individual's estimated individual-specific minor allele frequency at a SNP is less than this value, that indivdiual will either have that SNP excluded from the analysis or have their estimated indivdiual-specific minor allele frequency truncated to this value, depending on \code{maf.bound.method}. The default value is 0.01.}
   \item{maf.bound.method}{How individual-specific minor allele frequency estimates less that \code{maf.thresh} are handled. When set to `filter` (default), SNPs for which an individual's estimated individual-specific minor allele frequency are below \code{maf.thresh} are excluded from the analysis for that individual. When set to `truncate`, estimated individual-specific minor allele frequncies below \code{maf.thresh} have their value set to \code{maf.thresh}.}
  \item{small.samp.correct}{Logical indicator of whether to implement a small sample correction. The default is \code{TRUE}, but must be set to \code{FALSE} if \code{sample.block.size} is less than the number of samples or if \code{scale} is \code{'none'}.}
-  %\item{num.cores}{The number of cores to use. If \code{> 1}, multiple blocks of variants and/or samples can be analyzed in parallel.}
+  \item{BPPARAM}{A \code{\link{BiocParallelParam}} object to process blocks of variants in parallel. If not provided, the default back-end returned by \code{\link{bpparam}} will be used.}
   \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is TRUE.}
   \item{betaobj}{Outut of \code{calcISAFBeta}.}
   \item{sample.include.block1}{A vector of IDs for samples to include in block 1.}
@@ -81,6 +85,8 @@ correctK0(kinBtwn)
 	The basic premise of PC-Relate is to estimate kinship coefficients, IBD sharing probabilities, and inbreeding coefficients that reflect recent family (pedigree) relatedness by conditioning out genetic similarity due to distant population structure (ancestry) with ancestry representative principal components (PCs).
 
 	It is important that the PCs used in \code{pcs} to adjust for ancestry are representative of ancestry and NOT family structure, so we recommend using PCs calculated with PC-AiR (see: \code{\link{pcair}}).
+
+    \code{pcrelate} uses the \code{\link{BiocParallel}} package to process iterator chunks in parallel. See the \code{\link{BiocParallel}} documentation for more information on the default behaviour of \code{\link{bpparam}} and how to register different parallel backends. If serial execution is desired, set \code{BPPARAM=BiocParallel::SerialParam()}. Note that parallel execution requires more RAM than serial execution.
 
     In order to perform relatedness estimation, allele frequency estimates are required for centering and scaling genotype values. Individual-specific allele frequencies calculated for each individual at each SNP using the PCs specified in \code{pcs} are used. There are muliple choices for how genotype values are scaled. When \code{scale} is 'variant', centered genotype values at each SNP are divided by their expected variance under Hardy-Weinberg equilibrium. When \code{scale} is 'overall', centered genotype values at all SNPs are divided by the average across all SNPs of their expected variances under Hardy-Weinberg equilibrium; this scaling leads to more stable behavior when using low frequency variants. When \code{scale} is 'none', genotype values are only centered and not scaled; this won't provide accurate kinship coefficient estimates but may be useful for other purposes. Set \code{scale} to 'overall' to perform a standard PC-Relate analysis; this is the default.  If \code{scale} is set to 'variant', the estimators are very similar to REAP.
 
@@ -124,7 +130,8 @@ mypcair <- pcair(HapMap_genoData, kinobj = HapMap_ASW_MXL_KINGmat,
 HapMap_genoData <- GenotypeBlockIterator(HapMap_genoData)
 # run PC-Relate
 mypcrel <- pcrelate(HapMap_genoData, pcs = mypcair$vectors[,1,drop=FALSE],
-				training.set = mypcair$unrels)
+				training.set = mypcair$unrels,
+				BPPARAM=BiocParallel::SerialParam())
 head(mypcrel$kinBwtn)
 head(mypcrel$kinSelf)
 

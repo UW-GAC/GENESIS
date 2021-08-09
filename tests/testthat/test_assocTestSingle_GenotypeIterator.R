@@ -1,13 +1,16 @@
 context("single variant tests on GenotypeIterator objects")
 library(GWASTools)
 
+BPPARAM <- BiocParallel::SerialParam()
+#BPPARAM <- BiocParallel::MulticoreParam()
+
 test_that("assocTestSingle", {
     genoData <- .testGenoData()
     covMat <- .testGenoDataGRM(genoData)
     iterator <- GenotypeBlockIterator(genoData, snpBlock=1000)
 
     nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", cov.mat=covMat, verbose=FALSE)
-    assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
     freq <- GWASTools::alleleFrequency(genoData)
     keep <- !is.na(freq[,"MAF"]) & freq[,"MAF"] > 0
     expect_equal(assoc$variant.id, getSnpID(genoData)[keep])
@@ -22,7 +25,7 @@ test_that("assocTestSingle - sample selection", {
     iterator <- GenotypeBlockIterator(genoData, snpBlock=1000)
 
     nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", sample.id=samp, verbose=FALSE)
-    assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
     expect_equal(max(assoc$n.obs), 50)
 
     close(genoData)
@@ -50,7 +53,7 @@ test_that("assocTestSingle - reorder samples", {
     iterator <- GenotypeBlockIterator(genoData, snpBlock=1000)
 
     nullmod <- fitNullModel(genoData, outcome="outcome", cov.mat=covMat[samp,samp], verbose=FALSE)
-    assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
     expect_equal(nrow(nullmod$model.matrix), 50)
     expect_equal(nullmod$fit$sample.id, samp)
 
@@ -59,7 +62,7 @@ test_that("assocTestSingle - reorder samples", {
     nullmod2 <- fitNullModel(genoData, outcome="outcome", cov.mat=covMat[samp.sort,samp.sort], verbose=FALSE)
     expect_equal(nullmod2$fit$sample.id, samp.sort)
     GWASTools::resetIterator(iterator)
-    assoc2 <- assocTestSingle(iterator, nullmod2, verbose=FALSE)
+    assoc2 <- assocTestSingle(iterator, nullmod2, BPPARAM=BPPARAM, verbose=FALSE)
     # this test may not be reliable - see test_nullModel.R
     expect_equal(assoc, assoc2)
     #expect_equal(assoc[,1:6], assoc2[,1:6])
@@ -75,7 +78,7 @@ test_that("missing sample.id in null model", {
     nullmod <- fitNullModel(samp, outcome="outcome", covars="sex", verbose=FALSE)
     expect_false("sample.id" %in% names(nullmod$fit))
     expect_equal(length(nullmod$fit$outcome), 10)
-    assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
     expect_equal(max(assoc$n.obs), 10)
     close(genoData)
 })
@@ -90,7 +93,7 @@ test_that("missing sample.id in null model - row names", {
     expect_false("sample.id" %in% names(nullmod$fit))
     expect_equal(length(nullmod$fit$outcome), 10)
     iterator <- GenotypeBlockIterator(genoData)
-    assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
     expect_equal(max(assoc$n.obs), 10)
     close(genoData)
 })
@@ -107,11 +110,11 @@ test_that("MatrixGenotypeReader", {
 
     iterator <- GenotypeBlockIterator(genoData, snpBlock=1000)
     nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", verbose=FALSE)
-    assoc <- assocTestSingle(iterator, nullmod, verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
 
     iterator2 <- GenotypeBlockIterator(matData, snpBlock=1000)
     nullmod <- fitNullModel(matData, outcome="outcome", covars="sex", verbose=FALSE)
-    assoc2 <- assocTestSingle(iterator2, nullmod, verbose=FALSE)
+    assoc2 <- assocTestSingle(iterator2, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
 
     expect_equal(assoc, assoc2)
 

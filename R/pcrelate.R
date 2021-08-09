@@ -24,7 +24,7 @@ setMethod("pcrelate",
                    maf.thresh = 0.01,
                    maf.bound.method = c('filter', 'truncate'),
                    small.samp.correct = TRUE,
-                   #num.cores = 1,
+                   BPPARAM = bpparam(),
                    verbose = TRUE) {
               .pcrelate(gdsobj, 
                         pcs = pcs,
@@ -36,7 +36,7 @@ setMethod("pcrelate",
                         maf.thresh = maf.thresh,
                         maf.bound.method = maf.bound.method,
                         small.samp.correct = small.samp.correct,
-                        #num.cores = num.cores,
+                        BPPARAM = BPPARAM,
                         verbose = verbose)
           })
 
@@ -52,7 +52,7 @@ setMethod("pcrelate",
                    maf.thresh = 0.01,
                    maf.bound.method = c('filter', 'truncate'),
                    small.samp.correct = TRUE,
-                   #num.cores = 1,
+                   BPPARAM = bpparam(),
                    verbose = TRUE) {
               filt <- seqGetFilter(gdsobj)
               out <- .pcrelate(gdsobj, 
@@ -65,7 +65,7 @@ setMethod("pcrelate",
                                maf.thresh = maf.thresh,
                                maf.bound.method = maf.bound.method,
                                small.samp.correct = small.samp.correct,
-                               #num.cores = num.cores,
+                               BPPARAM = BPPARAM,
                                verbose = verbose)
               seqSetFilter(gdsobj,
                            sample.sel=filt$sample.sel,
@@ -84,7 +84,7 @@ setMethod("pcrelate",
                       maf.thresh = 0.01,
                       maf.bound.method = c('filter', 'truncate'),
                       small.samp.correct = TRUE,
-                      #num.cores = 1,
+                      BPPARAM = bpparam(),
                       verbose = TRUE){
 
     # checks
@@ -94,10 +94,7 @@ setMethod("pcrelate",
     .pcrelateChecks(pcs = pcs, scale = scale, ibd.probs = ibd.probs, sample.include = sample.include, training.set = training.set, 
                     maf.thresh = maf.thresh)
     
-    # set up number of cores
-    ## sys.cores <- parallel::detectCores(logical = TRUE)
-    ## doMC::registerDoMC(cores = min(c(num.cores, sys.cores)))
-    ## if(verbose) message('Using ', min(c(num.cores, sys.cores)), ' CPU cores')
+    if(verbose) message('Using ', bpnworkers(BPPARAM), ' CPU cores')
 
     # number of sample blocks
     nsampblock <- ceiling(length(sample.include)/sample.block.size)
@@ -128,11 +125,21 @@ setMethod("pcrelate",
         nsnpblock <- length(snp.blocks)
         if(verbose) message('Running PC-Relate analysis for ', length(sample.include), ' samples using ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
 
-        # for each snp block
-        matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %do% {
-            if(verbose) message('    Running block ', k, '...')
-            # read genotype data for the block
+        # iterator function to return genotype blocks
+        k <- 1
+        Giter <- function() {
+            if (k > nsnpblock) return(NULL)
             G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
+            k <<- k + 1
+            return(G)
+        }
+        
+        # for each snp block
+        #matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %do% {
+       snpBlock <- function(G, ...) {
+            #if(verbose) message('    Running block ', k, '...')
+            # read genotype data for the block
+            #G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
 
             # calculate ISAF betas
             beta <- .calcISAFBeta(G = G, VVtVi = VVtVi)
@@ -140,6 +147,8 @@ setMethod("pcrelate",
             # calculate PC-Relate estimates
             .pcrelateVarBlock(G = G, beta = beta, V = V, idx = 1:nrow(V), jdx = 1:nrow(V), scale = scale, ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
         }
+        
+        matList <- bpiterate(Giter, snpBlock, REDUCE = .matListCombine, reduce.in.order = FALSE, BPPARAM = BPPARAM)
 
         # take ratios to compute final estimates
         estList <- .pcrelateCalcRatio(matList = matList, scale = scale, ibd.probs = ibd.probs)
@@ -684,9 +693,11 @@ setMethod("meltMatrix",
 
 
 ### exported function for computing PC betas for individual specific allele frequency calculations ###
-calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, verbose = TRUE){
+calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, BPPARAM = bpparam(), verbose = TRUE){
     # checks - add some
-
+    
+    if(verbose) message('Using ', bpnworkers(BPPARAM), ' CPU cores')
+    
     # create matrix of PCs
     V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
 
@@ -696,17 +707,29 @@ calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, verbo
     snp.blocks <- .snpBlocks(gdsobj)
     nsnpblock <- length(snp.blocks)
     if(verbose) message('Calculating Indivdiual-Specific Allele Frequency betas for ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
-
-    beta <- foreach(k = 1:nsnpblock, .combine = rbind, .inorder = FALSE, .multicombine = TRUE) %do% {
-        if(verbose) message('    Running block ', k, '...')
-        # read genotype data for the block
+    
+    # iterator function to return genotype blocks
+    k <- 1
+    Giter <- function() {
+        if (k > nsnpblock) return(NULL)
         G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
-
-        # calculate ISAF betas
-        .calcISAFBeta(G = G, VVtVi = VVtVi)
+        k <<- k + 1
+        return(G)
     }
+    
+    # beta <- foreach(k = 1:nsnpblock, .combine = rbind, .inorder = FALSE, .multicombine = TRUE) %do% {
+    # snpBlock <- function(G, ...) {
+    #     if(verbose) message('    Running block ', k, '...')
+    #     # read genotype data for the block
+    #     G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
+    # 
+    #     # calculate ISAF betas
+    #     .calcISAFBeta(G = G, VVtVi = VVtVi)
+    # }
     ### rather than returning and rbinding here, we may want to be writing the output to something
-
+    
+    beta <- bpiterate(Giter, .calcISAFBeta, VVtVi = VVtVi, REDUCE = rbindlist, reduce.in.order = FALSE, BPPARAM = BPPARAM)
+    
     return(beta)
 }
 
@@ -715,10 +738,12 @@ calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, verbo
 pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sample.include.block2,
                               scale = c('overall', 'variant', 'none'), ibd.probs = TRUE,
                               maf.thresh = 0.01, maf.bound.method = c('filter', 'truncate'),
-                              verbose = TRUE){
+                              BPPARAM = bpparam(), verbose = TRUE){
 
     scale <- match.arg(scale)
     maf.bound.method <- match.arg(maf.bound.method)
+    
+    if(verbose) message('Using ', bpnworkers(BPPARAM), ' CPU cores')
     
     # create (joint) PC matrix and indices
     sample.include <- unique(c(sample.include.block1, sample.include.block2))
@@ -728,16 +753,26 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
     oneblock <- setequal(idx, jdx)
     ### slight inefficiency above because we create V for samples in block1 for each block2 when we don't have to if we are running serially; 
     ### but this seems more straightforward to parallelize
-
+    
+    # iterator function to return genotype blocks
+    k <- 1
+    Giter <- function() {
+        if (k > nsnpblock) return(NULL)
+        G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
+        k <<- k + 1
+        return(G)
+    }
+    
     snp.blocks <- .snpBlocks(gdsobj)
     nsnpblock <- length(snp.blocks)
 
     if(verbose) message('Running PC-Relate analysis using ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
     # compute estimates for each variant block; sum along the way
-    matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %do% {
-        if(verbose) message('    Running block ', k, '...')
+    #matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %do% {
+    snpBlock <- function(G, ...) {
+        #if(verbose) message('    Running block ', k, '...')
         # read genotype data for the block
-        G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
+        #G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
 
         # load betas for the current block of variants
         beta.block <- betaobj[colnames(G), , drop = FALSE]
@@ -746,6 +781,8 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
         # calculate PC-Relate estimates
         .pcrelateVarBlock(	G = G, beta = beta.block, V = V, idx = idx, jdx = jdx, scale = scale, ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
     }
+    
+    matList <- bpiterate(Giter, snpBlock, REDUCE = .matListCombine, reduce.in.order = FALSE, BPPARAM = BPPARAM)
 
     # take ratios to compute final estimates
     estList <- .pcrelateCalcRatio(matList = matList, scale = scale, ibd.probs = ibd.probs)
