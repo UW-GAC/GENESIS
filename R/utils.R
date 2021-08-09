@@ -291,7 +291,8 @@ setMethod(".annotateAssoc",
     err.chk <- sapply(x, is, "error")
     if (any(err.chk)) {
         ind <- which(err.chk)[1]
-        message("Error detected in iteration ", ind)
+        # only in serial execution is ind guaranteed to be the right index in an error state
+        #message("Error detected in iteration ", ind)
         stop(x[[ind]])
     }
 }

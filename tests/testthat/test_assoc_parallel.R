@@ -21,17 +21,11 @@ test_that("stopOnError", {
     }
     chk <- bpiterate(ITER, FUN, BPPARAM=BiocParallel::SerialParam())
     expect_error(as.integer(unlist(chk)))
-    expect_message(
-        expect_error(.stopOnError(chk), "x too big"), 
-        "Error detected in iteration 5"
-        )
+    expect_error(.stopOnError(chk), "x too big")
     
     i <- 1
     chk <- bpiterate(ITER, FUN, BPPARAM=BiocParallel::MulticoreParam())
-    expect_message(
-        expect_error(.stopOnError(chk), "x too big"), 
-        "Error detected in iteration 5"
-    )
+    expect_error(.stopOnError(chk), "x too big")
     
     x <- 1:4
     i <- 1
