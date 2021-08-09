@@ -154,6 +154,11 @@ setMethod("assocTestSingle",
     geno <- x$geno
     rm(x)
     
+    # mean impute missing values
+    if (any(n.obs < nrow(geno))) {
+        geno <- .meanImpute(geno, freq$freq)
+    }
+    
     # do the test
     if (ncol(geno) == 0){
         res.i <- NULL

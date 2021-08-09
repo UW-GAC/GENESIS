@@ -207,17 +207,6 @@ setMethod("assocTestAggregate",
         } else {
             weight <- .weightFromFreq(freq$freq, weight.beta)
         }
-    } else {
-        # user supplied weights
-        weight0 <- is.na(weight) | weight == 0
-        if (any(weight0)) {
-            keep <- !weight0
-            var.info <- var.info[keep,,drop=FALSE]
-            geno <- geno[,keep,drop=FALSE]
-            n.obs <- n.obs[keep]
-            freq <- freq[keep,,drop=FALSE]
-            weight <- weight[keep]
-        }
     }
     
     # number of variant sites
@@ -233,6 +222,11 @@ setMethod("assocTestAggregate",
     res.var.i <- cbind(var.info, n.obs, freq, weight)
     
     if (n.site > 0) {
+        # mean impute missing values
+        if (any(n.obs < nrow(geno))) {
+            geno <- .meanImpute(geno, freq$freq)
+        }
+        
         # do the test
         assoc <- testVariantSet(null.model, G=geno, weights=weight,
                                 test=test,

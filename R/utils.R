@@ -58,17 +58,20 @@ setMethod("variantFilter",
     # exclude variants with freq > max
     keep <-  keep & freq$freq <= AF.max
     
+    # exclude variants with weight 0
+    if (!is.null(weight)) {
+        weight0 <- is.na(weight) | weight == 0
+        if (any(weight0)) {
+            keep <- keep & !weight0
+        }
+    }
+    
     if (!all(keep)) {
         var.info <- var.info[keep,,drop=FALSE]
         geno <- geno[,keep,drop=FALSE]
         n.obs <- n.obs[keep]
         freq <- freq[keep,,drop=FALSE]
         weight <- weight[keep]
-    }
-    
-    # mean impute missing values
-    if (any(n.obs < nrow(geno))) {
-        geno <- .meanImpute(geno, freq$freq)
     }
     
     return(list(var.info=var.info, n.obs=n.obs, freq=freq, geno=geno, weight=weight))

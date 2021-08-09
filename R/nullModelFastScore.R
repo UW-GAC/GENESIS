@@ -214,7 +214,12 @@ setMethod(".calcScore",
                freq <- x$freq
                geno <- x$geno
                rm(x)
-
+               
+               # mean impute missing values
+               if (any(n.obs < nrow(geno))) {
+                   geno <- .meanImpute(geno, freq$freq)
+               }
+               
                geno <- .genoAsMatrix(null.model, geno)
 
                # score
