@@ -16,7 +16,7 @@ admixMap(admixDataList, null.model, male.diploid=TRUE,
     \item{null.model}{A null model object returned by \code{\link{fitNullModel}}.}
   \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid.}
   \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes.}
-  \item{BPPARAM}{A \code{\link{BiocParallelParam}} object to process blocks of variants in parallel.}
+  \item{BPPARAM}{A \code{\link{BiocParallelParam}} object to process blocks of variants in parallel. If not provided, the default back-end returned by \code{\link{bpparam}} will be used.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is TRUE.}
 }
 

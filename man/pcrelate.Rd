@@ -73,7 +73,7 @@ correctK0(kinBtwn)
   \item{maf.thresh}{Minor allele frequency threshold; if an individual's estimated individual-specific minor allele frequency at a SNP is less than this value, that indivdiual will either have that SNP excluded from the analysis or have their estimated indivdiual-specific minor allele frequency truncated to this value, depending on \code{maf.bound.method}. The default value is 0.01.}
   \item{maf.bound.method}{How individual-specific minor allele frequency estimates less that \code{maf.thresh} are handled. When set to `filter` (default), SNPs for which an individual's estimated individual-specific minor allele frequency are below \code{maf.thresh} are excluded from the analysis for that individual. When set to `truncate`, estimated individual-specific minor allele frequncies below \code{maf.thresh} have their value set to \code{maf.thresh}.}
  \item{small.samp.correct}{Logical indicator of whether to implement a small sample correction. The default is \code{TRUE}, but must be set to \code{FALSE} if \code{sample.block.size} is less than the number of samples or if \code{scale} is \code{'none'}.}
-  \item{BPPARAM}{A \code{\link{BiocParallelParam}} object to process blocks of variants in parallel.}
+  \item{BPPARAM}{A \code{\link{BiocParallelParam}} object to process blocks of variants in parallel. If not provided, the default back-end returned by \code{\link{bpparam}} will be used.}
   \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is TRUE.}
   \item{betaobj}{Outut of \code{calcISAFBeta}.}
   \item{sample.include.block1}{A vector of IDs for samples to include in block 1.}
