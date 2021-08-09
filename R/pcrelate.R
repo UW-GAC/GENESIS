@@ -36,7 +36,7 @@ setMethod("pcrelate",
                         maf.thresh = maf.thresh,
                         maf.bound.method = maf.bound.method,
                         small.samp.correct = small.samp.correct,
-                        BPPARAM = bpparam(),
+                        BPPARAM = BPPARAM,
                         verbose = verbose)
           })
 
