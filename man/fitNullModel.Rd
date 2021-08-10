@@ -55,9 +55,11 @@
 \S4method{fitNullModel}{ScanAnnotationDataFrame}(x, ...)
 \S4method{fitNullModel}{GenotypeData}(x, ...)
 
-nullModelInvNorm(null.model, cov.mat = NULL, norm.option = c("all", "by.group"),
-                 rescale = c("residSD", "none", "model"), AIREML.tol = 1e-4, max.iter = 100, 
-                 EM.iter = 0, drop.zeros = TRUE, return.small = FALSE, verbose = TRUE)
+nullModelInvNorm(null.model, cov.mat = NULL, 
+                 norm.option = c("all", "by.group"), 
+                 rescale = c("residSD", "none", "model"), 
+                 AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0, 
+                 drop.zeros = TRUE, return.small = FALSE, verbose = TRUE)
 
 nullModelSmall(null.model)
 
