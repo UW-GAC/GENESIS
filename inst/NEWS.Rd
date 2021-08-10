@@ -1,8 +1,13 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
-\section{Version 2.23.3}{
+\section{Version 2.23.5}{
   \itemize{
-    \item Mean imputation works for very large matrices (>2^31 elements).
+    \item assocTestSingle, assocTestAggregate, admixMap, and pcrelate use the BiocParallel package for parallel execution on blocks of variants.
+    }
+}
+\section{Version 2.23.4}{
+  \itemize{
+    \item For assocTestAggregate, the total number of genotypes in a single iterator element (NxM where N=number of samples and M=number of variants) may be >2^31.
     }
 }
 \section{Version 2.21.5}{
