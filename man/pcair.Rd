@@ -30,7 +30,7 @@
   \item{snp.include}{An optional vector of snp or variant IDs to use in the analysis.}
   \item{num.cores}{The number of cores to use.}
   \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is TRUE.}
-  \item{\dots}{Additional arguments to pass to \code{\link{snpgdsPCA}}, such as \code{eigen.cnt} to control the number of PCs returned.}
+  \item{\dots}{Additional arguments to pass to \code{\link{snpgdsPCA}}, such as \code{eigen.cnt} to control the number of PCs returned, \code{num.thread} for parallel execution, or \code{algorithm='randomized' for fastPCA (recommended for large sample sets).}}
 }
 \details{The basic premise of PC-AiR is to partition the entire sample of individuals into an ancestry representative 'unrelated subset' and a 'related set', perform standard PCA on the 'unrelated subset', and predict PC values for the 'related subset'.
 	
