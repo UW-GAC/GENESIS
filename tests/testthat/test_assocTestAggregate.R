@@ -3,8 +3,8 @@ library(SeqVarTools)
 library(GenomicRanges)
 library(Biobase)
 
-#BPPARAM <- BiocParallel::SerialParam()
-BPPARAM <- BiocParallel::MulticoreParam()
+BPPARAM <- BiocParallel::SerialParam()
+#BPPARAM <- BiocParallel::MulticoreParam()
 
 test_that("window", {
     svd <- .testData()
