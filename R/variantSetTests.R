@@ -392,8 +392,9 @@ testVariantSet <- function( nullmod, G, weights,
 
     }else{
         # find the minimum p-value
-        minp <- min(out.pval)
-        out2 <- list(min.pval=minp, opt.rho=rho[which.min(out.pval)])
+        minp <- min(out.pval, na.rm=TRUE)
+        opt.rho <- if (!is.na(minp)) rho[which.min(out.pval)] else NA
+        out2 <- list(min.pval=minp, opt.rho=opt.rho)
 
         # get qmin(rho); i.e. the (1-minp)th percentile of dist of each Q
         qmin <- rep(NA, nrho)
