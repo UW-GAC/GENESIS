@@ -143,6 +143,7 @@ test_that("meanImpute", {
     n <- 1000
     #m <- 100000 takes too long
     m <- 1000
+    set.seed(123)
     geno <- matrix(rbinom(n*m, size = 2, prob = 0.1), nrow = n, ncol = m)
     
     miss <- sample(n*m, size = 0.1*n*m, replace = FALSE)
@@ -166,4 +167,26 @@ test_that("meanImpute", {
     #n*m/2^25 # 3 blocks if m=100000
     y <- .meanImpute(Geno, freq, maxelem = 4e5)
     expect_equivalent(x, as.matrix(y))
+})
+
+test_that("prepGenoBlock", {
+    n <- 100
+    m <- 1000
+    set.seed(123)
+    geno <- matrix(rbinom(n*m, size = 2, prob = 0.1), nrow = n, ncol = m)
+    set.seed(456)
+    geno[,sample(nrow(geno), 5)] <- 0 # make some monomorphic
+    set.seed(789)
+    geno[sample(length(geno), 0.001*length(geno))] <- NA # make some missing
+    n0 <- colSums(geno == 0, na.rm=TRUE)
+    n1 <- colSums(geno == 1, na.rm=TRUE)
+    n2 <- colSums(geno == 2, na.rm=TRUE)
+    mono <- (n0 == n | n1 == n | n2 == n)
+    
+    vi <- data.frame(a=1:m)
+    x <- list(var.info=vi, geno=geno, chr=rep("1",m))
+    g <- .prepGenoBlock(x)
+    expect_equal(vi[!mono,,drop=FALSE], g$var.info)
+    
+    
 })

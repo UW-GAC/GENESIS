@@ -37,7 +37,9 @@ setMethod("variantFilter",
 
 
 # function to pre-process genotype data before testing
-.prepGenoBlock <- function(x, AF.max, sex, imputed, male.diploid) {
+.prepGenoBlock <- function(x, AF.max=1, imputed=FALSE, 
+                           sex=NULL, male.diploid=TRUE, 
+                           geno.coding="additive") {
     
     var.info <- x$var.info
     geno <- x$geno
@@ -64,6 +66,27 @@ setMethod("variantFilter",
         if (any(weight0)) {
             keep <- keep & !weight0
         }
+    }
+    
+    # recessive or dominant coding
+    if (geno.coding != "additive") {
+        if (geno.coding == "recessive") {
+            ## if wanting to test a recessive model, the genotypes 0 and 1 are '0'
+            ## and the genotype 2 is '1',
+            ## e.g. indicator of participant having 2 copies of the alternate allele
+            geno[geno %in% 1] <- 0L
+            geno[geno %in% 2] <- 1L
+            out.col <- "n.hom.alt"
+        } else if (geno.coding == "dominant") {
+            geno[geno %in% 2] <- 1L
+            out.col < "n.any.alt"
+        }
+        
+        # count number of carriers
+        freq[[out.col]] <- colSums(geno, na.rm=TRUE)
+        
+        # remove variants which are now monomorphic (all 0s or all 1s)
+        keep <- keep & (freq[[out.col]] == 0 | freq[[out.col]] == n.obs)
     }
     
     if (!all(keep)) {
@@ -167,10 +190,14 @@ setMethod("variantFilter",
 }
 
 
-.meanImputeFn <- function(geno, freq) {
+.meanImputeFn <- function(geno, freq, geno.coding="additive") {
     miss.idx <- which(is.na(geno))
     miss.var.idx <- ceiling(miss.idx/nrow(geno))
-    geno[miss.idx] <- 2*freq[miss.var.idx]
+    if (geno.coding == "additive") {
+        geno[miss.idx] <- 2*freq[miss.var.idx]
+    } else {
+        geno[miss.idx] <- freq[miss.var.idx]
+    }
     geno
 }
 

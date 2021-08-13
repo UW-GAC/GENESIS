@@ -105,13 +105,13 @@ setGeneric(".meanImpute", function(geno, freq, ...) standardGeneric(".meanImpute
 
 setMethod(".meanImpute",
           "matrix",
-          function(geno, freq){
-              .meanImputeFn(geno, freq)
+          function(geno, freq, ...){
+              .meanImputeFn(geno, freq, ...)
           })
 
 setMethod(".meanImpute",
           "Matrix",
-          function(geno, freq, maxelem = 2^30){
+          function(geno, freq, maxelem = 2^30, ...){
               
               # determine the number of blocks needed
               nr <- as.numeric(nrow(geno))
@@ -122,13 +122,13 @@ setMethod(".meanImpute",
                   blocks <- unname(split(1:nc, cut(1:nc, nblock)))
                   # apply to each block
                   ans <- lapply(blocks, function(b) {
-                      .meanImputeFn(geno[,b], freq[b])
+                      .meanImputeFn(geno[,b], freq[b], ...)
                   })
                   # recombine blocks
                   ans <- do.call(cbind, ans)
                   ans
               }else{
-                  .meanImputeFn(geno, freq)
+                  .meanImputeFn(geno, freq, ...)
               }
           })
 
