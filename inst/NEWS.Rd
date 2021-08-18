@@ -1,5 +1,10 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.23.7}{
+  \itemize{
+    \item Implement MatrixGenotypeReader method for pcair by writing a temporary GDS file.
+    }
+}
 \section{Version 2.23.5}{
   \itemize{
     \item assocTestSingle, assocTestAggregate, admixMap, and pcrelate use the BiocParallel package for parallel execution on blocks of variants.
