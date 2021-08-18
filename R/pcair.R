@@ -35,6 +35,18 @@ setMethod("pcair",
           })
 
 setMethod("pcair",
+          "MatrixGenotypeReader",
+          function(gdsobj, ...) {
+            gdsfile <- tempfile()
+            .genoDataToGds(gdsobj, gdsfile)
+            gds <- SNPRelate::snpgdsOpen(gdsfile)
+            res <- pcair(gds, ...)
+            SNPRelate::snpgdsClose(gds)
+            unlink(gdsfile)
+            return(res)
+          })
+
+setMethod("pcair",
           "GdsGenotypeReader",
           function(gdsobj, ...) {
               pcair(gdsobj@handler, ...)

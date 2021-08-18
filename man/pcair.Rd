@@ -4,6 +4,7 @@
 \alias{pcair,gds.class-method}
 \alias{pcair,SNPGDSFileClass-method}
 \alias{pcair,GdsGenotypeReader-method}
+\alias{pcair,MatrixGenotypeReader-method}
 \alias{pcair,GenotypeData-method}
 \alias{pcair,SeqVarGDSClass-method}
 \title{PC-AiR: Principal Components Analysis in Related Samples}
@@ -16,6 +17,7 @@
                             num.cores = 1L, verbose = TRUE, ...)
 \S4method{pcair}{SNPGDSFileClass}(gdsobj, ...)
 \S4method{pcair}{GdsGenotypeReader}(gdsobj, ...)
+\S4method{pcair}{MatrixGenotypeReader}(gdsobj, ...)
 \S4method{pcair}{GenotypeData}(gdsobj, ...)
 \S4method{pcair}{SeqVarGDSClass}(gdsobj, ...)
 }
@@ -49,6 +51,8 @@
 	If \code{kinobj = NULL}, and \code{unrel.set = NULL}, then the function will perform a "standard" PCA analysis.
 	
 	NOTE: \code{kinobj} and \code{divobj} may be identical.
+	
+	All \code{pcair} methods take the same arguments, as they ultimately call the \code{gds.class} method. The \code{\link{MatrixGenotypeReader}} method is implemented by writing a temporary GDS file.
 }
 \value{An object of class '\code{pcair}'.  A list including:
 	\item{vectors}{A matrix of principal components; each column is a principal component. Sample IDs are provided as rownames. The number of PCs returned can be adjusted by supplying the \code{eigen.cnt} argument, which is passed to \code{\link{snpgdsPCA}}.}

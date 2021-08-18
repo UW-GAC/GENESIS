@@ -47,6 +47,37 @@ test_that("GenotypeData", {
 })
 
 
+test_that("GenotypeData - MatrixGenotypeReader", {
+    showfile.gds(closeall=TRUE, verbose=FALSE)
+    gdsfile <- system.file("extdata", "HapMap_ASW_MXL_geno.gds", package="GENESIS")
+    HapMap_geno <- GWASTools::GdsGenotypeReader(gdsfile)
+    genoData <- GWASTools::GenotypeData(HapMap_geno)
+    data("HapMap_ASW_MXL_KINGmat")
+    mypcs <- pcair(genoData, kinobj=HapMap_ASW_MXL_KINGmat, divobj=HapMap_ASW_MXL_KINGmat, verbose=FALSE)
+    
+    matRdr <- GWASTools::MatrixGenotypeReader(genotype=GWASTools::getGenotype(genoData),
+                                              snpID=GWASTools::getSnpID(genoData),
+                                              chromosome=GWASTools::getChromosome(genoData),
+                                              position=GWASTools::getPosition(genoData),
+                                              scanID=GWASTools::getScanID(genoData))
+    matData <- GenotypeData(matRdr, scanAnnot=GWASTools::getScanAnnotation(genoData))
+    
+    matfile <- tempfile()
+    .genoDataToGds(matRdr, matfile)
+    matgds <- GWASTools::GdsGenotypeReader(matfile)
+    expect_equal(GWASTools::getGenotype(genoData),
+                 GWASTools::getGenotype(matgds))
+    GWASTools::close(genoData)
+    GWASTools::close(matgds)
+    unlink(matfile)
+    
+    kinmat <- HapMap_ASW_MXL_KINGmat
+    rownames(kinmat) <- colnames(kinmat) <- getScanID(matData)
+    matpcs <- pcair(matData, kinobj=kinmat, divobj=kinmat, verbose=FALSE)
+    expect_equivalent(mypcs$vectors, matpcs$vectors)
+})
+
+
 test_that("SeqVarData", {
     gds <- .testData()
     kin <- .testKing(gds)

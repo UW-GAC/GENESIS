@@ -296,3 +296,16 @@ setMethod(".annotateAssoc",
         stop(x[[ind]])
     }
 }
+
+.genoDataToGds <- function(x, filename) {
+    gds <- createfn.gds(filename)
+    add.gdsn(gds, "sample.id", getScanID(x))
+    add.gdsn(gds, "snp.id", getSnpID(x))
+    add.gdsn(gds, "snp.chromosome", getChromosome(x))
+    add.gdsn(gds, "snp.position", getPosition(x))
+    geno <- GWASTools::getGenotype(x, drop=FALSE, transpose=TRUE)
+    geno[is.na(geno)] <- 3
+    geno.node <- add.gdsn(gds, "genotype", geno, storage="bit2")
+    put.attr.gdsn(geno.node, "sample.order")
+    closefn.gds(gds)
+}
