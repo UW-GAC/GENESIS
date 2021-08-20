@@ -158,3 +158,12 @@ test_that("BinomiRare", {
     expect_true(all(assoc$freq <= 0.5))
     seqClose(svd)
 })
+
+test_that("dominant", {
+    svd <- .testData()
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, geno.coding="dominant", BPPARAM=BPPARAM, verbose=FALSE)
+    expect_true("n.any.alt" %in% names(assoc))
+    seqClose(svd)
+})

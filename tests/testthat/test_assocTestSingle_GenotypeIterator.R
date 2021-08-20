@@ -120,3 +120,15 @@ test_that("MatrixGenotypeReader", {
 
     close(genoData)
 })
+
+
+test_that("recessive", {
+    genoData <- .testGenoData()
+    iterator <- GenotypeBlockIterator(genoData)
+    
+    nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", verbose=FALSE)
+    assoc <- assocTestSingle(iterator, nullmod, geno.coding="recessive", BPPARAM=BPPARAM, verbose=FALSE)
+    expect_true("n.hom.alt" %in% names(assoc))
+    
+    close(genoData)
+})

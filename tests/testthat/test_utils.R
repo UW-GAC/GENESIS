@@ -185,8 +185,30 @@ test_that("prepGenoBlock", {
     
     vi <- data.frame(a=1:m)
     x <- list(var.info=vi, geno=geno, chr=rep("1",m))
+    
     g <- .prepGenoBlock(x)
     expect_equal(vi[!mono,,drop=FALSE], g$var.info)
+    expect_equal(colSums(!is.na(geno[,!mono])), g$n.obs)
+    expect_equal(0.5*colMeans(geno[,!mono], na.rm=TRUE), g$freq$freq)
+    expect_equal(geno[,!mono], g$geno)
+    expect_true(is.null(g$weight))
     
+    g2 <- .prepGenoBlock(x, AF.max = 0.1)
+    inc <- g$freq$freq <= 0.1
+    expect_equal(g2$freq, g$freq[inc,])
+    expect_equal(g2$geno, g$geno[,inc])
     
+    gr <- .prepGenoBlock(x, geno.coding="recessive")
+    rec.mono <- n2 == 0 | n2 == n
+    expect_equal(colSums(gr$geno == 1, na.rm=TRUE), n2[!rec.mono])
+    expect_equal(names(gr$freq), c("freq", "MAC", "n.hom.alt"))
+    
+    gd <- .prepGenoBlock(x, geno.coding="dominant")
+    dom.mono <- n0 == 0 | n0 == n
+    expect_equal(colSums(gd$geno != 0, na.rm=TRUE), (n1+n2)[!dom.mono])
+    expect_equal(names(gd$freq), c("freq", "MAC", "n.any.alt"))
+    
+    x$weight <- c(rep(1,900), rep(0,100))
+    gw <- .prepGenoBlock(x)
+    expect_equal(gw$weight, x$weight[!mono & as.logical(x$weight)])
 })
