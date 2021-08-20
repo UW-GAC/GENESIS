@@ -37,9 +37,8 @@ setMethod("variantFilter",
 
 
 # function to pre-process genotype data before testing
-.prepGenoBlock <- function(x, AF.max=1, imputed=FALSE, 
-                           sex=NULL, male.diploid=TRUE, 
-                           geno.coding="additive") {
+.prepGenoBlock <- function(x, AF.max=1, geno.coding="additive", imputed=FALSE, 
+                           sex=NULL, male.diploid=TRUE) {
     
     var.info <- x$var.info
     geno <- x$geno
@@ -74,19 +73,19 @@ setMethod("variantFilter",
             ## if wanting to test a recessive model, the genotypes 0 and 1 are '0'
             ## and the genotype 2 is '1',
             ## e.g. indicator of participant having 2 copies of the alternate allele
-            geno[geno %in% 1] <- 0L
-            geno[geno %in% 2] <- 1L
+            geno[geno == 1] <- 0L
+            geno[geno == 2] <- 1L
             out.col <- "n.hom.alt"
         } else if (geno.coding == "dominant") {
-            geno[geno %in% 2] <- 1L
-            out.col < "n.any.alt"
+            geno[geno == 2] <- 1L
+            out.col <- "n.any.alt"
         }
         
         # count number of carriers
         freq[[out.col]] <- colSums(geno, na.rm=TRUE)
         
         # remove variants which are now monomorphic (all 0s or all 1s)
-        keep <- keep & (freq[[out.col]] == 0 | freq[[out.col]] == n.obs)
+        keep <- keep & !(freq[[out.col]] == 0 | freq[[out.col]] == n.obs)
     }
     
     if (!all(keep)) {
