@@ -6,9 +6,11 @@ setMethod("assocTestSingle",
           "SeqVarIterator",
           function(gdsobj, null.model, test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
                    recalc.pval.thresh=0.05, fast.score.SE=FALSE, GxE=NULL,
+                   geno.coding=c("additive", "dominant", "recessive"),
                    sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), 
                    BPPARAM=bpparam(), verbose=TRUE) {
               test <- match.arg(test)
+              geno.coding <- match.arg(geno.coding)
 
               # don't use sparse matrices for imputed dosages
               if (imputed) sparse <- FALSE
@@ -68,6 +70,7 @@ setMethod("assocTestSingle",
                                sex=sex, null.model=null.model, test=test,
                                recalc.pval.thresh=recalc.pval.thresh, 
                                fast.score.SE=fast.score.SE, GxE=GxE,
+                               geno.coding=geno.coding,
                                sparse=sparse, imputed=imputed,
                                male.diploid=male.diploid)
               .stopOnError(res)
@@ -80,8 +83,10 @@ setMethod("assocTestSingle",
           "GenotypeIterator",
           function(gdsobj, null.model, test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
                    recalc.pval.thresh=0.05, GxE=NULL, 
+                   geno.coding=c("additive", "dominant", "recessive"),
                    male.diploid=TRUE, BPPARAM=bpparam(), verbose=TRUE) {
               test <- match.arg(test)
+              geno.coding <- match.arg(geno.coding)
 
               # Convert old null model format if necessary.
               null.model <- .updateNullModelFormat(null.model)
@@ -127,6 +132,7 @@ setMethod("assocTestSingle",
                                sex=sex, null.model=null.model, test=test,
                                recalc.pval.thresh=recalc.pval.thresh, 
                                fast.score.SE=FALSE, GxE=GxE,
+                               geno.coding=geno.coding,
                                sparse=FALSE, imputed=FALSE,
                                male.diploid=male.diploid)
               .stopOnError(res)
@@ -138,6 +144,7 @@ setMethod("assocTestSingle",
 # function to process a block of genotype data
 .testGenoBlockSingle <- function(x, sex, null.model, test,
                                  recalc.pval.thresh, fast.score.SE, GxE,
+                                 geno.coding,
                                  sparse, imputed, male.diploid, ...) {
     
     # for BinomiRare and CMP, restrict to variants where the alternate allele is minor
@@ -147,7 +154,8 @@ setMethod("assocTestSingle",
         AF.max <- 1
     }
     
-    x <- .prepGenoBlock(x, AF.max=AF.max, sex=sex, imputed=imputed, male.diploid=male.diploid)
+    x <- .prepGenoBlock(x, AF.max=AF.max, geno.coding=geno.coding, imputed=imputed,
+                        sex=sex, male.diploid=male.diploid)
     var.info <- x$var.info
     n.obs <- x$n.obs
     freq <- x$freq

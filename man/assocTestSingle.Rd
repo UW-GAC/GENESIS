@@ -13,12 +13,15 @@
 \S4method{assocTestSingle}{SeqVarIterator}(gdsobj, null.model,
                 test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
                 recalc.pval.thresh=0.05, fast.score.SE=FALSE,
-                GxE=NULL, sparse=TRUE, imputed=FALSE,
+                GxE=NULL, 
+                geno.coding=c("additive", "dominant", "recessive"),
+                sparse=TRUE, imputed=FALSE,
                 male.diploid=TRUE, genome.build=c("hg19", "hg38"),
                 BPPARAM=bpparam(), verbose=TRUE)
 \S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model,
                 test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
                 recalc.pval.thresh=0.05, GxE=NULL,
+                geno.coding=c("additive", "dominant", "recessive"),
                 male.diploid=TRUE, BPPARAM=bpparam(), verbose=TRUE)
 }
 
@@ -31,6 +34,7 @@
     \item{fast.score.SE}{Logical indicator of whether to use the fast approximation of the score standard error for testing variant association. When \code{FALSE} (default), the true score SE is calculated. When \code{TRUE}, the fast score SE approximation from SAIGE is used. This option can only be used with a null model fit with \code{\link{fitNullModelFastScore}} or updated with \code{\link{nullModelFastScore}}. See 'Details' for further information.}
     \item{GxE}{A vector of character strings specifying the names of the variables for which a genotype interaction term should be included.If \code{GxE} is not \code{NULL}, \code{test} is ignored and Wald tests of interaction are performed. If \code{GxE} is \code{NULL} (default) no genotype interactions are included. See 'Details' for further information.}
     %\item{ivar.return.betaCov}{Logical indicator of whether the estimated covariance matrix of the effect size estimates (betas) for the genotype and genotype interaction terms should be returned; the default is FALSE.}
+    \item{geno.coding}{Whether genotypes should be coded as "additive" (0, 1, or 2 copies of the effect allele), "recessive" (1=homozygous for the effect allele, 0 otherwise), or "dominant" (1=heterozygous or homozygous for the effect allele, 0 for no effect allele).}
     \item{sparse}{Logical indicator of whether to read genotypes as sparse Matrix objects; the default is \code{TRUE}. Set this to \code{FALSE} if the alternate allele dosage of the genotypes in the test are not expected to be mostly 0.}
     \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles.}
     \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid.}
@@ -71,6 +75,10 @@
     \item{n.obs}{The number of samples with non-missing genotypes}
     \item{freq}{The estimated alternate allele frequency}
     \item{MAC}{The minor allele count. For multiallelic variants, "minor" is determined by comparing the count of the alternate allele specified by \code{allele.index} with the sum of all other alleles.}
+    If \code{geno.coding} is \code{"recessive"}:
+    \item{n.hom.alt}{The number of samples homozygous for the effect (alternate) allele.}
+    If \code{geno.coding} is \code{"dominant"}:
+    \item{n.any.alt}{The number of samples with any copies of the effect (alternate) allele.}
     If \code{test} is \code{"Score"}:
     \item{Score}{The value of the score function}
     \item{Score.SE}{The estimated standard error of the Score}
