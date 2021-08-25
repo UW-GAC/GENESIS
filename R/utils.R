@@ -195,6 +195,7 @@ setMethod("variantFilter",
     if (geno.coding == "additive") {
         geno[miss.idx] <- 2*freq[miss.var.idx]
     } else {
+        freq <- colMeans(geno, na.rm=TRUE)
         geno[miss.idx] <- freq[miss.var.idx]
     }
     geno
