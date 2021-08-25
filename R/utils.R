@@ -73,8 +73,18 @@ setMethod("variantFilter",
             ## if wanting to test a recessive model, the genotypes 0 and 1 are '0'
             ## and the genotype 2 is '1',
             ## e.g. indicator of participant having 2 copies of the alternate allele
-            geno[geno == 1] <- 0L
-            geno[geno == 2] <- 1L
+            ## if the X chr is coded 0/1 for males, then geno==1 should be mapped to 1
+            if (male.diploid | is.null(sex)) {
+                geno[geno == 1] <- 0L
+                geno[geno == 2] <- 1L
+            } else {
+                sex.chr <- chr %in% c("X", "Y")
+                male <- sex == "M"
+                tmp <- geno[male, sex.chr]
+                geno[geno == 1] <- 0L
+                geno[geno == 2] <- 1L
+                geno[male, sex.chr][tmp == 1] <- 1L
+            }
             out.col <- "n.hom.alt"
         } else if (geno.coding == "dominant") {
             geno[geno == 2] <- 1L

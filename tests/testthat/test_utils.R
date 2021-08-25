@@ -212,3 +212,28 @@ test_that("prepGenoBlock", {
     gw <- .prepGenoBlock(x)
     expect_equal(gw$weight, x$weight[!mono & as.logical(x$weight)])
 })
+
+
+test_that("prepGenoBlock - male haploid", {
+    n <- 100
+    m <- 1000
+    set.seed(123)
+    geno <- matrix(rbinom(n*m, size = 2, prob = 0.3), nrow = n, ncol = m)
+    set.seed(456)
+    sex <- sample(c("M", "F"), n, replace=TRUE)
+    vi <- data.frame(a=1:m)
+    x <- list(var.info=vi, geno=geno, chr=rep("X",m))
+    
+    male <- sex == "M"
+    female <- sex == "F"
+    nm1 <- colSums(geno[male,] == 1)
+    nm2 <- colSums(geno[male,] == 2)
+    nf2 <- colSums(geno[female,] == 2)
+    
+    gd <- .prepGenoBlock(x, geno.coding="recessive", male.diploid=TRUE, sex=sex)
+    expect_equal(colSums(gd$geno[male,]), nm2)
+    expect_equal(colSums(gd$geno[female,]), nf2)
+    gh <- .prepGenoBlock(x, geno.coding="recessive", male.diploid=FALSE, sex=sex)
+    expect_equal(colSums(gh$geno[male,]), nm1 + nm2)
+    expect_equal(colSums(gh$geno[female,]), nf2)
+})
