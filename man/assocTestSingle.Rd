@@ -48,7 +48,7 @@
 
   All samples included in \code{null model} will be included in the association test, even if a different set of samples is present in the current filter for \code{gdsobj}.
   
-    The effect size estimate is for each copy of the alternate allele (when \code{gdsobj} is a \code{\link{SeqVarIterator}} object) or the "A" allele (when \code{gdsobj} is a \code{\link{GenotypeIterator}} object). For multiallelic variants, each alternate (or "A") allele is tested separately.
+    The effect size estimate is for each copy of the alternate allele (when \code{gdsobj} is a \code{\link{SeqVarIterator}} object) or the "A" allele (when \code{gdsobj} is a \code{\link{GenotypeIterator}} object). For multiallelic variants in \code{\link{SeqVarIterator}} objects, each alternate (or "A") allele is tested separately.
     %When \code{impute.geno} is TRUE, sporadic missing genotype values are mean imputed using the minor allele frequency (MAF) calculated on all other samples at that SNP. When \code{impute.geno} is FALSE, samples with missing values for all of the SNP genotypes in the current SNP block are removed from the analysis for the block; this may significantly slow down computation time because many pre-computed matrices need to be re-computed each time the sample set changes.  Also note: when \code{impute.geno} is FALSE, sporadic missingness for a sample inside of a SNP block will lead to an error.
 
     Sporadic missing genotype values are mean imputed using the allele frequency calculated on all other samples at that variant.
@@ -61,7 +61,7 @@
 
     The fast approximation to the score standard error for testing variant association used by Zhou et al. (2018) in their SAIGE software is available by setting the \code{fast.score.SE} parameter to \code{TRUE}. This approximation may be much faster than computing the true score SE in large samples, as it replaces the full covariance matrix in the calculation with the product of a diagonal matrix and a scalar correction factor. This scalar correction factor must be computed beforehand and stored in the input \code{null.model} as \code{se.correction}, either by fitting the \code{null.model} with \code{\link{fitNullModelFastScore}}, or by updating a \code{null.model} previously fit with \code{\link{fitNullModel}} using the \code{calcScore} and \code{\link{nullModelFastScore}} functions. This approach assumes a constant scalar SE correction factor across all variants. This method is only available when \code{gdsobj} is a \code{\link{SeqVarIterator}} object.
 
-    The BinomiRare test, run by using \code{test = "BinomiRare"}, and the CMP test, run by using \code{test = "CMP"} are carrier-only, robust tests. Only variants where the alternate allele is minor will be tested. Both tests focuse on carriers of the rare variant allele ("carriers"), and use the estimated probabilities of the binary outcome within the carriers, estimated under the null of not association, and the actual number of observed outcomes, to compute p-values. BinomiRare uses the Poisson-Binomial distribution, and the CMP uses the Conway-Maxwell-Poisson distribution, and is specifically designed for mixed models. (If \code{test = "CMP"} but \code{null.model$family$mixedmodel = FALSE}, the BinomiRare test will be run instead.) These tests provide both a traditional p-value (\code{"pval"}) and a mid-p-value (\code{"midp"}), which is less conservative/more liberal, with the difference being more pronounced for small number of carriers. The BinomiRare test is described in Sofer (2017) and compared to the Score and SPA in various settings in Sofer and Guo (2020).
+    The BinomiRare test, run by using \code{test = "BinomiRare"}, and the CMP test, run by using \code{test = "CMP"} are carrier-only, robust tests. Only variants where the effect allele is minor will be tested. Both tests focuse on carriers of the rare variant allele ("carriers"), and use the estimated probabilities of the binary outcome within the carriers, estimated under the null of not association, and the actual number of observed outcomes, to compute p-values. BinomiRare uses the Poisson-Binomial distribution, and the CMP uses the Conway-Maxwell-Poisson distribution, and is specifically designed for mixed models. (If \code{test = "CMP"} but \code{null.model$family$mixedmodel = FALSE}, the BinomiRare test will be run instead.) These tests provide both a traditional p-value (\code{"pval"}) and a mid-p-value (\code{"midp"}), which is less conservative/more liberal, with the difference being more pronounced for small number of carriers. The BinomiRare test is described in Sofer (2017) and compared to the Score and SPA in various settings in Sofer and Guo (2020).
     %A reference to the CMP test and the BinomiRare for mixed models will be provided once a preprint is available.
 
     For the \code{\link{GenotypeIterator}} method, objects created with \code{\link{GdsGenotypeReader}} or \code{\link{MatrixGenotypeReader}} are supported. \code{\link{NcdfGenotypeReader}} objects are not supported.
@@ -73,22 +73,22 @@
     \item{pos}{The base pair position}
     \item{allele.index}{The index of the alternate allele. For biallelic variants, this will always be 1.}
     \item{n.obs}{The number of samples with non-missing genotypes}
-    \item{freq}{The estimated alternate allele frequency}
-    \item{MAC}{The minor allele count. For multiallelic variants, "minor" is determined by comparing the count of the alternate allele specified by \code{allele.index} with the sum of all other alleles.}
+    \item{freq}{The estimated effect allele frequency}
+    \item{MAC}{The minor allele count. For multiallelic variants, "minor" is determined by comparing the count of the allele specified by \code{allele.index} with the sum of all other alleles.}
     If \code{geno.coding} is \code{"recessive"}:
-    \item{n.hom.alt}{The number of samples homozygous for the effect (alternate) allele.}
+    \item{n.hom.alt}{The number of samples homozygous for the effect allele.}
     If \code{geno.coding} is \code{"dominant"}:
-    \item{n.any.alt}{The number of samples with any copies of the effect (alternate) allele.}
+    \item{n.any.alt}{The number of samples with any copies of the effect allele.}
     If \code{test} is \code{"Score"}:
     \item{Score}{The value of the score function}
     \item{Score.SE}{The estimated standard error of the Score}
     \item{Score.Stat}{The score Z test statistic}
     \item{Score.pval}{The score p-value}
-    \item{Est}{An approximation of the effect size estimate for each additional copy of the alternate allele}
+    \item{Est}{An approximation of the effect size estimate for each additional copy of the effect allele}
     \item{Est.SE}{An approximation of the standard error of the effect size estimate}
     \item{PVE}{An approximation of the proportion of phenotype variance explained}
     % If \code{test} is \code{"Wald"} and \code{GxE} is \code{NULL}:
-    % \item{Est}{The effect size estimate for each additional copy of the alternate allele}
+    % \item{Est}{The effect size estimate for each additional copy of the effect allele}
     % \item{Est.SE}{The estimated standard error of the effect size estimate}    
     % \item{Wald.Stat}{The Wald Z test statistic}
     % \item{Wald.pval}{The Wald p-value}
@@ -105,8 +105,8 @@
     \item{Joint.Stat}{The Wald Z test statistic for the joint test of the genotype term and all of the genotype interaction terms}
     \item{Joint.pval}{The Wald p-value for the joint test of the genotype term and all of the genotype interaction terms; i.e. the test of any genotype effect}
     If \code{test} is \code{"BinomiRare" or "CMP"}:
-    \item{n.carrier}{Number of individuals with at least one copy of the alternate allele}
-    \item{n.D.carrier}{Number of cases with at least one copy of the alternate allele}
+    \item{n.carrier}{Number of individuals with at least one copy of the effect allele}
+    \item{n.D.carrier}{Number of cases with at least one copy of the effect allele}
     \item{pval}{p-value}
     \item{mid.pval}{mid-p-value}
     
