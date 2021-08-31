@@ -37,8 +37,8 @@
     \item{geno.coding}{Whether genotypes should be coded as "additive" (0, 1, or 2 copies of the effect allele), "recessive" (1=homozygous for the effect allele, 0 otherwise), or "dominant" (1=heterozygous or homozygous for the effect allele, 0 for no effect allele).}
     \item{sparse}{Logical indicator of whether to read genotypes as sparse Matrix objects; the default is \code{TRUE}. Set this to \code{FALSE} if the alternate allele dosage of the genotypes in the test are not expected to be mostly 0.}
     \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles.}
-    \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid.}
-    \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes.}
+    \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid. Default is `male.diploid=TRUE`, meaning sex chromosome genotypes for males have values 0/2. If the input \code{gdsobj} codes males as 0/1 on sex chromosomes, set `male.diploid=FALSE`.}
+    \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes. These regions are not treated as sex chromosomes when calculating allele frequencies.}
     \item{BPPARAM}{A \code{\link{BiocParallelParam}} object to process blocks of variants in parallel. If not provided, the default back-end returned by \code{\link{bpparam}} will be used.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is \code{TRUE}.}
 }
