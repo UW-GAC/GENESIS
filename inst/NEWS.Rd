@@ -1,5 +1,10 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.23.8}{
+  \itemize{
+    \item Added option for recessive and dominant coding to assocTestSingle.
+    }
+}
 \section{Version 2.23.7}{
   \itemize{
     \item Implement MatrixGenotypeReader method for pcair by writing a temporary GDS file.
