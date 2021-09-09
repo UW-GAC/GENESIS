@@ -37,7 +37,8 @@ setMethod("variantFilter",
 
 
 # function to pre-process genotype data before testing
-.prepGenoBlock <- function(x, AF.max, sex, imputed, male.diploid) {
+.prepGenoBlock <- function(x, AF.max=1, geno.coding="additive", imputed=FALSE, 
+                           sex=NULL, male.diploid=TRUE) {
     
     var.info <- x$var.info
     geno <- x$geno
@@ -64,6 +65,37 @@ setMethod("variantFilter",
         if (any(weight0)) {
             keep <- keep & !weight0
         }
+    }
+    
+    # recessive or dominant coding
+    if (geno.coding != "additive") {
+        if (geno.coding == "recessive") {
+            ## if wanting to test a recessive model, the genotypes 0 and 1 are '0'
+            ## and the genotype 2 is '1',
+            ## e.g. indicator of participant having 2 copies of the alternate allele
+            ## if the X chr is coded 0/1 for males, then geno==1 should be mapped to 1
+            if (male.diploid | is.null(sex)) {
+                geno[geno == 1] <- 0L
+                geno[geno == 2] <- 1L
+            } else {
+                sex.chr <- chr %in% c("X", "Y")
+                male <- sex == "M"
+                tmp <- geno[male, sex.chr]
+                geno[geno == 1] <- 0L
+                geno[geno == 2] <- 1L
+                geno[male, sex.chr][tmp == 1] <- 1L
+            }
+            out.col <- "n.hom.eff"
+        } else if (geno.coding == "dominant") {
+            geno[geno == 2] <- 1L
+            out.col <- "n.any.eff"
+        }
+        
+        # count number of carriers
+        freq[[out.col]] <- colSums(geno, na.rm=TRUE)
+        
+        # remove variants which are now monomorphic (all 0s or all 1s)
+        keep <- keep & !(freq[[out.col]] == 0 | freq[[out.col]] == n.obs)
     }
     
     if (!all(keep)) {
@@ -167,10 +199,15 @@ setMethod("variantFilter",
 }
 
 
-.meanImputeFn <- function(geno, freq) {
+.meanImputeFn <- function(geno, freq, geno.coding="additive") {
     miss.idx <- which(is.na(geno))
     miss.var.idx <- ceiling(miss.idx/nrow(geno))
-    geno[miss.idx] <- 2*freq[miss.var.idx]
+    if (geno.coding == "additive") {
+        geno[miss.idx] <- 2*freq[miss.var.idx]
+    } else {
+        freq <- colMeans(geno, na.rm=TRUE)
+        geno[miss.idx] <- freq[miss.var.idx]
+    }
     geno
 }
 

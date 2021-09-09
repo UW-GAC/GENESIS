@@ -29,7 +29,7 @@
 \arguments{
     \item{gdsobj}{An object of class \code{\link{SeqVarIterator}} from the package \pkg{\link{SeqVarTools}} containing the genotype data for the variants and samples to be used for the analysis.}
     \item{null.model}{A null model object returned by \code{fitNullModel}.}
-    \item{AF.max}{A numeric value specifying the upper bound on the alternate allele frequency for variants to be included in the analysis.}
+    \item{AF.max}{A numeric value specifying the upper bound on the effect allele frequency for variants to be included in the analysis.}
     \item{weight.beta}{A numeric vector of length two specifying the two parameters of the Beta distribution used to determine variant weights; weights are given by \code{dbeta(MAF, a, b)}, where MAF is the minor allele frequency, and a and b are the two parameters specified here. \code{weight.beta = c(1,25)} gives the Wu weights; \code{weight.beta = c(0.5, 0.5)} is proportional to the Madsen-Browning weights; and \code{weight.beta = c(1,1)} gives a weight of 1 to all variants. This input is ignored when \code{weight.user} is not \code{NULL}.}
     \item{weight.user}{A character string specifying the name of a variable to be used as variant weights. This variable can be in either 1) the variantData slot of \code{gdsobj} or 2) the \code{\link{mcols}} of the \code{\link{GRanges}} or \code{\link{GRangesList}} object used to create \code{gdsobj} (when \code{gdsobj} is a \code{link{SeqVarRangeIterator}} or \code{link{SeqVarListIterator}}).  When left \code{NULL} (the default), the weights specified by \code{weight.beta} will be used.}
     \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Burden"} (default), \code{"SKAT"}, \code{"fastSKAT"}, \code{"SMMAT"}, \code{"BinomiRare"}, or \code{"CMP"}.}
@@ -42,8 +42,8 @@
     %\item{pval.method}{A character string specifying which method to use to calculate SKAT p-values. \code{"davies"} (the default) uses numerical integration; \code{"kuonen"} uses a saddlepoint method; and \code{"liu"} uses a moment matching approximation. If the davies method generates an error, kuonen is tried, and then liu as a last resort.}
     \item{sparse}{Logical indicator of whether to read genotypes as sparse Matrix objects; the default is \code{TRUE}. Set this to \code{FALSE} if the alternate allele dosage of the genotypes in the test are not expected to be mostly 0.}
     \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles.}
-  \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid.}
-  \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes.}
+    \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid. Default is `male.diploid=TRUE`, meaning sex chromosome genotypes for males have values 0/2. If the input \code{gdsobj} codes males as 0/1 on sex chromosomes, set `male.diploid=FALSE`.}
+  \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes. These regions are not treated as sex chromosomes when calculating allele frequencies.}
     \item{BPPARAM}{A \code{\link{BiocParallelParam}} object to process blocks of variants in parallel. If not provided, the default back-end returned by \code{\link{bpparam}} will be used.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is \code{TRUE}.}
 }
@@ -60,7 +60,7 @@
   association test, even if a different set of samples is present in the
   current filter for \code{gdsobj}.
   
-    The effect size estimate is for each copy of the alternate allele (when \code{gdsobj} is a \code{\link{SeqVarIterator}} object) or the "A" allele (when \code{gdsobj} is a \code{\link{GenotypeIterator}} object). For multiallelic variants, each alternate (or "A") allele is tested separately.
+    The effect size estimate is for each copy of the alternate allele (when \code{gdsobj} is a \code{\link{SeqVarIterator}} object) or the "A" allele (when \code{gdsobj} is a \code{\link{GenotypeIterator}} object). We refer to this as the "effect allele" in the rest of the documentation. For multiallelic variants in \code{\link{SeqVarIterator}} objects, each alternate (or "A") allele is tested separately.
 
     Monomorphic variants (including variants where every sample is a heterozygote) are always omitted from the aggregate unit prior to testing.
   
@@ -70,7 +70,7 @@
 
     The fastSKAT method of Lumley et al. (2018) uses random matrix theory to speed up the computation of SKAT p-values. When \code{test = "fastSKAT"}, the function attempts to inteligently determine which p-value calculation approach to use for each aggregation unit: (1) if min(number samples, number variants) is small enough, then the standard SKAT p-value calculation is used; (2) if min(number samples, number variants) is too large for standard SKAT, but small enough to explicitly compute the genotype covariance matrix, random projections are used to approximate the eigenvalues of the covariance matrix, and the fastSKAT p-value calculation is used; (3) if min(number samples, number variants) is too big to explicitly compute the genotype covariance matrix, random projections are used to approximate both the eigenvalues and the trace of the covariance matrix, and the fastSKAT p-value calculation is used.)
     
-    The BinomiRare test, run by using \code{test = "BinomiRare"}, and the CMP test, run by using \code{test = "CMP"} are carrier-only, robust tests. Only variants where the alternate allele is minor will be tested. Both tests focuse on carriers of the rare variant allele ("carriers"), and use the estimated probabilities of the binary outcome within the carriers, estimated under the null of not association, and the actual number of observed outcomes, to compute p-values. BinomiRare uses the Poisson-Binomial distribution, and the CMP uses the Conway-Maxwell-Poisson distribution, and is specifically designed for mixed models. (If \code{test = "CMP"} but \code{null.model$family$mixedmodel = FALSE}, the BinomiRare test will be run instead.) These tests provide both a traditional p-value (\code{"pval"}) and a mid-p-value (\code{"midp"}), which is less conservative/more liberal, with the difference being more pronounced for small number of carriers. The BinomiRare test is described in Sofer (2017) and compared to the Score and SPA in various settings in Sofer and Guo (2020).
+    The BinomiRare test, run by using \code{test = "BinomiRare"}, and the CMP test, run by using \code{test = "CMP"} are carrier-only, robust tests. Only variants where the effect allele is minor will be tested. Both tests focuse on carriers of the rare variant allele ("carriers"), and use the estimated probabilities of the binary outcome within the carriers, estimated under the null of not association, and the actual number of observed outcomes, to compute p-values. BinomiRare uses the Poisson-Binomial distribution, and the CMP uses the Conway-Maxwell-Poisson distribution, and is specifically designed for mixed models. (If \code{test = "CMP"} but \code{null.model$family$mixedmodel = FALSE}, the BinomiRare test will be run instead.) These tests provide both a traditional p-value (\code{"pval"}) and a mid-p-value (\code{"midp"}), which is less conservative/more liberal, with the difference being more pronounced for small number of carriers. The BinomiRare test is described in Sofer (2017) and compared to the Score and SPA in various settings in Sofer and Guo (2020).
 }
 
 \value{A list with the following items:
@@ -82,8 +82,8 @@
 
     Always:
     \item{n.site}{The number of variant sites included in the test.}
-    \item{n.alt}{The number of alternate alleles included in the test.}
-    \item{n.sample.alt}{The number of samples with an observed alternate allele at any variant in the aggregate set.}
+    \item{n.alt}{The number of alternate (effect) alleles included in the test.}
+    \item{n.sample.alt}{The number of samples with an observed alternate (effect) allele at any variant in the aggregate set.}
     If \code{test} is \code{"Burden"}:
     %% \item{burden.skew}{The skewness of the burden value for all samples.}  
     %If \code{burden.test} is "Score":
@@ -126,8 +126,8 @@
     \item{pval_SKATO}{The SKAT-O p-value after adjustment for searching across multiple rho values.}
 
     If \code{test} is \code{"BinomiRare" or "CMP"}:
-    \item{n.carrier}{Number of individuals with at least one copy of the alternate allele}
-    \item{n.D.carrier}{Number of cases with at least one copy of the alternate allele}
+    \item{n.carrier}{Number of individuals with at least one copy of the effect allele}
+    \item{n.D.carrier}{Number of cases with at least one copy of the effect allele}
     \item{pval}{p-value}
     \item{mid.pval}{mid-p-value}
 
@@ -137,8 +137,8 @@
     \item{pos}{The base pair position}
     \item{allele.index}{The index of the alternate allele. For biallelic variants, this will always be 1.}
     \item{n.obs}{The number of samples with non-missing genotypes}
-    \item{freq}{The estimated alternate allele frequency}
-    \item{MAC}{The minor allele count. For multiallelic variants, "minor" is determined by comparing the count of the alternate allele specified by \code{allele.index} with the sum of all other alleles.}
+    \item{freq}{The estimated effect allele frequency}
+    \item{MAC}{The minor allele count. For multiallelic variants, "minor" is determined by comparing the count of the allele specified by \code{allele.index} with the sum of all other alleles.}
     \item{weight}{The weight assigned to the variant in the analysis.}
 }
 
