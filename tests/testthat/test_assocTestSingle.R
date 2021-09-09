@@ -164,6 +164,6 @@ test_that("dominant", {
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
     nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
     assoc <- assocTestSingle(iterator, nullmod, geno.coding="dominant", BPPARAM=BPPARAM, verbose=FALSE)
-    expect_true("n.any.alt" %in% names(assoc))
+    expect_true("n.any.eff" %in% names(assoc))
     seqClose(svd)
 })

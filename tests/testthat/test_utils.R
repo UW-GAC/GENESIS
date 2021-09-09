@@ -201,12 +201,12 @@ test_that("prepGenoBlock", {
     gr <- .prepGenoBlock(x, geno.coding="recessive")
     rec.mono <- n2 == 0 | n2 == n
     expect_equal(colSums(gr$geno == 1, na.rm=TRUE), n2[!rec.mono])
-    expect_equal(names(gr$freq), c("freq", "MAC", "n.hom.alt"))
+    expect_equal(names(gr$freq), c("freq", "MAC", "n.hom.eff"))
     
     gd <- .prepGenoBlock(x, geno.coding="dominant")
     dom.mono <- n0 == 0 | n0 == n
     expect_equal(colSums(gd$geno != 0, na.rm=TRUE), (n1+n2)[!dom.mono])
-    expect_equal(names(gd$freq), c("freq", "MAC", "n.any.alt"))
+    expect_equal(names(gd$freq), c("freq", "MAC", "n.any.eff"))
     
     x$weight <- c(rep(1,900), rep(0,100))
     gw <- .prepGenoBlock(x)

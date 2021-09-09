@@ -85,10 +85,10 @@ setMethod("variantFilter",
                 geno[geno == 2] <- 1L
                 geno[male, sex.chr][tmp == 1] <- 1L
             }
-            out.col <- "n.hom.alt"
+            out.col <- "n.hom.eff"
         } else if (geno.coding == "dominant") {
             geno[geno == 2] <- 1L
-            out.col <- "n.any.alt"
+            out.col <- "n.any.eff"
         }
         
         # count number of carriers

@@ -48,7 +48,7 @@
 
   All samples included in \code{null model} will be included in the association test, even if a different set of samples is present in the current filter for \code{gdsobj}.
   
-    The effect size estimate is for each copy of the alternate allele (when \code{gdsobj} is a \code{\link{SeqVarIterator}} object) or the "A" allele (when \code{gdsobj} is a \code{\link{GenotypeIterator}} object). For multiallelic variants in \code{\link{SeqVarIterator}} objects, each alternate (or "A") allele is tested separately.
+    The effect size estimate is for each copy of the alternate allele (when \code{gdsobj} is a \code{\link{SeqVarIterator}} object) or the "A" allele (when \code{gdsobj} is a \code{\link{GenotypeIterator}} object). We refer to this as the "effect allele" in the rest of the documentation. For multiallelic variants in \code{\link{SeqVarIterator}} objects, each alternate (or "A") allele is tested separately.
     %When \code{impute.geno} is TRUE, sporadic missing genotype values are mean imputed using the minor allele frequency (MAF) calculated on all other samples at that SNP. When \code{impute.geno} is FALSE, samples with missing values for all of the SNP genotypes in the current SNP block are removed from the analysis for the block; this may significantly slow down computation time because many pre-computed matrices need to be re-computed each time the sample set changes.  Also note: when \code{impute.geno} is FALSE, sporadic missingness for a sample inside of a SNP block will lead to an error.
 
     Sporadic missing genotype values are mean imputed using the allele frequency calculated on all other samples at that variant.
@@ -76,9 +76,9 @@
     \item{freq}{The estimated effect allele frequency}
     \item{MAC}{The minor allele count. For multiallelic variants, "minor" is determined by comparing the count of the allele specified by \code{allele.index} with the sum of all other alleles.}
     If \code{geno.coding} is \code{"recessive"}:
-    \item{n.hom.alt}{The number of samples homozygous for the effect allele.}
+    \item{n.hom.eff}{The number of samples homozygous for the effect allele.}
     If \code{geno.coding} is \code{"dominant"}:
-    \item{n.any.alt}{The number of samples with any copies of the effect allele.}
+    \item{n.any.eff}{The number of samples with any copies of the effect allele.}
     If \code{test} is \code{"Score"}:
     \item{Score}{The value of the score function}
     \item{Score.SE}{The estimated standard error of the Score}

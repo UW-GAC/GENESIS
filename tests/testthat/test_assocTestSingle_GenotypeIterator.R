@@ -128,7 +128,7 @@ test_that("recessive", {
     
     nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", verbose=FALSE)
     assoc <- assocTestSingle(iterator, nullmod, geno.coding="recessive", BPPARAM=BPPARAM, verbose=FALSE)
-    expect_true("n.hom.alt" %in% names(assoc))
+    expect_true("n.hom.eff" %in% names(assoc))
     
     close(genoData)
 })
