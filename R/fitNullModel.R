@@ -11,6 +11,8 @@ setMethod("fitNullModel",
                    two.stage = FALSE,
                    norm.option = c("all", "by.group"),
                    rescale = c("residSD", "none", "model"),
+                   dcovars = NULL,
+                   dlink = c("log", "identity"),
                    start = NULL,
                    AIREML.tol = 1e-4,
                    max.iter = 100,
@@ -18,12 +20,14 @@ setMethod("fitNullModel",
                    drop.zeros = TRUE,
                    return.small = FALSE,
                    verbose = TRUE) {
-              
+
               family <- .checkFamily(family, two.stage)
-              
+
               if (is.data.table(x)) x <- as.data.frame(x)
 
+              # mean model design matrix
               desmat <- createDesignMatrix(x, outcome, covars, group.var)
+
               # if there was missing data, need to subset cov.mat
               if (!is.null(cov.mat)) {
                   .checkRownames(cov.mat, x)
@@ -34,9 +38,21 @@ setMethod("fitNullModel",
                   cov.mat <-  .setCovMatNames(cov.mat)
               }
 
+              # variance model family and design matrix
+              if(!is.null(dcovars)){
+                if(!is.element(dlink, c("log", "identity"))){
+                    stop("dlink must be one of log or identity")
+                }
+                dfamily <- Gamma(link = dlink)
+                dX <- createDesignMatrix(x, outcome, dcovars)$X
+              }else{
+                dfamily <- NULL
+                dX <- NULL
+              }
 
               null.model <- .fitNullModel(y=desmat$y, X=desmat$X, covMatList=cov.mat,
                                           group.idx=desmat$group.idx, family=family,
+                                          dX=dX, dfamily=dfamily,
                                           start=start, AIREML.tol=AIREML.tol,
                                           max.iter=max.iter, EM.iter=EM.iter,
                                           drop.zeros=drop.zeros,
@@ -51,10 +67,10 @@ setMethod("fitNullModel",
 
               if(two.stage){
                   # fit the second stage model
-                  null.model <- nullModelInvNorm(null.model, cov.mat=cov.mat, 
-                                                 norm.option=norm.option, rescale=rescale, 
+                  null.model <- nullModelInvNorm(null.model, cov.mat=cov.mat,
+                                                 norm.option=norm.option, rescale=rescale,
                                                  AIREML.tol=AIREML.tol, max.iter=max.iter,
-                                                 EM.iter=EM.iter, drop.zeros=drop.zeros, 
+                                                 EM.iter=EM.iter, drop.zeros=drop.zeros,
                                                  return.small=return.small, verbose=verbose)
               }
 
@@ -124,7 +140,7 @@ setMethod("fitNullModel",
 
 ## function to check 'family' input
 .checkFamily <- function(family, two.stage=FALSE) {
-    
+
     if(is.character(family)){
         family <- get(family)
     }
@@ -137,11 +153,11 @@ setMethod("fitNullModel",
     if (!is.element(family$family, c("gaussian", "binomial", "poisson"))){
         stop("family must be one of gaussian, binomial, or poisson")
     }
-    
+
     if((two.stage) & (family$family != "gaussian")){
         stop('two stage model only applies when family is "gaussian"')
     }
-    
+
     return(family)
 }
 

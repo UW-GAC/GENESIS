@@ -1,6 +1,6 @@
-.runAIREMLother <- function(Y, X, start, covMatList, vmu, gmuinv, AIREML.tol, 
+.runAIREMLother <- function(Y, X, start, covMatList, diagV, AIREML.tol,
                             drop.zeros, max.iter, EM.iter, verbose){
-    
+
     # initial values
     m <- length(covMatList)
     n <- length(Y)
@@ -15,17 +15,17 @@
     zeroFLAG <- rep(FALSE, length(sigma2.k))
 
     if(verbose) message("Computing Variance Component Estimates...")
-    if(verbose) message(paste(paste("Sigma^2_",c(names(covMatList)),sep="", collapse="     "), "log-lik", "RSS", sep="     "))  
-    
+    if(verbose) message(paste(paste("Sigma^2_",c(names(covMatList)),sep="", collapse="     "), "log-lik", "RSS", sep="     "))
+
     reps <- 0
     repeat({
         reps <- reps+1
-        
+
         ### compute sigma quantities
-        sq <- .computeSigmaQuantities(varComp = sigma2.k, covMatList = covMatList, vmu = vmu, gmuinv = gmuinv )
+        sq <- .computeSigmaQuantities(varComp = sigma2.k, covMatList = covMatList, diagV = diagV)
         ### compute likelihood quantities
         lq <- .calcLikelihoodQuantities(Y = Y, X = X, Sigma.inv = sq$Sigma.inv, cholSigma.diag = sq$cholSigma.diag)
-        
+
         # print current estimates
         if(verbose) print(c(sigma2.k, lq$logLikR, lq$RSS))
 
@@ -35,25 +35,25 @@
                                                Sigma.inv = sq$Sigma.inv, Sigma.inv_X = lq$Sigma.inv_X, Xt_Sigma.inv_X.inv = lq$Xt_Sigma.inv_X.inv)
             AI <- covMats.score.AI$AI
             score <- covMats.score.AI$score
-            
+
             if(drop.zeros){
                 # remove Zero terms
                 AI <- AI[!zeroFLAG,!zeroFLAG]
                 score <- score[!zeroFLAG]
             }
-            
+
             # update
             AIinvScore <- solve(AI, score)
-            
+
             if(drop.zeros){
                 sigma2.kplus1[!zeroFLAG] <- sigma2.k[!zeroFLAG] + AIinvScore
                 sigma2.kplus1[zeroFLAG] <- 0
             }else{
                 sigma2.kplus1 <- sigma2.k + AIinvScore
                 # set elements that were previously "0" and are still < 0 back to 0 (prevents step-halving due to this component)
-                sigma2.kplus1[zeroFLAG & sigma2.kplus1 < AIREML.tol] <- 0 
+                sigma2.kplus1[zeroFLAG & sigma2.kplus1 < AIREML.tol] <- 0
             }
-            
+
             # step-halving if step too far
             tau <- 1
             while(!all(sigma2.kplus1 >= 0)){
@@ -64,14 +64,14 @@
                 }else{
                     sigma2.kplus1 <- sigma2.k + tau*AIinvScore
                     # set elements that were previously "0" and are still < 0 back to 0 (prevents step-halving due to this component)
-                    sigma2.kplus1[zeroFLAG & sigma2.kplus1 < AIREML.tol] <- 0 
+                    sigma2.kplus1[zeroFLAG & sigma2.kplus1 < AIREML.tol] <- 0
                 }
             }
-            
+
         }else{
             # EM step
             for(i in 1:m){
-                # PAPY <- sq$Sigma.inv %*% crossprod(covMatList[[i]],lq$PY) - tcrossprod(tcrossprod(lq$Sigma.inv_X, lq$Xt_Sigma.inv_X.inv), t(crossprod(covMatList[[i]],lq$PY)) %*% lq$Sigma.inv_X)	  
+                # PAPY <- sq$Sigma.inv %*% crossprod(covMatList[[i]],lq$PY) - tcrossprod(tcrossprod(lq$Sigma.inv_X, lq$Xt_Sigma.inv_X.inv), t(crossprod(covMatList[[i]],lq$PY)) %*% lq$Sigma.inv_X)
                 trPA.part1 <- sum( sq$Sigma.inv * covMatList[[i]] )
                 trPA.part2 <- sum(diag( (crossprod( lq$Sigma.inv_X, covMatList[[i]]) %*% lq$Sigma.inv_X) %*% lq$Xt_Sigma.inv_X.inv ))
                 trPA <-  trPA.part1 - trPA.part2
@@ -79,7 +79,7 @@
                 APY <- crossprod(covMatList[[i]],lq$PY)
                 sigma2.kplus1[i] <- as.numeric((1/n)*(sigma2.k[i]^2*crossprod(lq$PY,APY) + n*sigma2.k[i] - sigma2.k[i]^2*trPA ))
                 # sigma2.kplus1[i] <- as.numeric((1/n)*(sigma2.k[i]^2*crossprod(Y,PAPY) + n*sigma2.k[i] - sigma2.k[i]^2*trPA ))
-                
+
             }
         }
 
@@ -105,14 +105,12 @@
             }
         }
     })
-    
+
     # linear predictor
     eta <- as.numeric(lq$fits + crossprod(sq$Vre, lq$PY)) # X\beta + Zb
-    
+
     return(list(allZero = FALSE, varComp = sigma2.k, AI = AI, converged = converged, zeroFLAG = zeroFLAG, niter = reps,
                 Sigma.inv = sq$Sigma.inv, W = sq$W,
-                beta = lq$beta, residM = lq$residM, fits = lq$fits, eta = eta, 
+                beta = lq$beta, residM = lq$residM, fits = lq$fits, eta = eta,
                 logLikR = lq$logLikR, logLik = lq$logLik, RSS = lq$RSS))
 }
-
-

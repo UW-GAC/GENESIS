@@ -1,11 +1,12 @@
-.computeSigmaQuantities <- function(varComp, covMatList, group.idx = NULL, vmu = NULL, gmuinv = NULL){
+# .computeSigmaQuantities <- function(varComp, covMatList, group.idx = NULL, vmu = NULL, gmuinv = NULL){
+.computeSigmaQuantities <- function(varComp, covMatList, group.idx = NULL, diagV = NULL){
     m <- length(covMatList)
     n <- nrow(covMatList[[1]])
 
     # contribution to Sigma from random effects
     Vre <- Reduce("+", mapply("*", covMatList, varComp[1:m], SIMPLIFY=FALSE))
 
-    if (is.null(vmu)){
+    if (is.null(diagV)){
         # gaussian family
         # contribution to Sigma from residual variance
         if (is.null(group.idx)){
@@ -17,15 +18,18 @@
                 diagV[group.idx[[i]]] <- varComp[m+i]
             }
         }
-
-    } else {
-        # non-gaussian family
-        diagV <- as.vector(vmu)/as.vector(gmuinv)^2
     }
+
+    # NEED TO MULTIPLY diagV BY varComp[m+1] WHEN GAUSSIAN
+
+    # } else {
+    #     # non-gaussian family
+    #     diagV <- as.vector(vmu)/as.vector(gmuinv)^2
+    # }
 
     # construct Sigma
     Sigma <- Vre
-    diag(Sigma) <- diag(Sigma) + diagV   
+    diag(Sigma) <- diag(Sigma) + diagV
     # cholesky decomposition
     cholSigma <- chol(Sigma)
     # inverse

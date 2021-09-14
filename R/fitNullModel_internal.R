@@ -6,9 +6,10 @@
 
 ## y - outcome vector
 ## X - data.frame or model.matrix
-.fitNullModel <- function(y, X, covMatList = NULL, group.idx = NULL, family = gaussian(), start = NULL,
-                          AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0,
-                          drop.zeros = TRUE, return.small = FALSE, verbose = TRUE){
+.fitNullModel <- function(y, X, covMatList = NULL, group.idx = NULL, family = gaussian(),
+                          dX = NULL, dfamily = NULL, start = NULL, AIREML.tol = 1e-4,
+                          max.iter = 100, EM.iter = 0, drop.zeros = TRUE,
+                          return.small = FALSE, verbose = TRUE){
 
     ### checks
     if(!is.null(covMatList)){
@@ -23,26 +24,32 @@
 
     ### Gaussian family
     if (family$family == "gaussian"){
-        if (is.null(covMatList) & is.null(group.idx)) {
-            # linear regression
-            mod <- lm(y ~ -1 + X)
-            out <- .nullModOutReg(y, X, mod, family)
-        }
-        if (is.null(covMatList) & !is.null(group.idx)){
-            vc.mod <- .runWLSgaussian(y, X, group.idx = group.idx, start = start,
-                                      AIREML.tol = AIREML.tol, max.iter = max.iter,
-                                      EM.iter = EM.iter, verbose = verbose)
-            out <- .nullModOutWLS(y, X, vc.mod = vc.mod, family = family, group.idx = group.idx)
-        }
-        if (!is.null(covMatList)){
-            # LMM
-            if (is.null(group.idx)) group.idx <- list(resid.var = 1:length(y))
-            vc.mod <- .runAIREMLgaussian(y, X, start = start, covMatList = covMatList,
-                                         group.idx = group.idx, AIREML.tol = AIREML.tol, drop.zeros = drop.zeros,
-                                         max.iter = max.iter, EM.iter = EM.iter, verbose = verbose)
-            out <- .nullModOutMM(y = y, workingY = y, X = X, vc.mod = vc.mod,
-                                 family = family, covMatList = covMatList,
-                                 group.idx = group.idx, drop.zeros = drop.zeros)
+        if(is.null(dfamily)){
+            if (is.null(covMatList) & is.null(group.idx)) {
+                # linear regression
+                mod <- lm(y ~ -1 + X)
+                out <- .nullModOutReg(y, X, mod, family)
+            }
+            if (is.null(covMatList) & !is.null(group.idx)){
+                vc.mod <- .runWLSgaussian(y, X, group.idx = group.idx, start = start,
+                                          AIREML.tol = AIREML.tol, max.iter = max.iter,
+                                          EM.iter = EM.iter, verbose = verbose)
+                out <- .nullModOutWLS(y, X, vc.mod = vc.mod, family = family, group.idx = group.idx)
+            }
+            if (!is.null(covMatList)){
+                # LMM
+                if (is.null(group.idx)) group.idx <- list(resid.var = 1:length(y))
+                vc.mod <- .runAIREMLgaussian(y, X, start = start, covMatList = covMatList,
+                                             group.idx = group.idx, AIREML.tol = AIREML.tol, drop.zeros = drop.zeros,
+                                             max.iter = max.iter, EM.iter = EM.iter, verbose = verbose)
+                out <- .nullModOutMM(y = y, workingY = y, X = X, vc.mod = vc.mod,
+                                     family = family, covMatList = covMatList,
+                                     group.idx = group.idx, drop.zeros = drop.zeros)
+            }
+        }else{
+            if (!is.null(covMatList)){
+                # LMM
+                iterate.out <- .iterateDGLM()
         }
     }
 
@@ -66,8 +73,7 @@
                 out$zeroFLAG <- TRUE
             } else{
                 out <- .nullModOutMM(y = y, workingY = working.y$Y, X = X, vc.mod = vc.mod,
-                                     family = family, covMatList = covMatList,
-                                     vmu = working.y$vmu, gmuinv = working.y$gmuinv, drop.zeros = drop.zeros)
+                                     family = family, covMatList = covMatList, drop.zeros = drop.zeros)
             }
         } else{
             out <- .nullModOutReg(y, X, mod, family)

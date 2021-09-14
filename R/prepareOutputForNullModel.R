@@ -118,7 +118,7 @@
 
 
 
-.nullModOutMM <- function(y, workingY, X, vc.mod, family, covMatList, group.idx = NULL, vmu = NULL, gmuinv = NULL, drop.zeros = TRUE){
+.nullModOutMM <- function(y, workingY, X, vc.mod, family, covMatList, group.idx = NULL, drop.zeros = TRUE){
     n <- nrow(X)
     m <- length(covMatList)
 
@@ -209,12 +209,12 @@
 
     model <- list(hetResid = hetResid, family = family)
 
-    out <- list(model = model, varComp = varComp, varCompCov = varCompCov, 
-                fixef = fixef, betaCov = betaCov, fit = fit, 
+    out <- list(model = model, varComp = varComp, varCompCov = varCompCov,
+                fixef = fixef, betaCov = betaCov, fit = fit,
                 logLik = logLik, logLikR = logLikR, AIC = AIC,
-                model.matrix = X, group.idx = group.idx, 
-                cholSigmaInv = cholSigmaInv, W = vc.mod$W, 
-                converged = vc.mod$converged, zeroFLAG = vc.mod$zeroFLAG, 
+                model.matrix = X, group.idx = group.idx,
+                cholSigmaInv = cholSigmaInv, W = vc.mod$W,
+                converged = vc.mod$converged, zeroFLAG = vc.mod$zeroFLAG,
                 niter = vc.mod$niter, RSS = RSS)
     class(out) <- "GENESIS.nullMixedModel"
     return(out)

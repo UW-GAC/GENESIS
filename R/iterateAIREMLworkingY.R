@@ -9,8 +9,10 @@
     gmuinv <- family$mu.eta(eta) # = vmu for canonical link
     # working vector
     Y <- eta + (y - mu)/gmuinv
+    # diagV
+    diagV <- as.vector(vmu)/as.vector(gmuinv)^2
 
-    return(list(Y=Y, vmu=vmu, gmuinv=gmuinv))
+    return(list(Y=Y, diagV=diagV))
 }
 
 
@@ -21,20 +23,20 @@
     working.y <- .calcWorkingYnonGaussian(y, eta, family)
     newstart <- start
     Yreps <- 0
-    
+
     repeat({
         Yreps <- Yreps + 1
 
         # estimate variance components
-        vc.mod <- .runAIREMLother(Y = working.y$Y, X = X, start = newstart, covMatList = covMatList, 
-                                  vmu = working.y$vmu, gmuinv = working.y$gmuinv, AIREML.tol = AIREML.tol, drop.zeros = drop.zeros, 
+        vc.mod <- .runAIREMLother(Y = working.y$Y, X = X, start = newstart, covMatList = covMatList,
+                                  diagV = working.y$diagV, AIREML.tol = AIREML.tol, drop.zeros = drop.zeros,
                                   max.iter = max.iter, EM.iter = EM.iter, verbose = verbose)
-        
+
         if (vc.mod$allZero == TRUE) {
             message("All variance components estimated as zero, using glm...")
             break()
         }
-        
+
         ### check for convergence
         if(sqrt(sum((vc.mod$eta - eta)^2)) < AIREML.tol){
             converged <- TRUE
@@ -55,9 +57,9 @@
                 # update eta
                 eta <- vc.mod$eta
             }
-        }     
+        }
     })
-    
+
     return(list(vc.mod = vc.mod, working.y = working.y))
-    
+
 }
