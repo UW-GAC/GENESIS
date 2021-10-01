@@ -1,8 +1,8 @@
 # assocMetaSingle() or metaTestSingle() or metaAnalysisSingle() or metaSingle()
 
-metaSingle <- function()
+# metaSingle <- function()
 
-metaAggregate <- function()
+# metaAggregate <- function()
 
 setGeneric("metaPrepScores", function(gdsobj, ...) standardGeneric("metaPrepScores"))
 
