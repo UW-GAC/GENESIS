@@ -96,7 +96,7 @@ setMethod("metaPrepScores",
                        grnames <- .metaGroupNames(gdsobj)
                        # variant info
                        names(res1) <- grnames
-                       res1 <- as.data.frame(rbindlist(res1, use.names=TRUE, fill=TRUE, idcol = 'group.id')
+                       res1 <- as.data.frame(rbindlist(res1, use.names=TRUE, fill=TRUE, idcol = 'group.id'))
                        # scores.cov
                        names(res2) <- grnames
                        list(variants = res1, scores.cov = res2)
