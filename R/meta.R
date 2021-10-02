@@ -186,7 +186,7 @@ setMethod(".metaGroupNames",
 
 setMethod(".metaGroupNames",
           "SeqVarListIterator",
-          function(gdsobj, res1, res2) {
+          function(gdsobj) {
               stop('not implemented')
           })
 
