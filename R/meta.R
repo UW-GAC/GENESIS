@@ -91,9 +91,20 @@ setMethod("metaPrepScores",
                        res1 <- lapply(res, function(x) x[[1]])
                        res2 <- lapply(res, function(x) x[[2]])
                        rm(res)
-                       .metaPrepScoresOutput(gdsobj, res1, res2)
+
+                       # group names
+                       grnames <- .metaGroupNames(gdsobj)
+                       # variant info
+                       names(res1) <- grnames
+                       res1 <- as.data.frame(rbindlist(res1, use.names=TRUE, fill=TRUE, idcol = 'group.id')
+                       # scores.cov
+                       names(res2) <- grnames
+                       list(variants = res1, scores.cov = res2)
+
                      }else{
-                       as.data.frame(rbindlist(res))
+                       out <- rbindlist(res)
+                       out <- out[!duplicated(out)]
+                       as.data.frame(out)
                      }
                  })
 
@@ -149,30 +160,20 @@ setMethod("metaPrepScores",
 }
 
 
-setGeneric(".metaPrepScoresOutput", function(gdsobj, res1, res2) standardGeneric(".metaPrepScoresOutput"))
+setGeneric(".metaGroupNames", function(gdsobj) standardGeneric(".metaGroupNames"))
 
-setMethod(".metaPrepScoresOutput",
+setMethod(".metaGroupNames",
           "SeqVarWindowIterator",
-          function(gdsobj, res1, res2) {
+          function(gdsobj) {
             gr <- variantRanges(gdsobj)
             grnames <- paste(paste0("chr", as.character(GenomicRanges::seqnames(gr))),
                             BiocGenerics::start(gr), BiocGenerics::end(gr), sep = "_")
-
-            # scores
-            for(i in 1:length(res1)){
-                res1[[i]] <- cbind(group.id = grnames[i], res1[[i]])
-            }
-            res1 <- as.data.frame(rbindlist(res1, use.names=TRUE, fill=TRUE))
-
-            # scores.cov
-            names(res2) <- grnames
-
-            list(variants = res1, scores.cov = res2)
+            grnames
           })
 
-setMethod(".metaPrepScoresOutput",
+setMethod(".metaGroupNames",
           "SeqVarRangeIterator",
-          function(gdsobj, res1, res2) {
+          function(gdsobj) {
             # get variant group IDs
             gr <- variantRanges(gdsobj)
             grnames <- names(gr)
@@ -180,21 +181,67 @@ setMethod(".metaPrepScoresOutput",
               grnames <- paste(paste0("chr", as.character(GenomicRanges::seqnames(gr))),
                                BiocGenerics::start(gr), BiocGenerics::end(gr), sep = "_")
             }
-
-            # variant info
-            for(i in 1:length(res1)){
-                res1[[i]] <- cbind(group.id = grnames[i], res1[[i]])
-            }
-            res1 <- as.data.frame(rbindlist(res1, use.names=TRUE, fill=TRUE))
-
-            # scores.cov
-            names(res2) <- grnames
-
-            list(variants = res1, scores.cov = res2)
+            grnames
           })
 
-setMethod(".metaPrepScoresOutput",
+setMethod(".metaGroupNames",
           "SeqVarListIterator",
           function(gdsobj, res1, res2) {
               stop('not implemented')
           })
+
+
+
+#
+# setGeneric(".metaPrepScoresOutput", function(gdsobj, res1, res2) standardGeneric(".metaPrepScoresOutput"))
+#
+# setMethod(".metaPrepScoresOutput",
+#           "SeqVarWindowIterator",
+#           function(gdsobj, res1, res2) {
+#             gr <- variantRanges(gdsobj)
+#             grnames <- paste(paste0("chr", as.character(GenomicRanges::seqnames(gr))),
+#                             BiocGenerics::start(gr), BiocGenerics::end(gr), sep = "_")
+#
+#             # variant info
+#             # for(i in 1:length(res1)){
+#             #     res1[[i]] <- cbind(group.id = grnames[i], res1[[i]])
+#             # }
+#             # res1 <- as.data.frame(rbindlist(res1, use.names=TRUE, fill=TRUE))
+#
+#             # variant info
+#             names(res1) <- grnames
+#             res1 <- as.data.frame(rbindlist(res1, use.names=TRUE, fill=TRUE, idcol = 'group.id')
+#
+#             # scores.cov
+#             names(res2) <- grnames
+#
+#             list(variants = res1, scores.cov = res2)
+#           })
+#
+# setMethod(".metaPrepScoresOutput",
+#           "SeqVarRangeIterator",
+#           function(gdsobj, res1, res2) {
+#             # get variant group IDs
+#             gr <- variantRanges(gdsobj)
+#             grnames <- names(gr)
+#             if(is.null(grnames)){
+#               grnames <- paste(paste0("chr", as.character(GenomicRanges::seqnames(gr))),
+#                                BiocGenerics::start(gr), BiocGenerics::end(gr), sep = "_")
+#             }
+#
+#             # variant info
+#             # for(i in 1:length(res1)){
+#             #     res1[[i]] <- cbind(group.id = grnames[i], res1[[i]])
+#             # }
+#             # res1 <- as.data.frame(rbindlist(res1, use.names=TRUE, fill=TRUE))
+#
+#             # variant info
+#             names(res1) <- grnames
+#             res1 <- as.data.frame(rbindlist(res1, use.names=TRUE, fill=TRUE, idcol = 'group.id')
+#
+#             # scores.cov
+#             names(res2) <- grnames
+#
+#             list(variants = res1, scores.cov = res2)
+#           })
+#
