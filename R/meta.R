@@ -8,21 +8,13 @@ setGeneric("metaPrepScores", function(gdsobj, ...) standardGeneric("metaPrepScor
 
 setMethod("metaPrepScores",
           "SeqVarIterator",
-          function(gdsobj, null.model, score.cov = TRUE,
+          function(gdsobj, null.model,
                    geno.coding=c("additive", "dominant", "recessive"),
                    sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"),
                    BPPARAM=bpparam(), verbose=TRUE) {
 
-                     # better way to handle these checks?
-                     if(class(gdsobj) == 'SeqVarBlockIterator' && score.cov){
-                       stop('either set score.cov = FALSE when using a SeqVarBlockIterator object,
-                       or use a SeqVarWindowIterator or SeqVarRangeIterator object')
-                     }
-
-                     if(class(gdsobj) == 'SeqVarWindowIterator' && !score.cov){
-                       stop('either set score.cov = TRUE when using a SeqVarWindowIterator object,
-                       or use a SeqVarBlockIterator or SeqVarRangeIterator object')
-                     }
+                     # don't return score.cov for block iterator (single variant test)
+                     score.cov <- !(is(gdsobj, 'SeqVarBlockIterator') || is(gdsobj, 'GenotypeBlockIterator'))
 
                      # genotype coding
                      geno.coding <- match.arg(geno.coding)
@@ -60,10 +52,12 @@ setMethod("metaPrepScores",
 
                          # variant info
                          var.info <- variantInfo(gdsobj, alleles=TRUE, expanded=TRUE)
-                         # chr:pos:ref:alt ID for easy merging across studies
-                         VARID <- paste(paste0("chr", var.info$chr), var.info$pos, var.info$ref, var.info$alt, sep = ':')
-                         var.info <- cbind(VARID, var.info[,1:5])
-                         names(var.info)[5:6] <- c("other.allele", "effect.allele")
+                         if (nrow(var.info) > 0) {
+                           # chr:pos:ref:alt ID for easy merging across studies
+                           VARID <- paste(paste0("chr", var.info$chr), var.info$pos, var.info$ref, var.info$alt, sep = ':')
+                           var.info <- cbind(VARID, var.info[,1:5])
+                           names(var.info)[5:6] <- c("other.allele", "effect.allele")
+                         }
 
                          # read in genotype data
                          if (!imputed) {
