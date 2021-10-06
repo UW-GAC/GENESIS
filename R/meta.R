@@ -135,7 +135,8 @@ setMethod("metaPrepScores",
 
     if(score.cov){
       # calc score covariance matrix
-      V <- crossprod(Gtilde) # G^T P G
+      # pack() stores only one triangle of symmetric matrix
+      V <- pack(crossprod(Gtilde)) # G^T P G
       score.SE <- sqrt(diag(V))
       colnames(V) <- rownames(V) <- var.info$VARID
 
