@@ -90,15 +90,15 @@ setMethod("metaPrepScores",
                        grnames <- .metaGroupNames(gdsobj)
                        # variant info
                        names(res1) <- grnames
-                       res1 <- as.data.frame(rbindlist(res1, use.names=TRUE, fill=TRUE, idcol = 'group.id'))
+                       #res1 <- as.data.frame(rbindlist(res1, use.names=TRUE, fill=TRUE, idcol = 'group.id'))
                        # scores.cov
                        names(res2) <- grnames
                        list(variants = res1, scores.cov = res2)
 
                      }else{
-                       out <- rbindlist(res)
-                       out <- out[!duplicated(out)]
-                       as.data.frame(out)
+                       out <- as.data.frame(rbindlist(res))
+                       #out <- out[!duplicated(out)]
+                       #as.data.frame(out)
                      }
                  })
 
@@ -132,7 +132,7 @@ setMethod("metaPrepScores",
       # pack() stores only one triangle of symmetric matrix
       V <- pack(crossprod(Gtilde)) # G^T P G
       score.SE <- sqrt(diag(V))
-      colnames(V) <- rownames(V) <- var.info$VARID
+      #colnames(V) <- rownames(V) <- var.info$VARID
 
       # # melt the covariance matrix to a data.table
       # V <- meltMatrix(GPG, drop.lower = TRUE, drop.diag = FALSE)
