@@ -54,9 +54,10 @@ setMethod("metaPrepScores",
                          var.info <- variantInfo(gdsobj, alleles=TRUE, expanded=TRUE)
                          if (nrow(var.info) > 0) {
                            # chr:pos:ref:alt ID for easy merging across studies
-                           VARID <- paste(paste0("chr", var.info$chr), var.info$pos, var.info$ref, var.info$alt, sep = ':')
-                           var.info <- cbind(VARID, var.info[,1:5])
-                           names(var.info)[5:6] <- c("other.allele", "effect.allele")
+                           #VARID <- paste(paste0("chr", var.info$chr), var.info$pos, var.info$ref, var.info$alt, sep = ':')
+                           #var.info <- cbind(VARID, var.info[,1:5])
+                           names(var.info)[names(var.info) == 'ref'] <- 'other.allele'
+                           names(var.info)[names(var.info) == 'alt'] <- 'effect.allele'
                          }
 
                          # read in genotype data
