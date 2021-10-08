@@ -23,10 +23,15 @@ setMethod("validateSex",
 setMethod("variantInfo",
           "GenotypeData",
           function(gdsobj, alleles=FALSE) {
-              data.frame(variant.id=getSnpID(gdsobj),
+              x <- data.frame(variant.id=getSnpID(gdsobj),
                          chr=getChromosome(gdsobj, char=TRUE),
                          pos=getPosition(gdsobj),
                          stringsAsFactors=FALSE)
+              if (alleles) {
+                  x$effect.allele <- getAlleleA(gdsobj)
+                  x$other.allele <- getAlleleB(gdsobj)
+              }
+              x
           })
 
 setMethod("variantFilter",
