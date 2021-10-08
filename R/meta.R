@@ -14,7 +14,7 @@ setMethod("metaPrepScores",
                    BPPARAM=bpparam(), verbose=TRUE) {
 
                      # don't return score.cov for block iterator (single variant test)
-                     score.cov <- !(is(gdsobj, 'SeqVarBlockIterator') || is(gdsobj, 'GenotypeBlockIterator'))
+                     score.cov <- !is(gdsobj, 'SeqVarBlockIterator')
 
                      # genotype coding
                      geno.coding <- match.arg(geno.coding)
