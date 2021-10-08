@@ -8,7 +8,7 @@ setGeneric("metaPrepScores", function(gdsobj, ...) standardGeneric("metaPrepScor
 
 setMethod("metaPrepScores",
           "SeqVarIterator",
-          function(gdsobj, null.model,
+          function(gdsobj, null.model, AF.max = 1,
                    geno.coding=c("additive", "dominant", "recessive"),
                    sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"),
                    BPPARAM=bpparam(), verbose=TRUE) {
@@ -74,7 +74,7 @@ setMethod("metaPrepScores",
 
                      # worker function
                      res <- bpiterate(ITER, .metaPrepScores, BPPARAM=BPPARAM,
-                                      sex=sex, null.model=null.model,
+                                      sex=sex, null.model=null.model, AF.max=AF.max,
                                       geno.coding=geno.coding,
                                       sparse=sparse, imputed=imputed,
                                       male.diploid=male.diploid,
@@ -104,9 +104,9 @@ setMethod("metaPrepScores",
                  })
 
 
-.metaPrepScores <- function(x, sex, null.model, geno.coding, sparse, imputed, male.diploid, score.cov, ...) {
+.metaPrepScores <- function(x, sex, null.model, AF.max, geno.coding, sparse, imputed, male.diploid, score.cov, ...) {
   # prep the geno data
-  x <- .prepGenoBlock(x, AF.max=1, geno.coding=geno.coding, imputed=imputed,
+  x <- .prepGenoBlock(x, AF.max=AF.max, geno.coding=geno.coding, imputed=imputed,
                       sex=sex, male.diploid=male.diploid)
   var.info <- x$var.info
   n.obs <- x$n.obs
