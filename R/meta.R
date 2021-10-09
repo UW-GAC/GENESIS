@@ -104,6 +104,61 @@ setMethod("metaPrepScores",
                  })
 
 
+
+setMethod("metaPrepScores",
+          "GenotypeIterator",
+          function(gdsobj, null.model, AF.max = 1,
+                   geno.coding=c("additive", "dominant", "recessive"),
+                   male.diploid=TRUE,
+                   BPPARAM=bpparam(), verbose=TRUE) {
+
+              geno.coding <- match.arg(geno.coding)
+
+              # Convert old null model format if necessary.
+              null.model <- .updateNullModelFormat(null.model)
+
+              # filter samples to match null model
+              sample.index <- .sampleIndexNullModel(gdsobj, null.model)
+
+              # get sex for calculating allele freq
+              sex <- validateSex(gdsobj)[sample.index]
+
+              if(verbose) message('Using ', bpnworkers(BPPARAM), ' CPU cores')
+
+              i <- 1
+              ITER <- function() {
+                  iterate <- TRUE
+                  if (i > 1) {
+                      iterate <- GWASTools::iterateFilter(gdsobj)
+                  }
+                  i <<- i + 1
+                  if (!iterate) {
+                      return(NULL)
+                  }
+
+                  var.info <- variantInfo(gdsobj, alleles=TRUE)
+
+                  geno <- getGenotypeSelection(gdsobj, scan=sample.index, order="selection",
+                                               transpose=TRUE, use.names=FALSE, drop=FALSE)
+
+                  return(list(var.info=var.info, geno=geno, chr=var.info$chr))
+              }
+
+                     # worker function
+                     res <- bpiterate(ITER, .metaPrepScores, BPPARAM=BPPARAM,
+                                      sex=sex, null.model=null.model, AF.max=AF.max,
+                                      geno.coding=geno.coding,
+                                      sparse=FALSE, imputed=FALSE,
+                                      male.diploid=male.diploid,
+                                      score.cov=FALSE)
+                     .stopOnError(res)
+
+                     # prepare output
+                     out <- as.data.frame(rbindlist(res))
+          })
+
+
+
 .metaPrepScores <- function(x, sex, null.model, AF.max, geno.coding, sparse, imputed, male.diploid, score.cov, ...) {
   # prep the geno data
   x <- .prepGenoBlock(x, AF.max=AF.max, geno.coding=geno.coding, imputed=imputed,
