@@ -1,5 +1,10 @@
 \name{NEWS}
 \title{NEWS for GENESIS}
+\section{Version 2.23.9}{
+  \itemize{
+    \item Subset covariance matrix to specified samples when sample.id argument is passed to fitNullModel when called with an AnnotatedDataFrame
+    }
+}
 \section{Version 2.23.8}{
   \itemize{
     \item Added option for recessive and dominant coding to assocTestSingle.
