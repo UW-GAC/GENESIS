@@ -100,6 +100,25 @@ test_that("null model - cov.mat", {
     expect_false(nm$model$hetResid)
 })
 
+
+test_that("null model - cov.mat with extra samples", {
+    set.seed(23); a <- rnorm(10)
+    dat <- data.frame(sample.id=letters[1:10],
+                      a=a,
+                      b=c(rep("a",5), rep("b", 5)),
+                      stringsAsFactors=FALSE)
+    dat <- AnnotatedDataFrame(dat)
+    set.seed(24); covMat <- crossprod(matrix(rnorm(11^2,sd=0.05),11,11))
+    rownames(covMat) <- colnames(covMat) <- letters[1:11]
+    expect_error(fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, verbose=FALSE), "dimnames of cov.mat must be present")
+    sample_include <- dat$sample.id[1:9]
+    nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, sample.id = sample_include, verbose=FALSE)
+    chk <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat[sample_include, sample_include], verbose=FALSE)
+    expect_equal(nm$fit$sample.id, sample_include)
+    expect_equal(nm$fit, chk$fit)
+    expect_equivalent(nm$fit$workingY, dat$a[dat$sample.id %in% sample_include])
+})
+
 test_that("null model from data.frame", {
     set.seed(25); a <- rnorm(10)
     dat <- data.frame(a=a,
