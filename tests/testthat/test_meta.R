@@ -53,6 +53,23 @@ test_that("metaPrepScores - ranges", {
     seqClose(svd)
 })
 
+test_that("metaPrepScores - list", {
+    svd <- .testData()
+    gr <- GRangesList(
+        GRanges(seqnames=rep(1,2), ranges=IRanges(start=c(1e6, 3e6), width=1e6)),
+        GRanges(seqnames=rep(1,2), ranges=IRanges(start=c(3e6, 34e6), width=1e6)))
+    names(gr) <- letters[1:2]
+    iterator <- SeqVarListIterator(svd, variantRanges=gr, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+    scores <- metaPrepScores(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
+    expect_equal(length(scores$variants), length(gr))
+    expect_equal(length(scores$scores.cov), length(gr))
+    expect_equal(names(scores$variants), letters[1:2])
+    expect_equal(names(scores$scores.cov), letters[1:2])
+    for (i in length(gr)) expect_equal(nrow(scores$variants[[i]]), nrow(scores$scores.cov[[i]]))
+    seqClose(svd)
+})
+
 test_that("metaPrepScores - GenotypeIterator", {
     genoData <- .testGenoData()
     covMat <- .testGenoDataGRM(genoData)

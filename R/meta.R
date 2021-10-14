@@ -238,7 +238,12 @@ setMethod(".metaGroupNames",
 setMethod(".metaGroupNames",
           "SeqVarListIterator",
           function(gdsobj) {
-              stop('not implemented')
+            gr <- variantRanges(gdsobj)
+            grnames <- names(gr)
+            if(is.null(grnames)){
+              grnames <- seq(1, length(gr))
+            }
+            grnames
           })
 
 
