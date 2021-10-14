@@ -60,7 +60,7 @@ test_that("metaPrepScores - GenotypeIterator", {
     nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", cov.mat=covMat, verbose=FALSE)
     scores <- metaPrepScores(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
     expect_true(is.data.frame(scores))
-    #expect_true(all(c("effect.allele", "other.allele") %in% names(scores)))
+    expect_true(all(c("effect.allele", "other.allele") %in% names(scores)))
     expect_true(all(c("Score", "Score.SE") %in% names(scores)))
     close(genoData)
 })
