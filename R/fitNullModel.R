@@ -74,19 +74,17 @@ setMethod("fitNullModel",
               if (is(x, "tbl")) x <- as.data.frame(x)
               rownames(x) <- x$sample.id
 
-              ## subset data.frame and cov.mat for selected samples
-              if (!is.null(sample.id)) {
-                  stopifnot(all(sample.id %in% x$sample.id))
-                  ind <- x$sample.id %in% sample.id
-                  x <- x[ind,]
-                  if (!is.null(cov.mat)) {
-                      ind <- which(.covMatNames(cov.mat) %in% sample.id)
-                      cov.mat <- .covMatSubset(cov.mat, ind)
-                  }
-              }
+              if (is.null(sample.id)) sample.id <- x$sample.id
 
+              ## check if all requested samples are in x (and subset).
+              .checkXSampleId(x, sample.id)
+              x <- x[x$sample.id %in% sample.id, ]
+
+              ## check if all requested samples are in cov.mat (and subset).
               if (!is.null(cov.mat)) {
-                  .checkSampleId(cov.mat, x)
+                .checkCovMatSampleId(cov.mat, sample.id)
+                ind <- which(.covMatNames(cov.mat) %in% sample.id)
+                cov.mat <- .covMatSubset(cov.mat, ind)
               }
 
               ## reorder data.frame to match cov.mat
@@ -203,14 +201,20 @@ setMethod("fitNullModel",
 }
 
 
-## match sample.id between cov.mat and data frame
-.checkSampleId <- function(cov.mat, x) {
-    nms <- .covMatNames(cov.mat)
-    if (is.null(nms)) {
-        stop("provide sample.id in rownames and/or colnames of cov.mat")
-    } else if (!all(nms %in% x$sample.id)) {
-        stop("all sample names in dimnames of cov.mat must be present in x$sample.id")
-    }
+## check if a set of samples are in the data
+.checkXSampleId <- function(x, sample.id) {
+  if (!all(sample.id %in% x$sample.id)) {
+    stop("all samples in sample.id must be present in x")
+  }
+}
+
+.checkCovMatSampleId <- function(cov.mat, sample.id) {
+  nms <- .covMatNames(cov.mat)
+  if (is.null(nms)) {
+      stop("provide sample.id in rownames and/or colnames of cov.mat")
+  } else if (!all(sample.id %in% nms)) {
+      stop("all samples in sample.id must be present in dimnames of cov.mat")
+  }
 }
 
 
