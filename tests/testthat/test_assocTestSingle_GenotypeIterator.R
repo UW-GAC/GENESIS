@@ -52,14 +52,14 @@ test_that("assocTestSingle - reorder samples", {
     set.seed(82); samp <- as.character(sample(getScanID(genoData), 50))
     iterator <- GenotypeBlockIterator(genoData, snpBlock=1000)
 
-    nullmod <- fitNullModel(genoData, outcome="outcome", cov.mat=covMat[samp,samp], verbose=FALSE)
+    nullmod <- fitNullModel(genoData, outcome="outcome", cov.mat=covMat[samp,samp], sample.id=samp, verbose=FALSE)
     assoc <- assocTestSingle(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
     expect_equal(nrow(nullmod$model.matrix), 50)
     expect_equal(nullmod$fit$sample.id, samp)
 
     # check that we get same assoc results with samples in different order
     samp.sort <- sort(samp)
-    nullmod2 <- fitNullModel(genoData, outcome="outcome", cov.mat=covMat[samp.sort,samp.sort], verbose=FALSE)
+    nullmod2 <- fitNullModel(genoData, outcome="outcome", cov.mat=covMat[samp.sort,samp.sort], sample.id=samp, verbose=FALSE)
     expect_equal(nullmod2$fit$sample.id, samp.sort)
     GWASTools::resetIterator(iterator)
     assoc2 <- assocTestSingle(iterator, nullmod2, BPPARAM=BPPARAM, verbose=FALSE)
@@ -125,10 +125,10 @@ test_that("MatrixGenotypeReader", {
 test_that("recessive", {
     genoData <- .testGenoData()
     iterator <- GenotypeBlockIterator(genoData)
-    
+
     nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", verbose=FALSE)
     assoc <- assocTestSingle(iterator, nullmod, geno.coding="recessive", BPPARAM=BPPARAM, verbose=FALSE)
     expect_true("n.hom.eff" %in% names(assoc))
-    
+
     close(genoData)
 })

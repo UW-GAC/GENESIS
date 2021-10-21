@@ -182,19 +182,14 @@ test_that("dimnames for cov.mat", {
                       stringsAsFactors=FALSE)
     set.seed(28); covMat <- crossprod(matrix(rnorm(100,sd=0.05),10,10))
     .checkRownames(covMat, dat)
-    expect_error(.checkSampleId(covMat, dat))
 
     dimnames(covMat) <- list(1:10, 1:10)
-    expect_error(.checkSampleId(covMat, dat))
-
     rownames(dat) <- dat$sample.id
     expect_error(.checkRownames(covMat, dat))
-
-    dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
-    .checkSampleId(covMat, dat)
 })
 
 test_that("sample selection", {
+    # without specifying sample.id
     set.seed(28); a <- rnorm(10)
     dat <- data.frame(sample.id=letters[1:10],
                       a=a,
@@ -203,10 +198,44 @@ test_that("sample selection", {
     dat <- AnnotatedDataFrame(dat)
     set.seed(29); covMat <- crossprod(matrix(rnorm(100,sd=0.05),10,10))
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
+    nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, verbose=FALSE)
+    expect_equal(nm$fit$sample.id, dat$sample.id)
 
+    # same result regardless of sample ordering
+    chk <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, sample.id=rev(dat$sample.id), verbose=FALSE)
+    expect_equal(nm$fit, chk$fit)
+
+    # samples in sample.id that are in x and cov.mat
     keep <- rev(dat$sample.id[c(TRUE,FALSE)])
     nm <- fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, sample.id=keep, verbose=FALSE)
     expect_equal(nm$fit$sample.id, rev(keep))
+
+
+    # samples in sample.id that are in x but are not in cov.mat
+    keep <- rev(c(dat$sample.id[c(TRUE, FALSE)]))
+    expect_error(fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat[1:3, 1:3], sample.id=keep, verbose=FALSE),
+                 "all samples in sample.id must be present in dimnames of cov.mat")
+
+    # samples in sample.id that are not in x but are in cov.mat
+    keep <- rev(c(dat$sample.id[c(TRUE, FALSE)]))
+    expect_error(fitNullModel(dat[1:3], outcome="a", covars="b", group.var="b", cov.mat=covMat, sample.id=keep, verbose=FALSE),
+                 "all samples in sample.id must be present in x")
+
+    # samples in sample.id that are not in x and are not in cov.mat
+    keep <- c(dat$sample.id[c(TRUE,FALSE)], "zzz")
+    expect_error(fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, sample.id=keep, verbose=FALSE),
+                 "all samples in sample.id must be present in x")
+
+    # without dimnames on covmat, no sample.id passed
+    dimnames(covMat) <- NULL
+    expect_error(fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, verbose=FALSE),
+                 "provide sample.id in rownames and/or colnames of cov.mat")
+
+    # without dimnames on covmat, sample.id passed
+    keep <- rev(dat$sample.id[c(TRUE,FALSE)])
+    expect_error(fitNullModel(dat, outcome="a", covars="b", group.var="b", cov.mat=covMat, sample.id=keep, verbose=FALSE),
+                 "provide sample.id in rownames and/or colnames of cov.mat")
+
 })
 
 test_that("change sample order", {

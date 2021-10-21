@@ -59,7 +59,7 @@ test_that("assocTestSingle - reorder samples", {
     set.seed(51); samp <- sample(sampleData(svd)$sample.id, 50)
     grm <- .testGRM(svd)
     iterator <- SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
-    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), cov.mat=grm[samp,samp], verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), cov.mat=grm[samp,samp], sample.id=samp, verbose=FALSE)
     expect_equal(nrow(nullmod$model.matrix), 50)
     expect_equal(nullmod$fit$sample.id, samp)
     assoc <- assocTestSingle(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
@@ -67,7 +67,7 @@ test_that("assocTestSingle - reorder samples", {
 
     # check that we get same assoc results with samples in different order
     samp.sort <- sort(samp)
-    nullmod2 <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), cov.mat=grm[samp.sort,samp.sort], verbose=FALSE)
+    nullmod2 <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), cov.mat=grm[samp.sort,samp.sort], sample.id=samp, verbose=FALSE)
     expect_equal(nullmod2$fit$sample.id, samp.sort)
     resetIterator(iterator, verbose=FALSE)
     assoc2 <- assocTestSingle(iterator, nullmod2, BPPARAM=BPPARAM, verbose=FALSE)
@@ -84,7 +84,7 @@ test_that("reorder genotypes", {
     svd <- .testData()
     grm <- .testGRM(svd)
     set.seed(52); samp <- sample(sampleData(svd)$sample.id, 50)
-    nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=grm[samp,samp], verbose=FALSE)
+    nullmod <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=grm[samp,samp], sample.id=samp, verbose=FALSE)
     sample.index <- .setFilterNullModel(svd, nullmod, verbose=FALSE)
     geno <- expandedAltDosage(svd, use.names=TRUE, sparse=TRUE)[sample.index,,drop=FALSE]
     expect_equal(rownames(geno), samp)

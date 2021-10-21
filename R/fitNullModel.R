@@ -18,9 +18,9 @@ setMethod("fitNullModel",
                    drop.zeros = TRUE,
                    return.small = FALSE,
                    verbose = TRUE) {
-              
+
               family <- .checkFamily(family, two.stage)
-              
+
               if (is.data.table(x)) x <- as.data.frame(x)
 
               desmat <- createDesignMatrix(x, outcome, covars, group.var)
@@ -51,10 +51,10 @@ setMethod("fitNullModel",
 
               if(two.stage){
                   # fit the second stage model
-                  null.model <- nullModelInvNorm(null.model, cov.mat=cov.mat, 
-                                                 norm.option=norm.option, rescale=rescale, 
+                  null.model <- nullModelInvNorm(null.model, cov.mat=cov.mat,
+                                                 norm.option=norm.option, rescale=rescale,
                                                  AIREML.tol=AIREML.tol, max.iter=max.iter,
-                                                 EM.iter=EM.iter, drop.zeros=drop.zeros, 
+                                                 EM.iter=EM.iter, drop.zeros=drop.zeros,
                                                  return.small=return.small, verbose=verbose)
               }
 
@@ -74,19 +74,17 @@ setMethod("fitNullModel",
               if (is(x, "tbl")) x <- as.data.frame(x)
               rownames(x) <- x$sample.id
 
-              if (!is.null(cov.mat)) {
-                  .checkSampleId(cov.mat, x)
-              }
+              if (is.null(sample.id)) sample.id <- x$sample.id
 
-              ## subset data.frame and cov.mat for selected samples
-              if (!is.null(sample.id)) {
-                  stopifnot(all(sample.id %in% x$sample.id))
-                  ind <- x$sample.id %in% sample.id
-                  x <- x[ind,]
-                  if (!is.null(cov.mat)) {
-                      ind <- which(.covMatNames(cov.mat) %in% sample.id)
-                      cov.mat <- .covMatSubset(cov.mat, ind)
-                  }
+              ## check if all requested samples are in x (and subset).
+              .checkXSampleId(x, sample.id)
+              x <- x[x$sample.id %in% sample.id, ]
+
+              ## check if all requested samples are in cov.mat (and subset).
+              if (!is.null(cov.mat)) {
+                .checkCovMatSampleId(cov.mat, sample.id)
+                ind <- which(.covMatNames(cov.mat) %in% sample.id)
+                cov.mat <- .covMatSubset(cov.mat, ind)
               }
 
               ## reorder data.frame to match cov.mat
@@ -124,7 +122,7 @@ setMethod("fitNullModel",
 
 ## function to check 'family' input
 .checkFamily <- function(family, two.stage=FALSE) {
-    
+
     if(is.character(family)){
         family <- get(family)
     }
@@ -137,11 +135,11 @@ setMethod("fitNullModel",
     if (!is.element(family$family, c("gaussian", "binomial", "poisson"))){
         stop("family must be one of gaussian, binomial, or poisson")
     }
-    
+
     if((two.stage) & (family$family != "gaussian")){
         stop('two stage model only applies when family is "gaussian"')
     }
-    
+
     return(family)
 }
 
@@ -203,14 +201,20 @@ setMethod("fitNullModel",
 }
 
 
-## match sample.id between cov.mat and data frame
-.checkSampleId <- function(cov.mat, x) {
-    nms <- .covMatNames(cov.mat)
-    if (is.null(nms)) {
-        stop("provide sample.id in rownames and/or colnames of cov.mat")
-    } else if (!all(nms %in% x$sample.id)) {
-        stop("all sample names in dimnames of cov.mat must be present in x$sample.id")
-    }
+## check if a set of samples are in the data
+.checkXSampleId <- function(x, sample.id) {
+  if (!all(sample.id %in% x$sample.id)) {
+    stop("all samples in sample.id must be present in x")
+  }
+}
+
+.checkCovMatSampleId <- function(cov.mat, sample.id) {
+  nms <- .covMatNames(cov.mat)
+  if (is.null(nms)) {
+      stop("provide sample.id in rownames and/or colnames of cov.mat")
+  } else if (!all(sample.id %in% nms)) {
+      stop("all samples in sample.id must be present in dimnames of cov.mat")
+  }
 }
 
 
