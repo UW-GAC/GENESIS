@@ -162,7 +162,8 @@ setMethod("metaPrepScores",
 
 
 
-.metaPrepScores <- function(x, sex, null.model, AF.max, MAC.min, geno.coding, sparse, imputed, male.diploid, score.cov, ...) {
+.metaPrepScores <- function(x, sex, null.model, AF.max, MAC.min, geno.coding,
+                            sparse, imputed, DS.min, male.diploid, score.cov, ...) {
   # prep the geno data
   x <- .prepGenoBlock(x, AF.max=AF.max, MAC.min=MAC.min, geno.coding=geno.coding,
                       imputed=imputed, DS.min=DS.min, sex=sex, male.diploid=male.diploid)
