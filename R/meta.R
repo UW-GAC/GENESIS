@@ -8,9 +8,10 @@ setGeneric("metaPrepScores", function(gdsobj, ...) standardGeneric("metaPrepScor
 
 setMethod("metaPrepScores",
           "SeqVarIterator",
-          function(gdsobj, null.model, AF.max = 1,
+          function(gdsobj, null.model, AF.max = 1, MAC.min = 0,
                    geno.coding=c("additive", "dominant", "recessive"),
-                   sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"),
+                   sparse=TRUE, imputed=FALSE, DS.min = 0,
+                   male.diploid=TRUE, genome.build=c("hg19", "hg38"),
                    BPPARAM=bpparam(), verbose=TRUE) {
 
                      # don't return score.cov for block iterator (single variant test)
@@ -74,9 +75,10 @@ setMethod("metaPrepScores",
 
                      # worker function
                      res <- bpiterate(ITER, .metaPrepScores, BPPARAM=BPPARAM,
-                                      sex=sex, null.model=null.model, AF.max=AF.max,
+                                      sex=sex, null.model=null.model,
+                                      AF.max=AF.max, MAC.min=MAC.min,
                                       geno.coding=geno.coding,
-                                      sparse=sparse, imputed=imputed,
+                                      sparse=sparse, imputed=imputed, DS.min=DS.min,
                                       male.diploid=male.diploid,
                                       score.cov=score.cov)
                      .stopOnError(res)
@@ -107,7 +109,7 @@ setMethod("metaPrepScores",
 
 setMethod("metaPrepScores",
           "GenotypeIterator",
-          function(gdsobj, null.model, AF.max = 1,
+          function(gdsobj, null.model, AF.max = 1, MAC.min = 0,
                    geno.coding=c("additive", "dominant", "recessive"),
                    male.diploid=TRUE,
                    BPPARAM=bpparam(), verbose=TRUE) {
@@ -146,9 +148,10 @@ setMethod("metaPrepScores",
 
                      # worker function
                      res <- bpiterate(ITER, .metaPrepScores, BPPARAM=BPPARAM,
-                                      sex=sex, null.model=null.model, AF.max=AF.max,
+                                      sex=sex, null.model=null.model,
+                                      AF.max=AF.max, MAC.min=MAC.min,
                                       geno.coding=geno.coding,
-                                      sparse=FALSE, imputed=FALSE,
+                                      sparse=FALSE, imputed=FALSE, DS.min=0,
                                       male.diploid=male.diploid,
                                       score.cov=FALSE)
                      .stopOnError(res)
@@ -159,10 +162,10 @@ setMethod("metaPrepScores",
 
 
 
-.metaPrepScores <- function(x, sex, null.model, AF.max, geno.coding, sparse, imputed, male.diploid, score.cov, ...) {
+.metaPrepScores <- function(x, sex, null.model, AF.max, MAC.min, geno.coding, sparse, imputed, male.diploid, score.cov, ...) {
   # prep the geno data
-  x <- .prepGenoBlock(x, AF.max=AF.max, geno.coding=geno.coding, imputed=imputed,
-                      sex=sex, male.diploid=male.diploid)
+  x <- .prepGenoBlock(x, AF.max=AF.max, MAC.min=MAC.min, geno.coding=geno.coding,
+                      imputed=imputed, DS.min=DS.min, sex=sex, male.diploid=male.diploid)
   var.info <- x$var.info
   n.obs <- x$n.obs
   freq <- x$freq
@@ -245,59 +248,3 @@ setMethod(".metaGroupNames",
             }
             grnames
           })
-
-
-
-#
-# setGeneric(".metaPrepScoresOutput", function(gdsobj, res1, res2) standardGeneric(".metaPrepScoresOutput"))
-#
-# setMethod(".metaPrepScoresOutput",
-#           "SeqVarWindowIterator",
-#           function(gdsobj, res1, res2) {
-#             gr <- variantRanges(gdsobj)
-#             grnames <- paste(paste0("chr", as.character(GenomicRanges::seqnames(gr))),
-#                             BiocGenerics::start(gr), BiocGenerics::end(gr), sep = "_")
-#
-#             # variant info
-#             # for(i in 1:length(res1)){
-#             #     res1[[i]] <- cbind(group.id = grnames[i], res1[[i]])
-#             # }
-#             # res1 <- as.data.frame(rbindlist(res1, use.names=TRUE, fill=TRUE))
-#
-#             # variant info
-#             names(res1) <- grnames
-#             res1 <- as.data.frame(rbindlist(res1, use.names=TRUE, fill=TRUE, idcol = 'group.id')
-#
-#             # scores.cov
-#             names(res2) <- grnames
-#
-#             list(variants = res1, scores.cov = res2)
-#           })
-#
-# setMethod(".metaPrepScoresOutput",
-#           "SeqVarRangeIterator",
-#           function(gdsobj, res1, res2) {
-#             # get variant group IDs
-#             gr <- variantRanges(gdsobj)
-#             grnames <- names(gr)
-#             if(is.null(grnames)){
-#               grnames <- paste(paste0("chr", as.character(GenomicRanges::seqnames(gr))),
-#                                BiocGenerics::start(gr), BiocGenerics::end(gr), sep = "_")
-#             }
-#
-#             # variant info
-#             # for(i in 1:length(res1)){
-#             #     res1[[i]] <- cbind(group.id = grnames[i], res1[[i]])
-#             # }
-#             # res1 <- as.data.frame(rbindlist(res1, use.names=TRUE, fill=TRUE))
-#
-#             # variant info
-#             names(res1) <- grnames
-#             res1 <- as.data.frame(rbindlist(res1, use.names=TRUE, fill=TRUE, idcol = 'group.id')
-#
-#             # scores.cov
-#             names(res2) <- grnames
-#
-#             list(variants = res1, scores.cov = res2)
-#           })
-#

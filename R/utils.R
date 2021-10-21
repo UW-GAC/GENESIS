@@ -42,8 +42,8 @@ setMethod("variantFilter",
 
 
 # function to pre-process genotype data before testing
-.prepGenoBlock <- function(x, AF.max=1, geno.coding="additive", imputed=FALSE,
-                           sex=NULL, male.diploid=TRUE) {
+.prepGenoBlock <- function(x, AF.max=1, MAC.min=0, geno.coding="additive",
+                           imputed=FALSE, DS.min=0, sex=NULL, male.diploid=TRUE) {
 
     var.info <- x$var.info
     geno <- x$geno
@@ -63,6 +63,19 @@ setMethod("variantFilter",
 
     # exclude variants with freq > max
     keep <-  keep & freq$freq <= AF.max
+
+    if(!imputed){
+      # exclude variants with MAC < min
+      keep <- keep & freq$MAC >= MAC.min
+    }else{
+      # exclude variants with effMAC < min
+      keep <- keep & freq$effMAC >= effMAC.min
+    }
+
+    if(imputed){
+      # exclude variants where the smaller of the ref/alt max dosage < min
+      keep <- keep & freq$maxDS >= DS.min
+    }
 
     # exclude variants with weight 0
     if (!is.null(weight)) {
@@ -147,12 +160,16 @@ setMethod("variantFilter",
         freq <- count/(2*nsamp)
         mac <- pmin(count, 2*nsamp - count)
         if(imputed){
+          # imputation r^2
           var.dosage <- .apply(geno, MARGIN = 2, FUN = var)
           r2.dosage <- var.dosage/(2*freq*(1-freq))
+          # effective MAC
           effMAC <- mac*r2.dosage
-          return(data.frame(freq=freq, MAC=round(mac), effMAC=effMAC))
+          # smaller of max dosage for alt and ref alleles
+          maxDS <- .apply(geno, MARGIN = 2, FUN = function(x){ min(max(x), 2-min(x)) })
+          return(data.frame(freq=freq, MAC=round(mac), effMAC=effMAC, maxDS=maxDS))
         }else{
-          return(data.frame(freq=freq, MAC=round(mac)))
+          return(data.frame(freq=freq, MAC=round(mac))) # does MAC need to be rounded?
         }
     }
 
@@ -209,30 +226,38 @@ setMethod("variantFilter",
     mac <- pmin(count, possible - count)
 
     if(imputed){
+      # imputation r^2
       var.dosage <- .apply(geno, MARGIN = 2, FUN = var)
-
       r2.dosage <- rep(NA, ncol(geno))
+      maxDS <- rep(NA, ncol(geno))
       if(any(auto)){
         r2.dosage[auto] <- var.dosage[auto]/(2*freq[auto]*(1-freq[auto]))
+        maxDS[auto] <- .apply(geno[, auto, drop=FALSE], MARGIN = 2, FUN = function(x){ min(max(x), 2-min(x)) })
       }
       if(any(X)){
         F.prop <- F.nsamp/(F.nsamp + M.nsamp)
         if(male.diploid){
           r2.dosage[X] <- var.dosage[X]/(2*freq[X]*(1-freq[X])*(2 - F.prop))
+          maxDS[X] <- .apply(geno[, X, drop=FALSE], MARGIN = 2, FUN = function(x){ min(max(x), 2-min(x)) })
         }else{
           r2.dosage[X] <- var.dosage[X]/(freq[X]*(1-freq[X])*(1 + F.prop))
+          maxDS.F <- .apply(geno[female, X, drop=FALSE], MARGIN = 2, FUN = function(x){ min(max(x), 2-min(x)) })
+          maxDS.M <- .apply(geno[male, X, drop=FALSE], MARGIN = 2, FUN = function(x){ min(max(x), 1-min(x)) })
+          maxDS[X] <- pmin(maxDS.F, maxDS.M)
         }
       }
       if(any(Y)){
         if(male.diploid){
           r2.dosage[Y] <- var.dosage[Y]/(4*freq[Y]*(1-freq[Y]))
+          maxDS[Y] <- .apply(geno[male, Y, drop=FALSE], MARGIN = 2, FUN = function(x){ min(max(x), 2-min(x)) })
         }else{
           r2.dosage[Y] <- var.dosage[Y]/(freq[Y]*(1-freq[Y]))
+          maxDS[Y] <- .apply(geno[male, Y, drop=FALSE], MARGIN = 2, FUN = function(x){ min(max(x), 1-min(x)) })
         }
       }
-
+      # effective MAC
       effMAC <- mac*r2.dosage
-      return(data.frame(freq=freq, MAC=round(mac), effMAC=effMAC))
+      return(data.frame(freq=freq, MAC=round(mac), effMAC=effMAC, maxDS=maxDS))
     }else{
       return(data.frame(freq=freq, MAC=round(mac))) # does this need to be rounded?
     }
