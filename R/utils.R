@@ -69,7 +69,7 @@ setMethod("variantFilter",
       keep <- keep & freq$MAC >= MAC.min
     }else{
       # exclude variants with effMAC < min
-      keep <- keep & freq$effMAC >= effMAC.min
+      keep <- keep & freq$effMAC >= MAC.min
     }
 
     if(imputed){
