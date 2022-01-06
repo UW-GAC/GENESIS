@@ -11,6 +11,7 @@ renv/
 # other
 *.Rproj
 .Rproj.user/
+*~
 
 # R files produced from vignette
 vignettes/*.R
