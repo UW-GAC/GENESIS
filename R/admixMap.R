@@ -29,7 +29,7 @@ admixMap <- function(admixDataList,
         stop("admixDataList must contain GenotypeIterator or SeqVarIterator objects")
     }
     n.samp <- length(sample.index)
-
+    
     # get sex for calculating allele freq
     sex <- validateSex(admixDataList[[1]])[sample.index]
 
@@ -52,9 +52,9 @@ admixMap <- function(admixDataList,
 
     # n.iter <- length(variantFilter(admixDataList[[1]]))
     # set.messages <- ceiling(n.iter / 100) # max messages = 100
-
+                  
     if(verbose) message('Using ', bpnworkers(BPPARAM), ' CPU cores')
-
+    
     b <- 1
     ITER <- function() {
         iterate <- TRUE
@@ -71,7 +71,7 @@ admixMap <- function(admixDataList,
         if (!iterate) {
             return(NULL)
         }
-
+        
         var.info <- variantInfo(admixDataList[[1]], alleles=FALSE)
         n.var <- nrow(var.info)
 
@@ -85,22 +85,22 @@ admixMap <- function(admixDataList,
             }
         }
         if (any(is.na(local))) warning("missing values in local ancestry will produce NA output for this block")
-
+        
         # chromosome indicator is needed to calculate allele frequency for sex chroms
         chr <- chromWithPAR(admixDataList[[i]], genome.build=genome.build)
-
+        
         return(list(var.info=var.info, local=local, chr=chr))
     }
-
+    
     FUN <- function(x) {
         var.info <- x$var.info
         local <- x$local
         chr <- x$chr
         rm(x)
-
+        
         n.var <- nrow(var.info)
         res <- matrix(NA, nrow=n.var, ncol=length(nv), dimnames=list(NULL, nv))
-
+    
         # ancestral frequency
         # matrix:  rows are SNPs, columns are ancestries
         freq <- matrix(NA, nrow=n.var, ncol=v)
@@ -178,7 +178,8 @@ admixMap <- function(admixDataList,
         # }
         return(res)
     }
-
+    
     res.list <- bpiterate(ITER, FUN, BPPARAM=BPPARAM)
+    .stopOnError(res.list)
     as.data.frame(rbindlist(res.list))
 }

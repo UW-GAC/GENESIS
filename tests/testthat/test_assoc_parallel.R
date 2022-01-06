@@ -1,5 +1,39 @@
 context("BiocParallel tests")
 
+test_that("stopOnError", {
+    FUN <- function(x) {
+        if (x < 5) {
+            return(x)
+        } else {
+            stop("x too big")
+        }
+    }
+    x <- 1:10
+    i <- 1
+    ITER <- function() {
+        if (i <= length(x)) {
+            res <- x[i]
+        } else {
+            res <- NULL
+        }
+        i <<- i + 1
+        return(res)
+    }
+    chk <- bpiterate(ITER, FUN, BPPARAM=BiocParallel::SerialParam())
+    expect_error(as.integer(unlist(chk)))
+    expect_error(.stopOnError(chk), "x too big")
+    
+    i <- 1
+    chk <- bpiterate(ITER, FUN, BPPARAM=BiocParallel::MulticoreParam())
+    expect_error(.stopOnError(chk), "x too big")
+    
+    x <- 1:4
+    i <- 1
+    chk <- bpiterate(ITER, FUN, BPPARAM=BiocParallel::SerialParam())
+    expect_equal(unlist(chk), 1:4)
+})
+
+
 test_that("assocTestSingle - SeqVarIterator", {
     svd <- .testData()
     iterator <- SeqVarTools::SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
@@ -56,14 +90,4 @@ test_that("assocTestAggregate - GenotypeIterator", {
     assoc2 <- assocTestAggregate(iterator, nullmod, BPPARAM=BiocParallel::MulticoreParam(), verbose=FALSE)
     expect_equal(assoc, assoc2)
     close(genoData)
-})
-
-
-test_that("errors are reported correctly", {
-    svd <- .testData()
-    iterator <- SeqVarTools::SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
-    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
-    # if all goes well, this error should be the original error mentioning the "poibin" package, not an error in rblindlist
-    expect_error(assocTestSingle(iterator, nullmod, BPPARAM=BiocParallel::MulticoreParam(workers=2), verbose=FALSE, test="CMP"), "poibin")
-    seqClose(svd)
 })

@@ -7,7 +7,7 @@ setMethod("assocTestSingle",
           function(gdsobj, null.model, test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
                    recalc.pval.thresh=0.05, fast.score.SE=FALSE, GxE=NULL,
                    geno.coding=c("additive", "dominant", "recessive"),
-                   sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"),
+                   sparse=TRUE, imputed=FALSE, male.diploid=TRUE, genome.build=c("hg19", "hg38"), 
                    BPPARAM=bpparam(), verbose=TRUE) {
               test <- match.arg(test)
               geno.coding <- match.arg(geno.coding)
@@ -19,27 +19,27 @@ setMethod("assocTestSingle",
               null.model <- .updateNullModelFormat(null.model)
 
               # check that the provided null model is compatible with the requested test
-              .checkNullModelTestSingle(null.model = null.model, test = test,
+              .checkNullModelTestSingle(null.model = null.model, test = test, 
               	recalc.pval.thresh = recalc.pval.thresh, fast.score.SE = fast.score.SE, GxE = GxE)
-
+              
               # coerce null.model if necessary
               if (sparse) null.model <- .nullModelAsMatrix(null.model)
 
               # filter samples to match null model
               sample.index <- .setFilterNullModel(gdsobj, null.model, verbose=verbose)
-
+              
               # get sex for calculating allele freq
               sex <- validateSex(gdsobj)[sample.index]
-
+              
               if (!is.null(GxE)) GxE <- .modelMatrixColumns(null.model, GxE)
-
+              
               # check ploidy
               if (SeqVarTools:::.ploidy(gdsobj) == 1) male.diploid <- FALSE
 
               # results
               #n.iter <- length(variantFilter(gdsobj))
               #set.messages <- ceiling(n.iter / 100) # max messages = 100
-
+                  
               if(verbose) message('Using ', bpnworkers(BPPARAM), ' CPU cores')
 
               i <- 1
@@ -52,27 +52,28 @@ setMethod("assocTestSingle",
                   if (!iterate) {
                       return(NULL)
                   }
-
+                  
                   var.info <- variantInfo(gdsobj, alleles=FALSE, expanded=TRUE)
-
+                  
                   if (!imputed) {
                       geno <- expandedAltDosage(gdsobj, use.names=FALSE, sparse=sparse)[sample.index,,drop=FALSE]
                   } else {
                       geno <- imputedDosage(gdsobj, use.names=FALSE)[sample.index,,drop=FALSE]
                   }
-
+                  
                   chr <- chromWithPAR(gdsobj, genome.build=genome.build)
-
+                  
                   return(list(var.info=var.info, geno=geno, chr=chr))
               }
 
               res <- bpiterate(ITER, .testGenoBlockSingle, BPPARAM=BPPARAM,
                                sex=sex, null.model=null.model, test=test,
-                               recalc.pval.thresh=recalc.pval.thresh,
+                               recalc.pval.thresh=recalc.pval.thresh, 
                                fast.score.SE=fast.score.SE, GxE=GxE,
                                geno.coding=geno.coding,
                                sparse=sparse, imputed=imputed,
                                male.diploid=male.diploid)
+              .stopOnError(res)
               as.data.frame(rbindlist(res))
           })
 
@@ -81,7 +82,7 @@ setMethod("assocTestSingle",
 setMethod("assocTestSingle",
           "GenotypeIterator",
           function(gdsobj, null.model, test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
-                   recalc.pval.thresh=0.05, GxE=NULL,
+                   recalc.pval.thresh=0.05, GxE=NULL, 
                    geno.coding=c("additive", "dominant", "recessive"),
                    male.diploid=TRUE, BPPARAM=bpparam(), verbose=TRUE) {
               test <- match.arg(test)
@@ -91,23 +92,23 @@ setMethod("assocTestSingle",
               null.model <- .updateNullModelFormat(null.model)
 
               # check that the provided null model is compatible with the requested test
-              .checkNullModelTestSingle(null.model = null.model, test = test,
+              .checkNullModelTestSingle(null.model = null.model, test = test, 
               	recalc.pval.thresh = recalc.pval.thresh, fast.score.SE = FALSE, GxE = GxE)
 
               # filter samples to match null model
               sample.index <- .sampleIndexNullModel(gdsobj, null.model)
-
+              
               # get sex for calculating allele freq
               sex <- validateSex(gdsobj)[sample.index]
-
+              
               if (!is.null(GxE)) GxE <- .modelMatrixColumns(null.model, GxE)
 
               # results
               # n.iter <- length(snpFilter(gdsobj))
               # set.messages <- ceiling(n.iter / 100) # max messages = 100
-
+                  
               if(verbose) message('Using ', bpnworkers(BPPARAM), ' CPU cores')
-
+              
               i <- 1
               ITER <- function() {
                   iterate <- TRUE
@@ -118,22 +119,23 @@ setMethod("assocTestSingle",
                   if (!iterate) {
                       return(NULL)
                   }
-
+                  
                   var.info <- variantInfo(gdsobj)
 
                   geno <- getGenotypeSelection(gdsobj, scan=sample.index, order="selection",
                                                transpose=TRUE, use.names=FALSE, drop=FALSE)
-
+                  
                   return(list(var.info=var.info, geno=geno, chr=var.info$chr))
               }
-
+              
               res <- bpiterate(ITER, .testGenoBlockSingle, BPPARAM=BPPARAM,
                                sex=sex, null.model=null.model, test=test,
-                               recalc.pval.thresh=recalc.pval.thresh,
+                               recalc.pval.thresh=recalc.pval.thresh, 
                                fast.score.SE=FALSE, GxE=GxE,
                                geno.coding=geno.coding,
                                sparse=FALSE, imputed=FALSE,
                                male.diploid=male.diploid)
+              .stopOnError(res)
               as.data.frame(rbindlist(res))
           })
 
@@ -144,14 +146,14 @@ setMethod("assocTestSingle",
                                  recalc.pval.thresh, fast.score.SE, GxE,
                                  geno.coding,
                                  sparse, imputed, male.diploid, ...) {
-
+    
     # for BinomiRare and CMP, restrict to variants where the alternate allele is minor
     if (test %in% c("BinomiRare", "CMP")) {
         AF.max <- 0.5
     } else {
         AF.max <- 1
     }
-
+    
     x <- .prepGenoBlock(x, AF.max=AF.max, geno.coding=geno.coding, imputed=imputed,
                         sex=sex, male.diploid=male.diploid)
     var.info <- x$var.info
@@ -159,12 +161,12 @@ setMethod("assocTestSingle",
     freq <- x$freq
     geno <- x$geno
     rm(x)
-
+    
     # mean impute missing values
     if (any(n.obs < nrow(geno))) {
         geno <- .meanImpute(geno, freq$freq)
     }
-
+    
     # do the test
     if (ncol(geno) == 0){
         res.i <- NULL
@@ -172,10 +174,10 @@ setMethod("assocTestSingle",
         assoc <- testGenoSingleVar(null.model, G=geno, E=GxE, test=test,
                                    recalc.pval.thresh=recalc.pval.thresh,
                                    fast.score.SE=fast.score.SE)
-
+        
         res.i <- cbind(var.info, n.obs, freq, assoc)
     }
-
+    
     #if (verbose & n.iter > 1 & i %% set.messages == 0) {
     #    message(paste("Iteration", i , "of", n.iter, "completed"))
     #}
