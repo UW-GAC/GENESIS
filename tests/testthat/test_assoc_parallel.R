@@ -64,7 +64,7 @@ test_that("errors are reported correctly", {
     svd <- .testData()
     iterator <- SeqVarTools::SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
     nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
-    # if all goes well, this error should be the original error mentioning the "poibin" package, not an error in rbindlist
-    expect_error(assocTestSingle(iterator, nullmod, BPPARAM=BiocParallel::MulticoreParam(workers=2), verbose=FALSE, test="CMP"), "poibin")
+    # if all goes well, this error should be the original error, not an error in rbindlist
+    expect_error(assocTestSingle(iterator, nullmod, BPPARAM=BiocParallel::MulticoreParam(workers=2), verbose=FALSE, test="CMP"), "n.D.carrier <= n.carrier is not TRUE")
     seqClose(svd)
 })
