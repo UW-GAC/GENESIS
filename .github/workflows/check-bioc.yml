@@ -240,12 +240,14 @@ jobs:
               dir('check', 'tar.gz$', full.names = TRUE),
               `quit-with-status` = TRUE,
               `no-check-R-ver` = TRUE,
-              `no-check-bioc-help` = TRUE,
-	      `no-check-coding-practices` = TRUE,
-	      `no-check-function-len` = TRUE,
-	      `no-check-formatting` = TRUE,
-	      `no-check-CRAN` = TRUE,
-	      `no-check-bioc-help` = TRUE
+              `no-check-bioc-views` = TRUE,
+              `no-check-bbs` = TRUE,
+              `no-check-coding-practices` = TRUE,
+              `no-check-function-len` = TRUE,
+              `no-check-man-doc` = TRUE,
+              `no-check-formatting` = TRUE,
+              `no-check-CRAN` = TRUE,
+              `no-check-bioc-help` = TRUE
           )
         shell: Rscript {0}
 
