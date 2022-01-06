@@ -36,7 +36,8 @@ mypcair <- pcair(HapMap_genoData, kinobj = HapMap_ASW_MXL_KINGmat,
 # run PC-Relate
 HapMap_genoData <- GenotypeBlockIterator(HapMap_genoData, snpBlock=20000)
 mypcrel <- pcrelate(HapMap_genoData, pcs = mypcair$vectors[,1,drop=FALSE],
-    			training.set = mypcair$unrels)
+    			training.set = mypcair$unrels,
+                        BPPARAM = BiocParallel::SerialParam())
 close(HapMap_genoData)
 
 # generate a phenotype
