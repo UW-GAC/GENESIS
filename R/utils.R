@@ -37,28 +37,28 @@ setMethod("variantFilter",
 
 
 # function to pre-process genotype data before testing
-.prepGenoBlock <- function(x, AF.max=1, geno.coding="additive", imputed=FALSE, 
+.prepGenoBlock <- function(x, AF.max=1, geno.coding="additive", imputed=FALSE,
                            sex=NULL, male.diploid=TRUE) {
-    
+
     var.info <- x$var.info
     geno <- x$geno
     chr <- x$chr
     weight <- x$weight # only applies to aggregate tests, NULL otherwise
     rm(x)
-    
+
     # take note of number of non-missing samples
     #n.obs <- colSums(!is.na(geno))
     n.obs <- .countNonMissing(geno, MARGIN = 2)
-    
+
     # allele frequency
     freq <- .alleleFreq(geno, chr, sex, male.diploid=male.diploid)
-    
+
     # filter monomorphic variants
     keep <- .filterMonomorphic(geno, count=n.obs, freq=freq$freq, imputed=imputed)
-    
+
     # exclude variants with freq > max
     keep <-  keep & freq$freq <= AF.max
-    
+
     # exclude variants with weight 0
     if (!is.null(weight)) {
         weight0 <- is.na(weight) | weight == 0
@@ -66,7 +66,7 @@ setMethod("variantFilter",
             keep <- keep & !weight0
         }
     }
-    
+
     # recessive or dominant coding
     if (geno.coding != "additive") {
         if (geno.coding == "recessive") {
@@ -90,14 +90,14 @@ setMethod("variantFilter",
             geno[geno == 2] <- 1L
             out.col <- "n.any.eff"
         }
-        
+
         # count number of carriers
         freq[[out.col]] <- colSums(geno, na.rm=TRUE)
-        
+
         # remove variants which are now monomorphic (all 0s or all 1s)
         keep <- keep & !(freq[[out.col]] == 0 | freq[[out.col]] == n.obs)
     }
-    
+
     if (!all(keep)) {
         var.info <- var.info[keep,,drop=FALSE]
         geno <- geno[,keep,drop=FALSE]
@@ -105,7 +105,7 @@ setMethod("variantFilter",
         freq <- freq[keep,,drop=FALSE]
         weight <- weight[keep]
     }
-    
+
     return(list(var.info=var.info, n.obs=n.obs, freq=freq, geno=geno, weight=weight))
 }
 
@@ -324,15 +324,6 @@ setMethod(".annotateAssoc",
     all(sapply(x[-1], FUN = identical, x[[1]]))
 }
 
-.stopOnError <- function(x) {
-    err.chk <- sapply(x, is, "error")
-    if (any(err.chk)) {
-        ind <- which(err.chk)[1]
-        # only in serial execution is ind guaranteed to be the right index in an error state
-        #message("Error detected in iteration ", ind)
-        stop(x[[ind]])
-    }
-}
 
 .genoDataToGds <- function(x, filename) {
     gds <- createfn.gds(filename)
