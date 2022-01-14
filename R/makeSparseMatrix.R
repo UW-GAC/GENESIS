@@ -46,7 +46,7 @@ setMethod("makeSparseMatrix",
     if(is.null(rownames(x))) {
         rownames(x) <- colnames(x)
     }
-    
+
     # check that matrix is square
     if(!all(rownames(x) == colnames(x))){
         stop("x must be square when it is a matrix object")
@@ -81,7 +81,7 @@ setMethod("makeSparseMatrix",
     # extract cluster membership
     clu <- igraph::components(g)
     mem <- clu$membership
-    
+
     blocks <- list()
     block.id <- list()
     if(clu$no > 0){
@@ -90,7 +90,7 @@ setMethod("makeSparseMatrix",
         for(i in 1:clu$no){
             # samples in the cluster
             ids <- names(mem[mem == i])
-            
+
             # extract the matrix for all pairs in the cluster
             submat <- x[rownames(x) %in% ids, colnames(x) %in% ids]
 
@@ -106,7 +106,7 @@ setMethod("makeSparseMatrix",
     }else{
         if(verbose) message("    No clusters identified")
     }
-        
+
     # add in identity matrix of unrelated samples
     unrel.id <- setdiff(sample.include, names(mem))
     if(verbose) message(length(unrel.id), " samples with no relatives included")
@@ -129,8 +129,8 @@ setMethod("makeSparseMatrix",
         mat_sparse <- bdiag(blocks)
     }else{
         mat_sparse <- Matrix(blocks[[1]])
-    } 
-    
+    }
+
     # ids of samples
     mat.id <- unlist(block.id)
     rownames(mat_sparse) <- mat.id
@@ -145,6 +145,10 @@ setMethod("makeSparseMatrix",
 
     # keep R CMD check from warning about undefined global variables
     ID1 <- ID2 <- value <- NULL
+
+    # make sure IDs are character
+    if (!is.character(x$ID1)) x$ID1 <- as.character(x$ID1)
+    if (!is.character(x$ID2)) x$ID2 <- as.character(x$ID2)
 
     # check sample.include
     if(!is.null(sample.include)){
@@ -175,7 +179,7 @@ setMethod("makeSparseMatrix",
     # extract cluster membership
     clu <- igraph::components(g)
     mem <- clu$membership
-    
+
     blocks <- list()
     block.id <- list()
     if(clu$no > 0){
@@ -186,12 +190,12 @@ setMethod("makeSparseMatrix",
             ids <- names(mem[mem == i])
             # create a table for all pairs in the cluster
             allpairs <- as.data.table(expand.grid(ID2 = ids, ID1 = ids, stringsAsFactors=FALSE))
-            
+
             # merge
             sub <- x[ID1 %in% ids & ID2 %in% ids][allpairs, on = c("ID1", "ID2")]
             # set pairs without values to 0
             sub[is.na(value), value := 0]
-            
+
             # cast to a matrix
             submat <- reshape2::acast(data = sub, formula = ID1 ~ ID2, value.var = "value")
             # put the values on both sides of the diagonal
@@ -202,7 +206,7 @@ setMethod("makeSparseMatrix",
             }else{
                 diag(submat) <- diag.value
             }
-            
+
             # store in the list
             blocks[[i]] <- submat
             block.id[[i]] <- rownames(submat)
@@ -210,7 +214,7 @@ setMethod("makeSparseMatrix",
     }else{
         if(verbose) message("    No clusters identified")
     }
-        
+
     # add in identity matrix of unrelated samples
     unrel.id <- setdiff(sample.include, names(mem))
     if(verbose) message(length(unrel.id), " samples with no relatives included")
@@ -233,8 +237,8 @@ setMethod("makeSparseMatrix",
         mat_sparse <- bdiag(blocks)
     }else{
         mat_sparse <- Matrix(blocks[[1]])
-    } 
-    
+    }
+
     # ids of samples
     mat.id <- unlist(block.id)
     rownames(mat_sparse) <- mat.id
@@ -264,7 +268,7 @@ setMethod("pcrelateToMatrix",
 .pcrelateToMatrix <- function(pcrelobj, sample.include = NULL, thresh = NULL, scaleKin = 2, verbose = TRUE){
     # keep R CMD check from warning about undefined global variables
     f <- ID1 <- ID2 <- kin <- NULL
-    
+
     # get the diagonals
     x <- as.data.table(pcrelobj$kinSelf)[, c('ID', 'f')]
     setnames(x, 'ID', 'ID1')
@@ -276,7 +280,7 @@ setMethod("pcrelateToMatrix",
 
     # scale the values
     x[, kin := scaleKin*kin]
-    
+
     # set kin name to value
     setnames(x, 'kin', 'value')
     # call makeSparseMatrix
@@ -325,7 +329,7 @@ setMethod("kingToMatrix",
     }else if(estimator == 'Kinship'){
         if(verbose) message('Reading in Kinship estimates from KING --kinship output...')
     }
-    
+
     # if multiple input files
     if(length(file.king) > 1){
         king <- lapply(file.king, .readKing, estimator = estimator)
@@ -333,19 +337,19 @@ setMethod("kingToMatrix",
         cnames <- Reduce(intersect, lapply(king, colnames))
         # subset and rbind
         king <- rbindlist(lapply(king, function(x){ x[, colnames(x) %in% cnames, with = FALSE]} ))
-        
+
     # one input file
     }else{
         king <- .readKing(file.king, estimator = estimator)
     }
-    
+
     # subset to needed columns
     if(estimator == 'PropIBD'){
         king <- king[, value := 0.5*PropIBD][, PropIBD := NULL]
     }else if(estimator == 'Kinship'){
         setnames(king, 'Kinship', 'value')
     }
-        
+
     # check for duplicate pairs
     setkeyv(king, c('ID1', 'ID2'))
     if(any(duplicated(king))){

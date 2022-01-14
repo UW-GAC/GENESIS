@@ -27,3 +27,13 @@ test_that("sample include", {
     expect_equal(dimnames(sm), list(as.character(2:6), as.character(2:6)))
     expect_equal(diag(sm), 2:6)
 })
+
+
+test_that("numeric IDs", {
+    ID1 <- c(1:30,29)
+    ID2 <- c(1:30,30)
+    value <- c(rep(1,30),0.23)
+    kin.dat <- data.frame(ID1,ID2,value)
+    sm <- makeSparseMatrix(kin.dat,thresh=NULL)
+    expect_true(setequal(rownames(sm), as.character(1:30)))
+})
