@@ -34,7 +34,7 @@
 
   \code{isNullModelSmall} returns TRUE if a null model is small; FALSE otherwise.
 
-  \code{fitNullModelFastScore} fits a null model that can be used for association testing with the fast approximation to the score standard error (SE). 
+  \code{fitNullModelFastScore} fits a null model that can be used for association testing with the fast approximation to the score standard error (SE).
 
   \code{calcScore} calculates the score, its true SE, and the fast SE for a set of variants; used to compute the SE correction factor used for the fast approximation.
 
@@ -44,10 +44,10 @@
 }
 
 \usage{
-\S4method{fitNullModel}{data.frame}(x, outcome, covars = NULL, cov.mat = NULL, 
-            group.var = NULL, family = "gaussian", two.stage = FALSE, 
+\S4method{fitNullModel}{data.frame}(x, outcome, covars = NULL, cov.mat = NULL,
+            group.var = NULL, family = "gaussian", two.stage = FALSE,
             norm.option = c("all", "by.group"), rescale = c("residSD", "none", "model"),
-            start = NULL, AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0, 
+            start = NULL, AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0,
             drop.zeros = TRUE, return.small = FALSE, verbose = TRUE)
 \S4method{fitNullModel}{AnnotatedDataFrame}(x, outcome, covars = NULL, cov.mat = NULL,
             group.var = NULL, sample.id = NULL, ...)
@@ -55,10 +55,10 @@
 \S4method{fitNullModel}{ScanAnnotationDataFrame}(x, ...)
 \S4method{fitNullModel}{GenotypeData}(x, ...)
 
-nullModelInvNorm(null.model, cov.mat = NULL, 
-                 norm.option = c("all", "by.group"), 
-                 rescale = c("residSD", "none", "model"), 
-                 AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0, 
+nullModelInvNorm(null.model, cov.mat = NULL,
+                 norm.option = c("all", "by.group"),
+                 rescale = c("residSD", "none", "model"),
+                 AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0,
                  drop.zeros = TRUE, return.small = FALSE, verbose = TRUE)
 
 nullModelSmall(null.model)
@@ -69,13 +69,13 @@ isNullModelSmall(null.model)
             group.var = NULL, family = "gaussian", two.stage = FALSE,
             norm.option = c("all", "by.group"), rescale = c("residSD", "none", "model"),
             start = NULL, AIREML.tol = 1e-4, max.iter = 100, EM.iter = 0,
-            drop.zeros = TRUE, return.small = TRUE, 
-            variant.id = NULL, nvar = 100, min.mac = 20, sparse = TRUE, 
+            drop.zeros = TRUE, return.small = TRUE,
+            variant.id = NULL, nvar = 100, min.mac = 20, sparse = TRUE,
             imputed = FALSE, male.diploid = TRUE, genome.build = c("hg19", "hg38"),
             verbose = TRUE)
 
 calcScore(x, null.model, variant.id = NULL, nvar = 100, min.mac = 20, sparse = TRUE,
-          imputed = FALSE, male.diploid = TRUE, genome.build = c("hg19", "hg38"), 
+          imputed = FALSE, male.diploid = TRUE, genome.build = c("hg19", "hg38"),
           verbose = TRUE)
 
 nullModelFastScore(null.model, score.table, return.small = TRUE, verbose = TRUE)
@@ -165,7 +165,7 @@ The \code{fit} data frame contains the following columns, depending on which typ
 \describe{
   \item{outcome}{The original outcome vector.}
   \item{workingY}{The "working" outcome vector. When \code{family} is gaussian, this is just the original outcome vector. When \code{family} is not gaussian, this is the PQL linearization of the outcome vector. This is used by \code{\link{assocTestSingle}} or \code{\link{assocTestAggregate}} for genetic association testing. See 'Details' for more information.}
-  \item{fitted.values}{The fitted values from the model; i.e. X*beta where X is the design matrix and beta is the vector of effect size estimates for the fixed effects.}
+  \item{fitted.values}{The fitted values from the model. For linear models and mixed models, this is X*beta where X is the design matrix and beta is the vector of effect size estimates for the fixed effects. For logistic (non-mixed) models, this is the expit of X*beta.}
   \item{resid.marginal}{The marginal residuals from the model; i.e. Y - X*beta where Y is the vector of outcome values.}
   \item{linear.predictor}{The linear predictor from the model; i.e. X*beta + Z*u, where Z*u represents the effects captured by the random effects specified with the cov.mat input.}
   \item{resid.conditional}{The conditional residuals from the model; i.e. Y - X*beta - Z*u, where Z*u represents the effects captured by the random effects specified with the cov.mat input.}
