@@ -165,7 +165,7 @@ The \code{fit} data frame contains the following columns, depending on which typ
 \describe{
   \item{outcome}{The original outcome vector.}
   \item{workingY}{The "working" outcome vector. When \code{family} is gaussian, this is just the original outcome vector. When \code{family} is not gaussian, this is the PQL linearization of the outcome vector. This is used by \code{\link{assocTestSingle}} or \code{\link{assocTestAggregate}} for genetic association testing. See 'Details' for more information.}
-  \item{fitted.values}{The fitted values from the model. For linear models and mixed models, this is X*beta where X is the design matrix and beta is the vector of effect size estimates for the fixed effects. For logistic (non-mixed) models, this is the expit of X*beta.}
+  \item{fitted.values}{The fitted values from the model. For mixed models, this is \code{X*beta} where \code{X} is the design matrix and beta is the vector of effect size estimates for the fixed effects. For non-mixed models, this is the inverse link function applied to \code{X*beta} (e.g., \code{expit(X*beta)} for logistic regression when \code{family = "binomial"}).}
   \item{resid.marginal}{The marginal residuals from the model; i.e. Y - X*beta where Y is the vector of outcome values.}
   \item{linear.predictor}{The linear predictor from the model; i.e. X*beta + Z*u, where Z*u represents the effects captured by the random effects specified with the cov.mat input.}
   \item{resid.conditional}{The conditional residuals from the model; i.e. Y - X*beta - Z*u, where Z*u represents the effects captured by the random effects specified with the cov.mat input.}
