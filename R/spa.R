@@ -23,7 +23,8 @@ SPA_pval <- function(score.result, nullmod, G, pval.thresh = 1){
                 if (nullmod$model$family$mixedmodel) {
                     mu <- as.vector(expit(nullmod$fit$linear.predictor))
                 } else {
-                    mu <- as.vector(expit(nullmod$fit$fitted.values))
+                    # fitted.values from glm models are already the expit.
+                    mu <- as.vector(nullmod$fit$fitted.values)
                 }
 
 		# W is the diagonal of a matrix
