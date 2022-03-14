@@ -2,6 +2,11 @@
 
 \title{NEWS for GENESIS}
 
+\section{Version 2.25.4}{
+  \itemize{
+    \item Fixed a bug in pcrelate when running with both multiple sample blocks and multiple cores
+  }
+}
 \section{Version 2.25.3}{
   \itemize{
     \item Fixed a bug in assocTestSingle for computing saddle-point approximation (SPA) p-values for variants (i.e. when using test = Score.SPA) when the input null model is not a mixed models (i.e. when fitNullModel was run with cov.mat = NULL , or all variance components converged to 0) and the family = "binomial"
