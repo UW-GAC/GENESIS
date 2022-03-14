@@ -5,7 +5,6 @@ BPPARAM <- BiocParallel::SerialParam()
 #BPPARAM <- BiocParallel::MulticoreParam()
 
 test_that("pcrelate2 - variant blocks", {
-    param <- BiocParallel::SerialParam()
     svd <- .testData()
     mypcs <- .testPCs(svd)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
@@ -18,7 +17,6 @@ test_that("pcrelate2 - variant blocks", {
 })
 
 test_that("pcrelate2 - 2 sample blocks", {
-    param <- BiocParallel::SerialParam()
     svd <- .testData()
     mypcs <- .testPCs(svd)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
@@ -30,7 +28,6 @@ test_that("pcrelate2 - 2 sample blocks", {
 })
 
 test_that("pcrelate2 - >2 sample blocks", {
-    param <- BiocParallel::SerialParam()
     svd <- .testData()
     mypcs <- .testPCs(svd)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
@@ -42,7 +39,6 @@ test_that("pcrelate2 - >2 sample blocks", {
 })
 
 test_that("pcrelate2 - sample include", {
-    param <- BiocParallel::SerialParam()
     svd <- .testData()
     mypcs <- .testPCs(svd)
     set.seed(90); samp.incl <- sample(seqGetData(svd, "sample.id"), 50)
@@ -53,7 +49,6 @@ test_that("pcrelate2 - sample include", {
 })
 
 test_that("pcrelate2 - sample filter", {
-    param <- BiocParallel::SerialParam()
     svd <- .testData()
     mypcs <- .testPCs(svd)
     seqSetFilter(svd, sample.sel=1:20, verbose=FALSE)
@@ -64,7 +59,6 @@ test_that("pcrelate2 - sample filter", {
 })
 
 test_that("pcrelate2 - GenotypeData - variant blocks", {
-    param <- BiocParallel::SerialParam()
     gd <- .testGenoData()
     mypcs <- .testGenoPCs(gd)
     iterator <- GWASTools::GenotypeBlockIterator(gd)
@@ -76,11 +70,10 @@ test_that("pcrelate2 - GenotypeData - variant blocks", {
 })
 
 test_that("pcrelate2 - GenotypeData - sample blocks", {
-    param <- BiocParallel::SerialParam()
     gd <- .testGenoData()
     mypcs <- .testGenoPCs(gd)
     iterator <- GWASTools::GenotypeBlockIterator(gd)
-    myrel <- pcrelate(iterator, pcs = mypcs, small.samp.correct=FALSE,BPPARAM=BPPARAM,  verbose=FALSE)
+    myrel <- pcrelate(iterator, pcs = mypcs, small.samp.correct=FALSE, BPPARAM=BPPARAM, verbose=FALSE)
     iterator <- GWASTools::GenotypeBlockIterator(gd)
     myrel2 <- pcrelate(iterator, pcs = mypcs, sample.block.size=50, small.samp.correct=FALSE, BPPARAM=BPPARAM, verbose=FALSE)
     expect_equal(myrel, myrel2)
@@ -88,7 +81,6 @@ test_that("pcrelate2 - GenotypeData - sample blocks", {
 })
 
 test_that("pcrelate2 - GenotypeData - sample include", {
-    param <- BiocParallel::SerialParam()
     gd <- .testGenoData()
     mypcs <- .testGenoPCs(gd)
     set.seed(91); samp.incl <- sample(GWASTools::getScanID(gd), 50)
@@ -117,7 +109,6 @@ test_that("pcrelate2 - GenotypeData - MatrixGenotypeReader", {
 })
 
 test_that("pcrelate2 - small sample correction", {
-    param <- BiocParallel::SerialParam()
     svd <- .testData()
     mypcs <- .testPCs(svd)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
@@ -125,16 +116,15 @@ test_that("pcrelate2 - small sample correction", {
     resetIterator(iterator, verbose=FALSE)
     myrel2 <- pcrelate(iterator, pcs = mypcs, small.samp.correct=TRUE, BPPARAM=BPPARAM, verbose=FALSE)
     expect_equal(myrel$kinBtwn[,1:2], myrel2$kinBtwn[,1:2])
-    
+
     resetIterator(iterator, verbose=FALSE)
     expect_warning(myrel <- pcrelate(iterator, pcs = mypcs, sample.block.size=50, small.samp.correct=TRUE, BPPARAM=BPPARAM, verbose=FALSE),
                    "small.samp.correct can only be used when all samples are analyzed in one block")
-    
+
     seqClose(svd)
 })
 
 test_that("pcrelate2 - scale=variant", {
-    param <- BiocParallel::SerialParam()
     svd <- .testData()
     mypcs <- .testPCs(svd)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
@@ -147,7 +137,6 @@ test_that("pcrelate2 - scale=variant", {
 })
 
 test_that("pcrelate2 - scale=none", {
-    param <- BiocParallel::SerialParam()
     svd <- .testData()
     mypcs <- .testPCs(svd)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
@@ -159,7 +148,6 @@ test_that("pcrelate2 - scale=none", {
 })
 
 test_that("pcrelate2 - method=truncate", {
-    param <- BiocParallel::SerialParam()
     svd <- .testData()
     mypcs <- .testPCs(svd)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
@@ -171,7 +159,6 @@ test_that("pcrelate2 - method=truncate", {
 })
 
 test_that("pcrelate2 - make GRM", {
-    param <- BiocParallel::SerialParam()
     svd <- .testData()
     mypcs <- .testPCs(svd)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
@@ -182,31 +169,17 @@ test_that("pcrelate2 - make GRM", {
 })
 
 test_that("pcrelateSampBlock with 1 sample in block 1", {
-    param <- BiocParallel::SerialParam()
     svd <- .testData()
     mypcs <- .testPCs(svd)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
     samp <- seqGetData(svd, "sample.id")
-    beta <- calcISAFBeta(iterator, pcs=mypcs, sample.include=samp[1:10], verbose=FALSE)
+    beta <- calcISAFBeta(iterator, pcs=mypcs, sample.include=samp[1:10], BPPARAM=BPPARAM, verbose=FALSE)
     resetIterator(iterator, verbose=FALSE)
     myrel <- pcrelateSampBlock(iterator, betaobj=beta, pcs=mypcs,
                                sample.include.block1=samp[1],
                                sample.include.block2=samp[2:10],
+                               BPPARAM=BPPARAM,
                                verbose=FALSE)
     expect_equal(nrow(myrel$kinBtwn), 9)
-    seqClose(svd)
-})
-
-
-test_that("pcrelate2 - BPPARAM", {
-    param <- BiocParallel::SerialParam()
-    svd <- .testData()
-    mypcs <- .testPCs(svd)
-    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
-    myrel <- pcrelate(iterator, pcs = mypcs, verbose=FALSE)
-    seqResetFilter(svd, verbose=FALSE)
-    iterator <- SeqVarBlockIterator(svd, variantBlock=500, verbose=FALSE)
-    myrel2 <- pcrelate(iterator, pcs = mypcs, BPPARAM=BiocParallel::SerialParam(), verbose=FALSE)
-    expect_equal(myrel, myrel2)
     seqClose(svd)
 })

@@ -716,7 +716,7 @@ calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, BPPAR
     # }
     ### rather than returning and rbinding here, we may want to be writing the output to something
     
-    beta <- bpiterate(Giter, .calcISAFBeta, VVtVi = VVtVi, REDUCE = rbindlist, reduce.in.order = FALSE, BPPARAM = BPPARAM)
+    beta <- bpiterate(Giter, .calcISAFBeta, VVtVi = VVtVi, REDUCE = rbind, reduce.in.order = FALSE, BPPARAM = BPPARAM)
     
     return(beta)
 }
