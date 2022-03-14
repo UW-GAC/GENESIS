@@ -14,7 +14,7 @@ setMethod("pcrelate",
                    small.samp.correct = TRUE,
                    BPPARAM = bpparam(),
                    verbose = TRUE) {
-              .pcrelate(gdsobj, 
+              .pcrelate(gdsobj,
                         pcs = pcs,
                         scale = scale,
                         ibd.probs = ibd.probs,
@@ -43,7 +43,7 @@ setMethod("pcrelate",
                    BPPARAM = bpparam(),
                    verbose = TRUE) {
               filt <- seqGetFilter(gdsobj)
-              out <- .pcrelate(gdsobj, 
+              out <- .pcrelate(gdsobj,
                                pcs = pcs,
                                scale = scale,
                                ibd.probs = ibd.probs,
@@ -79,9 +79,9 @@ setMethod("pcrelate",
     scale <- match.arg(scale)
     maf.bound.method <- match.arg(maf.bound.method)
     sample.include <- samplesGdsOrder(gdsobj, sample.include)
-    .pcrelateChecks(pcs = pcs, scale = scale, ibd.probs = ibd.probs, sample.include = sample.include, training.set = training.set, 
+    .pcrelateChecks(pcs = pcs, scale = scale, ibd.probs = ibd.probs, sample.include = sample.include, training.set = training.set,
                     maf.thresh = maf.thresh)
-    
+
     if(verbose) message('Using ', bpnworkers(BPPARAM), ' CPU cores')
 
     # number of sample blocks
@@ -90,7 +90,9 @@ setMethod("pcrelate",
     # check for small sample correction
     if(small.samp.correct){
         small.samp.correct <- (nsampblock == 1) & (scale != 'none')
-        if(!small.samp.correct) warning('small.samp.correct can only be used when all samples are analyzed in one block and `scale != none`')
+        if(!small.samp.correct) {
+            warning('small.samp.correct can only be used when all samples are analyzed in one block and `scale != none`')
+        }
     }
 
     # list of samples in each block
@@ -111,7 +113,10 @@ setMethod("pcrelate",
 
         snp.blocks <- .snpBlocks(gdsobj)
         nsnpblock <- length(snp.blocks)
-        if(verbose) message('Running PC-Relate analysis for ', length(sample.include), ' samples using ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
+        if(verbose) {
+            message('Running PC-Relate analysis for ', length(sample.include), ' samples using ',
+                    length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
+        }
 
         # iterator function to return genotype blocks
         k <- 1
@@ -121,10 +126,10 @@ setMethod("pcrelate",
             k <<- k + 1
             return(G)
         }
-        
+
         # for each snp block
         #matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %do% {
-       snpBlock <- function(G, ...) {
+        snpBlock <- function(G, ...) {
             #if(verbose) message('    Running block ', k, '...')
             # read genotype data for the block
             #G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
@@ -133,9 +138,10 @@ setMethod("pcrelate",
             beta <- .calcISAFBeta(G = G, VVtVi = VVtVi)
 
             # calculate PC-Relate estimates
-            .pcrelateVarBlock(G = G, beta = beta, V = V, idx = 1:nrow(V), jdx = 1:nrow(V), scale = scale, ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
+            .pcrelateVarBlock(G = G, beta = beta, V = V, idx = 1:nrow(V), jdx = 1:nrow(V), scale = scale,
+                              ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
         }
-        
+
         matList <- bpiterate(Giter, snpBlock, REDUCE = .matListCombine, reduce.in.order = FALSE, BPPARAM = BPPARAM)
 
         # take ratios to compute final estimates
@@ -149,12 +155,15 @@ setMethod("pcrelate",
 
 
     }else if(nsampblock > 1){
-        if(verbose) message(length(sample.include), ' samples to be included in the analysis, split into ', nsampblock, ' blocks...')
+        if(verbose) {
+            message(length(sample.include), ' samples to be included in the analysis, split into ', nsampblock, ' blocks...')
+        }
 
         # calculate betas for individual specific allele frequencies
-        beta <- calcISAFBeta(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include, training.set = training.set, verbose = verbose)		
+        beta <- calcISAFBeta(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include,
+                             training.set = training.set, verbose = verbose, BPPARAM = BPPARAM)
         ### beta is a matrix of variants x PCs; needs to be saved, not sure of the best format or the best way to split this up ###
-        
+
         # compute estimates for current (pair of) sample block(s)
         ### this is where we would parallelize with multiple jobs ###
         kinSelf <- NULL
@@ -163,9 +172,13 @@ setMethod("pcrelate",
             for(j in i:nsampblock){
                 if(verbose) message('Running PC-Relate analysis for sample block pair (', i, ',', j, ')')
                 # compute estimates for the (pair of) sample block(s)
-                tmp <- pcrelateSampBlock(	gdsobj = gdsobj, pcs = pcs, betaobj = beta, sample.include.block1 = samp.blocks[[i]], sample.include.block2 = samp.blocks[[j]],
+                tmp <- pcrelateSampBlock(gdsobj = gdsobj, pcs = pcs, betaobj = beta,
+                                         sample.include.block1 = samp.blocks[[i]],
+                                         sample.include.block2 = samp.blocks[[j]],
                                          scale = scale, ibd.probs = ibd.probs,
-                                         maf.thresh = maf.thresh, maf.bound.method = maf.bound.method, verbose = verbose)
+                                         maf.thresh = maf.thresh,
+                                         maf.bound.method = maf.bound.method,
+                                         BPPARAM = BPPARAM, verbose = verbose)
 
                 # update results with this (pair of) sample block(s)
                 if(i == j) kinSelf <- rbind(kinSelf, tmp$kinSelf)
@@ -183,17 +196,20 @@ setMethod("pcrelate",
     # correct kinship - small sample
     if(small.samp.correct){
         if(verbose) message('Performing Small Sample Correction...')
-        out <- correctKin(kinBtwn = kinBtwn, kinSelf = kinSelf, pcs = pcs, sample.include = sample.include)
+        out <- correctKin(kinBtwn = kinBtwn, kinSelf = kinSelf, pcs = pcs,
+                          sample.include = sample.include)
         kinBtwn <- out$kinBtwn
         kinSelf <- out$kinSelf
     }
 
     # correct k2 - HW departure and small sample
-    if(ibd.probs) kinBtwn <- correctK2(kinBtwn = kinBtwn, kinSelf = kinSelf, small.samp.correct = small.samp.correct, pcs = pcs, sample.include = sample.include)
+    if(ibd.probs) kinBtwn <- correctK2(kinBtwn = kinBtwn, kinSelf = kinSelf,
+                                       small.samp.correct = small.samp.correct, pcs = pcs,
+                                       sample.include = sample.include)
 
     # use alternate k0 estimator for non-1st degree relatives
     if(ibd.probs) kinBtwn <- correctK0(kinBtwn = kinBtwn)
-    
+
     # return output
     out <- list(kinBtwn = as.data.frame(kinBtwn), kinSelf = as.data.frame(kinSelf))
     class(out) <- "pcrelate"
@@ -208,10 +224,16 @@ setMethod("pcrelate",
     if(scale == 'none' & ibd.probs) stop('`ibd.probs` must be FALSE when `scale` == none')
     if(maf.thresh < 0 | maf.thresh > 0.5) stop('maf.thresh must be in [0,0.5]')
     # check training.set
-    if(!is.null(training.set) & !all(training.set %in% sample.include)) stop('All samples in training.set must be in sample.include')
+    if(!is.null(training.set) & !all(training.set %in% sample.include)) {
+        stop('All samples in training.set must be in sample.include')
+    }
     # check pcs
-    if(!is.matrix(pcs) | is.null(rownames(pcs))) stop('pcs should be a matrix of PCs with rownames set to sample.ids')
-    if(!all(sample.include %in% rownames(pcs))) stop('All samples in sample.include must be in pcs')
+    if(!is.matrix(pcs) | is.null(rownames(pcs))) {
+        stop('pcs should be a matrix of PCs with rownames set to sample.ids')
+    }
+    if(!all(sample.include %in% rownames(pcs))) {
+        stop('All samples in sample.include must be in pcs')
+    }
 }
 
 
@@ -235,16 +257,22 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
 }
 
 
-# function to get 
+# function to get
 .calcISAFBetaPCProd <- function(V, training.set, verbose = TRUE){
     if(!is.null(training.set)){
         idx <- rownames(V) %in% training.set
         VVtVi <- tcrossprod(V[idx,], chol2inv(chol(crossprod(V[idx,]))))
-        if(verbose) message('Betas for ', ncol(V) - 1, ' PC(s) will be calculated using ', sum(idx), ' samples in training.set...')
+        if(verbose) {
+            message('Betas for ', ncol(V) - 1, ' PC(s) will be calculated using ',
+                    sum(idx), ' samples in training.set...')
+        }
     }else{
         idx <- NULL
         VVtVi <- tcrossprod(V, chol2inv(chol(crossprod(V))))
-        if(verbose) message('Betas for ', ncol(V) - 1, ' PC(s) will be calculated using all ', nrow(V), ' samples in sample.include...')
+        if(verbose) {
+            message('Betas for ', ncol(V) - 1, ' PC(s) will be calculated using all ',
+                    nrow(V), ' samples in sample.include...')
+        }
     }
     return(list(val = VVtVi, idx = idx))
 }
@@ -256,10 +284,14 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
 
     # calculate beta
     if(is.null(VVtVi$idx)){
-        if(!identical(rownames(G), rownames(VVtVi$val))) stop('sample order in genotypes and pcs do not match')
+        if(!identical(rownames(G), rownames(VVtVi$val))) {
+            stop('sample order in genotypes and pcs do not match')
+        }
         beta <- crossprod(G, VVtVi$val)
     }else{
-        if(!identical(rownames(G)[VVtVi$idx], rownames(VVtVi$val))) stop('sample order in genotypes and pcs do not match')
+        if(!identical(rownames(G)[VVtVi$idx], rownames(VVtVi$val))) {
+            stop('sample order in genotypes and pcs do not match')
+        }
         beta <- crossprod(G[VVtVi$idx, ], VVtVi$val)
     }
     return(beta)
@@ -344,7 +376,7 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
         # compute ibd values
         ibdList <- .pcrCalcIBDOvr(G, mu, muqu, nonmiss, filt.idx, idx, jdx)
 
-        return(list(kinNum = kinList$kinNum, 
+        return(list(kinNum = kinList$kinNum,
                     kinDen = kinList$kinDen,
                     k0Num = ibdList$k0Num,
                     k0Den = ibdList$k0Den,
@@ -397,7 +429,7 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
     qu[filt.idx] <- 0
     muqu[filt.idx] <- 0
 
-    # k0	
+    # k0
     k0Num <- tcrossprod(IAA[idx,,drop=F], Iaa[jdx,,drop=F]) + tcrossprod(Iaa[idx,,drop=F], IAA[jdx,,drop=F])
     k0Den <- tcrossprod(mu[idx,,drop=F]^2, qu[jdx,,drop=F]^2) + tcrossprod(qu[idx,,drop=F]^2, mu[jdx,,drop=F]^2)
 
@@ -446,7 +478,7 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
 
     # numerator (crossprod of scaled residuals)
     kinNum <- tcrossprod(R[idx,,drop=F], R[jdx,,drop=F])
-    
+
     return(kinNum)
 }
 
@@ -461,9 +493,9 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
     # dominance coded genotype matrix
     Gd <- mu
     Gd[G == 1 & nonmiss] <- 0
-    Gd[IAA] <- qu[IAA] 
+    Gd[IAA] <- qu[IAA]
 
-    # scale 
+    # scale
     Iaa <- 0.5*Iaa/qu^2 # factor of 1/2 for IAA*Iaa comes in from splitting up the two terms AA,aa vs aa,AA
     IAA <- IAA/mu^2
     Gd <- Gd/muqu - 1
@@ -553,7 +585,7 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
 correctKin <- function(kinBtwn, kinSelf, pcs, sample.include = NULL){
     # keep R CMD check from warning about undefined global variables
     f <- ID1 <- ID2 <- kin <- newval <- value <- NULL
-    
+
     # temporary data.table to store values
     tmp <- kinSelf[, c('ID', 'f')]
     setnames(tmp, c('ID','f'), c('ID1', 'kin'))
@@ -561,10 +593,10 @@ correctKin <- function(kinBtwn, kinSelf, pcs, sample.include = NULL){
     tmp <- rbind(kinBtwn[, c('ID1', 'ID2', 'kin')], tmp)
     setnames(tmp, 'kin', 'newval')
     setkeyv(tmp, c('ID1', 'ID2'))
-    
+
     # get the PC matrix
     V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
-    
+
     # make adjustment for each PC
     for(k in 2:ncol(V)){
         Acov <- tcrossprod(V[,k])
@@ -576,11 +608,11 @@ correctKin <- function(kinBtwn, kinSelf, pcs, sample.include = NULL){
         tmp[, newval := newval - coef[1] - coef[2]*value]
         tmp[, value := NULL]
     }
-    
+
     # merge back into kinBtwn
     kinBtwn <- tmp[kinBtwn, on = c('ID1', 'ID2')]
     kinBtwn[, kin := newval][, newval := NULL]
-    
+
     # merge back into kinSelf
     tmp <- tmp[ID1 == ID2][, ID2 := NULL]
     setnames(tmp, 'ID1', 'ID')
@@ -593,7 +625,7 @@ correctKin <- function(kinBtwn, kinSelf, pcs, sample.include = NULL){
 correctK2 <- function(kinBtwn, kinSelf, pcs, sample.include = NULL, small.samp.correct = TRUE){
     # keep R CMD check from warning about undefined global variables
     f.1 <- f.2 <- kin <- k2 <- newval <- value <- NULL
-    
+
     # correct k2 for HW departure
     kinBtwn <- merge(kinBtwn, kinSelf[, c('ID', 'f')], by.x = 'ID2', by.y = 'ID')
     setnames(kinBtwn, 'f', 'f.2')
@@ -621,27 +653,27 @@ correctK2 <- function(kinBtwn, kinSelf, pcs, sample.include = NULL, small.samp.c
             tmp[, newval := newval - coef[1] - coef[2]*value - coef[3]*value^2]
             tmp[, value := NULL]
         }
-        
+
         # make adjustment for kinship
         coef <- lm(formula = as.formula(newval ~ kin), data = tmp[newval < 2^(-9/2)])$coef
         tmp[, newval := newval - coef[1] - coef[2]*kin]
         tmp[, kin := NULL]
-        
+
         # merge back into kinBtwn
         kinBtwn <- tmp[kinBtwn, on = c('ID1', 'ID2')]
         kinBtwn[!is.na(newval), k2 := newval][, newval := NULL]
     }
-    
+
     return(kinBtwn)
 }
 
 correctK0 <- function(kinBtwn){
     # keep R CMD check from warning about undefined global variables
     kin <- k0 <- k2 <- NULL
-    
+
     # use alternate k0 estimator for non-1st degree relatives
     kinBtwn[kin < 2^(-5/2), k0 := 1 - 4*kin + k2]
-    
+
     return(kinBtwn)
 }
 
@@ -672,7 +704,7 @@ setMethod("meltMatrix",
             setnames(labels, c('Var1', 'Var2'), c('ID1', 'ID2'))
 
             missing <- is.na(as.vector(x))
-            x <- cbind(labels[!missing,], data.table(value = x[!missing])) 
+            x <- cbind(labels[!missing,], data.table(value = x[!missing]))
             setkeyv(x, c('ID1', 'ID2'))
           })
 
@@ -683,19 +715,22 @@ setMethod("meltMatrix",
 ### exported function for computing PC betas for individual specific allele frequency calculations ###
 calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, BPPARAM = bpparam(), verbose = TRUE){
     # checks - add some
-    
+
     if(verbose) message('Using ', bpnworkers(BPPARAM), ' CPU cores')
-    
+
     # create matrix of PCs
     V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
 
     # matrix product of V
     VVtVi <- .calcISAFBetaPCProd(V = V, training.set = training.set, verbose = verbose)
-    
+
     snp.blocks <- .snpBlocks(gdsobj)
     nsnpblock <- length(snp.blocks)
-    if(verbose) message('Calculating Indivdiual-Specific Allele Frequency betas for ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
-    
+    if(verbose) {
+        message('Calculating Indivdiual-Specific Allele Frequency betas for ',
+                length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
+    }
+
     # iterator function to return genotype blocks
     k <- 1
     Giter <- function() {
@@ -704,20 +739,20 @@ calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, BPPAR
         k <<- k + 1
         return(G)
     }
-    
+
     # beta <- foreach(k = 1:nsnpblock, .combine = rbind, .inorder = FALSE, .multicombine = TRUE) %do% {
     # snpBlock <- function(G, ...) {
     #     if(verbose) message('    Running block ', k, '...')
     #     # read genotype data for the block
     #     G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
-    # 
+    #
     #     # calculate ISAF betas
     #     .calcISAFBeta(G = G, VVtVi = VVtVi)
     # }
     ### rather than returning and rbinding here, we may want to be writing the output to something
-    
-    beta <- bpiterate(Giter, .calcISAFBeta, VVtVi = VVtVi, REDUCE = rbindlist, reduce.in.order = FALSE, BPPARAM = BPPARAM)
-    
+
+    beta <- bpiterate(Giter, .calcISAFBeta, VVtVi = VVtVi, REDUCE = rbind, reduce.in.order = FALSE, BPPARAM = BPPARAM)
+
     return(beta)
 }
 
@@ -730,18 +765,18 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
 
     scale <- match.arg(scale)
     maf.bound.method <- match.arg(maf.bound.method)
-    
+
     if(verbose) message('Using ', bpnworkers(BPPARAM), ' CPU cores')
-    
+
     # create (joint) PC matrix and indices
     sample.include <- unique(c(sample.include.block1, sample.include.block2))
     V <- .createPCMatrix(pcs = pcs, sample.include = sample.include)
     idx <- which(rownames(V) %in% sample.include.block1)
     jdx <- which(rownames(V) %in% sample.include.block2)
     oneblock <- setequal(idx, jdx)
-    ### slight inefficiency above because we create V for samples in block1 for each block2 when we don't have to if we are running serially; 
+    ### slight inefficiency above because we create V for samples in block1 for each block2 when we don't have to if we are running serially;
     ### but this seems more straightforward to parallelize
-    
+
     # iterator function to return genotype blocks
     k <- 1
     Giter <- function() {
@@ -750,11 +785,13 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
         k <<- k + 1
         return(G)
     }
-    
+
     snp.blocks <- .snpBlocks(gdsobj)
     nsnpblock <- length(snp.blocks)
 
-    if(verbose) message('Running PC-Relate analysis using ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
+    if(verbose) {
+        message('Running PC-Relate analysis using ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
+    }
     # compute estimates for each variant block; sum along the way
     #matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %do% {
     snpBlock <- function(G, ...) {
@@ -767,15 +804,16 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
         ### this line of code will probably be different if we save the betas; need to load correct betas
 
         # calculate PC-Relate estimates
-        .pcrelateVarBlock(	G = G, beta = beta.block, V = V, idx = idx, jdx = jdx, scale = scale, ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
+        .pcrelateVarBlock(G = G, beta = beta.block, V = V, idx = idx, jdx = jdx, scale = scale,
+                          ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
     }
-    
+
     matList <- bpiterate(Giter, snpBlock, REDUCE = .matListCombine, reduce.in.order = FALSE, BPPARAM = BPPARAM)
 
     # take ratios to compute final estimates
     estList <- .pcrelateCalcRatio(matList = matList, scale = scale, ibd.probs = ibd.probs)
     rm(matList)
-    
+
     # cast to data.tables
     if(oneblock){
         # self table
@@ -790,6 +828,6 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
     }
     rm(estList)
     setkeyv(kinBtwn, c('ID1', 'ID2'))
-    
+
     return(list(kinSelf = kinSelf, kinBtwn = kinBtwn))
 }
