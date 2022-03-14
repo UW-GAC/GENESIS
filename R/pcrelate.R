@@ -90,7 +90,9 @@ setMethod("pcrelate",
     # check for small sample correction
     if(small.samp.correct){
         small.samp.correct <- (nsampblock == 1) & (scale != 'none')
-        if(!small.samp.correct) warning('small.samp.correct can only be used when all samples are analyzed in one block and `scale != none`')
+        if(!small.samp.correct) {
+            warning('small.samp.correct can only be used when all samples are analyzed in one block and `scale != none`')
+        }
     }
 
     # list of samples in each block
@@ -111,7 +113,10 @@ setMethod("pcrelate",
 
         snp.blocks <- .snpBlocks(gdsobj)
         nsnpblock <- length(snp.blocks)
-        if(verbose) message('Running PC-Relate analysis for ', length(sample.include), ' samples using ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
+        if(verbose) {
+            message('Running PC-Relate analysis for ', length(sample.include), ' samples using ',
+                    length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
+        }
 
         # iterator function to return genotype blocks
         k <- 1
@@ -124,7 +129,7 @@ setMethod("pcrelate",
 
         # for each snp block
         #matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %do% {
-       snpBlock <- function(G, ...) {
+        snpBlock <- function(G, ...) {
             #if(verbose) message('    Running block ', k, '...')
             # read genotype data for the block
             #G <- .readGeno(gdsobj, sample.include, snp.index = snp.blocks[[k]])
@@ -133,7 +138,8 @@ setMethod("pcrelate",
             beta <- .calcISAFBeta(G = G, VVtVi = VVtVi)
 
             # calculate PC-Relate estimates
-            .pcrelateVarBlock(G = G, beta = beta, V = V, idx = 1:nrow(V), jdx = 1:nrow(V), scale = scale, ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
+            .pcrelateVarBlock(G = G, beta = beta, V = V, idx = 1:nrow(V), jdx = 1:nrow(V), scale = scale,
+                              ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
         }
 
         matList <- bpiterate(Giter, snpBlock, REDUCE = .matListCombine, reduce.in.order = FALSE, BPPARAM = BPPARAM)
@@ -149,10 +155,13 @@ setMethod("pcrelate",
 
 
     }else if(nsampblock > 1){
-        if(verbose) message(length(sample.include), ' samples to be included in the analysis, split into ', nsampblock, ' blocks...')
+        if(verbose) {
+            message(length(sample.include), ' samples to be included in the analysis, split into ', nsampblock, ' blocks...')
+        }
 
         # calculate betas for individual specific allele frequencies
-        beta <- calcISAFBeta(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include, training.set = training.set, BPPARAM = BPPARAM, verbose = verbose)
+        beta <- calcISAFBeta(gdsobj = gdsobj, pcs = pcs, sample.include = sample.include,
+                             training.set = training.set, verbose = verbose, BPPARAM = BPPARAM)
         ### beta is a matrix of variants x PCs; needs to be saved, not sure of the best format or the best way to split this up ###
 
         # compute estimates for current (pair of) sample block(s)
@@ -163,9 +172,13 @@ setMethod("pcrelate",
             for(j in i:nsampblock){
                 if(verbose) message('Running PC-Relate analysis for sample block pair (', i, ',', j, ')')
                 # compute estimates for the (pair of) sample block(s)
-                tmp <- pcrelateSampBlock(	gdsobj = gdsobj, pcs = pcs, betaobj = beta, sample.include.block1 = samp.blocks[[i]], sample.include.block2 = samp.blocks[[j]],
+                tmp <- pcrelateSampBlock(gdsobj = gdsobj, pcs = pcs, betaobj = beta,
+                                         sample.include.block1 = samp.blocks[[i]],
+                                         sample.include.block2 = samp.blocks[[j]],
                                          scale = scale, ibd.probs = ibd.probs,
-                                         maf.thresh = maf.thresh, maf.bound.method = maf.bound.method, BPPARAM = BPPARAM, verbose = verbose)
+                                         maf.thresh = maf.thresh,
+                                         maf.bound.method = maf.bound.method,
+                                         BPPARAM = BPPARAM, verbose = verbose)
 
                 # update results with this (pair of) sample block(s)
                 if(i == j) kinSelf <- rbind(kinSelf, tmp$kinSelf)
@@ -183,13 +196,16 @@ setMethod("pcrelate",
     # correct kinship - small sample
     if(small.samp.correct){
         if(verbose) message('Performing Small Sample Correction...')
-        out <- correctKin(kinBtwn = kinBtwn, kinSelf = kinSelf, pcs = pcs, sample.include = sample.include)
+        out <- correctKin(kinBtwn = kinBtwn, kinSelf = kinSelf, pcs = pcs, s
+                          ample.include = sample.include)
         kinBtwn <- out$kinBtwn
         kinSelf <- out$kinSelf
     }
 
     # correct k2 - HW departure and small sample
-    if(ibd.probs) kinBtwn <- correctK2(kinBtwn = kinBtwn, kinSelf = kinSelf, small.samp.correct = small.samp.correct, pcs = pcs, sample.include = sample.include)
+    if(ibd.probs) kinBtwn <- correctK2(kinBtwn = kinBtwn, kinSelf = kinSelf,
+                                       small.samp.correct = small.samp.correct, pcs = pcs,
+                                       sample.include = sample.include)
 
     # use alternate k0 estimator for non-1st degree relatives
     if(ibd.probs) kinBtwn <- correctK0(kinBtwn = kinBtwn)
@@ -208,10 +224,16 @@ setMethod("pcrelate",
     if(scale == 'none' & ibd.probs) stop('`ibd.probs` must be FALSE when `scale` == none')
     if(maf.thresh < 0 | maf.thresh > 0.5) stop('maf.thresh must be in [0,0.5]')
     # check training.set
-    if(!is.null(training.set) & !all(training.set %in% sample.include)) stop('All samples in training.set must be in sample.include')
+    if(!is.null(training.set) & !all(training.set %in% sample.include)) {
+        stop('All samples in training.set must be in sample.include')
+    }
     # check pcs
-    if(!is.matrix(pcs) | is.null(rownames(pcs))) stop('pcs should be a matrix of PCs with rownames set to sample.ids')
-    if(!all(sample.include %in% rownames(pcs))) stop('All samples in sample.include must be in pcs')
+    if(!is.matrix(pcs) | is.null(rownames(pcs))) {
+        stop('pcs should be a matrix of PCs with rownames set to sample.ids')
+    }
+    if(!all(sample.include %in% rownames(pcs))) {
+        stop('All samples in sample.include must be in pcs')
+    }
 }
 
 
@@ -240,11 +262,17 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
     if(!is.null(training.set)){
         idx <- rownames(V) %in% training.set
         VVtVi <- tcrossprod(V[idx,], chol2inv(chol(crossprod(V[idx,]))))
-        if(verbose) message('Betas for ', ncol(V) - 1, ' PC(s) will be calculated using ', sum(idx), ' samples in training.set...')
+        if(verbose) {
+            message('Betas for ', ncol(V) - 1, ' PC(s) will be calculated using ',
+                    sum(idx), ' samples in training.set...')
+        }
     }else{
         idx <- NULL
         VVtVi <- tcrossprod(V, chol2inv(chol(crossprod(V))))
-        if(verbose) message('Betas for ', ncol(V) - 1, ' PC(s) will be calculated using all ', nrow(V), ' samples in sample.include...')
+        if(verbose) {
+            message('Betas for ', ncol(V) - 1, ' PC(s) will be calculated using all ',
+                    nrow(V), ' samples in sample.include...')
+        }
     }
     return(list(val = VVtVi, idx = idx))
 }
@@ -256,10 +284,14 @@ samplesGdsOrder <- function(gdsobj, sample.include) {
 
     # calculate beta
     if(is.null(VVtVi$idx)){
-        if(!identical(rownames(G), rownames(VVtVi$val))) stop('sample order in genotypes and pcs do not match')
+        if(!identical(rownames(G), rownames(VVtVi$val))) {
+            stop('sample order in genotypes and pcs do not match')
+        }
         beta <- crossprod(G, VVtVi$val)
     }else{
-        if(!identical(rownames(G)[VVtVi$idx], rownames(VVtVi$val))) stop('sample order in genotypes and pcs do not match')
+        if(!identical(rownames(G)[VVtVi$idx], rownames(VVtVi$val))) {
+            stop('sample order in genotypes and pcs do not match')
+        }
         beta <- crossprod(G[VVtVi$idx, ], VVtVi$val)
     }
     return(beta)
@@ -694,7 +726,10 @@ calcISAFBeta <- function(gdsobj, pcs, sample.include, training.set = NULL, BPPAR
 
     snp.blocks <- .snpBlocks(gdsobj)
     nsnpblock <- length(snp.blocks)
-    if(verbose) message('Calculating Indivdiual-Specific Allele Frequency betas for ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
+    if(verbose) {
+        message('Calculating Indivdiual-Specific Allele Frequency betas for ',
+                length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
+    }
 
     # iterator function to return genotype blocks
     k <- 1
@@ -754,7 +789,9 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
     snp.blocks <- .snpBlocks(gdsobj)
     nsnpblock <- length(snp.blocks)
 
-    if(verbose) message('Running PC-Relate analysis using ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
+    if(verbose) {
+        message('Running PC-Relate analysis using ', length(unlist(snp.blocks)), ' SNPs in ', nsnpblock, ' blocks...')
+    }
     # compute estimates for each variant block; sum along the way
     #matList <- foreach(k = 1:nsnpblock, .combine = .matListCombine, .inorder = FALSE, .multicombine = FALSE) %do% {
     snpBlock <- function(G, ...) {
@@ -767,7 +804,8 @@ pcrelateSampBlock <- function(gdsobj, betaobj, pcs, sample.include.block1, sampl
         ### this line of code will probably be different if we save the betas; need to load correct betas
 
         # calculate PC-Relate estimates
-        .pcrelateVarBlock(	G = G, beta = beta.block, V = V, idx = idx, jdx = jdx, scale = scale, ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
+        .pcrelateVarBlock(G = G, beta = beta.block, V = V, idx = idx, jdx = jdx, scale = scale,
+                          ibd.probs = ibd.probs, maf.thresh = maf.thresh, maf.bound.method = maf.bound.method)
     }
 
     matList <- bpiterate(Giter, snpBlock, REDUCE = .matListCombine, reduce.in.order = FALSE, BPPARAM = BPPARAM)
