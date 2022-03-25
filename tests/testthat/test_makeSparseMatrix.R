@@ -25,7 +25,7 @@ test_that("sample include", {
     dimnames(x) <- list(1:10,1:10)
     sm <- makeSparseMatrix(x, sample.include=2:6, thresh=0, verbose=FALSE)
     expect_equal(dimnames(sm), list(as.character(2:6), as.character(2:6)))
-    expect_equal(diag(sm), 2:6)
+    expect_equivalent(diag(sm), 2:6)
 })
 
 
