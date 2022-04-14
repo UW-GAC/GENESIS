@@ -1,0 +1,83 @@
+context("meta analysis tests")
+library(SeqVarTools)
+library(GenomicRanges)
+library(Biobase)
+
+BPPARAM <- BiocParallel::SerialParam()
+#BPPARAM <- BiocParallel::MulticoreParam()
+
+test_that("metaPrepScores - block", {
+    svd <- .testData()
+    seqSetFilterChrom(svd, include=1, verbose=FALSE)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+    scores <- metaPrepScores(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
+    expect_true(is.data.frame(scores))
+    expect_true(all(c("effect.allele", "other.allele") %in% names(scores)))
+    expect_true(all(c("Score", "Score.SE") %in% names(scores)))
+    seqClose(svd)
+})
+
+test_that("metaPrepScores - window", {
+    svd <- .testData()
+    seqSetFilterChrom(svd, include=1, verbose=FALSE)
+    iterator <- SeqVarWindowIterator(svd, windowSize=5e5, windowShift=2.5e5, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+    scores <- metaPrepScores(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
+    expect_equal(names(scores), c("variants", "scores.cov"))
+    nwin <- length(variantRanges(iterator))
+    expect_equal(length(scores$variants), nwin)
+    expect_equal(length(scores$scores.cov), nwin)
+    expect_true(all(c("effect.allele", "other.allele") %in% names(scores$variants[[1]])))
+    expect_true(all(c("Score", "Score.SE") %in% names(scores$variants[[1]])))
+    vr <- variantRanges(iterator)
+    nm <- paste0("chr", seqnames(vr), "_", start(vr), "_", end(vr))
+    expect_equal(nm, names(scores$variants))
+    expect_equal(nm, names(scores$scores.cov))
+    for (i in nwin) expect_equal(nrow(scores$variants[[i]]), nrow(scores$scores.cov[[i]]))
+    seqClose(svd)
+})
+
+test_that("metaPrepScores - ranges", {
+    svd <- .testData()
+    gr <- GRanges(seqnames=rep(1,3), ranges=IRanges(start=c(1e6, 2e6, 3e6), width=1e6))
+    names(gr) <- letters[1:3]
+    iterator <- SeqVarRangeIterator(svd, variantRanges=gr, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+    scores <- metaPrepScores(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
+    expect_equal(length(scores$variants), length(gr))
+    expect_equal(length(scores$scores.cov), length(gr))
+    expect_equal(names(scores$variants), letters[1:3])
+    expect_equal(names(scores$scores.cov), letters[1:3])
+    for (i in length(gr)) expect_equal(nrow(scores$variants[[i]]), nrow(scores$scores.cov[[i]]))
+    seqClose(svd)
+})
+
+test_that("metaPrepScores - list", {
+    svd <- .testData()
+    gr <- GRangesList(
+        GRanges(seqnames=rep(1,2), ranges=IRanges(start=c(1e6, 3e6), width=1e6)),
+        GRanges(seqnames=rep(1,2), ranges=IRanges(start=c(3e6, 34e6), width=1e6)))
+    names(gr) <- letters[1:2]
+    iterator <- SeqVarListIterator(svd, variantRanges=gr, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+    scores <- metaPrepScores(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
+    expect_equal(length(scores$variants), length(gr))
+    expect_equal(length(scores$scores.cov), length(gr))
+    expect_equal(names(scores$variants), letters[1:2])
+    expect_equal(names(scores$scores.cov), letters[1:2])
+    for (i in length(gr)) expect_equal(nrow(scores$variants[[i]]), nrow(scores$scores.cov[[i]]))
+    seqClose(svd)
+})
+
+test_that("metaPrepScores - GenotypeIterator", {
+    genoData <- .testGenoData()
+    covMat <- .testGenoDataGRM(genoData)
+    iterator <- GenotypeBlockIterator(genoData, snpBlock=1000)
+    nullmod <- fitNullModel(genoData, outcome="outcome", covars="sex", cov.mat=covMat, verbose=FALSE)
+    scores <- metaPrepScores(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
+    expect_true(is.data.frame(scores))
+    expect_true(all(c("effect.allele", "other.allele") %in% names(scores)))
+    expect_true(all(c("Score", "Score.SE") %in% names(scores)))
+    close(genoData)
+})

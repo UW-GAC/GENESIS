@@ -65,6 +65,7 @@ exportMethods(assocTestSingle,
               fitNullModelFastScore,
               kingToMatrix,
               makeSparseMatrix,
+              metaPrepScores,
               pcair,
               pcrelate,
               pcrelateToMatrix)
