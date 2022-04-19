@@ -143,10 +143,33 @@ test_that("missing sample.id in null model", {
     seqSetFilter(svd, sample.sel=1:n, verbose=FALSE)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
     nullmod <- fitNullModel(pData(sampleData(svd)), outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
-    expect_false("sample.id" %in% names(nullmod))
+    expect_false("sample.id" %in% names(nullmod$fit))
     expect_equal(length(nullmod$fit$outcome), n)
     assoc <- assocTestSingle(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE)
     expect_equal(max(assoc$n.obs), n)
+    seqClose(svd)
+})
+
+test_that("extra samples in null model", {
+    svd <- .testData()
+
+    # AnnotatedDataFrame
+    samp <- sampleData(svd)
+    sampx <- AnnotatedDataFrame(rbind(pData(samp),
+                   data.frame(sample.id="x", sex="M", age=30, outcome=10, status=0)))
+    nullmod <- fitNullModel(sampx, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+
+    seqSetFilterChrom(svd, include=1, verbose=FALSE)
+    iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
+    expect_error(assocTestSingle(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE),
+                 "Some samples in null.model not present in gdsobj")
+
+    # data.frame
+    resetIterator(iterator, verbose=FALSE)
+    nullmod <- fitNullModel(pData(sampx), outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+    expect_error(assocTestSingle(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE),
+                 "Some samples in null.model not present in gdsobj")
+
     seqClose(svd)
 })
 
