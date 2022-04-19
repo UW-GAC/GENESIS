@@ -10,8 +10,8 @@
 \usage{
 \S4method{assocTestAggregate}{SeqVarIterator}(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
-                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO",
-		          "BinomiRare", "CMP"),
+                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", 
+                   "SKATO", "BinomiRare", "CMP"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
                    sparse=TRUE, imputed=FALSE,
@@ -19,8 +19,8 @@
                    BPPARAM=bpparam(), verbose=TRUE)
 \S4method{assocTestAggregate}{GenotypeIterator}(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
-                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "SKATO",
-		          "BinomiRare", "CMP"),
+                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT",
+                   "SKATO", "BinomiRare", "CMP"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
                    male.diploid=TRUE, BPPARAM=bpparam(), verbose=TRUE)
@@ -32,12 +32,12 @@
     \item{AF.max}{A numeric value specifying the upper bound on the effect allele frequency for variants to be included in the analysis.}
     \item{weight.beta}{A numeric vector of length two specifying the two parameters of the Beta distribution used to determine variant weights; weights are given by \code{dbeta(MAF, a, b)}, where MAF is the minor allele frequency, and a and b are the two parameters specified here. \code{weight.beta = c(1,25)} gives the Wu weights; \code{weight.beta = c(0.5, 0.5)} is proportional to the Madsen-Browning weights; and \code{weight.beta = c(1,1)} gives a weight of 1 to all variants. This input is ignored when \code{weight.user} is not \code{NULL}.}
     \item{weight.user}{A character string specifying the name of a variable to be used as variant weights. This variable can be in either 1) the variantData slot of \code{gdsobj} or 2) the \code{\link{mcols}} of the \code{\link{GRanges}} or \code{\link{GRangesList}} object used to create \code{gdsobj} (when \code{gdsobj} is a \code{link{SeqVarRangeIterator}} or \code{link{SeqVarListIterator}}).  When left \code{NULL} (the default), the weights specified by \code{weight.beta} will be used.}
-    \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Burden"} (default), \code{"SKAT"}, \code{"fastSKAT"}, \code{"SMMAT"}, \code{"BinomiRare"}, or \code{"CMP"}.}
+    \item{test}{A character string specifying the type of test to be performed. The possibilities are \code{"Burden"} (default), \code{"SKAT"}, \code{"fastSKAT"}, \code{"SMMAT"}, \code{"fastSMMAT"}, \code{"BinomiRare"}, or \code{"CMP"}.}
     % \item{burden.test}{A character string specifying the type of Burden test to perform when \code{test = "Burden"}.  Currently, the only option is \code{"Score"}.}
     % \item{burden.test}{A character string specifying the type of Burden test to perform when \code{test = "Burden"}.  The possibilities are \code{"Score"} and \code{"Wald"}. \code{"Score"} can be used for any \code{null.model}. \code{"Wald"} can not be used when the \code{null.model} is from a mixed model with a binary outcome variable.}
     %\item{burden.test}{A character string specifying the type of Burden test to perform when \code{test} = "Burden".  The possibilities are "Score", "Wald", and "Firth". "Score" can be used for any \code{null.model}. "Wald" can not be used when the \code{null.model} is from a mixed model with a binary outcome variable. "Firth" can only be used when the \code{null.model} is from a logistic regression with a binary outcome variable.}
-    \item{neig}{The number eigenvalues to approximate by using random projections for calculating p-values with fastSKAT; default is 200. See 'Details' for more information.}
-    \item{ntrace}{The number of vectors to sample when using random projections to estimate the trace needed for p-value calculation with fastSKAT; default is 500. See 'Details' for more information.}
+    \item{neig}{The number eigenvalues to approximate by using random projections for calculating p-values with fastSKAT or fastSMMAT; default is 200. See 'Details' for more information.}
+    \item{ntrace}{The number of vectors to sample when using random projections to estimate the trace needed for p-value calculation with fastSKAT or fastSMMAT; default is 500. See 'Details' for more information.}
     \item{rho}{A numeric value (or vector of numeric values) in \code{[0,1]} specifying the rho parameter when using \code{test == "SKATO"}; these are the values for which SKAT-O is performed, defining the search space for the optimal \code{rho}. If \code{rho = 0}, this is equivalent to a standard SKAT test; if \code{rho = 1}, this is equivalent to a score burden test.}
     %\item{pval.method}{A character string specifying which method to use to calculate SKAT p-values. \code{"davies"} (the default) uses numerical integration; \code{"kuonen"} uses a saddlepoint method; and \code{"liu"} uses a moment matching approximation. If the davies method generates an error, kuonen is tried, and then liu as a last resort.}
     \item{sparse}{Logical indicator of whether to read genotypes as sparse Matrix objects; the default is \code{TRUE}. Set this to \code{FALSE} if the alternate allele dosage of the genotypes in the test are not expected to be mostly 0.}
@@ -53,23 +53,25 @@
     used for \code{gdsobj}. Options include sliding windows, specific
     ranges of variants or selection of individual variants (ranges with
     width 1). See \code{\link{SeqVarIterator}} for more details.
-    
+
     \code{assocTestAggregate} uses the \code{\link{BiocParallel}} package to process iterator chunks in parallel. See the \code{\link{BiocParallel}} documentation for more information on the default behaviour of \code{\link{bpparam}} and how to register different parallel backends. If serial execution is desired, set \code{BPPARAM=BiocParallel::SerialParam()}. Note that parallel execution requires more RAM than serial execution.
-    
+
   All samples included in \code{null model} will be included in the
   association test, even if a different set of samples is present in the
   current filter for \code{gdsobj}.
-  
+
     The effect size estimate is for each copy of the alternate allele (when \code{gdsobj} is a \code{\link{SeqVarIterator}} object) or the "A" allele (when \code{gdsobj} is a \code{\link{GenotypeIterator}} object). We refer to this as the "effect allele" in the rest of the documentation. For multiallelic variants in \code{\link{SeqVarIterator}} objects, each alternate (or "A") allele is tested separately.
 
     Monomorphic variants (including variants where every sample is a heterozygote) are always omitted from the aggregate unit prior to testing.
-  
+
     Somewhat similarly to SKAT-O, the variant Set Mixed Model Association Test (SMMAT, Chen et al., 2019) combines the burden test p-value with an adjusted SKAT (which is asymptotically independent of the burden test) p-value using a chi-square distribution with 4df from Fisher's method.
 
     SKAT and SMMAT will attempt to use Davies' method (i.e. integration) to calculate p-values; if an error occurs in integration or the reported p-values are too small that they are unreliable (i.e. near machine epsilon), then the saddlepoint approximation will instead be used to calculate the p-values.
 
     The fastSKAT method of Lumley et al. (2018) uses random matrix theory to speed up the computation of SKAT p-values. When \code{test = "fastSKAT"}, the function attempts to inteligently determine which p-value calculation approach to use for each aggregation unit: (1) if min(number samples, number variants) is small enough, then the standard SKAT p-value calculation is used; (2) if min(number samples, number variants) is too large for standard SKAT, but small enough to explicitly compute the genotype covariance matrix, random projections are used to approximate the eigenvalues of the covariance matrix, and the fastSKAT p-value calculation is used; (3) if min(number samples, number variants) is too big to explicitly compute the genotype covariance matrix, random projections are used to approximate both the eigenvalues and the trace of the covariance matrix, and the fastSKAT p-value calculation is used.)
-    
+
+    The fastSMMAT method uses the same random matrix theory as fastSKAT to speed up the computation of the p-value for the adjusted SKAT component of the test. When \code{test = "fastSMMAT"}, the function uses the same logic as for fastSKAT to determine which p-value calculation approach to use for each aggregation unit.
+
     The BinomiRare test, run by using \code{test = "BinomiRare"}, and the CMP test, run by using \code{test = "CMP"} are carrier-only, robust tests. Only variants where the effect allele is minor will be tested. Both tests focuse on carriers of the rare variant allele ("carriers"), and use the estimated probabilities of the binary outcome within the carriers, estimated under the null of not association, and the actual number of observed outcomes, to compute p-values. BinomiRare uses the Poisson-Binomial distribution, and the CMP uses the Conway-Maxwell-Poisson distribution, and is specifically designed for mixed models. (If \code{test = "CMP"} but \code{null.model$family$mixedmodel = FALSE}, the BinomiRare test will be run instead.) These tests provide both a traditional p-value (\code{"pval"}) and a mid-p-value (\code{"midp"}), which is less conservative/more liberal, with the difference being more pronounced for small number of carriers. The BinomiRare test is described in Sofer (2017) and compared to the Score and SPA in various settings in Sofer and Guo (2020).
 }
 
@@ -85,7 +87,7 @@
     \item{n.alt}{The number of alternate (effect) alleles included in the test.}
     \item{n.sample.alt}{The number of samples with an observed alternate (effect) allele at any variant in the aggregate set.}
     If \code{test} is \code{"Burden"}:
-    %% \item{burden.skew}{The skewness of the burden value for all samples.}  
+    %% \item{burden.skew}{The skewness of the burden value for all samples.}
     %If \code{burden.test} is "Score":
     \item{Score}{The value of the score function}
     \item{Score.SE}{The estimated standard error of the Score}
@@ -96,7 +98,7 @@
     \item{PVE}{An approximation of the proportion of phenotype variance explained}
     % If \code{burden.test} is \code{"Wald"}:
     % \item{Est}{The effect size estimate for a one unit increase in the burden value}
-    % \item{Est.SE}{The estimated standard error of the effect size estimate}    
+    % \item{Est.SE}{The estimated standard error of the effect size estimate}
     % \item{Wald.Stat}{The Wald Z test statistic}
     % \item{Wald.pval}{The Wald p-value}
     % %% If \code{burden.test} is "Firth":
@@ -104,18 +106,19 @@
     %% \item{SE}{The estimated standard error of the effect size estimate}
     %% \item{Firth.stat}{The Firth test statistic}
     %% \item{Firth.pval}{The Firth p-value}
-    
+
     If \code{test} is \code{"SKAT"} or \code{"fastSKAT"}:
     \item{Q}{The SKAT test statistic.}
     \item{pval}{The SKAT p-value.}
     \item{err}{Takes value 1 if there was an error in calculating the p-value; takes the value 2 when multiple random projections were required to get a good approximation from fastSKAT (the reported p-value is likely still reliable); 0 otherwise.}
     \item{pval.method}{The p-value calculation method used. When standard SKAT is used, one of "integration" or "saddlepoint"; when fastSKAT random projections are used to approximate eigenvalues of the genotype covariance matrix, one of "ssvd_integration" or "ssvd_saddlepoint"; when fastSKAT random projections are used to approximate both the eigenvalues and the trace of the genotype covariance matrix, one of "rsvd_integration" or "rsvd_saddlepoint".}
 
-    If \code{test} is \code{"SMMAT"}:
+    If \code{test} is \code{"SMMAT"} or \code{"fastSMMAT"}:
     \item{pval_burden}{The burden test p-value}
     \item{pval_theta}{The p-value of the adjusted SKAT test (which is asymptotically independent of the burden test)}
     \item{pval_SMMAT}{The SMMAT p-value after combining pval_burden and pval_theta using Fisher's method.}
     \item{err}{Takes value 1 if there was an error calculating the SMMAT p-value; 0 otherwise. If \code{err=1}, \code{pval_SMMAT} is set to \code{pval_burden}.}
+    \item{pval_theta.method}{The p-value calculation method used for \code{pval_theta} (the adjusted SKAT test). When standard SMMAT is used, one of "integration" or "saddlepoint"; when fastSMMAT random projections are used to approximate eigenvalues of the genotype covariance matrix, one of "ssvd_integration" or "ssvd_saddlepoint"; when fastSMMAT random projections are used to approximate both the eigenvalues and the trace of the genotype covariance matrix, one of "rsvd_integration" or "rsvd_saddlepoint".}
 
     If \code{test} is \code{"SKATO"}:
     \item{Q_rho}{The SKAT test statistic for the value of rho specified. There will be as many of these variables as there are rho values chosen.}
