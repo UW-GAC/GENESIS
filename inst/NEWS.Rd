@@ -2,6 +2,11 @@
 
 \title{NEWS for GENESIS}
 
+\section{Version 2.25.5}{
+  \itemize{
+    \item Add new test option "fastSMMAT" to assocTestAggregate.
+  }
+}
 \section{Version 2.25.4}{
   \itemize{
     \item Fixed a bug in pcrelate when running with both multiple sample blocks and multiple cores
