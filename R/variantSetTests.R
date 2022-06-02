@@ -167,7 +167,13 @@ testVariantSet <- function( nullmod, G, weights,
         err <- 1
         smmat.pval <- burden.pval
     }
-    return(list(pval_burden = burden.pval, pval_theta = theta.pval, pval_SMMAT = smmat.pval, err = err, pval_theta.method = out$pval.method))
+    return(list(
+      pval_burden = burden.pval,
+      pval_theta = theta.pval,
+      pval_SMMAT = smmat.pval,
+      err = err,
+      pval_theta.method = out$pval.method
+    ))
 }
 
 
