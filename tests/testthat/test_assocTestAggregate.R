@@ -49,6 +49,30 @@ test_that("list", {
     seqClose(svd)
 })
 
+test_that("SMMAT output", {
+    svd <- .testData()
+    gr <- GRangesList(
+        GRanges(seqnames=rep(1,2), ranges=IRanges(start=c(1e6, 3e6), width=1e6)),
+        GRanges(seqnames=rep(1,2), ranges=IRanges(start=c(3e6, 34e6), width=1e6)))
+    names(gr) <- letters[1:2]
+    iterator <- SeqVarListIterator(svd, variantRanges=gr, verbose=FALSE)
+    nullmod <- fitNullModel(iterator, outcome="outcome", covars=c("sex", "age"), verbose=FALSE)
+    assoc <- assocTestAggregate(iterator, nullmod, BPPARAM=BPPARAM, verbose=FALSE, test="SMMAT")
+    expect_equal(names(assoc), c("results", "variantInfo"))
+    expected_names <- c(
+      "n.site", "n.alt", "n.sample.alt",
+      "Score_burden", "Score.SE_burden", "Stat_burden", "pval_burden",
+      "Q_theta", "pval_theta",
+      "pval_SMMAT",
+      "err", "pval_theta.method"
+    )
+    expect_equal(names(assoc$results), expected_names)
+    expect_equal(names(assoc$variantInfo), letters[1:2])
+    expected_names <- c("variant.id", "chr", "pos", "allele.index", "n.obs", "freq", "MAC", "weight")
+    expect_equal(names(assoc$variantInfo[[1]]), expected_names)
+    seqClose(svd)
+})
+
 test_that("user weights", {
     svd <- .testData()
     variant.id <- seqGetData(svd, "variant.id")
