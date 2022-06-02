@@ -118,7 +118,7 @@
     \item{Score.SE_burden}{The estimated standard error of the Score for the burden test}
     \item{Stat_burden}{The score Z test statistic for the burden test}
     \item{pval_burden}{The burden test p-value}
-    \item{Q_theta}{The SMMAT test statistic}
+    \item{Q_theta}{The test statistic for the adjusted SKAT test (which is asymptotically independent of the burden test)}
     \item{pval_theta}{The p-value of the adjusted SKAT test (which is asymptotically independent of the burden test)}
     \item{pval_SMMAT}{The SMMAT p-value after combining pval_burden and pval_theta using Fisher's method.}
     \item{err}{Takes value 1 if there was an error calculating the SMMAT p-value; 0 otherwise. If \code{err=1}, \code{pval_SMMAT} is set to \code{pval_burden}.}
