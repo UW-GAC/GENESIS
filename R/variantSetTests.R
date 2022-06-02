@@ -136,8 +136,8 @@ testVariantSet <- function( nullmod, G, weights,
     G.rowSums <- rowSums(G) # P^{1/2}GW1
     GG1 <- crossprod(G, G.rowSums) # WGPGW1  # O(mn)
     V.sum <- sum(GG1) # 1WGPGW1
-    burden.stat = U.sum^2 / V.sum
-    burden.pval <- pchisq(burden.stat, df=1, lower.tail=FALSE)
+    burden.stat = U.sum / sqrt(V.sum)
+    burden.pval <- pchisq(burden.stat^2, df=1, lower.tail=FALSE)
 
     # adjust U and G for burden
     U <- U - GG1*U.sum/V.sum # WGPY - WGPGW1 * 1WGPY/(1WGPGW1)
@@ -172,7 +172,7 @@ testVariantSet <- function( nullmod, G, weights,
       # burden test output.
       Score_burden = U.sum,
       Score.SE_burden = sqrt(V.sum),
-      Stat_burden = sqrt(burden.stat),
+      Stat_burden = burden.stat,
       pval_burden = burden.pval,
       # SKAT output.
       # SMMAT output.
