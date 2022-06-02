@@ -10,7 +10,7 @@
 \usage{
 \S4method{assocTestAggregate}{SeqVarIterator}(gdsobj, null.model, AF.max=1,
                    weight.beta=c(1,1), weight.user=NULL,
-                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT", 
+                   test=c("Burden", "SKAT", "fastSKAT", "SMMAT", "fastSMMAT",
                    "SKATO", "BinomiRare", "CMP"),
                    neig = 200, ntrace = 500,
                    rho = seq(from = 0, to = 1, by = 0.1),
@@ -114,7 +114,11 @@
     \item{pval.method}{The p-value calculation method used. When standard SKAT is used, one of "integration" or "saddlepoint"; when fastSKAT random projections are used to approximate eigenvalues of the genotype covariance matrix, one of "ssvd_integration" or "ssvd_saddlepoint"; when fastSKAT random projections are used to approximate both the eigenvalues and the trace of the genotype covariance matrix, one of "rsvd_integration" or "rsvd_saddlepoint".}
 
     If \code{test} is \code{"SMMAT"} or \code{"fastSMMAT"}:
+    \item{Score_burden}{The value of the score function for the burden test}
+    \item{Score.SE_burden}{The estimated standard error of the Score for the burden test}
+    \item{Stat_burden}{The score Z test statistic for the burden test}
     \item{pval_burden}{The burden test p-value}
+    \item{Q_theta}{The SMMAT test statistic}
     \item{pval_theta}{The p-value of the adjusted SKAT test (which is asymptotically independent of the burden test)}
     \item{pval_SMMAT}{The SMMAT p-value after combining pval_burden and pval_theta using Fisher's method.}
     \item{err}{Takes value 1 if there was an error calculating the SMMAT p-value; 0 otherwise. If \code{err=1}, \code{pval_SMMAT} is set to \code{pval_burden}.}
