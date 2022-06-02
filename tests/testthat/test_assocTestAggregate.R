@@ -62,7 +62,7 @@ test_that("SMMAT output", {
     expected_names <- c(
       "n.site", "n.alt", "n.sample.alt",
       "Score_burden", "Score.SE_burden", "Stat_burden", "pval_burden",
-      "pval_theta",
+      "Q_theta", "pval_theta",
       "pval_SMMAT",
       "err", "pval_theta.method"
     )

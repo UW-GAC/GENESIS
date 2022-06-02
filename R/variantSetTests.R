@@ -169,10 +169,14 @@ testVariantSet <- function( nullmod, G, weights,
         smmat.pval <- burden.pval
     }
     return(list(
+      # burden test output.
       Score_burden = U.sum,
       Score.SE_burden = sqrt(V.sum),
       Stat_burden = burden.stat,
       pval_burden = burden.pval,
+      # SKAT output.
+      # SMMAT output.
+      Q_theta = Q,
       pval_theta = theta.pval,
       pval_SMMAT = smmat.pval,
       err = err,
