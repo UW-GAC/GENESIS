@@ -61,7 +61,7 @@ test_that("SMMAT output", {
     expect_equal(names(assoc), c("results", "variantInfo"))
     expected_names <- c(
       "n.site", "n.alt", "n.sample.alt",
-      "pval_burden",
+      "Score_burden", "Score.SE_burden", "Stat_burden", "pval_burden",
       "pval_theta",
       "pval_SMMAT",
       "err", "pval_theta.method"

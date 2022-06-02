@@ -44,6 +44,10 @@ test_that("SMMAT matches burden", {
 	nullmod <- .testNullmod(n, MM=TRUE)
         smmat <- .testVariantSetSMMAT(nullmod, geno, weights)
         burden <- .testVariantSetBurden(nullmod, geno, weights, burden.test="Score")
+        expect_equal(smmat$Score_burden,burden$Score)
+        expect_equal(smmat$Score.SE_burden, burden$Score.SE)
+        # Burden test does not return a test statistic.
+        # expect_equal(smmat$Stat_burden, burden$XX)
         expect_equal(smmat$pval_burden, burden$Score.pval)
 
         ## basic
@@ -51,17 +55,32 @@ test_that("SMMAT matches burden", {
         smmat <- .testVariantSetSMMAT(nullmod, geno, weights)
         burden <- .testVariantSetBurden(nullmod, geno, weights, burden.test="Score")
         expect_equal(smmat$pval_burden, burden$Score.pval)
+        expect_equal(smmat$Score_burden,burden$Score)
+        expect_equal(smmat$Score.SE_burden, burden$Score.SE)
+        # Burden test does not return a test statistic.
+        # expect_equal(smmat$Stat_burden, burden$XX)
+        expect_equal(smmat$pval_burden, burden$Score.pval)
 
         ## mixed model - binary
 	nullmod <- .testNullmod(n, MM=TRUE, binary=TRUE)
         smmat <- .testVariantSetSMMAT(nullmod, geno, weights)
         burden <- .testVariantSetBurden(nullmod, geno, weights, burden.test="Score")
         expect_equal(smmat$pval_burden, burden$Score.pval)
+        expect_equal(smmat$Score_burden,burden$Score)
+        expect_equal(smmat$Score.SE_burden, burden$Score.SE)
+        # Burden test does not return a test statistic.
+        # expect_equal(smmat$Stat_burden, burden$XX)
+        expect_equal(smmat$pval_burden, burden$Score.pval)
 
         ## basic - binary
 	nullmod <- .testNullmod(n, MM=FALSE, binary=TRUE)
         smmat <- .testVariantSetSMMAT(nullmod, geno, weights)
         burden <- .testVariantSetBurden(nullmod, geno, weights, burden.test="Score")
+        expect_equal(smmat$pval_burden, burden$Score.pval)
+        expect_equal(smmat$Score_burden,burden$Score)
+        expect_equal(smmat$Score.SE_burden, burden$Score.SE)
+        # Burden test does not return a test statistic.
+        # expect_equal(smmat$Stat_burden, burden$XX)
         expect_equal(smmat$pval_burden, burden$Score.pval)
 })
 
