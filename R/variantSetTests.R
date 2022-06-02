@@ -172,7 +172,7 @@ testVariantSet <- function( nullmod, G, weights,
       # burden test output.
       Score_burden = U.sum,
       Score.SE_burden = sqrt(V.sum),
-      Stat_burden = burden.stat,
+      Stat_burden = sqrt(burden.stat),
       pval_burden = burden.pval,
       # SKAT output.
       # SMMAT output.
