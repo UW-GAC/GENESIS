@@ -20,7 +20,8 @@
                 BPPARAM=bpparam(), verbose=TRUE)
 \S4method{assocTestSingle}{GenotypeIterator}(gdsobj, null.model,
                 test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
-                recalc.pval.thresh=0.05, GxE=NULL,
+                recalc.pval.thresh=0.05,
+                GxE=NULL, GxE.return.cov=FALSE,
                 geno.coding=c("additive", "dominant", "recessive"),
                 male.diploid=TRUE, BPPARAM=bpparam(), verbose=TRUE)
 }
