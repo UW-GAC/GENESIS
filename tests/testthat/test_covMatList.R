@@ -31,7 +31,7 @@ test_that("packed matrix", {
 test_that("dense matrix", {
     dat <- .testNullInputs()
     cor.mat <- Matrix(dat$cor.mat, sparse=FALSE)
-    cor.mat <- as(cor.mat, "dgeMatrix")
+    cor.mat <- as(cor.mat, "denseMatrix")
 
     nullmod <- .fitNullModel(dat$y, dat$X, cor.mat, verbose=FALSE)
     nullmod2 <- .fitNullModel(dat$y, dat$X, dat$cor.mat, verbose=FALSE)
