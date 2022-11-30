@@ -5,6 +5,7 @@ setMethod("fitNullModel",
           "data.frame",
           function(x, outcome,
                    covars = NULL,
+                   no.intercept = FALSE,
                    cov.mat = NULL,
                    group.var = NULL,
                    family = "gaussian",
@@ -23,7 +24,7 @@ setMethod("fitNullModel",
 
               if (is.data.table(x)) x <- as.data.frame(x)
 
-              desmat <- createDesignMatrix(x, outcome, covars, group.var)
+              desmat <- createDesignMatrix(x, outcome, covars, group.var, no.intercept)
               # if there was missing data, need to subset cov.mat
               if (!is.null(cov.mat)) {
                   .checkRownames(cov.mat, x)

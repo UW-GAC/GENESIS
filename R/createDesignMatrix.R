@@ -1,5 +1,5 @@
 
-createDesignMatrix <- function(x, outcome, covars=NULL, group.var=NULL) {
+createDesignMatrix <- function(x, outcome, covars=NULL, group.var=NULL, no.intercept = FALSE) {
 
     # remake factors to remove any missing levels
     for (f in union(covars, group.var)) {
@@ -9,7 +9,11 @@ createDesignMatrix <- function(x, outcome, covars=NULL, group.var=NULL) {
     }
 
     if (!is.null(covars)) {
-        model.formula <- as.formula(paste(outcome, "~", paste(covars, collapse="+")))
+        if(no.intercept){
+          model.formula <- as.formula(paste(outcome, "~", paste(-1, paste(covars, collapse="+"), sep = "+")))
+        }else{
+          model.formula <- as.formula(paste(outcome, "~", paste(covars, collapse="+")))
+        }
         # allow interactions
         covars <- unique(unlist(strsplit(covars,"[*:]")))
     } else {
@@ -31,7 +35,11 @@ createDesignMatrix <- function(x, outcome, covars=NULL, group.var=NULL) {
     # create design matrix
     X <- model.matrix(model.formula, data=x)
     # check for columns of all the same value (except the intercept)
-    dropcol <- append(FALSE, apply(X[,-1,drop=FALSE], 2, var) == 0)
+    if(no.intercept){
+      dropcol <- append(FALSE, apply(X[,,drop=FALSE], 2, var) == 0)
+    }else{
+      dropcol <- append(FALSE, apply(X[,-1,drop=FALSE], 2, var) == 0)
+    }
     if (sum(dropcol) > 0) {
         message("Covariates ",paste(colnames(X)[dropcol], collapse = ", "), " have only 1 value: they have been removed from the model")
         X <- X[,!dropcol,drop=FALSE]
