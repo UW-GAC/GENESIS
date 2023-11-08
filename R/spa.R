@@ -21,7 +21,7 @@ SPA_pval <- function(score.result, nullmod, G, pval.thresh = 1){
 		# calculate the fitted values  from the null model;
                 # expit(eta) = expit(X\beta + Zb)
                 if (nullmod$model$family$mixedmodel) {
-                    mu <- as.vector(expit(nullmod$fit$linear.predictor))
+                    mu <- as.vector(plogis(nullmod$fit$linear.predictor))
                 } else {
                     # fitted.values from glm models are already the expit.
                     mu <- as.vector(nullmod$fit$fitted.values)
