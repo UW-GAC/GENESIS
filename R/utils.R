@@ -352,3 +352,10 @@ setMethod(".annotateAssoc",
     put.attr.gdsn(geno.node, "sample.order")
     closefn.gds(gds)
 }
+
+.pchisq_filter_extreme <- function(...) {
+    # Note: stat is the squared test statistic.
+    pval = pchisq(...)
+    pval[pval < .Machine$double.xmin] = .Machine$double.xmin
+    return(pval)
+}
