@@ -128,12 +128,12 @@ test_that("MAC - sex chrs", {
     sample.id <- seqGetData(gds, "sample.id")
     df <- data.frame(sample.id, sex="M", stringsAsFactors=FALSE)
     svd <- SeqVarData(gds, sampleData=AnnotatedDataFrame(df))
-    
+
     freq <- alleleFrequency(svd)
     geno <- refDosage(svd)
     chk <- .alleleFreq(svd, geno, male.diploid=FALSE)
     expect_equal(chk$freq, freq)
-    
+
     mac <- minorAlleleCount(svd)
     expect_equal(chk$MAC, round(mac))
     seqClose(gds)
@@ -145,24 +145,24 @@ test_that("meanImpute", {
     m <- 1000
     set.seed(123)
     geno <- matrix(rbinom(n*m, size = 2, prob = 0.1), nrow = n, ncol = m)
-    
+
     miss <- sample(n*m, size = 0.1*n*m, replace = FALSE)
     geno[miss] <- NA
-    
+
     freq <- 0.5*colMeans(geno, na.rm = TRUE)
-    
+
     # original function
     x <- .meanImputeFn(geno, freq)
-    
+
     # new function with matrix
     y <- .meanImpute(geno, freq)
     expect_equal(x, y)
-    
+
     # new function with Matrix (one block)
     Geno <- Matrix(geno)
     y <- .meanImpute(Geno, freq)
     expect_equivalent(x, as.matrix(y))
-    
+
     # new function with Matrix (multiple blocks)
     #n*m/2^25 # 3 blocks if m=100000
     y <- .meanImpute(Geno, freq, maxelem = 4e5)
@@ -182,32 +182,32 @@ test_that("prepGenoBlock", {
     n1 <- colSums(geno == 1, na.rm=TRUE)
     n2 <- colSums(geno == 2, na.rm=TRUE)
     mono <- (n0 == n | n1 == n | n2 == n)
-    
+
     vi <- data.frame(a=1:m)
     x <- list(var.info=vi, geno=geno, chr=rep("1",m))
-    
+
     g <- .prepGenoBlock(x)
     expect_equal(vi[!mono,,drop=FALSE], g$var.info)
     expect_equal(colSums(!is.na(geno[,!mono])), g$n.obs)
     expect_equal(0.5*colMeans(geno[,!mono], na.rm=TRUE), g$freq$freq)
     expect_equal(geno[,!mono], g$geno)
     expect_true(is.null(g$weight))
-    
+
     g2 <- .prepGenoBlock(x, AF.max = 0.1)
     inc <- g$freq$freq <= 0.1
     expect_equal(g2$freq, g$freq[inc,])
     expect_equal(g2$geno, g$geno[,inc])
-    
+
     gr <- .prepGenoBlock(x, geno.coding="recessive")
     rec.mono <- n2 == 0 | n2 == n
     expect_equal(colSums(gr$geno == 1, na.rm=TRUE), n2[!rec.mono])
     expect_equal(names(gr$freq), c("freq", "MAC", "n.hom.eff"))
-    
+
     gd <- .prepGenoBlock(x, geno.coding="dominant")
     dom.mono <- n0 == 0 | n0 == n
     expect_equal(colSums(gd$geno != 0, na.rm=TRUE), (n1+n2)[!dom.mono])
     expect_equal(names(gd$freq), c("freq", "MAC", "n.any.eff"))
-    
+
     x$weight <- c(rep(1,900), rep(0,100))
     gw <- .prepGenoBlock(x)
     expect_equal(gw$weight, x$weight[!mono & as.logical(x$weight)])
@@ -223,17 +223,24 @@ test_that("prepGenoBlock - male haploid", {
     sex <- sample(c("M", "F"), n, replace=TRUE)
     vi <- data.frame(a=1:m)
     x <- list(var.info=vi, geno=geno, chr=rep("X",m))
-    
+
     male <- sex == "M"
     female <- sex == "F"
     nm1 <- colSums(geno[male,] == 1)
     nm2 <- colSums(geno[male,] == 2)
     nf2 <- colSums(geno[female,] == 2)
-    
+
     gd <- .prepGenoBlock(x, geno.coding="recessive", male.diploid=TRUE, sex=sex)
     expect_equal(colSums(gd$geno[male,]), nm2)
     expect_equal(colSums(gd$geno[female,]), nf2)
     gh <- .prepGenoBlock(x, geno.coding="recessive", male.diploid=FALSE, sex=sex)
     expect_equal(colSums(gh$geno[male,]), nm1 + nm2)
     expect_equal(colSums(gh$geno[female,]), nf2)
+})
+
+test_that(".pchisq_filter_extreme", {
+    stat <- c(0.1, 0.5, 1, 10)
+    expect_equal(.pchisq_filter_extreme(stat^2, lower.tail=FALSE, df=1), pchisq(stat^2, lower.tail=FALSE, df=1))
+    # Extreme p-value
+    expect_equal(.pchisq_filter_extreme(100^2, lower.tail=FALSE, df=1), .Machine$double.xmin)
 })
