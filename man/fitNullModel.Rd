@@ -197,6 +197,9 @@ The \code{score.table} data frame contains the following columns:
   \item{Score.SE.fast}{The estimated fast standard error of the Score (before scalar correction)}
   \item{se.ratio}{The ratio of Score.SE to Score.SE.fast; these values are averaged across varaints to estimate \code{se.correction} in \code{nullModelFastScore}.}
 }
+
+p-values that are calculated using \code{pchisq} and are smaller than \code{.Machine\$double.xmin} are set to \code{.Machine\$double.xmin}.
+
 }
 
 \references{

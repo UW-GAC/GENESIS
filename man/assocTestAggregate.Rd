@@ -117,7 +117,7 @@
     \item{Score_burden}{The value of the score function for the burden test}
     \item{Score.SE_burden}{The estimated standard error of the Score for the burden test}
     \item{Stat_burden}{The score Z test statistic for the burden test}
-    \item{pval_burden}{The burden test p-value}
+    \item{pval_burden}{The burden test p-value.}
     \item{Q_theta}{The test statistic for the adjusted SKAT test (which is asymptotically independent of the burden test)}
     \item{pval_theta}{The p-value of the adjusted SKAT test (which is asymptotically independent of the burden test)}
     \item{pval_SMMAT}{The SMMAT p-value after combining pval_burden and pval_theta using Fisher's method.}
@@ -147,6 +147,9 @@
     \item{freq}{The estimated effect allele frequency}
     \item{MAC}{The minor allele count. For multiallelic variants, "minor" is determined by comparing the count of the allele specified by \code{allele.index} with the sum of all other alleles.}
     \item{weight}{The weight assigned to the variant in the analysis.}
+
+p-values that are calculated using \code{pchisq} and are smaller than \code{.Machine\$double.xmin} are set to \code{.Machine\$double.xmin}.
+
 }
 
 \author{Matthew P. Conomos, Stephanie M. Gogarten, Thomas Lumley, Tamar Sofer, Ken Rice, Chaoyu Yu, Han Chen}

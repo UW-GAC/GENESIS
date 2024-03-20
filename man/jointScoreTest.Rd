@@ -31,6 +31,10 @@ jointScoreTest(null.model, G)
   \item{fixef}{A data.frame with joint effect size estimates (Est), standard errors (SE), chi-squared test statistics (Stat), p-values (pval), and estimated proportion of variance explained (PVE) for each of the variants specified in \code{G}.}
   \item{betaCov}{Estimated covariance matrix for the variants in \code{G}.}
 }
+
+p-values that are calculated using \code{pchisq} and are smaller than \code{.Machine\$double.xmin} are set to \code{.Machine\$double.xmin}.
+
+
 %\references{
 %}
 

@@ -7,7 +7,7 @@ Run admixture analyses
 }
 \usage{
 admixMap(admixDataList, null.model, male.diploid=TRUE,
-         genome.build=c("hg19", "hg38"), 
+         genome.build=c("hg19", "hg38"),
          BPPARAM=bpparam(), verbose=TRUE)
 }
 
@@ -41,6 +41,8 @@ See the example for how one might set up the \code{admixDataList} object. List n
     \item{Joint.Stat}{The chi-square Wald test statistic for the joint test of all local ancestry terms}
     \item{Joint.pval}{The Wald p-value for the joint test of all local ancestry terms}
 }
+
+p-values that are calculated using \code{pchisq} and are smaller than \code{.Machine\$double.xmin} are set to \code{.Machine\$double.xmin}.
 
 \author{Matthew P. Conomos, Lisa Brown, Stephanie M. Gogarten, Tamar Sofer, Ken Rice, Chaoyu Yu}
 
@@ -77,7 +79,7 @@ genoIterators <- lapply(genoDataList[1:2], GenotypeBlockIterator)
 null.model <- fitNullModel(scanAnnot, outcome="pheno", covars="covar")
 
 # run the association test
-myassoc <- admixMap(genoIterators, null.model, 
+myassoc <- admixMap(genoIterators, null.model,
                     BPPARAM=BiocParallel::SerialParam())
 head(myassoc)
 
