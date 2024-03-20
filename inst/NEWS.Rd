@@ -2,6 +2,12 @@
 
 \title{NEWS for GENESIS}
 
+\section{Version 2.33.1}{
+  \itemize{
+    \item Set extremely small p-values calculated with pchisq to \code{Machine$double.xmin}.
+  }
+
+}
 \section{Version 2.25.5}{
   \itemize{
     \item Add new test option "fastSMMAT" to assocTestAggregate.
