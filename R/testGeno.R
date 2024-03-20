@@ -117,7 +117,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     Stat <- score/score.SE
 
     res <- data.frame(Score = score, Score.SE = score.SE, Score.Stat = Stat,
-                      Score.pval = pchisq(Stat^2, df = 1, lower.tail = FALSE),
+                      Score.pval = .pchisq_filter_extreme(Stat^2, df = 1, lower.tail = FALSE),
                       Est = score/GPG, Est.SE = 1/score.SE,
                       PVE = (Stat^2)/RSS0) # RSS0 = (n-k) when gaussian; not when binary
 
@@ -135,7 +135,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
 #     Vbeta <- RSS/GPG
 #     Stat <- beta/sqrt(Vbeta)
 #     res <- data.frame(Est = beta, Est.SE = sqrt(Vbeta), Wald.Stat = Stat,
-#                       Wald.pval = pchisq(Stat^2, df = 1, lower.tail = FALSE))
+#                       Wald.pval = .pchisq_filter_extreme(Stat^2, df = 1, lower.tail = FALSE))
 #     return(res)
 # }
 
@@ -193,8 +193,8 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
     }
 
     res <- as.data.frame(res)
-    res$GxE.pval <- pchisq((res$GxE.Stat)^2, df = (v - 1), lower.tail = FALSE)
-    res$Joint.pval <- pchisq((res$Joint.Stat)^2, df = v, lower.tail = FALSE)
+    res$GxE.pval <- .pchisq_filter_extreme((res$GxE.Stat)^2, df = (v - 1), lower.tail = FALSE)
+    res$Joint.pval <- .pchisq_filter_extreme((res$Joint.Stat)^2, df = v, lower.tail = FALSE)
 
     if (GxE.return.cov.mat) {
         return(list(res = res, GxEcovMatList = res.Vbetas))
@@ -286,7 +286,7 @@ testGenoSingleVar <- function(nullmod, G, E = NULL, test = c("Score", "Score.SPA
                                                crossprod(GPG, betas))/RSS,
                                      error = function(e) { NA })
 
-    res[,"Joint.pval"] <- pchisq(res[,"Joint.Stat"], df = v, lower.tail = FALSE)
+    res[,"Joint.pval"] <- .pchisq_filter_extreme(res[,"Joint.Stat"], df = v, lower.tail = FALSE)
 
     res <- as.data.frame(res)
     return(list(res = res, allelesCovMat = Vbetas))

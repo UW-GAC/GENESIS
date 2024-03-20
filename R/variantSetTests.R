@@ -137,7 +137,7 @@ testVariantSet <- function( nullmod, G, weights,
     GG1 <- crossprod(G, G.rowSums) # WGPGW1  # O(mn)
     V.sum <- sum(GG1) # 1WGPGW1
     burden.stat = U.sum / sqrt(V.sum)
-    burden.pval <- pchisq(burden.stat^2, df=1, lower.tail=FALSE)
+    burden.pval <- .pchisq_filter_extreme(burden.stat^2, df=1, lower.tail=FALSE)
 
     # adjust U and G for burden
     U <- U - GG1*U.sum/V.sum # WGPY - WGPGW1 * 1WGPY/(1WGPGW1)
@@ -152,7 +152,7 @@ testVariantSet <- function( nullmod, G, weights,
     # # denominator for burden
     # V.sum <- sum(GG1) # 1WGPGW1
     # # burden p-value
-    # burden.pval <- pchisq(U.sum^2/V.sum, df=1, lower.tail=FALSE)
+    # burden.pval <- .pchisq_filter_extreme(U.sum^2/V.sum, df=1, lower.tail=FALSE)
     # # adjust for burden
     # U <- U - GG1*U.sum/V.sum
     # V <- V - tcrossprod(GG1)/V.sum  # O(m^2)
@@ -163,7 +163,7 @@ testVariantSet <- function( nullmod, G, weights,
     err <- out$err
 
     # Fisher's method to combine p-values
-    smmat.pval <- tryCatch(pchisq(-2*log(burden.pval)-2*log(theta.pval), df=4, lower.tail = FALSE), error = function(e) { NA })
+    smmat.pval <- tryCatch(.pchisq_filter_extreme(-2*log(burden.pval)-2*log(theta.pval), df=4, lower.tail = FALSE), error = function(e) { NA })
     if(is.na(smmat.pval)) {
         err <- 1
         smmat.pval <- burden.pval
@@ -187,7 +187,7 @@ testVariantSet <- function( nullmod, G, weights,
 
 .regular <- function(Q, V, ncolG) {
     if(ncolG == 1){
-        pv <- list(pval = pchisq(as.numeric(Q/V), df=1, lower.tail=FALSE), method = "integration")
+        pv <- list(pval = .pchisq_filter_extreme(as.numeric(Q/V), df=1, lower.tail=FALSE), method = "integration")
 
     }else{
         lambda <- eigen(V, only.values = TRUE, symmetric=TRUE)$values
@@ -381,7 +381,7 @@ testVariantSet <- function( nullmod, G, weights,
         # p value calculation
         if(length(scores) == 1){
             lambdas[[i]] <- as.numeric(distMat)
-            pval <- pchisq(as.numeric(Q/distMat), df=1, lower.tail=FALSE)
+            pval <- .pchisq_filter_extreme(as.numeric(Q/distMat), df=1, lower.tail=FALSE)
             err <- ifelse(is.na(pval), 1, 0)
         }else{
             lambda <- eigen(distMat, only.values = TRUE, symmetric=TRUE)$values
@@ -493,7 +493,7 @@ integrateFxn <- function(x, qmin, otherParams, tau, rho){
 
     temp.q<-(minval - mu)/sqrt(varia)*sqrt(2*degf) + degf
 
-    re<-pchisq(temp.q ,df=degf) * dchisq(x,df=1)
+    re<-.pchisq_filter_extreme(temp.q ,df=degf) * dchisq(x,df=1)
 
     return(re)
 }

@@ -131,7 +131,7 @@ admixMap <- function(admixDataList,
             res[,"Est"] <- beta
             res[,"SE"] <- sqrt(Vbeta)
             res[,"Stat"] <- Stat
-            res[,"pval"] <- pchisq(Stat, df=1, lower.tail=FALSE)
+            res[,"pval"] <- .pchisq_filter_extreme(Stat, df=1, lower.tail=FALSE)
 
         }else{
             Joint.Stat <- rep(NA, ncol(local))
@@ -167,7 +167,7 @@ admixMap <- function(admixDataList,
                 res[,paste(names(admixDataList)[i],".SE", sep="")] <- SE[,i]
             }
             res[,"Joint.Stat"] <- Joint.Stat
-            res[,"Joint.pval"] <- pchisq(Joint.Stat, df=v, lower.tail=FALSE)
+            res[,"Joint.pval"] <- .pchisq_filter_extreme(Joint.Stat, df=v, lower.tail=FALSE)
         } # else
 
         # results data frame
