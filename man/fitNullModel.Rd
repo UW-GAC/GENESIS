@@ -134,6 +134,8 @@ isNullModelFastScore(null.model)
     When \code{two.stage = TRUE}, the fully-adjusted two-stage rank normalization procedure from Sofer et. al. (2019) is used. With this procedure: the stage 1 model is fit as usual, with the specified \code{outcome}, \code{covars}, \code{cov.mat}, and \code{group.var}; the marginal residuals from the stage 1 model are rank normalized as specified by \code{norm.option} and then rescaled as specified by \code{rescale}; the stage 2 model is then fit using the rank normalized and rescaled residuals as the new outcome, with the same \code{covars}, \code{cov.mat}, and \code{group.var} as the stage 1 model. The output of this stage 2 model is saved and should be used for association testing. This procedure is only applicable when \code{family = "gaussian"}. The \code{nullModelInvNorm} function takes a previously fit null model as input and does the rank normalization, rescaling, and stage 2 model fitting.
 
     The function \code{fitNullModelFastScore} fits a null model that can be used for testing variant association with the fast approximation to the score standard error (SE) implemented by Zhou et al. (2018) in their SAIGE software. This approximation may be much faster than computing the true score SE in large samples, as it replaces the full covariance matrix in the calculation with the product of a diagonal matrix and a scalar correction factor (\code{se.correction} in the null model output); see the option \code{fast.Score.SE} in \code{\link{assocTestSingle}} for further details. A null model previously fit with \code{fitNullModel} can be updated to this format by using \code{calcScore} to compute the necessary statistics on a set of variants, followed by \code{nullModelFastScore} to calculate the \code{se.correction} factor and update the null model format.
+
+p-values that are calculated using \code{pchisq} and are smaller than \code{.Machine\$double.xmin} are set to \code{.Machine\$double.xmin}.
 }
 
 \value{An object of class '\code{GENESIS.nullModel}' or '\code{GENESIS.nullMixedModel}'. A list including:
@@ -197,9 +199,6 @@ The \code{score.table} data frame contains the following columns:
   \item{Score.SE.fast}{The estimated fast standard error of the Score (before scalar correction)}
   \item{se.ratio}{The ratio of Score.SE to Score.SE.fast; these values are averaged across varaints to estimate \code{se.correction} in \code{nullModelFastScore}.}
 }
-
-p-values that are calculated using \code{pchisq} and are smaller than \code{.Machine\$double.xmin} are set to \code{.Machine\$double.xmin}.
-
 }
 
 \references{

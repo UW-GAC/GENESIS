@@ -23,6 +23,8 @@ jointScoreTest(null.model, G)
   \code{fixef} and \code{betaCov} will be in the same order as the columns in \code{G}.
 
   Missing data in \code{G} are not allowed.
+
+  p-values that are calculated using \code{pchisq} and are smaller than \code{.Machine\$double.xmin} are set to \code{.Machine\$double.xmin}.
 }
 \value{\code{jointScoreTest} returns a list with the following elements:
   \item{Joint.Stat}{Squared joint score test statistic for all variants in \code{G}.}
@@ -31,8 +33,6 @@ jointScoreTest(null.model, G)
   \item{fixef}{A data.frame with joint effect size estimates (Est), standard errors (SE), chi-squared test statistics (Stat), p-values (pval), and estimated proportion of variance explained (PVE) for each of the variants specified in \code{G}.}
   \item{betaCov}{Estimated covariance matrix for the variants in \code{G}.}
 }
-
-p-values that are calculated using \code{pchisq} and are smaller than \code{.Machine\$double.xmin} are set to \code{.Machine\$double.xmin}.
 
 
 %\references{

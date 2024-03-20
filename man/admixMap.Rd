@@ -28,6 +28,8 @@ This function is used with local ancestry results such as those obtained from RF
 See the example for how one might set up the \code{admixDataList} object. List names will propagate to the output file.
 
     \code{admixMap} uses the \code{\link{BiocParallel}} package to process iterator chunks in parallel. See the \code{\link{BiocParallel}} documentation for more information on the default behaviour of \code{\link{bpparam}} and how to register different parallel backends. If serial execution is desired, set \code{BPPARAM=BiocParallel::SerialParam()}. Note that parallel execution requires more RAM than serial execution.
+
+p-values that are calculated using \code{pchisq} and are smaller than \code{.Machine\$double.xmin} are set to \code{.Machine\$double.xmin}.
 }
 
 \value{A data.frame where each row refers to a different variant with the columns:
@@ -41,8 +43,6 @@ See the example for how one might set up the \code{admixDataList} object. List n
     \item{Joint.Stat}{The chi-square Wald test statistic for the joint test of all local ancestry terms}
     \item{Joint.pval}{The Wald p-value for the joint test of all local ancestry terms}
 }
-
-p-values that are calculated using \code{pchisq} and are smaller than \code{.Machine\$double.xmin} are set to \code{.Machine\$double.xmin}.
 
 \author{Matthew P. Conomos, Lisa Brown, Stephanie M. Gogarten, Tamar Sofer, Ken Rice, Chaoyu Yu}
 

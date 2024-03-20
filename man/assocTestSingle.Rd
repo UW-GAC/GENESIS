@@ -65,6 +65,9 @@
     %A reference to the CMP test and the BinomiRare for mixed models will be provided once a preprint is available.
 
     For the \code{\link{GenotypeIterator}} method, objects created with \code{\link{GdsGenotypeReader}} or \code{\link{MatrixGenotypeReader}} are supported. \code{\link{NcdfGenotypeReader}} objects are not supported.
+
+p-values that are calculated using \code{pchisq} and are smaller than \code{.Machine\$double.xmin} are set to \code{.Machine\$double.xmin}.
+
 }
 
 \value{A data.frame where each row refers to a different variant with the columns:
@@ -112,8 +115,6 @@
 
     %When \code{GxE} is not \code{NULL}, if \code{ivar.return.betaCov} is \code{TRUE}, then the output is a list with two elements.  The first, "results", is the data.frame described above.  The second, "betaCov", is a list with length equal to the number of rows of "results", where each element of the list is the covariance matrix of the effect size estimates (betas) for the genotype and genotype interaction terms.
 }
-
-p-values that are calculated using \code{pchisq} and are smaller than \code{.Machine\$double.xmin} are set to \code{.Machine\$double.xmin}.
 
 \references{
     Dey, R., Schmidt, E. M., Abecasis, G. R., & Lee, S. (2017). A fast and accurate algorithm to test for binary phenotypes and its application to PheWAS. The American Journal of Human Genetics, 101(1), 37-49.

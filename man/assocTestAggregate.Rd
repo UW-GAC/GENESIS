@@ -73,6 +73,9 @@
     The fastSMMAT method uses the same random matrix theory as fastSKAT to speed up the computation of the p-value for the adjusted SKAT component of the test. When \code{test = "fastSMMAT"}, the function uses the same logic as for fastSKAT to determine which p-value calculation approach to use for each aggregation unit.
 
     The BinomiRare test, run by using \code{test = "BinomiRare"}, and the CMP test, run by using \code{test = "CMP"} are carrier-only, robust tests. Only variants where the effect allele is minor will be tested. Both tests focuse on carriers of the rare variant allele ("carriers"), and use the estimated probabilities of the binary outcome within the carriers, estimated under the null of not association, and the actual number of observed outcomes, to compute p-values. BinomiRare uses the Poisson-Binomial distribution, and the CMP uses the Conway-Maxwell-Poisson distribution, and is specifically designed for mixed models. (If \code{test = "CMP"} but \code{null.model$family$mixedmodel = FALSE}, the BinomiRare test will be run instead.) These tests provide both a traditional p-value (\code{"pval"}) and a mid-p-value (\code{"midp"}), which is less conservative/more liberal, with the difference being more pronounced for small number of carriers. The BinomiRare test is described in Sofer (2017) and compared to the Score and SPA in various settings in Sofer and Guo (2020).
+
+    p-values that are calculated using \code{pchisq} and are smaller than \code{.Machine\$double.xmin} are set to \code{.Machine\$double.xmin}.
+
 }
 
 \value{A list with the following items:
@@ -147,8 +150,6 @@
     \item{freq}{The estimated effect allele frequency}
     \item{MAC}{The minor allele count. For multiallelic variants, "minor" is determined by comparing the count of the allele specified by \code{allele.index} with the sum of all other alleles.}
     \item{weight}{The weight assigned to the variant in the analysis.}
-
-p-values that are calculated using \code{pchisq} and are smaller than \code{.Machine\$double.xmin} are set to \code{.Machine\$double.xmin}.
 
 }
 
