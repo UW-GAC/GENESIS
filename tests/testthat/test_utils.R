@@ -244,7 +244,12 @@ test_that(".pchisq_filter_extreme", {
     # Extreme p-value
     expect_identical(.pchisq_filter_extreme(100^2, lower.tail=FALSE, df=1), .Machine$double.xmin)
     # df=0
+    expect_identical(.pchisq_filter_extreme(0, lower.tail=FALSE, df=0), 1)
+    expect_identical(.pchisq_filter_extreme(0, lower.tail=TRUE, df=0), 0)
     expect_identical(.pchisq_filter_extreme(1, lower.tail=FALSE, df=0), 0)
+    expect_identical(.pchisq_filter_extreme(1, lower.tail=TRUE, df=0), 1)
     expect_identical(.pchisq_filter_extreme(10, lower.tail=FALSE, df=0), 0)
+    expect_identical(.pchisq_filter_extreme(10, lower.tail=TRUE, df=0), 1)
     expect_identical(.pchisq_filter_extreme(100, lower.tail=FALSE, df=0), 0)
+    expect_identical(.pchisq_filter_extreme(100, lower.tail=TRUE, df=0), 1)
 })
