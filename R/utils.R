@@ -354,8 +354,10 @@ setMethod(".annotateAssoc",
 }
 
 .pchisq_filter_extreme <- function(...) {
-    # Note: stat is the squared test statistic.
+    args <- list(...)
     pval = pchisq(...)
-    pval[pval < .Machine$double.xmin] = .Machine$double.xmin
+    if ("df" %in% names(args) && args$df > 0) {
+        pval[pval < .Machine$double.xmin] = .Machine$double.xmin
+    }
     return(pval)
 }

@@ -240,7 +240,11 @@ test_that("prepGenoBlock - male haploid", {
 
 test_that(".pchisq_filter_extreme", {
     stat <- c(0.1, 0.5, 1, 10)
-    expect_equal(.pchisq_filter_extreme(stat^2, lower.tail=FALSE, df=1), pchisq(stat^2, lower.tail=FALSE, df=1))
+    expect_identical(.pchisq_filter_extreme(stat^2, lower.tail=FALSE, df=1), pchisq(stat^2, lower.tail=FALSE, df=1))
     # Extreme p-value
-    expect_equal(.pchisq_filter_extreme(100^2, lower.tail=FALSE, df=1), .Machine$double.xmin)
+    expect_identical(.pchisq_filter_extreme(100^2, lower.tail=FALSE, df=1), .Machine$double.xmin)
+    # df=0
+    expect_identical(.pchisq_filter_extreme(1, lower.tail=FALSE, df=0), 0)
+    expect_identical(.pchisq_filter_extreme(10, lower.tail=FALSE, df=0), 0)
+    expect_identical(.pchisq_filter_extreme(100, lower.tail=FALSE, df=0), 0)
 })
