@@ -2,7 +2,7 @@
 
 \title{NEWS for GENESIS}
 
-\section{Version 2.33.1}{
+\section{Version 2.33.2}{
   \itemize{
     \item Set extremely small p-values calculated with pchisq to \code{Machine$double.xmin}.
   }
