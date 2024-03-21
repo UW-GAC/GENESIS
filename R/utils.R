@@ -356,7 +356,7 @@ setMethod(".annotateAssoc",
 .pchisq_filter_extreme <- function(...) {
     args <- list(...)
     pval = pchisq(...)
-    if ("df" %in% names(args) && args$df > 0) {
+    if (args$df > 0) {
         pval[pval < .Machine$double.xmin] = .Machine$double.xmin
     }
     return(pval)
