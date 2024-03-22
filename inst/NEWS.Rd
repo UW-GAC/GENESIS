@@ -4,7 +4,7 @@
 
 \section{Version 2.33.2}{
   \itemize{
-    \item Set extremely small p-values calculated with pchisq to \code{Machine$double.xmin}.
+    \item Set extremely small p-values (\code{< Machine$double.xmin}) calculated with pchisq to \code{Machine$double.xmin}. This change prevents GENESIS from returning p-values equal to 0.
   }
 
 }
