@@ -80,7 +80,7 @@
 
     SE <- sqrt(diag(betaCov))
     Stat <- (vc.mod$beta/SE)^2
-    pval <- pchisq(Stat, df = 1, lower.tail = FALSE)
+    pval <- .pchisq_filter_extreme(Stat, df = 1, lower.tail = FALSE)
 
     fixef <- data.frame(Est = vc.mod$beta, SE = SE, Stat = Stat, pval = pval)
     rownames(fixef) <- varNames
@@ -181,7 +181,7 @@
 
     SE <- sqrt(diag(betaCov))
     Stat <- (vc.mod$beta/SE)^2
-    pval <- pchisq(Stat, df = 1, lower.tail = FALSE)
+    pval <- .pchisq_filter_extreme(Stat, df = 1, lower.tail = FALSE)
 
     fixef <- data.frame(Est = vc.mod$beta, SE = SE, Stat = Stat, pval = pval)
     rownames(fixef) <- varNames

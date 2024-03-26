@@ -13,7 +13,7 @@
 \S4method{assocTestSingle}{SeqVarIterator}(gdsobj, null.model,
                 test=c("Score", "Score.SPA", "BinomiRare", "CMP"),
                 recalc.pval.thresh=0.05, fast.score.SE=FALSE,
-                GxE=NULL, 
+                GxE=NULL,
                 geno.coding=c("additive", "dominant", "recessive"),
                 sparse=TRUE, imputed=FALSE,
                 male.diploid=TRUE, genome.build=c("hg19", "hg38"),
@@ -47,14 +47,14 @@
     \code{assocTestSingle} uses the \code{\link{BiocParallel}} package to process iterator chunks in parallel. See the \code{\link{BiocParallel}} documentation for more information on the default behaviour of \code{\link{bpparam}} and how to register different parallel backends. If serial execution is desired, set \code{BPPARAM=BiocParallel::SerialParam()}. Note that parallel execution requires more RAM than serial execution.
 
   All samples included in \code{null model} will be included in the association test, even if a different set of samples is present in the current filter for \code{gdsobj}.
-  
+
     The effect size estimate is for each copy of the alternate allele (when \code{gdsobj} is a \code{\link{SeqVarIterator}} object) or the "A" allele (when \code{gdsobj} is a \code{\link{GenotypeIterator}} object). We refer to this as the "effect allele" in the rest of the documentation. For multiallelic variants in \code{\link{SeqVarIterator}} objects, each alternate (or "A") allele is tested separately.
     %When \code{impute.geno} is TRUE, sporadic missing genotype values are mean imputed using the minor allele frequency (MAF) calculated on all other samples at that SNP. When \code{impute.geno} is FALSE, samples with missing values for all of the SNP genotypes in the current SNP block are removed from the analysis for the block; this may significantly slow down computation time because many pre-computed matrices need to be re-computed each time the sample set changes.  Also note: when \code{impute.geno} is FALSE, sporadic missingness for a sample inside of a SNP block will lead to an error.
 
     Sporadic missing genotype values are mean imputed using the allele frequency calculated on all other samples at that variant.
 
     Monomorphic variants (including variants where every sample is a heterozygote) are omitted from the results.
- 
+
     The input \code{GxE} can be used to perform GxE tests.  Multiple interaction variables may be specified, but all interaction variables specified must have been included as covariates in fitting the null model with \code{fitNullModel}.  When performing GxE analyses, \code{assocTestSingle} will report two tests:  (1) the joint Wald test of all genotype interaction terms in the model (this is the test for any genotype interaction effect), and (2) the joint Wald test of the genotype term along with all of the genotype interaction terms (this is the test for any genetic effect). Individual genotype interaction terms can be tested by creating test statistics from the reported effect size estimates and their standard errors (Note: when \code{GxE} contains a single continuous or binary covariate, this test is the same as the test for any genotype interaction effect mentioned above).  %In order to test more complex hypotheses regarding subsets of multiple genotype interaction terms, \code{ivar.return.betaCov} can be used to retrieve the estimated covariance matrix of the effect size estimates.
 
     The saddle point approximation (SPA), run by using \code{test = "Score.SPA"}, implements the method described by Dey et al. (2017), which was extended to mixed models by Zhou et al. (2018) in their SAIGE software. SPA provides better calibration of p-values when fitting mixed models with a binomial family for a sample with an imbalanced case to control ratio.
@@ -65,6 +65,9 @@
     %A reference to the CMP test and the BinomiRare for mixed models will be provided once a preprint is available.
 
     For the \code{\link{GenotypeIterator}} method, objects created with \code{\link{GdsGenotypeReader}} or \code{\link{MatrixGenotypeReader}} are supported. \code{\link{NcdfGenotypeReader}} objects are not supported.
+
+p-values that are calculated using \code{pchisq} and are smaller than \code{.Machine\$double.xmin} are set to \code{.Machine\$double.xmin}.
+
 }
 
 \value{A data.frame where each row refers to a different variant with the columns:
@@ -89,7 +92,7 @@
     \item{PVE}{An approximation of the proportion of phenotype variance explained}
     % If \code{test} is \code{"Wald"} and \code{GxE} is \code{NULL}:
     % \item{Est}{The effect size estimate for each additional copy of the effect allele}
-    % \item{Est.SE}{The estimated standard error of the effect size estimate}    
+    % \item{Est.SE}{The estimated standard error of the effect size estimate}
     % \item{Wald.Stat}{The Wald Z test statistic}
     % \item{Wald.pval}{The Wald p-value}
     If \code{test} is \code{"Score.SPA"}:
@@ -109,7 +112,7 @@
     \item{n.D.carrier}{Number of cases with at least one copy of the effect allele}
     \item{pval}{p-value}
     \item{mid.pval}{mid-p-value}
-    
+
     %When \code{GxE} is not \code{NULL}, if \code{ivar.return.betaCov} is \code{TRUE}, then the output is a list with two elements.  The first, "results", is the data.frame described above.  The second, "betaCov", is a list with length equal to the number of rows of "results", where each element of the list is the covariance matrix of the effect size estimates (betas) for the genotype and genotype interaction terms.
 }
 
@@ -157,7 +160,7 @@ nullmod <- fitNullModel(iterator, outcome="outcome", covars="sex")
 # run the association test
 assoc <- assocTestSingle(iterator, nullmod,
                          BPPARAM=BiocParallel::SerialParam())
-                
+
 # use fast score SE for a null model with a covariance matrix
 seqResetFilter(seqData)
 grm <- SNPRelate::snpgdsGRM(seqData, verbose=FALSE)

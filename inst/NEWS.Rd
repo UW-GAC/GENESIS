@@ -2,6 +2,12 @@
 
 \title{NEWS for GENESIS}
 
+\section{Version 2.33.2}{
+  \itemize{
+    \item Set extremely small p-values (\code{< Machine$double.xmin}) calculated with pchisq to \code{Machine$double.xmin}. This change prevents GENESIS from returning p-values equal to 0.
+  }
+
+}
 \section{Version 2.25.5}{
   \itemize{
     \item Add new test option "fastSMMAT" to assocTestAggregate.

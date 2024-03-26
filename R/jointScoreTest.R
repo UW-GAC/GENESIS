@@ -51,7 +51,7 @@ jointScoreTest <- function(null.model, G) {  # # Check rownames/colnames match.
   # Joint test statistic. Note this is the equivalent of the stat being squared,
   # by convention.
   Stat.joint <- as.numeric(crossprod(GY, beta))
-  pval.joint <- pchisq(Stat.joint, lower.tail = FALSE, df = ncol(G))
+  pval.joint <- .pchisq_filter_extreme(Stat.joint, lower.tail = FALSE, df = ncol(G))
 
   # Percentage of variance explained jointly by these variants.
   pve.joint <- as.numeric(Stat.joint / null.model$RSS0)
@@ -63,7 +63,7 @@ jointScoreTest <- function(null.model, G) {  # # Check rownames/colnames match.
     stringsAsFactors = FALSE
   )
   fixef$Stat <- fixef$Est / fixef$SE
-  fixef$pval <- pchisq(fixef$Stat^2, lower.tail = FALSE, df = 1)
+  fixef$pval <- .pchisq_filter_extreme(fixef$Stat^2, lower.tail = FALSE, df = 1)
   fixef$PVE <- fixef$Stat^2 / null.model$RSS0
 
   rownames(fixef) <- colnames(G)

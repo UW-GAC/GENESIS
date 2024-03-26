@@ -25,7 +25,7 @@ testSingleVarianceComponent <- function(nullmod, varCompName, covMatList, group.
 
 	test.stat <- -2*(nullmod.noVarComp$logLik - nullmod$logLik)
 
-	pval <- 0.5*pchisq(test.stat, df = length(nullmod$varComp), lower.tail = FALSE) + 0.5*pchisq(test.stat, df = length(nullmod$varComp) - 1, lower.tail = F)
+	pval <- 0.5*.pchisq_filter_extreme(test.stat, df = length(nullmod$varComp), lower.tail = FALSE) + 0.5*.pchisq_filter_extreme(test.stat, df = length(nullmod$varComp) - 1, lower.tail = F)
 
 	return(pval)
 }

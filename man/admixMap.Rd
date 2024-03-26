@@ -7,7 +7,7 @@ Run admixture analyses
 }
 \usage{
 admixMap(admixDataList, null.model, male.diploid=TRUE,
-         genome.build=c("hg19", "hg38"), 
+         genome.build=c("hg19", "hg38"),
          BPPARAM=bpparam(), verbose=TRUE)
 }
 
@@ -28,6 +28,8 @@ This function is used with local ancestry results such as those obtained from RF
 See the example for how one might set up the \code{admixDataList} object. List names will propagate to the output file.
 
     \code{admixMap} uses the \code{\link{BiocParallel}} package to process iterator chunks in parallel. See the \code{\link{BiocParallel}} documentation for more information on the default behaviour of \code{\link{bpparam}} and how to register different parallel backends. If serial execution is desired, set \code{BPPARAM=BiocParallel::SerialParam()}. Note that parallel execution requires more RAM than serial execution.
+
+p-values that are calculated using \code{pchisq} and are smaller than \code{.Machine\$double.xmin} are set to \code{.Machine\$double.xmin}.
 }
 
 \value{A data.frame where each row refers to a different variant with the columns:
@@ -77,7 +79,7 @@ genoIterators <- lapply(genoDataList[1:2], GenotypeBlockIterator)
 null.model <- fitNullModel(scanAnnot, outcome="pheno", covars="covar")
 
 # run the association test
-myassoc <- admixMap(genoIterators, null.model, 
+myassoc <- admixMap(genoIterators, null.model,
                     BPPARAM=BiocParallel::SerialParam())
 head(myassoc)
 
