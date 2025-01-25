@@ -6,19 +6,19 @@
 Run admixture analyses
 }
 \usage{
-admixMap(admixDataList, null.model, male.diploid=TRUE,
-         genome.build=c("hg19", "hg38"),imputed=FALSE,
-         dosage.field="DS",
+admixMap(admixDataList, null.model, 
+         imputed=FALSE,
+         male.diploid=TRUE,
+         genome.build=c("hg19", "hg38"), 
          BPPARAM=bpparam(), verbose=TRUE)
 }
 
 \arguments{
   \item{admixDataList}{named list of \code{\link{GenotypeIterator}} or \code{\link{SeqVarIterator}} objects for each ancestry}
     \item{null.model}{A null model object returned by \code{\link{fitNullModel}}.}
+    \item{imputed}{Logical indicator of whether to read dosages from the "DS" field containing imputed dosages instead of counting the number of alternate alleles. Only used if admixDataList contains \code{\link{SeqVarIterator}} objects.}
     \item{male.diploid}{Logical for whether males on sex chromosomes are coded as diploid. Default is `male.diploid=TRUE`, meaning sex chromosome genotypes for males have values 0/2. If the input object codes males as 0/1 on sex chromosomes, set `male.diploid=FALSE`.}
   \item{genome.build}{A character sting indicating genome build; used to identify pseudoautosomal regions on the X and Y chromosomes. These regions are not treated as sex chromosomes when calculating allele frequencies.}
-   \item{imputed}{Logical indicator of whether to read dosages from the field specified in `dosage.field`,containing imputed dosages instead of counting the number of ref alleles. Only relevant when admixDataList contains \code{\link{SeqVarIterator}}, i.e. ignored when admixDataList contains \code{\link{GenotypeIterator}}  }
-   \item{dosage.field}{The name of the dosage field in the GDS object (will be prepended with "annotation/format"). Default is dosage.field='DS'.}
   \item{BPPARAM}{A \code{\link{BiocParallelParam}} object to process blocks of variants in parallel. If not provided, the default back-end returned by \code{\link{bpparam}} will be used.}
     \item{verbose}{Logical indicator of whether updates from the function should be printed to the console; the default is TRUE.}
 }

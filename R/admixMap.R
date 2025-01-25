@@ -1,7 +1,7 @@
 admixMap <- function(admixDataList,
                      null.model,
-                     male.diploid=TRUE, genome.build=c("hg19", "hg38"),imputed=FALSE,
-                     dosage.field="DS",
+                     imputed=FALSE,
+                     male.diploid=TRUE, genome.build=c("hg19", "hg38"),
                      BPPARAM=bpparam(), verbose=TRUE){
 
     # if admixDataList is one file, convert to a list
@@ -31,9 +31,10 @@ admixMap <- function(admixDataList,
     }
     n.samp <- length(sample.index)
     
-    # if admixDataList contain GenotypeIterator, imputed=TRUE will be ignored
-    if (is(admixDataList[[1]], "GenotypeIterator") && imputed=TRUE)
-        print("admixDataList contain GenotypeIterator, imputed=TRUE is ignored")
+    # if admixDataList contains GenotypeIterator, imputed=TRUE will be ignored
+    if (is(admixDataList[[1]], "GenotypeIterator") && imputed) {
+        message("admixDataList contains GenotypeIterator, imputed=TRUE is ignored")
+    }
     
     # get sex for calculating allele freq
     sex <- validateSex(admixDataList[[1]])[sample.index]
@@ -86,11 +87,11 @@ admixMap <- function(admixDataList,
             if (is(admixDataList[[1]], "GenotypeIterator")) {
                 local[,,i] <- getGenotypeSelection(admixDataList[[i]], scan=sample.index, order="selection", transpose=TRUE, use.names=FALSE, drop=FALSE)
             } else {
-               if(imputed=FALSE){
-                local[,,i] <- refDosage(admixDataList[[i]], use.names=FALSE)[sample.index,,drop=FALSE]
-               }else
-                local[,,i] <- imputedDosage(admixDataList[[i]], use.names=FALSE,dosage.field="DS")[sample.index,,drop=FALSE]
-              
+               if (!imputed) {
+                   local[,,i] <- refDosage(admixDataList[[i]], use.names=FALSE)[sample.index,,drop=FALSE]
+               } else {
+                   local[,,i] <- imputedDosage(admixDataList[[i]], use.names=FALSE)[sample.index,,drop=FALSE]
+               }
             }
         }
         if (any(is.na(local))) warning("missing values in local ancestry will produce NA output for this block")
