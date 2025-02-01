@@ -2,6 +2,12 @@
 
 \title{NEWS for GENESIS}
 
+
+\section{Version 2.37.1}{
+  \itemize{
+    \item Add option "imputed" to admixMap to allow testing imputed dosages.
+  }
+}
 \section{Version 2.33.2}{
   \itemize{
     \item Set extremely small p-values (\code{< Machine$double.xmin}) calculated with pchisq to \code{Machine$double.xmin}. This change prevents GENESIS from returning p-values equal to 0.
