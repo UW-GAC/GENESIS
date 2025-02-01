@@ -71,3 +71,49 @@ test_that("admixMap", {
     lapply(tmpfile, unlink)
     lapply(tmpfile2, unlink)
 })
+
+
+test_that("admixMap - imputed dosage", {
+    gdsfmt::showfile.gds(closeall=TRUE, verbose=FALSE)
+    gdsfile <- gds <- SeqArray::seqExampleFileName("gds")
+    gds <- openfn.gds(gdsfile)
+    samp <- as.character(read.gdsn(index.gdsn(gds, "sample.id")))
+    nsnp <- objdesp.gdsn(index.gdsn(gds, "variant.id"))$dim
+    nsamp <- objdesp.gdsn(index.gdsn(gds, "sample.id"))$dim
+    closefn.gds(gds)
+    set.seed(200); dosage_eur <- sample(0:2, nsnp*nsamp, replace=TRUE)
+    set.seed(201); dosage_afr <- ifelse(dosage_eur == 2, 0, sample(0:1, nsnp*nsamp, replace=TRUE))
+    set.seed(202); dosage_amer <- 2 - dosage_eur - dosage_afr
+    dosage <- list(dosage_eur, dosage_afr, dosage_amer)
+    tmpfile <- character(3)
+    for (i in 1:3) {
+        tmpfile[i] <- tempfile()
+        file.copy(gdsfile, tmpfile[i])
+        gds <- openfn.gds(tmpfile[i], readonly=FALSE)
+        format_node <- index.gdsn(gds, "annotation/format")
+        folder <- addfolder.gdsn(format_node, "DS")
+        add.gdsn(folder, "data", matrix(dosage[[i]], nrow=nsamp, ncol=nsnp))
+        data2 <- read.gdsn(index.gdsn(gds, "annotation/format/DP/~data"))
+        add.gdsn(folder, "~data", data2)
+        closefn.gds(gds)
+    }
+    
+    set.seed(203); pheno <- rnorm(nsamp, mean = 0, sd = 1)
+    set.seed(204); covar <- sample(0:1, nsamp, replace=TRUE)
+    
+    annot <- AnnotatedDataFrame(data.frame(sample.id = samp, 
+                                           covar, pheno, stringsAsFactors=FALSE))
+    seqIterators <- lapply(tmpfile, function(x) {
+        gr <- seqOpen(x)
+        gd <- SeqVarData(gr, sampleData=annot)
+        SeqVarBlockIterator(gd, verbose=FALSE)
+    })
+    
+    null.model <- fitNullModel(annot, outcome = "pheno", covars = "covar")
+    myassoc <- admixMap(seqIterators, null.model, imputed=TRUE, BPPARAM=BPPARAM, verbose=FALSE)
+    expect_equal(nrow(myassoc), nsnp)
+    
+    lapply(seqIterators, seqClose)
+    
+    lapply(tmpfile, unlink)
+})

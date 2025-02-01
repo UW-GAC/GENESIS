@@ -1,5 +1,6 @@
 admixMap <- function(admixDataList,
                      null.model,
+                     imputed=FALSE,
                      male.diploid=TRUE, genome.build=c("hg19", "hg38"),
                      BPPARAM=bpparam(), verbose=TRUE){
 
@@ -15,7 +16,7 @@ admixMap <- function(admixDataList,
     if(is.null(names(admixDataList))){
         names(admixDataList) <- paste("Anc",1:v,sep="")
     }
-
+   
     # get sample index
     if (is(admixDataList[[1]], "GenotypeIterator")) {
         sample.index <- lapply(admixDataList, .sampleIndexNullModel, null.model)
@@ -29,6 +30,11 @@ admixMap <- function(admixDataList,
         stop("admixDataList must contain GenotypeIterator or SeqVarIterator objects")
     }
     n.samp <- length(sample.index)
+    
+    # if admixDataList contains GenotypeIterator, imputed=TRUE will be ignored
+    if (is(admixDataList[[1]], "GenotypeIterator") && imputed) {
+        message("admixDataList contains GenotypeIterator, imputed=TRUE is ignored")
+    }
     
     # get sex for calculating allele freq
     sex <- validateSex(admixDataList[[1]])[sample.index]
@@ -81,7 +87,11 @@ admixMap <- function(admixDataList,
             if (is(admixDataList[[1]], "GenotypeIterator")) {
                 local[,,i] <- getGenotypeSelection(admixDataList[[i]], scan=sample.index, order="selection", transpose=TRUE, use.names=FALSE, drop=FALSE)
             } else {
-                local[,,i] <- refDosage(admixDataList[[i]], use.names=FALSE)[sample.index,,drop=FALSE]
+               if (!imputed) {
+                   local[,,i] <- refDosage(admixDataList[[i]], use.names=FALSE)[sample.index,,drop=FALSE]
+               } else {
+                   local[,,i] <- imputedDosage(admixDataList[[i]], use.names=FALSE)[sample.index,,drop=FALSE]
+               }
             }
         }
         if (any(is.na(local))) warning("missing values in local ancestry will produce NA output for this block")
