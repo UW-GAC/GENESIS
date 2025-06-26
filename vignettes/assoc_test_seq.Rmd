@@ -226,6 +226,7 @@ In this example, we illustrate defining ranges based on known genes. We run a bu
 
 ```{r}
 library(GenomicRanges)
+library(GenomeInfoDb)
 library(TxDb.Hsapiens.UCSC.hg19.knownGene)
 
 # return the variants on chromosome 1 as a GRanges object
