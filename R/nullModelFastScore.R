@@ -131,6 +131,7 @@ setMethod(".selectRandomVars",
                    sample.id = NULL, 
                    nvar = 100, 
                    min.mac = 20, 
+                   max.iter = 100,
                    verbose = TRUE){
 
             # filter to sample set in null.model
@@ -145,6 +146,7 @@ setMethod(".selectRandomVars",
             if(nvar.gds < nvar) stop('requested more variants than available in gdsobj')
 
             out <- NULL
+            niter <- 0
             while(length(out) < nvar){
               # sample variants
               var.rand <- sort(sample(var.filt, size = nvar, replace = FALSE))
@@ -154,6 +156,8 @@ setMethod(".selectRandomVars",
               if(min.mac > 0) SeqArray::seqSetFilterCond(gdsobj, mac = min.mac, verbose = verbose)
               # collect selected variants
               out <- sort(unique(c(out, seqGetData(gdsobj, 'variant.id'))))
+              niter <- niter + 1
+              if (niter > max.iter) stop("exceeded maximum number of iterations to select variants")
             }
 
             # sample down to number requested

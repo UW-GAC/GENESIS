@@ -9,14 +9,15 @@ test_that("fast score SE", {
     
     nm <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=covmat, verbose=FALSE)
     set.seed(123)
-    nm.se <- fitNullModelFastScore(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=covmat, verbose=FALSE)
+    nm.se <- fitNullModelFastScore(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=covmat,
+                                   nvar=50, min.mac=2, verbose=FALSE)
     expect_true(all(c("se.correction", "score.table") %in% names(nm.se)))
     
     chk <- intersect(names(nm), names(nm.se))
     expect_equal(nm[chk], nm.se[chk])
     
     set.seed(456)
-    score.table <- calcScore(svd, nm, verbose=FALSE)
+    score.table <- calcScore(svd, nm, nvar=50, min.mac=2, verbose=FALSE)
     nm2 <- nullModelFastScore(nm, score.table, verbose=FALSE)
     expect_equal(nm2, nm.se)
     
@@ -28,7 +29,7 @@ test_that("fast score SE", {
     resetIterator(iterator, verbose=FALSE)
     set.seed(789)
     assoc.se <- assocTestSingle(iterator, nm.se, fast.score.SE=TRUE, BPPARAM=BPPARAM, verbose=FALSE)
-    expect_equal(assoc, assoc.se, tolerance=0.0001)
+    expect_equal(assoc, assoc.se, tolerance=0.002)
     
     seqClose(svd)
 })

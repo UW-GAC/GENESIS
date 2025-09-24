@@ -300,7 +300,7 @@ test_that("missing data - data.frame", {
     dat <- data.frame(a=a,
                       b=c(rep(NA, 5), rep("a",5), rep("b", 5)),
                       stringsAsFactors=FALSE)
-    set.seed(35); covMat <- crossprod(matrix(rnorm(15*2,sd=0.05),15,15))
+    set.seed(35); covMat <- crossprod(matrix(rnorm(15*15,sd=0.05),15,15))
     nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, group="b", verbose=FALSE)
     expect_equivalent(rownames(nm$model.matrix), as.character(6:15))
     expect_equivalent(nm$fit$workingY, dat$a[6:15])
@@ -313,7 +313,7 @@ test_that("missing data - AnnotatedDataFrame", {
                       b=c(rep(NA, 5), rep("a",5), rep("b", 5)),
                       stringsAsFactors=FALSE)
     dat <- AnnotatedDataFrame(dat)
-    set.seed(37); covMat <- crossprod(matrix(rnorm(15*2,sd=0.05),15,15))
+    set.seed(37); covMat <- crossprod(matrix(rnorm(15*15,sd=0.05),15,15))
     dimnames(covMat) <- list(dat$sample.id, dat$sample.id)
     nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMat, group="b", verbose=FALSE)
     expect_equal(nm$fit$sample.id, dat$sample.id[6:15])
@@ -346,8 +346,8 @@ test_that("multiple matrices", {
                       b=c(rep("a",5), rep("b", 5)),
                       stringsAsFactors=FALSE)
     dat <- AnnotatedDataFrame(dat)
-    set.seed(41); covMat <- crossprod(matrix(rnorm(15*2,sd=0.05),10,10, dimnames=list(samp,samp)))
-    set.seed(42); covMat2 <- crossprod(matrix(rnorm(15*2,sd=0.05),10,10, dimnames=list(samp,samp)))
+    set.seed(41); covMat <- crossprod(matrix(rnorm(100,sd=0.05),10,10, dimnames=list(samp,samp)))
+    set.seed(42); covMat2 <- crossprod(matrix(rnorm(100,sd=0.05),10,10, dimnames=list(samp,samp)))
     covMatList <- list(covMat, covMat2)
     nm1 <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMatList, verbose=FALSE)
     nm <- fitNullModel(dat, outcome="a", covars="b", cov.mat=covMatList, verbose=FALSE)
