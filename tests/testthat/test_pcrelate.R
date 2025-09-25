@@ -7,6 +7,7 @@ BPPARAM <- BiocParallel::SerialParam()
 test_that("pcrelate2 - variant blocks", {
     svd <- .testData()
     mypcs <- .testPCs(svd)
+    seqResetFilter(svd, verbose=FALSE)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
     myrel <- pcrelate(iterator, pcs = mypcs, BPPARAM=BPPARAM, verbose=FALSE)
     seqResetFilter(svd, verbose=FALSE)
@@ -19,6 +20,7 @@ test_that("pcrelate2 - variant blocks", {
 test_that("pcrelate2 - 2 sample blocks", {
     svd <- .testData()
     mypcs <- .testPCs(svd)
+    seqResetFilter(svd, verbose=FALSE)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
     myrel <- pcrelate(iterator, pcs = mypcs, small.samp.correct=FALSE, BPPARAM=BPPARAM, verbose=FALSE)
     resetIterator(iterator, verbose=FALSE)
