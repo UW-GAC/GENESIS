@@ -6,6 +6,7 @@ test_that("pcrelate2 - variant blocks", {
     param <- BiocParallel::MulticoreParam()
     svd <- .testData()
     mypcs <- .testPCs(svd)
+    seqResetFilter(svd, verbose=FALSE)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
     myrel <- pcrelate(iterator, pcs = mypcs, BPPARAM=param, verbose=FALSE)
     seqResetFilter(svd, verbose=FALSE)
