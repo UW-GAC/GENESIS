@@ -165,9 +165,9 @@ assoc <- assocTestSingle(iterator, nullmod,
 seqResetFilter(seqData)
 grm <- SNPRelate::snpgdsGRM(seqData, verbose=FALSE)
 covmat <- grm$grm; dimnames(covmat) <- list(grm$sample.id, grm$sample.id)
+seqResetFilter(seqData, verbose=FALSE)
 set.seed(10)
-nullmod <- fitNullModelFastScore(iterator, outcome="outcome", covars="sex", cov.mat=covmat,
-                                 nvar=50, min.mac=2)
+nullmod <- fitNullModelFastScore(iterator, outcome="outcome", covars="sex", cov.mat=covmat)
 assoc.se <- assocTestSingle(iterator, nullmod, fast.score.SE=TRUE,
                             BPPARAM=BiocParallel::SerialParam())
 

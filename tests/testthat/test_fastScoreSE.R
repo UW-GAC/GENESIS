@@ -6,21 +6,22 @@ BPPARAM <- BiocParallel::SerialParam()
 test_that("fast score SE", {
     svd <- .testData()
     covmat <- .testGRM(svd)
+    seqResetFilter(svd, verbose = FALSE)
     
     nm <- fitNullModel(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=covmat, verbose=FALSE)
     set.seed(123)
-    nm.se <- fitNullModelFastScore(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=covmat,
-                                   nvar=50, min.mac=2, verbose=FALSE)
+    nm.se <- fitNullModelFastScore(svd, outcome="outcome", covars=c("sex", "age"), cov.mat=covmat, verbose=FALSE)
     expect_true(all(c("se.correction", "score.table") %in% names(nm.se)))
     
     chk <- intersect(names(nm), names(nm.se))
     expect_equal(nm[chk], nm.se[chk])
     
     set.seed(456)
-    score.table <- calcScore(svd, nm, nvar=50, min.mac=2, verbose=FALSE)
+    score.table <- calcScore(svd, nm, verbose=FALSE)
     nm2 <- nullModelFastScore(nm, score.table, verbose=FALSE)
     expect_equal(nm2, nm.se)
     
+    seqResetFilter(svd, verbose = FALSE)
     iterator <- SeqVarBlockIterator(svd, verbose=FALSE)
     expect_error(assocTestSingle(iterator, nm, fast.score.SE=TRUE, BPPARAM=BPPARAM, verbose=FALSE),
                  "null.model must have se.correction")
