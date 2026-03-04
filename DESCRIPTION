@@ -5,9 +5,17 @@ Title: GENetic EStimation and Inference in Structured samples
         samples with population structure and/or relatedness
 Version: 2.41.0
 Date: 2025-01-31
-Author: Matthew P. Conomos, Stephanie M. Gogarten,
-	Lisa Brown, Han Chen, Thomas Lumley, Kenneth Rice, Tamar Sofer, Adrienne Stilp, Timothy Thornton, Chaoyu Yu
-Maintainer: Stephanie M. Gogarten <sdmorris@uw.edu>
+Authors@R: c(
+  person(c("Matthew", "P."), "Conomos", role = c("aut")),
+  person(c("Stephanie", "M."), "Gogarten", email = "sdmorris@uw.edu", role = c("aut", "cre")),
+  person("Lisa", "Brown", role = "aut"),
+  person("Han", "Chen", role = "aut"),
+  person("Thomas", "Lumley", role = "aut"),
+  person("Kenneth", "Rice", role = "aut"),
+  person("Tamar", "Sofer", role = "aut"),
+  person("Adrienne", "Stilp", role = "aut"),
+  person("Timothy", "Thornton", role = "aut"),
+  person("Chaoyu", "Yu", role = "aut"))
 Description: The GENESIS package provides methodology for estimating,
         inferring, and accounting for population and pedigree structure
         in genetic analyses.  The current implementation provides
